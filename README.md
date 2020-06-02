@@ -47,3 +47,4 @@ Design principles:
 - [ ] comment/uncomment
 - [ ] code folding
 - [ ] setting overrides for file type
+- [ ] macros

@@ -1,2 +1,2 @@
-# text-vm
-Turing-complete text editor
+# aretext
+Terminal-based text editor par excellence.

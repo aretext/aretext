@@ -11,39 +11,39 @@ Design principles:
 
 ## Roadmap
 
-- [ ] edit: display file contents
-- [ ] edit: exit
-- [ ] edit: handle terminal resize
-- [ ] edit: navigate up/down/left/right
-- [ ] edit: scroll file contents vertically
-- [ ] edit: scroll file contents horizontally, handle long lines
-- [ ] edit: insert text
-- [ ] edit: delete text
-- [ ] edit: save changes
-- [ ] edit: check for unsaved changes on exit
-- [ ] edit: detect when file changed automatically, prompt for reload
-- [ ] edit: open a file with a particular cursor position
-- [ ] edit: status line showing file edited
-- [ ] edit: copy/paste using system clipboard integration
-- [ ] edit: line numbers
-- [ ] edit: switch to a different file (with prompt for save)
-- [ ] edit: handle double-width unicode characters
-- [ ] edit: handle tabs
-- [ ] edit: soft-wrap long lines
-- [ ] edit: undo/redo
-- [ ] edit: autocomplete through language server integration
-- [ ] edit: jump to definition through language server integration
-- [ ] edit: find usages through language server integration
-- [ ] edit: highlight errors from language server
-- [ ] edit: hover hints from language server
-- [ ] edit: forward search through file
-- [ ] edit: backward search through file
-- [ ] edit: option to display non-printable characters
-- [ ] edit: show help on bottom of screen, enable/disable with option
-- [ ] edit: config file to set default options
-- [ ] edit: optional vim-style keybindings (normal mode, visual mode, insert mode)
-- [ ] edit: syntax highlighting using textmate definitions
-- [ ] edit: autoindent
-- [ ] edit: comment/uncomment
-- [ ] edit: code folding
-- [ ] edit: setting overrides for file type
+- [ ] display file contents
+- [ ] exit
+- [ ] handle terminal resize
+- [ ] navigate up/down/left/right
+- [ ] scroll file contents vertically
+- [ ] scroll file contents horizontally, handle long lines
+- [ ] insert text
+- [ ] delete text
+- [ ] save changes
+- [ ] check for unsaved changes on exit
+- [ ] detect when file changed automatically, prompt for reload
+- [ ] open a file with a particular cursor position
+- [ ] status line showing file edited
+- [ ] copy/paste using system clipboard integration
+- [ ] line numbers
+- [ ] switch to a different file (with prompt for save)
+- [ ] handle double-width unicode characters
+- [ ] handle tabs
+- [ ] soft-wrap long lines
+- [ ] undo/redo
+- [ ] autocomplete through language server integration
+- [ ] jump to definition through language server integration
+- [ ] find usages through language server integration
+- [ ] highlight errors from language server
+- [ ] hover hints from language server
+- [ ] forward search through file
+- [ ] backward search through file
+- [ ] option to display non-printable characters
+- [ ] show help on bottom of screen, enable/disable with option
+- [ ] config file to set default options
+- [ ] optional vim-style keybindings (normal mode, visual mode, insert mode)
+- [ ] syntax highlighting using textmate definitions
+- [ ] autoindent
+- [ ] comment/uncomment
+- [ ] code folding
+- [ ] setting overrides for file type

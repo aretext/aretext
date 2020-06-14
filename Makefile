@@ -10,6 +10,9 @@ build:
 test:
 	go test ./...
 
+vet:
+	go vet ./...
+
 clean:
 	rm -rf aretext
 	go clean ./...

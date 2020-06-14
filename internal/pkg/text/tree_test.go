@@ -117,3 +117,36 @@ func TestCursorStartLocation(t *testing.T) {
 		})
 	}
 }
+
+func benchmarkLoad(b *testing.B, numBytes int) {
+	text := repeat('a', numBytes)
+	for n := 0; n < b.N; n++ {
+		reader := strings.NewReader(text)
+		_, err := NewTreeFromReader(reader)
+		if err != nil {
+			b.Fatalf("err = %v", err)
+		}
+	}
+}
+
+func benchmarkRead(b *testing.B, numBytes int) {
+	text := repeat('a', numBytes)
+	reader := strings.NewReader(text)
+	tree, err := NewTreeFromReader(reader)
+	if err != nil {
+		b.Fatalf("err = %v", err)
+	}
+
+	for n := 0; n < b.N; n++ {
+		cursor := tree.CursorAtPosition(0)
+		_, err := ioutil.ReadAll(cursor)
+		if err != nil {
+			b.Fatalf("err = %v", err)
+		}
+	}
+}
+
+func BenchmarkLoad4096Bytes(b *testing.B)    { benchmarkLoad(b, 4096) }
+func BenchmarkLoad1048576Bytes(b *testing.B) { benchmarkLoad(b, 1048576) }
+func BenchmarkRead4096Bytes(b *testing.B)    { benchmarkRead(b, 4096) }
+func BenchmarkRead1048576Bytes(b *testing.B) { benchmarkRead(b, 1048576) }

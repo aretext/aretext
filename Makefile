@@ -13,6 +13,9 @@ test:
 vet:
 	go vet ./...
 
+bench:
+	go test ./... -bench=.
+
 clean:
 	rm -rf aretext
 	go clean ./...

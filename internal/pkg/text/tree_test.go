@@ -218,6 +218,57 @@ func TestCursorAtLine(t *testing.T) {
 	}
 }
 
+func TestCursorPastLastLine(t *testing.T) {
+	testCases := []struct {
+		name    string
+		text    string
+		lineNum uint64
+	}{
+		{
+			name:    "empty, line zero",
+			text:    "",
+			lineNum: 0,
+		},
+		{
+			name:    "empty, line one",
+			text:    "",
+			lineNum: 1,
+		},
+		{
+			name:    "single line, line one",
+			text:    "abcdefgh",
+			lineNum: 1,
+		},
+		{
+			name:    "single line, line two",
+			text:    "abcdefgh",
+			lineNum: 2,
+		},
+		{
+			name:    "multiple lines, one past last line",
+			text:    "abc\ndefg\nhijk",
+			lineNum: 3,
+		},
+		{
+			name:    "multiple lines, two past last line",
+			text:    "abc\ndefg\nhijk",
+			lineNum: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := strings.NewReader(tc.text)
+			tree, err := NewTreeFromReader(reader)
+			require.NoError(t, err)
+			cursor := tree.CursorAtLine(tc.lineNum)
+			retrieved, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, "", string(retrieved))
+		})
+	}
+}
+
 func benchmarkLoad(b *testing.B, numBytes int) {
 	text := repeat('a', numBytes)
 	for n := 0; n < b.N; n++ {

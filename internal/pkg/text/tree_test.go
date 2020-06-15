@@ -320,6 +320,155 @@ func TestCursorPastLastLine(t *testing.T) {
 	}
 }
 
+func TestDeleteAtPosition(t *testing.T) {
+	testCases := []struct {
+		name         string
+		inputText    string
+		deletePos    uint64
+		expectedText string
+	}{
+		{
+			name:         "empty",
+			inputText:    "",
+			deletePos:    0,
+			expectedText: "",
+		},
+		{
+			name:         "single character",
+			inputText:    "A",
+			deletePos:    0,
+			expectedText: "",
+		},
+		{
+			name:         "single character, delete past end",
+			inputText:    "A",
+			deletePos:    1,
+			expectedText: "A",
+		},
+		{
+			name:         "two characters, delete first",
+			inputText:    "AB",
+			deletePos:    0,
+			expectedText: "B",
+		},
+		{
+			name:         "two characters, delete second",
+			inputText:    "AB",
+			deletePos:    1,
+			expectedText: "A",
+		},
+		{
+			name:         "multi-byte character, delete before",
+			inputText:    "a£b",
+			deletePos:    0,
+			expectedText: "£b",
+		},
+		{
+			name:         "multi-byte character, delete on",
+			inputText:    "a£b",
+			deletePos:    1,
+			expectedText: "ab",
+		},
+		{
+			name:         "multi-byte character, delete after",
+			inputText:    "a£b",
+			deletePos:    2,
+			expectedText: "a£",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := strings.NewReader(tc.inputText)
+			tree, err := NewTreeFromReader(reader)
+			require.NoError(t, err)
+			tree.DeleteAtPosition(tc.deletePos)
+			cursor := tree.CursorAtPosition(0)
+			retrieved, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedText, string(retrieved))
+		})
+	}
+}
+
+func TestDeleteAllCharsInLongStringFromBeginning(t *testing.T) {
+	testCases := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "ASCII",
+			text: repeat('a', 4096),
+		},
+		{
+			name: "2-byte chars",
+			text: repeat('£', 4096),
+		},
+		{
+			name: "3-byte chars",
+			text: repeat('፴', 4096),
+		},
+		{
+			name: "4-byte chars",
+			text: repeat('\U0010AAAA', 4096),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := strings.NewReader(tc.text)
+			tree, err := NewTreeFromReader(reader)
+			require.NoError(t, err)
+			for i := 0; i < len(tc.text); i++ {
+				tree.DeleteAtPosition(0)
+			}
+			cursor := tree.CursorAtPosition(0)
+			retrieved, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, "", string(retrieved))
+		})
+	}
+}
+
+func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
+	testCases := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "ASCII",
+			text: repeat('a', 4096),
+		},
+		{
+			name: "2-byte chars",
+			text: repeat('£', 4096),
+		},
+		{
+			name: "3-byte chars",
+			text: repeat('፴', 4096),
+		},
+		{
+			name: "4-byte chars",
+			text: repeat('\U0010AAAA', 4096),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := strings.NewReader(tc.text)
+			tree, err := NewTreeFromReader(reader)
+			require.NoError(t, err)
+			for i := len(tc.text) - 1; i >= 0; i-- {
+				tree.DeleteAtPosition(0)
+			}
+			cursor := tree.CursorAtPosition(0)
+			retrieved, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, "", string(retrieved))
+		})
+	}
+}
+
 func benchmarkLoad(b *testing.B, numBytes int) {
 	text := repeat('a', numBytes)
 	for n := 0; n < b.N; n++ {

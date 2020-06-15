@@ -122,6 +122,12 @@ func buildInnerNodesFromLeaves(leafGroups []nodeGroup) nodeGroup {
 	}
 }
 
+// DeleteAtPosition removes the UTF-8 character at the specified position (0-indexed).
+// If charPos is past the end of the text, this has no effect.
+func (t *Tree) DeleteAtPosition(charPos uint64) {
+	t.root.deleteAtPosition(0, charPos)
+}
+
 // CursorAtPosition returns a cursor starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned cursor will read zero bytes.
 func (t *Tree) CursorAtPosition(charPos uint64) *Cursor {
@@ -188,6 +194,7 @@ const maxBytesPerLeaf = 63
 // nodeGroup is either an inner node group or a leaf node group.
 type nodeGroup interface {
 	keys() []indexKey
+	deleteAtPosition(nodeIdx byte, charPos uint64)
 	cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor
 	cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor
 }
@@ -214,6 +221,10 @@ func (g *innerNodeGroup) keys() []indexKey {
 		keys[i] = g.nodes[i].key()
 	}
 	return keys
+}
+
+func (g *innerNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) {
+	g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
 func (g *innerNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
@@ -247,6 +258,20 @@ func (n *innerNode) key() indexKey {
 		nodeKey.numNewlines += key.numNewlines
 	}
 	return nodeKey
+}
+
+func (n *innerNode) deleteAtPosition(charPos uint64) {
+	c := uint64(0)
+
+	for i := byte(0); i < n.numKeys; i++ {
+		nc := n.keys[i].numChars
+		if charPos < c+nc {
+			n.child.deleteAtPosition(i, charPos-c)
+			n.keys[i].numChars--
+			return
+		}
+		c += nc
+	}
 }
 
 func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
@@ -294,6 +319,12 @@ func (g *leafNodeGroup) keys() []indexKey {
 	return keys
 }
 
+func (g *leafNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) {
+	// Don't bother rebalancing the tree.  This leaves extra space in the leaves,
+	// but that's okay because usually the user will want to insert more text anyway.
+	g.nodes[nodeIdx].deleteAtPosition(charPos)
+}
+
 func (g *leafNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
 	return &Cursor{
@@ -335,6 +366,18 @@ func (l *leafNode) key() indexKey {
 		}
 	}
 	return key
+}
+
+func (l *leafNode) deleteAtPosition(charPos uint64) {
+	offset := l.byteOffsetForPosition(charPos)
+	if offset < l.numBytes {
+		startByte := l.textBytes[offset]
+		charWidth := utf8CharWidth[startByte]
+		for i := offset; i < l.numBytes-charWidth; i++ {
+			l.textBytes[i] = l.textBytes[i+charWidth]
+		}
+		l.numBytes -= charWidth
+	}
 }
 
 func (l *leafNode) byteOffsetForPosition(charPos uint64) byte {

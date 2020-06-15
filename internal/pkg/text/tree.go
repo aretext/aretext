@@ -63,7 +63,8 @@ func bulkLoadIntoLeaves(r io.Reader, v *Validator) ([]nodeGroup, error) {
 		}
 
 		for i := 0; i < n; i++ {
-			if currentNode.numBytes == maxBytesPerLeaf {
+			charWidth := utf8CharWidth[buf[i]] // zero for continuation bytes
+			if currentNode.numBytes+charWidth >= maxBytesPerLeaf {
 				if currentGroup.numNodes < uint64(maxNodesPerGroup) {
 					currentNode = &currentGroup.nodes[currentGroup.numNodes]
 					currentGroup.numNodes++
@@ -195,8 +196,6 @@ type nodeGroup interface {
 type indexKey struct {
 
 	// Number of UTF-8 characters in a subtree.
-	// If a multi-byte UTF-8 character is split between multiple leaf nodes,
-	// it is counted by the node containing the first byte.
 	numChars uint64
 
 	// Number of newline characters in a subtree.
@@ -315,7 +314,7 @@ func (g *leafNodeGroup) cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cur
 
 // leafNode is a node that stores UTF-8 text as a byte array.
 //
-// Multi-byte UTF-8 characters may be split between adjacent leaf nodes.
+// Multi-byte UTF-8 characters are never split between leaf nodes.
 //
 // +---------------------------------+
 // |   numBytes  |   textBytes[63]   |
@@ -363,7 +362,24 @@ func (l *leafNode) byteOffsetAfterNewline(newlinePos uint64) byte {
 	return l.numBytes
 }
 
-// Lookup table for UTF-8 bytes. Set to 1 for start bytes, zero otherwise.
+// Lookup table for UTF-8 character byte counts.  Set to the byte count of the character for start bytes, zero otherwise.
+var utf8CharWidth [256]byte
+
+func init() {
+	for b := 0; b < 256; b++ {
+		if b>>7 == 0 {
+			utf8CharWidth[b] = 1
+		} else if b>>5 == 0b110 {
+			utf8CharWidth[b] = 2
+		} else if b>>4 == 0b1110 {
+			utf8CharWidth[b] = 3
+		} else if b>>3 == 0b11110 {
+			utf8CharWidth[b] = 4
+		}
+	}
+}
+
+// Lookup table for UTF-8 start bytes. Set to 1 for start bytes, zero otherwise.
 var utf8StartByteIndicator [256]byte
 
 func init() {

@@ -18,7 +18,7 @@ func repeat(c rune, n int) string {
 	return string(runes)
 }
 
-func lines(numLines int, charsPerLine int) []string {
+func lines(numLines int, charsPerLine int) string {
 	lines := make([]string, 0, numLines)
 	currentChar := byte(65)
 
@@ -31,7 +31,7 @@ func lines(numLines int, charsPerLine int) []string {
 		}
 	}
 
-	return lines
+	return strings.Join(lines, "\n")
 }
 
 func TestEmptyTree(t *testing.T) {
@@ -137,44 +137,52 @@ func TestCursorStartLocation(t *testing.T) {
 
 func TestCursorAtLine(t *testing.T) {
 	testCases := []struct {
-		name  string
-		lines []string
+		name string
+		text string
 	}{
 		{
-			name:  "empty",
-			lines: []string{},
+			name: "empty",
+			text: "",
 		},
 		{
-			name:  "single line, same leaf",
-			lines: lines(1, 12),
+			name: "single newline",
+			text: "\n",
 		},
 		{
-			name:  "single line, multiple leaves",
-			lines: lines(1, 4096),
+			name: "two newlines",
+			text: "\n\n",
 		},
 		{
-			name:  "two lines, same leaf",
-			lines: lines(2, 4),
+			name: "single line, same leaf",
+			text: lines(1, 12),
 		},
 		{
-			name:  "two lines, multiple leaves",
-			lines: lines(2, 4096),
+			name: "single line, multiple leaves",
+			text: lines(1, 4096),
 		},
 		{
-			name:  "many lines, single character per line",
-			lines: lines(4096, 1),
+			name: "two lines, same leaf",
+			text: lines(2, 4),
 		},
 		{
-			name:  "many lines, many characters per line",
-			lines: lines(4096, 1024),
+			name: "two lines, multiple leaves",
+			text: lines(2, 4096),
 		},
 		{
-			name:  "many lines, newline on previous leaf",
-			lines: lines(1024, maxBytesPerLeaf-1),
+			name: "many lines, single character per line",
+			text: lines(4096, 1),
 		},
 		{
-			name:  "many lines, newline on next leaf",
-			lines: lines(1024, maxBytesPerLeaf),
+			name: "many lines, many characters per line",
+			text: lines(4096, 1024),
+		},
+		{
+			name: "many lines, newline on previous leaf",
+			text: lines(1024, maxBytesPerLeaf-1),
+		},
+		{
+			name: "many lines, newline on next leaf",
+			text: lines(1024, maxBytesPerLeaf),
 		},
 	}
 
@@ -195,12 +203,17 @@ func TestCursorAtLine(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			text := strings.Join(tc.lines, "\n")
-			reader := strings.NewReader(text)
+			lines := strings.Split(tc.text, "\n")
+			if len(lines) > 0 && lines[len(lines)-1] == "" {
+				// match bufio.ScanLines behavior, which ignores last empty line
+				lines = lines[:len(lines)-1]
+			}
+
+			reader := strings.NewReader(tc.text)
 			tree, err := NewTreeFromReader(reader)
 			require.NoError(t, err)
-			actualLines := linesFromTree(tree, len(tc.lines))
-			assert.Equal(t, tc.lines, actualLines, "expected lines = %v, actual lines = %v", len(tc.lines), len(actualLines))
+			actualLines := linesFromTree(tree, len(lines))
+			assert.Equal(t, lines, actualLines, "expected lines = %v, actual lines = %v", len(lines), len(actualLines))
 		})
 	}
 }

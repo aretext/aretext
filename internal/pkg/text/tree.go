@@ -127,6 +127,19 @@ func (t *Tree) CursorAtPosition(charPos uint64) *Cursor {
 	return t.root.cursorAtPosition(0, charPos)
 }
 
+// CursorAtLine returns a cursor starting at the first character at the specified line (0-indexed).
+// For line zero, this is the first character in the tree; for subsequent lines, this is the first
+// character after the newline character.
+// If the line number is greater than the maximum line number, the returned cursor will read zero bytes.
+func (t *Tree) CursorAtLine(lineNum uint64) *Cursor {
+	if lineNum == 0 {
+		// Special case the first line, since it's the only line that doesn't immediately follow a newline character.
+		return t.root.cursorAtPosition(0, 0)
+	}
+
+	return t.root.cursorAfterNewline(0, lineNum-1)
+}
+
 // text.Cursor reads UTF-8 bytes from a text.Tree.
 // It implements io.Reader.
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
@@ -175,6 +188,7 @@ const maxBytesPerLeaf = 63
 type nodeGroup interface {
 	keys() []indexKey
 	cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor
+	cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -185,10 +199,8 @@ type indexKey struct {
 	// it is counted by the node containing the first byte.
 	numChars uint64
 
-	// Number of UTF-8 characters in a subtree.
-	// If a multi-byte UTF-8 character is split between multiple leaf nodes,
-	// it is counted by the node containing the first byte.
-	numLines uint64
+	// Number of newline characters in a subtree.
+	numNewlines uint64
 }
 
 // innerNodeGroup is a group of inner nodes referenced by a parent inner node.
@@ -207,6 +219,10 @@ func (g *innerNodeGroup) keys() []indexKey {
 
 func (g *innerNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
 	return g.nodes[nodeIdx].cursorAtPosition(charPos)
+}
+
+func (g *innerNodeGroup) cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor {
+	return g.nodes[nodeIdx].cursorAfterNewline(newlinePos)
 }
 
 // innerNode is used to navigate to the leaf node containing a character offset or line number.
@@ -229,7 +245,7 @@ func (n *innerNode) key() indexKey {
 	for i := byte(0); i < n.numKeys; i++ {
 		key := n.keys[i]
 		nodeKey.numChars += key.numChars
-		nodeKey.numLines += key.numLines
+		nodeKey.numNewlines += key.numNewlines
 	}
 	return nodeKey
 }
@@ -246,6 +262,20 @@ func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
 	}
 
 	return n.child.cursorAtPosition(n.numKeys-1, charPos-c)
+}
+
+func (n *innerNode) cursorAfterNewline(newlinePos uint64) *Cursor {
+	c := uint64(0)
+
+	for i := byte(0); i < n.numKeys-1; i++ {
+		nc := n.keys[i].numNewlines
+		if newlinePos < c+nc {
+			return n.child.cursorAfterNewline(i, newlinePos-c)
+		}
+		c += nc
+	}
+
+	return n.child.cursorAfterNewline(n.numKeys-1, newlinePos-c)
 }
 
 // leafNodeGroup is a group of leaf nodes referenced by an inner node.
@@ -274,6 +304,15 @@ func (g *leafNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
 	}
 }
 
+func (g *leafNodeGroup) cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor {
+	textByteOffset := g.nodes[nodeIdx].byteOffsetAfterNewline(newlinePos)
+	return &Cursor{
+		group:          g,
+		nodeIdx:        nodeIdx,
+		textByteOffset: textByteOffset,
+	}
+}
+
 // leafNode is a node that stores UTF-8 text as a byte array.
 //
 // Multi-byte UTF-8 characters may be split between adjacent leaf nodes.
@@ -293,7 +332,7 @@ func (l *leafNode) key() indexKey {
 	for _, b := range l.textBytes[:l.numBytes] {
 		key.numChars += uint64(utf8StartByteIndicator[b])
 		if b == '\n' {
-			key.numLines++
+			key.numNewlines++
 		}
 	}
 	return key
@@ -307,6 +346,19 @@ func (l *leafNode) byteOffsetForPosition(charPos uint64) byte {
 			return byte(i) // safe b/c maxBytesPerLeaf < 256
 		}
 		n += uint64(c)
+	}
+	return l.numBytes
+}
+
+func (l *leafNode) byteOffsetAfterNewline(newlinePos uint64) byte {
+	n := uint64(0)
+	for i, b := range l.textBytes[:l.numBytes] {
+		if b == '\n' {
+			if n == newlinePos {
+				return byte(i + 1) // safe b/c maxBytesPerLeaf < 255
+			}
+			n++
+		}
 	}
 	return l.numBytes
 }

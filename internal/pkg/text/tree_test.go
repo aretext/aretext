@@ -135,6 +135,57 @@ func TestCursorStartLocation(t *testing.T) {
 	}
 }
 
+func TestCursorPastLastCharacter(t *testing.T) {
+	testCases := []struct {
+		name string
+		text string
+		pos  uint64
+	}{
+		{
+			name: "empty, position zero",
+			text: "",
+			pos:  0,
+		},
+		{
+			name: "empty, position one",
+			text: "",
+			pos:  1,
+		},
+		{
+			name: "single char, position one",
+			text: "a",
+			pos:  1,
+		},
+		{
+			name: "single char, position two",
+			text: "a",
+			pos:  2,
+		},
+		{
+			name: "full leaf, position at end of leaf",
+			text: repeat('a', maxBytesPerLeaf),
+			pos:  maxBytesPerLeaf,
+		},
+		{
+			name: "full leaf, position one after end of leaf",
+			text: repeat('b', maxBytesPerLeaf),
+			pos:  maxBytesPerLeaf + 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := strings.NewReader(tc.text)
+			tree, err := NewTreeFromReader(reader)
+			require.NoError(t, err)
+			cursor := tree.CursorAtPosition(tc.pos)
+			retrieved, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, "", string(retrieved))
+		})
+	}
+}
+
 func TestCursorAtLine(t *testing.T) {
 	testCases := []struct {
 		name string

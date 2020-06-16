@@ -33,6 +33,7 @@ Design principles:
 - [ ] vim-style edit commands
 - [ ] forward search through file
 - [ ] backward search through file
+- [ ] incremental read from pipe
 - [ ] option to display non-printable characters
 - [ ] syntax highlighting using textmate definitions
 - [ ] repeat last action

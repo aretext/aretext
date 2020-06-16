@@ -3,6 +3,7 @@ package text
 import (
 	"errors"
 	"io"
+	"strings"
 )
 
 // text.Tree is a data structure for representing UTF-8 text.
@@ -39,6 +40,12 @@ func NewTreeFromReader(r io.Reader) (*Tree, error) {
 	}
 	root := buildInnerNodesFromLeaves(leafGroups)
 	return &Tree{root, validator}, nil
+}
+
+// NewTreeFromString creates a new Tree from a UTF-8 string.
+func NewTreeFromString(s string) (*Tree, error) {
+	reader := strings.NewReader(s)
+	return NewTreeFromReader(reader)
 }
 
 func bulkLoadIntoLeaves(r io.Reader, v *Validator) ([]nodeGroup, error) {

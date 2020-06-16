@@ -69,8 +69,7 @@ func TestTreeBulkLoadAndReadAll(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			text := allTextFromTree(t, tree)
 			assert.Equal(t, tc.text, text, "original str had len %d, output string had len %d", len(tc.text), len(text))
@@ -123,8 +122,7 @@ func TestCursorStartLocation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(string(tc.runes))
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(string(tc.runes))
 			require.NoError(t, err)
 
 			// Check a cursor starting from each character position to the end
@@ -178,8 +176,7 @@ func TestCursorPastLastCharacter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			cursor := tree.CursorAtPosition(tc.pos)
 			retrieved, err := ioutil.ReadAll(cursor)
@@ -263,8 +260,7 @@ func TestCursorAtLine(t *testing.T) {
 				lines = lines[:len(lines)-1]
 			}
 
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			actualLines := linesFromTree(tree, len(lines))
 			assert.Equal(t, lines, actualLines, "expected lines = %v, actual lines = %v", len(lines), len(actualLines))
@@ -312,8 +308,7 @@ func TestCursorPastLastLine(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			cursor := tree.CursorAtLine(tc.lineNum)
 			retrieved, err := ioutil.ReadAll(cursor)
@@ -382,8 +377,7 @@ func TestDeleteAtPosition(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.inputText)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.inputText)
 			require.NoError(t, err)
 			tree.DeleteAtPosition(tc.deletePos)
 			text := allTextFromTree(t, tree)
@@ -417,8 +411,7 @@ func TestDeleteAllCharsInLongStringFromBeginning(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			for i := 0; i < len(tc.text); i++ {
 				tree.DeleteAtPosition(0)
@@ -454,8 +447,7 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := strings.NewReader(tc.text)
-			tree, err := NewTreeFromReader(reader)
+			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			for i := len(tc.text) - 1; i >= 0; i-- {
 				tree.DeleteAtPosition(0)
@@ -469,8 +461,7 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 func benchmarkLoad(b *testing.B, numBytes int) {
 	text := repeat('a', numBytes)
 	for n := 0; n < b.N; n++ {
-		reader := strings.NewReader(text)
-		_, err := NewTreeFromReader(reader)
+		_, err := NewTreeFromString(text)
 		if err != nil {
 			b.Fatalf("err = %v", err)
 		}
@@ -479,8 +470,7 @@ func benchmarkLoad(b *testing.B, numBytes int) {
 
 func benchmarkRead(b *testing.B, numBytes int) {
 	text := repeat('a', numBytes)
-	reader := strings.NewReader(text)
-	tree, err := NewTreeFromReader(reader)
+	tree, err := NewTreeFromString(text)
 	if err != nil {
 		b.Fatalf("err = %v", err)
 	}

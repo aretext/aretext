@@ -11,7 +11,7 @@ Design principles:
 
 ## Roadmap
 
-- [ ] display file contents
+- [ ] display file contents, with support for wide characters and grapheme clustering
 - [ ] exit
 - [ ] handle terminal resize
 - [ ] navigate up/down/left/right
@@ -26,25 +26,16 @@ Design principles:
 - [ ] status line showing file edited
 - [ ] copy/paste using system clipboard integration
 - [ ] line numbers
-- [ ] switch to a different file (with prompt for save)
-- [ ] handle double-width unicode characters
 - [ ] handle tabs
 - [ ] soft-wrap long lines
 - [ ] undo/redo
-- [ ] autocomplete through language server integration
-- [ ] jump to definition through language server integration
-- [ ] find usages through language server integration
-- [ ] highlight errors from language server
-- [ ] hover hints from language server
+- [ ] vim-style navigation for words, lines, and sections
+- [ ] vim-style edit commands
 - [ ] forward search through file
 - [ ] backward search through file
 - [ ] option to display non-printable characters
-- [ ] show help on bottom of screen, enable/disable with option
-- [ ] config file to set default options
-- [ ] optional vim-style keybindings (normal mode, visual mode, insert mode)
 - [ ] syntax highlighting using textmate definitions
+- [ ] repeat last action
+- [ ] macros
 - [ ] autoindent
 - [ ] comment/uncomment
-- [ ] code folding
-- [ ] setting overrides for file type
-- [ ] macros

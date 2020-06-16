@@ -34,12 +34,17 @@ func lines(numLines int, charsPerLine int) string {
 	return strings.Join(lines, "\n")
 }
 
-func TestEmptyTree(t *testing.T) {
-	tree := NewTree()
+func allTextFromTree(t *testing.T, tree *Tree) string {
 	cursor := tree.CursorAtPosition(0)
 	retrievedBytes, err := ioutil.ReadAll(cursor)
 	require.NoError(t, err)
-	assert.Equal(t, 0, len(retrievedBytes))
+	return string(retrievedBytes)
+}
+
+func TestEmptyTree(t *testing.T) {
+	tree := NewTree()
+	text := allTextFromTree(t, tree)
+	assert.Equal(t, "", text)
 }
 
 func TestTreeBulkLoadAndReadAll(t *testing.T) {
@@ -67,10 +72,8 @@ func TestTreeBulkLoadAndReadAll(t *testing.T) {
 			reader := strings.NewReader(tc.text)
 			tree, err := NewTreeFromReader(reader)
 			require.NoError(t, err)
-			cursor := tree.CursorAtPosition(0)
-			retrievedBytes, err := ioutil.ReadAll(cursor)
-			require.NoError(t, err)
-			assert.Equal(t, tc.text, string(retrievedBytes), "original str had len %d, output string had len %d", len(tc.text), len(retrievedBytes))
+			text := allTextFromTree(t, tree)
+			assert.Equal(t, tc.text, text, "original str had len %d, output string had len %d", len(tc.text), len(text))
 		})
 	}
 }
@@ -383,10 +386,8 @@ func TestDeleteAtPosition(t *testing.T) {
 			tree, err := NewTreeFromReader(reader)
 			require.NoError(t, err)
 			tree.DeleteAtPosition(tc.deletePos)
-			cursor := tree.CursorAtPosition(0)
-			retrieved, err := ioutil.ReadAll(cursor)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedText, string(retrieved))
+			text := allTextFromTree(t, tree)
+			assert.Equal(t, tc.expectedText, text)
 		})
 	}
 }
@@ -422,10 +423,8 @@ func TestDeleteAllCharsInLongStringFromBeginning(t *testing.T) {
 			for i := 0; i < len(tc.text); i++ {
 				tree.DeleteAtPosition(0)
 			}
-			cursor := tree.CursorAtPosition(0)
-			retrieved, err := ioutil.ReadAll(cursor)
-			require.NoError(t, err)
-			assert.Equal(t, "", string(retrieved))
+			text := allTextFromTree(t, tree)
+			assert.Equal(t, "", text)
 		})
 	}
 }
@@ -461,10 +460,8 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 			for i := len(tc.text) - 1; i >= 0; i-- {
 				tree.DeleteAtPosition(0)
 			}
-			cursor := tree.CursorAtPosition(0)
-			retrieved, err := ioutil.ReadAll(cursor)
-			require.NoError(t, err)
-			assert.Equal(t, "", string(retrieved))
+			text := allTextFromTree(t, tree)
+			assert.Equal(t, "", text)
 		})
 	}
 }

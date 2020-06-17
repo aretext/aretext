@@ -458,6 +458,22 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 	}
 }
 
+func TestDeleteNewline(t *testing.T) {
+	tree, err := NewTreeFromString(lines(4096, 100))
+	require.NoError(t, err)
+
+	cursor := tree.CursorAtLine(4094) // read last two lines
+	text, err := ioutil.ReadAll(cursor)
+	require.NoError(t, err)
+	assert.Equal(t, 201, len(text))
+
+	tree.DeleteAtPosition(100)       // delete first newline
+	cursor = tree.CursorAtLine(4094) // read last line
+	text, err = ioutil.ReadAll(cursor)
+	require.NoError(t, err)
+	assert.Equal(t, 100, len(text))
+}
+
 func benchmarkLoad(b *testing.B, numBytes int) {
 	text := repeat('a', numBytes)
 	for n := 0; n < b.N; n++ {

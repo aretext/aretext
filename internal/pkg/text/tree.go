@@ -201,7 +201,7 @@ const maxBytesPerLeaf = 63
 // nodeGroup is either an inner node group or a leaf node group.
 type nodeGroup interface {
 	keys() []indexKey
-	deleteAtPosition(nodeIdx byte, charPos uint64)
+	deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool)
 	cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor
 	cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor
 }
@@ -230,8 +230,8 @@ func (g *innerNodeGroup) keys() []indexKey {
 	return keys
 }
 
-func (g *innerNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) {
-	g.nodes[nodeIdx].deleteAtPosition(charPos)
+func (g *innerNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool) {
+	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
 func (g *innerNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
@@ -267,18 +267,24 @@ func (n *innerNode) key() indexKey {
 	return nodeKey
 }
 
-func (n *innerNode) deleteAtPosition(charPos uint64) {
+func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
 	c := uint64(0)
 
 	for i := byte(0); i < n.numKeys; i++ {
 		nc := n.keys[i].numChars
 		if charPos < c+nc {
-			n.child.deleteAtPosition(i, charPos-c)
-			n.keys[i].numChars--
+			didDelete, wasNewline = n.child.deleteAtPosition(i, charPos-c)
+			if didDelete {
+				n.keys[i].numChars--
+				if wasNewline {
+					n.keys[i].numNewlines--
+				}
+			}
 			return
 		}
 		c += nc
 	}
+	return
 }
 
 func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
@@ -326,10 +332,10 @@ func (g *leafNodeGroup) keys() []indexKey {
 	return keys
 }
 
-func (g *leafNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) {
+func (g *leafNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool) {
 	// Don't bother rebalancing the tree.  This leaves extra space in the leaves,
 	// but that's okay because usually the user will want to insert more text anyway.
-	g.nodes[nodeIdx].deleteAtPosition(charPos)
+	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
 func (g *leafNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
@@ -375,7 +381,7 @@ func (l *leafNode) key() indexKey {
 	return key
 }
 
-func (l *leafNode) deleteAtPosition(charPos uint64) {
+func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
 	offset := l.byteOffsetForPosition(charPos)
 	if offset < l.numBytes {
 		startByte := l.textBytes[offset]
@@ -384,7 +390,10 @@ func (l *leafNode) deleteAtPosition(charPos uint64) {
 			l.textBytes[i] = l.textBytes[i+charWidth]
 		}
 		l.numBytes -= charWidth
+		didDelete = true
+		wasNewline = startByte == '\n'
 	}
+	return
 }
 
 func (l *leafNode) byteOffsetForPosition(charPos uint64) byte {

@@ -72,7 +72,7 @@ func bulkLoadIntoLeaves(r io.Reader, v *Validator) ([]nodeGroup, error) {
 		for i := 0; i < n; i++ {
 			charWidth := utf8CharWidth[buf[i]] // zero for continuation bytes
 			if currentNode.numBytes+charWidth >= maxBytesPerLeaf {
-				if currentGroup.numNodes < uint64(maxNodesPerGroup) {
+				if currentGroup.numNodes < maxNodesPerGroup {
 					currentNode = &currentGroup.nodes[currentGroup.numNodes]
 					currentGroup.numNodes++
 				} else {
@@ -101,12 +101,12 @@ func buildInnerNodesFromLeaves(leafGroups []nodeGroup) nodeGroup {
 	childGroups := leafGroups
 
 	for {
-		parentGroups := make([]nodeGroup, 0, len(childGroups)/int(maxNodesPerGroup)+1)
+		parentGroups := make([]nodeGroup, 0, len(childGroups)/maxNodesPerGroup+1)
 		currentGroup := &innerNodeGroup{}
 		parentGroups = append(parentGroups, currentGroup)
 
 		for _, cg := range childGroups {
-			if currentGroup.numNodes == uint64(maxNodesPerGroup) {
+			if currentGroup.numNodes == maxNodesPerGroup {
 				newGroup := &innerNodeGroup{}
 				parentGroups = append(parentGroups, newGroup)
 				currentGroup = newGroup
@@ -159,8 +159,8 @@ func (t *Tree) CursorAtLine(lineNum uint64) *Cursor {
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
 type Cursor struct {
 	group          *leafNodeGroup
-	nodeIdx        byte
-	textByteOffset byte
+	nodeIdx        uint64
+	textByteOffset uint64
 }
 
 func (c *Cursor) Read(b []byte) (int, error) {
@@ -176,15 +176,15 @@ func (c *Cursor) Read(b []byte) (int, error) {
 
 		node := &c.group.nodes[c.nodeIdx]
 		bytesWritten := copy(b[i:], node.textBytes[c.textByteOffset:node.numBytes])
-		c.textByteOffset += byte(bytesWritten) // conversion is safe b/c maxBytesPerLeaf < 256
+		c.textByteOffset += uint64(bytesWritten)
 		i += bytesWritten
 
-		if c.textByteOffset == node.numBytes {
+		if c.textByteOffset == uint64(node.numBytes) {
 			c.nodeIdx++
 			c.textByteOffset = 0
 		}
 
-		if uint64(c.nodeIdx) == c.group.numNodes {
+		if c.nodeIdx == c.group.numNodes {
 			c.group = c.group.next
 			c.nodeIdx = 0
 			c.textByteOffset = 0
@@ -194,16 +194,16 @@ func (c *Cursor) Read(b []byte) (int, error) {
 	return 0, nil
 }
 
-const maxKeysPerNode = byte(64)
+const maxKeysPerNode = 64
 const maxNodesPerGroup = maxKeysPerNode
 const maxBytesPerLeaf = 63
 
 // nodeGroup is either an inner node group or a leaf node group.
 type nodeGroup interface {
 	keys() []indexKey
-	deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool)
-	cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor
-	cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor
+	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
+	cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor
+	cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -230,28 +230,28 @@ func (g *innerNodeGroup) keys() []indexKey {
 	return keys
 }
 
-func (g *innerNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool) {
+func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
+func (g *innerNodeGroup) cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor {
 	return g.nodes[nodeIdx].cursorAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor {
+func (g *innerNodeGroup) cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor {
 	return g.nodes[nodeIdx].cursorAfterNewline(newlinePos)
 }
 
 // innerNode is used to navigate to the leaf node containing a character offset or line number.
 //
-// +-----------------------------------------+
-// | child | numKeys |  padding   | keys[64] |
-// +-----------------------------------------+
-//     8        1          7          1024     = 1032 bytes
+// +-----------------------------+
+// | child | numKeys |  keys[64] |
+// +-----------------------------+
+//     8        1         1024     = 1032 bytes
 //
 type innerNode struct {
 	child   nodeGroup
-	numKeys byte
+	numKeys uint64
 
 	// Each key corresponds to a node in the child group.
 	keys [maxKeysPerNode]indexKey
@@ -259,7 +259,7 @@ type innerNode struct {
 
 func (n *innerNode) key() indexKey {
 	nodeKey := indexKey{}
-	for i := byte(0); i < n.numKeys; i++ {
+	for i := uint64(0); i < n.numKeys; i++ {
 		key := n.keys[i]
 		nodeKey.numChars += key.numChars
 		nodeKey.numNewlines += key.numNewlines
@@ -269,8 +269,7 @@ func (n *innerNode) key() indexKey {
 
 func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
 	c := uint64(0)
-
-	for i := byte(0); i < n.numKeys; i++ {
+	for i := uint64(0); i < n.numKeys; i++ {
 		nc := n.keys[i].numChars
 		if charPos < c+nc {
 			didDelete, wasNewline = n.child.deleteAtPosition(i, charPos-c)
@@ -289,8 +288,7 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 
 func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
 	c := uint64(0)
-
-	for i := byte(0); i < n.numKeys-1; i++ {
+	for i := uint64(0); i < n.numKeys-1; i++ {
 		nc := n.keys[i].numChars
 		if charPos < c+nc {
 			return n.child.cursorAtPosition(i, charPos-c)
@@ -303,8 +301,7 @@ func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
 
 func (n *innerNode) cursorAfterNewline(newlinePos uint64) *Cursor {
 	c := uint64(0)
-
-	for i := byte(0); i < n.numKeys-1; i++ {
+	for i := uint64(0); i < n.numKeys-1; i++ {
 		nc := n.keys[i].numNewlines
 		if newlinePos < c+nc {
 			return n.child.cursorAfterNewline(i, newlinePos-c)
@@ -332,13 +329,13 @@ func (g *leafNodeGroup) keys() []indexKey {
 	return keys
 }
 
-func (g *leafNodeGroup) deleteAtPosition(nodeIdx byte, charPos uint64) (didDelete, wasNewline bool) {
+func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
 	// Don't bother rebalancing the tree.  This leaves extra space in the leaves,
 	// but that's okay because usually the user will want to insert more text anyway.
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
+func (g *leafNodeGroup) cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
 	return &Cursor{
 		group:          g,
@@ -347,7 +344,7 @@ func (g *leafNodeGroup) cursorAtPosition(nodeIdx byte, charPos uint64) *Cursor {
 	}
 }
 
-func (g *leafNodeGroup) cursorAfterNewline(nodeIdx byte, newlinePos uint64) *Cursor {
+func (g *leafNodeGroup) cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetAfterNewline(newlinePos)
 	return &Cursor{
 		group:          g,
@@ -383,11 +380,11 @@ func (l *leafNode) key() indexKey {
 
 func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
 	offset := l.byteOffsetForPosition(charPos)
-	if offset < l.numBytes {
+	if offset < uint64(l.numBytes) {
 		startByte := l.textBytes[offset]
 		charWidth := utf8CharWidth[startByte]
-		for i := offset; i < l.numBytes-charWidth; i++ {
-			l.textBytes[i] = l.textBytes[i+charWidth]
+		for i := offset; i < uint64(l.numBytes-charWidth); i++ {
+			l.textBytes[i] = l.textBytes[i+uint64(charWidth)]
 		}
 		l.numBytes -= charWidth
 		didDelete = true
@@ -396,29 +393,29 @@ func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool)
 	return
 }
 
-func (l *leafNode) byteOffsetForPosition(charPos uint64) byte {
+func (l *leafNode) byteOffsetForPosition(charPos uint64) uint64 {
 	n := uint64(0)
 	for i, b := range l.textBytes[:l.numBytes] {
-		c := utf8StartByteIndicator[b]
+		c := uint64(utf8StartByteIndicator[b])
 		if c > 0 && n == charPos {
-			return byte(i) // safe b/c maxBytesPerLeaf < 256
+			return uint64(i)
 		}
-		n += uint64(c)
+		n += c
 	}
-	return l.numBytes
+	return uint64(l.numBytes)
 }
 
-func (l *leafNode) byteOffsetAfterNewline(newlinePos uint64) byte {
+func (l *leafNode) byteOffsetAfterNewline(newlinePos uint64) uint64 {
 	n := uint64(0)
 	for i, b := range l.textBytes[:l.numBytes] {
 		if b == '\n' {
 			if n == newlinePos {
-				return byte(i + 1) // safe b/c maxBytesPerLeaf < 255
+				return uint64(i + 1)
 			}
 			n++
 		}
 	}
-	return l.numBytes
+	return uint64(l.numBytes)
 }
 
 // Lookup table for UTF-8 character byte counts.  Set to the byte count of the character for start bytes, zero otherwise.

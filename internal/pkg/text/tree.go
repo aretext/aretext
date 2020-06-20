@@ -115,7 +115,7 @@ func buildTreeFromLeaves(leafGroups []nodeGroup) *innerNode {
 			currentGroup.numNodes++
 		}
 
-		if len(parentGroups) == 1 && currentGroup.numNodes == 1 {
+		if len(parentGroups) == 1 {
 			root := innerNode{child: parentGroups[0]}
 			root.recalculateChildKeys()
 			return &root

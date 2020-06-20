@@ -272,35 +272,20 @@ func (n *innerNode) recalculateChildKeys() {
 }
 
 func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
-	c := uint64(0)
-	for i := uint64(0); i < n.numKeys; i++ {
-		nc := n.keys[i].numChars
-		if charPos < c+nc {
-			didDelete, wasNewline = n.child.deleteAtPosition(i, charPos-c)
-			if didDelete {
-				n.keys[i].numChars--
-				if wasNewline {
-					n.keys[i].numNewlines--
-				}
-			}
-			return
+	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
+	didDelete, wasNewline = n.child.deleteAtPosition(nodeIdx, adjustedCharPos)
+	if didDelete {
+		n.keys[nodeIdx].numChars--
+		if wasNewline {
+			n.keys[nodeIdx].numNewlines--
 		}
-		c += nc
 	}
 	return
 }
 
 func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
-	c := uint64(0)
-	for i := uint64(0); i < n.numKeys-1; i++ {
-		nc := n.keys[i].numChars
-		if charPos < c+nc {
-			return n.child.cursorAtPosition(i, charPos-c)
-		}
-		c += nc
-	}
-
-	return n.child.cursorAtPosition(n.numKeys-1, charPos-c)
+	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
+	return n.child.cursorAtPosition(nodeIdx, adjustedCharPos)
 }
 
 func (n *innerNode) cursorAfterNewline(newlinePos uint64) *Cursor {
@@ -314,6 +299,18 @@ func (n *innerNode) cursorAfterNewline(newlinePos uint64) *Cursor {
 	}
 
 	return n.child.cursorAfterNewline(n.numKeys-1, newlinePos-c)
+}
+
+func (n *innerNode) locatePosition(charPos uint64) (nodeIdx, adjustedCharPos uint64) {
+	c := uint64(0)
+	for i := uint64(0); i < n.numKeys; i++ {
+		nc := n.keys[i].numChars
+		if charPos < c+nc {
+			return i, charPos - c
+		}
+		c += nc
+	}
+	return n.numKeys - 1, c
 }
 
 // leafNodeGroup is a group of leaf nodes referenced by an inner node.

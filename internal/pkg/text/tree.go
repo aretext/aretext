@@ -16,14 +16,13 @@ import (
 // and the parent uses offsets within the node group to identify child nodes.
 // All nodes are carefully designed to fit as much data as possible within a 64-byte cache line.
 type Tree struct {
-	root nodeGroup
+	root *innerNode
 }
 
 // NewTree returns a tree representing an empty string.
 func NewTree() *Tree {
-	root := &innerNodeGroup{numNodes: 1}
-	root.nodes[0].child = &leafNodeGroup{numNodes: 1}
-	root.nodes[0].numKeys = 1
+	root := &innerNode{numKeys: 1}
+	root.child = &leafNodeGroup{numNodes: 1}
 	return &Tree{root}
 }
 
@@ -35,7 +34,7 @@ func NewTreeFromReader(r io.Reader) (*Tree, error) {
 	if err != nil {
 		return nil, err
 	}
-	root := buildInnerNodesFromLeaves(leafGroups)
+	root := buildTreeFromLeaves(leafGroups)
 	return &Tree{root}, nil
 }
 
@@ -95,7 +94,7 @@ func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
 	return leafGroups, nil
 }
 
-func buildInnerNodesFromLeaves(leafGroups []nodeGroup) nodeGroup {
+func buildTreeFromLeaves(leafGroups []nodeGroup) *innerNode {
 	childGroups := leafGroups
 
 	for {
@@ -112,15 +111,14 @@ func buildInnerNodesFromLeaves(leafGroups []nodeGroup) nodeGroup {
 
 			innerNode := &currentGroup.nodes[currentGroup.numNodes]
 			innerNode.child = cg
-			for i, key := range cg.keys() {
-				innerNode.keys[i] = key
-				innerNode.numKeys++
-			}
+			innerNode.recalculateChildKeys()
 			currentGroup.numNodes++
 		}
 
 		if len(parentGroups) == 1 && currentGroup.numNodes == 1 {
-			return parentGroups[0]
+			root := innerNode{child: parentGroups[0]}
+			root.recalculateChildKeys()
+			return &root
 		}
 
 		childGroups = parentGroups
@@ -130,13 +128,13 @@ func buildInnerNodesFromLeaves(leafGroups []nodeGroup) nodeGroup {
 // DeleteAtPosition removes the UTF-8 character at the specified position (0-indexed).
 // If charPos is past the end of the text, this has no effect.
 func (t *Tree) DeleteAtPosition(charPos uint64) {
-	t.root.deleteAtPosition(0, charPos)
+	t.root.deleteAtPosition(charPos)
 }
 
 // CursorAtPosition returns a cursor starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned cursor will read zero bytes.
 func (t *Tree) CursorAtPosition(charPos uint64) *Cursor {
-	return t.root.cursorAtPosition(0, charPos)
+	return t.root.cursorAtPosition(charPos)
 }
 
 // CursorAtLine returns a cursor starting at the first character at the specified line (0-indexed).
@@ -146,10 +144,10 @@ func (t *Tree) CursorAtPosition(charPos uint64) *Cursor {
 func (t *Tree) CursorAtLine(lineNum uint64) *Cursor {
 	if lineNum == 0 {
 		// Special case the first line, since it's the only line that doesn't immediately follow a newline character.
-		return t.root.cursorAtPosition(0, 0)
+		return t.root.cursorAtPosition(0)
 	}
 
-	return t.root.cursorAfterNewline(0, lineNum-1)
+	return t.root.cursorAfterNewline(lineNum - 1)
 }
 
 // text.Cursor reads UTF-8 bytes from a text.Tree.
@@ -263,6 +261,14 @@ func (n *innerNode) key() indexKey {
 		nodeKey.numNewlines += key.numNewlines
 	}
 	return nodeKey
+}
+
+func (n *innerNode) recalculateChildKeys() {
+	childKeys := n.child.keys()
+	for i, key := range childKeys {
+		n.keys[i] = key
+	}
+	n.numKeys = uint64(len(childKeys))
 }
 
 func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {

@@ -16,30 +16,27 @@ import (
 // and the parent uses offsets within the node group to identify child nodes.
 // All nodes are carefully designed to fit as much data as possible within a 64-byte cache line.
 type Tree struct {
-	root      nodeGroup
-	validator *Validator
+	root nodeGroup
 }
 
 // NewTree returns a tree representing an empty string.
 func NewTree() *Tree {
-	validator := NewValidator()
 	root := &innerNodeGroup{numNodes: 1}
 	root.nodes[0].child = &leafNodeGroup{numNodes: 1}
 	root.nodes[0].numKeys = 1
-	return &Tree{root, validator}
+	return &Tree{root}
 }
 
 // NewTreeFromReader creates a new Tree from a reader that produces UTF-8 text.
 // This is more efficient than inserting the bytes into an empty tree.
 // Returns an error if the bytes are invalid UTF-8.
 func NewTreeFromReader(r io.Reader) (*Tree, error) {
-	validator := NewValidator()
-	leafGroups, err := bulkLoadIntoLeaves(r, validator)
+	leafGroups, err := bulkLoadIntoLeaves(r)
 	if err != nil {
 		return nil, err
 	}
 	root := buildInnerNodesFromLeaves(leafGroups)
-	return &Tree{root, validator}, nil
+	return &Tree{root}, nil
 }
 
 // NewTreeFromString creates a new Tree from a UTF-8 string.
@@ -48,7 +45,8 @@ func NewTreeFromString(s string) (*Tree, error) {
 	return NewTreeFromReader(reader)
 }
 
-func bulkLoadIntoLeaves(r io.Reader, v *Validator) ([]nodeGroup, error) {
+func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
+	v := NewValidator()
 	leafGroups := make([]nodeGroup, 0, 1)
 	currentGroup := &leafNodeGroup{numNodes: 1}
 	currentNode := &currentGroup.nodes[0]

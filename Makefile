@@ -6,6 +6,7 @@ fmt:
 
 build:
 	go build ./...
+	go build ./cmd/aretext
 
 test:
 	go test ./...

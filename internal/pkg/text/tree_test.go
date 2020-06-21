@@ -869,52 +869,86 @@ func TestDeleteNewline(t *testing.T) {
 	assert.Equal(t, 100, len(text))
 }
 
-func benchmarkLoad(b *testing.B, numBytes int) {
-	text := repeat('a', numBytes)
-	for n := 0; n < b.N; n++ {
-		_, err := NewTreeFromString(text)
-		if err != nil {
-			b.Fatalf("err = %v", err)
-		}
+func BenchmarkLoad(b *testing.B) {
+	benchmarks := []struct{
+		name string
+		numBytes int
+	}{
+		{ name: "small", numBytes: 16 },
+		{ name: "medium", numBytes: 4096 },
+		{ name: "large", numBytes: 1048576 },
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func (b *testing.B) {
+			text := repeat('a', bm.numBytes)
+			for n := 0; n < b.N; n++ {
+				_, err := NewTreeFromString(text)
+				if err != nil {
+					b.Fatalf("err = %v", err)
+				}
+			}
+		})
 	}
 }
 
-func benchmarkRead(b *testing.B, numBytes int) {
-	text := repeat('a', numBytes)
-	tree, err := NewTreeFromString(text)
-	if err != nil {
-		b.Fatalf("err = %v", err)
+func BenchmarkRead(b *testing.B) {
+	benchmarks := []struct {
+		name string
+		numBytes int
+	}{
+		{ name: "small", numBytes: 16 },
+		{ name: "medium", numBytes: 4096 },
+		{ name: "large", numBytes: 1048576 },
 	}
 
-	for n := 0; n < b.N; n++ {
-		cursor := tree.CursorAtPosition(0)
-		_, err := ioutil.ReadAll(cursor)
-		if err != nil {
-			b.Fatalf("err = %v", err)
-		}
-	}
-}
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func (b *testing.B) {
+			text := repeat('a', bm.numBytes)
+			tree, err := NewTreeFromString(text)
+			if err != nil {
+				b.Fatalf("err = %v", err)
+			}
 
-func benchmarkInsert(b *testing.B, numBytesInTree int) {
-	text := repeat('a', numBytesInTree)
-	tree, err := NewTreeFromString(text)
-	if err != nil {
-		b.Fatalf("err = %v", err)
-	}
-
-	for n := 0; n < b.N; n++ {
-		// This is a little inaccurate because we're modifying the same tree on each iteration.
-		err = tree.InsertAtPosition(uint64(numBytesInTree/2), 'x')
-		if err != nil {
-			b.Fatalf("err = %v", err)
-		}
+			for n := 0; n < b.N; n++ {
+				cursor := tree.CursorAtPosition(0)
+				_, err := ioutil.ReadAll(cursor)
+				if err != nil {
+					b.Fatalf("err = %v", err)
+				}
+			}
+		})
 	}
 }
 
-func BenchmarkLoad4096Bytes(b *testing.B)    { benchmarkLoad(b, 4096) }
-func BenchmarkLoad1048576Bytes(b *testing.B) { benchmarkLoad(b, 1048576) }
-func BenchmarkRead4096Bytes(b *testing.B)    { benchmarkRead(b, 4096) }
-func BenchmarkRead1048576Bytes(b *testing.B) { benchmarkRead(b, 1048576) }
-func BenchmarkInsertEmptyTree(b *testing.B)  { benchmarkInsert(b, 0) }
-func BenchmarkInsertSmallTree(b *testing.B)  { benchmarkInsert(b, 4096) }
-func BenchmarkInsertLargeTree(b *testing.B)  { benchmarkInsert(b, 1048576) }
+func BenchmarkInsert(b *testing.B) {
+	benchmarks := []struct{
+		name string
+		numBytesInTree int
+	}{
+		{ name: "empty", numBytesInTree: 0 },
+		{ name: "small", numBytesInTree: 16 },
+		{ name: "medium", numBytesInTree: 4096 },
+		{ name: "large", numBytesInTree: 1048576 },
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func (b *testing.B) {
+			text := repeat('a', bm.numBytesInTree)
+			tree, err := NewTreeFromString(text)
+			if err != nil {
+				b.Fatalf("err = %v", err)
+			}
+
+			insertPos := uint64(bm.numBytesInTree/2)
+
+			for n := 0; n < b.N; n++ {
+				// This is a little inaccurate because we're modifying the same tree on each iteration.
+				err = tree.InsertAtPosition(insertPos, 'x')
+				if err != nil {
+					b.Fatalf("err = %v", err)
+				}
+			}
+		})
+	}
+}

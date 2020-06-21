@@ -35,8 +35,8 @@ func lines(numLines int, charsPerLine int) string {
 }
 
 func allTextFromTree(t *testing.T, tree *Tree) string {
-	cursor := tree.CursorAtPosition(0)
-	retrievedBytes, err := ioutil.ReadAll(cursor)
+	reader := tree.ReaderAtPosition(0)
+	retrievedBytes, err := ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	return string(retrievedBytes)
 }
@@ -77,7 +77,7 @@ func TestTreeBulkLoadAndReadAll(t *testing.T) {
 	}
 }
 
-func TestCursorStartLocation(t *testing.T) {
+func TestReaderStartLocation(t *testing.T) {
 	testCases := []struct {
 		name  string
 		runes []rune
@@ -125,10 +125,10 @@ func TestCursorStartLocation(t *testing.T) {
 			tree, err := NewTreeFromString(string(tc.runes))
 			require.NoError(t, err)
 
-			// Check a cursor starting from each character position to the end
+			// Check a reader starting from each character position to the end
 			for i := 0; i < len(tc.runes); i++ {
-				cursor := tree.CursorAtPosition(uint64(i))
-				retrieved, err := ioutil.ReadAll(cursor)
+				reader := tree.ReaderAtPosition(uint64(i))
+				retrieved, err := ioutil.ReadAll(reader)
 				require.NoError(t, err)
 				require.Equal(t, string(tc.runes[i:]), string(retrieved), "invalid substring starting from character at position %d (expected len = %d, actual len = %d)", i, len(string(tc.runes[i:])), len(string(retrieved)))
 			}
@@ -136,7 +136,7 @@ func TestCursorStartLocation(t *testing.T) {
 	}
 }
 
-func TestCursorPastLastCharacter(t *testing.T) {
+func TestReaderPastLastCharacter(t *testing.T) {
 	testCases := []struct {
 		name string
 		text string
@@ -178,15 +178,15 @@ func TestCursorPastLastCharacter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			cursor := tree.CursorAtPosition(tc.pos)
-			retrieved, err := ioutil.ReadAll(cursor)
+			reader := tree.ReaderAtPosition(tc.pos)
+			retrieved, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
 		})
 	}
 }
 
-func TestCursorAtLine(t *testing.T) {
+func TestReaderAtLine(t *testing.T) {
 	testCases := []struct {
 		name string
 		text string
@@ -240,8 +240,8 @@ func TestCursorAtLine(t *testing.T) {
 	linesFromTree := func(tree *Tree, numLines int) []string {
 		lines := make([]string, 0, numLines)
 		for i := 0; i < numLines; i++ {
-			cursor := tree.CursorAtLine(uint64(i))
-			scanner := bufio.NewScanner(cursor)
+			reader := tree.ReaderAtLine(uint64(i))
+			scanner := bufio.NewScanner(reader)
 			scanner.Split(bufio.ScanLines)
 
 			for scanner.Scan() {
@@ -268,7 +268,7 @@ func TestCursorAtLine(t *testing.T) {
 	}
 }
 
-func TestCursorPastLastLine(t *testing.T) {
+func TestReaderPastLastLine(t *testing.T) {
 	testCases := []struct {
 		name    string
 		text    string
@@ -310,8 +310,8 @@ func TestCursorPastLastLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			cursor := tree.CursorAtLine(tc.lineNum)
-			retrieved, err := ioutil.ReadAll(cursor)
+			reader := tree.ReaderAtLine(tc.lineNum)
+			retrieved, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
 		})
@@ -698,8 +698,8 @@ func TestInsertNewline(t *testing.T) {
 			err = tree.InsertAtPosition(tc.insertPos, '\n')
 			require.NoError(t, err)
 
-			cursor := tree.CursorAtLine(tc.retrieveLineNum)
-			text, err := ioutil.ReadAll(cursor)
+			reader := tree.ReaderAtLine(tc.retrieveLineNum)
+			text, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedLine, string(text))
 		})
@@ -857,30 +857,30 @@ func TestDeleteNewline(t *testing.T) {
 	tree, err := NewTreeFromString(lines(4096, 100))
 	require.NoError(t, err)
 
-	cursor := tree.CursorAtLine(4094) // read last two lines
-	text, err := ioutil.ReadAll(cursor)
+	reader := tree.ReaderAtLine(4094) // read last two lines
+	text, err := ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	assert.Equal(t, 201, len(text))
 
 	tree.DeleteAtPosition(100)       // delete first newline
-	cursor = tree.CursorAtLine(4094) // read last line
-	text, err = ioutil.ReadAll(cursor)
+	reader = tree.ReaderAtLine(4094) // read last line
+	text, err = ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	assert.Equal(t, 100, len(text))
 }
 
 func BenchmarkLoad(b *testing.B) {
-	benchmarks := []struct{
-		name string
+	benchmarks := []struct {
+		name     string
 		numBytes int
 	}{
-		{ name: "small", numBytes: 16 },
-		{ name: "medium", numBytes: 4096 },
-		{ name: "large", numBytes: 1048576 },
+		{name: "small", numBytes: 16},
+		{name: "medium", numBytes: 4096},
+		{name: "large", numBytes: 1048576},
 	}
 
 	for _, bm := range benchmarks {
-		b.Run(bm.name, func (b *testing.B) {
+		b.Run(bm.name, func(b *testing.B) {
 			text := repeat('a', bm.numBytes)
 			for n := 0; n < b.N; n++ {
 				_, err := NewTreeFromString(text)
@@ -894,16 +894,16 @@ func BenchmarkLoad(b *testing.B) {
 
 func BenchmarkRead(b *testing.B) {
 	benchmarks := []struct {
-		name string
+		name     string
 		numBytes int
 	}{
-		{ name: "small", numBytes: 16 },
-		{ name: "medium", numBytes: 4096 },
-		{ name: "large", numBytes: 1048576 },
+		{name: "small", numBytes: 16},
+		{name: "medium", numBytes: 4096},
+		{name: "large", numBytes: 1048576},
 	}
 
 	for _, bm := range benchmarks {
-		b.Run(bm.name, func (b *testing.B) {
+		b.Run(bm.name, func(b *testing.B) {
 			text := repeat('a', bm.numBytes)
 			tree, err := NewTreeFromString(text)
 			if err != nil {
@@ -911,8 +911,8 @@ func BenchmarkRead(b *testing.B) {
 			}
 
 			for n := 0; n < b.N; n++ {
-				cursor := tree.CursorAtPosition(0)
-				_, err := ioutil.ReadAll(cursor)
+				reader := tree.ReaderAtPosition(0)
+				_, err := ioutil.ReadAll(reader)
 				if err != nil {
 					b.Fatalf("err = %v", err)
 				}
@@ -922,25 +922,25 @@ func BenchmarkRead(b *testing.B) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	benchmarks := []struct{
-		name string
+	benchmarks := []struct {
+		name           string
 		numBytesInTree int
 	}{
-		{ name: "empty", numBytesInTree: 0 },
-		{ name: "small", numBytesInTree: 16 },
-		{ name: "medium", numBytesInTree: 4096 },
-		{ name: "large", numBytesInTree: 1048576 },
+		{name: "empty", numBytesInTree: 0},
+		{name: "small", numBytesInTree: 16},
+		{name: "medium", numBytesInTree: 4096},
+		{name: "large", numBytesInTree: 1048576},
 	}
 
 	for _, bm := range benchmarks {
-		b.Run(bm.name, func (b *testing.B) {
+		b.Run(bm.name, func(b *testing.B) {
 			text := repeat('a', bm.numBytesInTree)
 			tree, err := NewTreeFromString(text)
 			if err != nil {
 				b.Fatalf("err = %v", err)
 			}
 
-			insertPos := uint64(bm.numBytesInTree/2)
+			insertPos := uint64(bm.numBytesInTree / 2)
 
 			for n := 0; n < b.N; n++ {
 				// This is a little inaccurate because we're modifying the same tree on each iteration.

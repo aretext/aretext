@@ -157,35 +157,35 @@ func (t *Tree) DeleteAtPosition(charPos uint64) {
 	t.root.deleteAtPosition(charPos)
 }
 
-// CursorAtPosition returns a cursor starting at the UTF-8 character at the specified position (0-indexed).
-// If the position is past the end of the text, the returned cursor will read zero bytes.
-func (t *Tree) CursorAtPosition(charPos uint64) *Cursor {
-	return t.root.cursorAtPosition(charPos)
+// ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
+// If the position is past the end of the text, the returned reader will read zero bytes.
+func (t *Tree) ReaderAtPosition(charPos uint64) *Reader {
+	return t.root.readerAtPosition(charPos)
 }
 
-// CursorAtLine returns a cursor starting at the first character at the specified line (0-indexed).
+// ReaderAtLine returns a reader starting at the first character at the specified line (0-indexed).
 // For line zero, this is the first character in the tree; for subsequent lines, this is the first
 // character after the newline character.
-// If the line number is greater than the maximum line number, the returned cursor will read zero bytes.
-func (t *Tree) CursorAtLine(lineNum uint64) *Cursor {
+// If the line number is greater than the maximum line number, the returned reader will read zero bytes.
+func (t *Tree) ReaderAtLine(lineNum uint64) *Reader {
 	if lineNum == 0 {
 		// Special case the first line, since it's the only line that doesn't immediately follow a newline character.
-		return t.root.cursorAtPosition(0)
+		return t.root.readerAtPosition(0)
 	}
 
-	return t.root.cursorAfterNewline(lineNum - 1)
+	return t.root.readerAfterNewline(lineNum - 1)
 }
 
-// text.Cursor reads UTF-8 bytes from a text.Tree.
+// text.Reader reads UTF-8 bytes from a text.Tree.
 // It implements io.Reader.
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
-type Cursor struct {
+type Reader struct {
 	group          *leafNodeGroup
 	nodeIdx        uint64
 	textByteOffset uint64
 }
 
-func (c *Cursor) Read(b []byte) (int, error) {
+func (c *Reader) Read(b []byte) (int, error) {
 	i := 0
 	for {
 		if i == len(b) {
@@ -225,8 +225,8 @@ type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
-	cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor
-	cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor
+	readerAtPosition(nodeIdx uint64, charPos uint64) *Reader
+	readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -301,12 +301,12 @@ func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDe
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor {
-	return g.nodes[nodeIdx].cursorAtPosition(charPos)
+func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) *Reader {
+	return g.nodes[nodeIdx].readerAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor {
-	return g.nodes[nodeIdx].cursorAfterNewline(newlinePos)
+func (g *innerNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader {
+	return g.nodes[nodeIdx].readerAfterNewline(newlinePos)
 }
 
 // innerNode is used to navigate to the leaf node containing a character offset or line number.
@@ -381,22 +381,22 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 	return
 }
 
-func (n *innerNode) cursorAtPosition(charPos uint64) *Cursor {
+func (n *innerNode) readerAtPosition(charPos uint64) *Reader {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
-	return n.child.cursorAtPosition(nodeIdx, adjustedCharPos)
+	return n.child.readerAtPosition(nodeIdx, adjustedCharPos)
 }
 
-func (n *innerNode) cursorAfterNewline(newlinePos uint64) *Cursor {
+func (n *innerNode) readerAfterNewline(newlinePos uint64) *Reader {
 	c := uint64(0)
 	for i := uint64(0); i < n.numKeys-1; i++ {
 		nc := n.keys[i].numNewlines
 		if newlinePos < c+nc {
-			return n.child.cursorAfterNewline(i, newlinePos-c)
+			return n.child.readerAfterNewline(i, newlinePos-c)
 		}
 		c += nc
 	}
 
-	return n.child.cursorAfterNewline(n.numKeys-1, newlinePos-c)
+	return n.child.readerAfterNewline(n.numKeys-1, newlinePos-c)
 }
 
 func (n *innerNode) locatePosition(charPos uint64) (nodeIdx, adjustedCharPos uint64) {
@@ -412,7 +412,7 @@ func (n *innerNode) locatePosition(charPos uint64) (nodeIdx, adjustedCharPos uin
 }
 
 // leafNodeGroup is a group of leaf nodes referenced by an inner node.
-// These form a doubly-linked list so a cursor can scan the text efficiently.
+// These form a doubly-linked list so a reader can scan the text efficiently.
 type leafNodeGroup struct {
 	prev     *leafNodeGroup
 	next     *leafNodeGroup
@@ -483,18 +483,18 @@ func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDel
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor {
+func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) *Reader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
-	return &Cursor{
+	return &Reader{
 		group:          g,
 		nodeIdx:        nodeIdx,
 		textByteOffset: textByteOffset,
 	}
 }
 
-func (g *leafNodeGroup) cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor {
+func (g *leafNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetAfterNewline(newlinePos)
-	return &Cursor{
+	return &Reader{
 		group:          g,
 		nodeIdx:        nodeIdx,
 		textByteOffset: textByteOffset,

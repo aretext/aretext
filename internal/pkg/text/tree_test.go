@@ -318,6 +318,401 @@ func TestCursorPastLastLine(t *testing.T) {
 	}
 }
 
+func TestInsertAtPosition(t *testing.T) {
+	testCases := []struct {
+		name         string
+		initialText  string
+		insertPos    uint64
+		insertChar   rune
+		expectedText string
+	}{
+		{
+			name:         "empty, insert ASCII",
+			initialText:  "",
+			insertPos:    0,
+			insertChar:   'a',
+			expectedText: "a",
+		},
+		{
+			name:         "empty, insert 2-byte char",
+			initialText:  "",
+			insertPos:    0,
+			insertChar:   '£',
+			expectedText: "£",
+		},
+		{
+			name:         "empty, insert 3-byte char",
+			initialText:  "",
+			insertPos:    0,
+			insertChar:   'ऴ',
+			expectedText: "ऴ",
+		},
+		{
+			name:         "empty, insert 4-byte char",
+			initialText:  "",
+			insertPos:    0,
+			insertChar:   '\U0010AAAA',
+			expectedText: "\U0010AAAA",
+		},
+		{
+			name:         "insert ASCII at beginning",
+			initialText:  "abcdefgh",
+			insertPos:    0,
+			insertChar:   'x',
+			expectedText: "xabcdefgh",
+		},
+		{
+			name:         "insert 2-byte char at beginning",
+			initialText:  "abcƊe",
+			insertPos:    0,
+			insertChar:   'ô',
+			expectedText: "ôabcƊe",
+		},
+		{
+			name:         "insert 3-byte char at beginning",
+			initialText:  "ab፴cƊe",
+			insertPos:    0,
+			insertChar:   'ऴ',
+			expectedText: "ऴab፴cƊe",
+		},
+		{
+			name:         "insert 4-byte char at beginning",
+			initialText:  "ab፴cƊe",
+			insertPos:    0,
+			insertChar:   '\U0010AAAA',
+			expectedText: "\U0010AAAAab፴cƊe",
+		},
+		{
+			name:         "insert ASCII just before end",
+			initialText:  "abc",
+			insertPos:    2,
+			insertChar:   'x',
+			expectedText: "abxc",
+		},
+		{
+			name:         "insert 2-byte char just before end",
+			initialText:  "abcƊe",
+			insertPos:    4,
+			insertChar:   'ô',
+			expectedText: "abcƊôe",
+		},
+		{
+			name:         "insert 3-byte char just before end",
+			initialText:  "ab፴cƊe",
+			insertPos:    5,
+			insertChar:   'ऴ',
+			expectedText: "ab፴cƊऴe",
+		},
+		{
+			name:         "insert 4-byte char just before end",
+			initialText:  "ab፴cƊe",
+			insertPos:    5,
+			insertChar:   '\U0010AAAA',
+			expectedText: "ab፴cƊ\U0010AAAAe",
+		},
+		{
+			name:         "insert ASCII at end",
+			initialText:  "abc",
+			insertPos:    3,
+			insertChar:   'x',
+			expectedText: "abcx",
+		},
+		{
+			name:         "insert 2-byte char at end",
+			initialText:  "abcƊe",
+			insertPos:    5,
+			insertChar:   'ô',
+			expectedText: "abcƊeô",
+		},
+		{
+			name:         "insert 3-byte char just before end",
+			initialText:  "ab፴cƊe",
+			insertPos:    6,
+			insertChar:   'ऴ',
+			expectedText: "ab፴cƊeऴ",
+		},
+		{
+			name:         "insert 4-byte char just before end",
+			initialText:  "ab፴cƊe",
+			insertPos:    6,
+			insertChar:   '\U0010AAAA',
+			expectedText: "ab፴cƊe\U0010AAAA",
+		},
+		{
+			name:         "insert ASCII past end",
+			initialText:  "abc",
+			insertPos:    1000,
+			insertChar:   'x',
+			expectedText: "abcx",
+		},
+		{
+			name:         "insert 2-byte char at end",
+			initialText:  "abcƊe",
+			insertPos:    1000,
+			insertChar:   'ô',
+			expectedText: "abcƊeô",
+		},
+		{
+			name:         "insert 3-byte char at end",
+			initialText:  "ab፴cƊe",
+			insertPos:    1000,
+			insertChar:   'ऴ',
+			expectedText: "ab፴cƊeऴ",
+		},
+		{
+			name:         "insert 4-byte char at end",
+			initialText:  "ab፴cƊe",
+			insertPos:    1000,
+			insertChar:   '\U0010AAAA',
+			expectedText: "ab፴cƊe\U0010AAAA",
+		},
+		{
+			name:         "insert ASCII in middle",
+			initialText:  "abcdefgh",
+			insertPos:    3,
+			insertChar:   'x',
+			expectedText: "abcxdefgh",
+		},
+		{
+			name:         "insert 2-byte char in middle",
+			initialText:  "abcƊe",
+			insertPos:    3,
+			insertChar:   'ô',
+			expectedText: "abcôƊe",
+		},
+		{
+			name:         "insert 3-byte char in middle",
+			initialText:  "ab፴cƊe",
+			insertPos:    3,
+			insertChar:   'ऴ',
+			expectedText: "ab፴ऴcƊe",
+		},
+		{
+			name:         "insert 4-byte char in middle",
+			initialText:  "ab፴cƊe",
+			insertPos:    3,
+			insertChar:   '\U0010AAAA',
+			expectedText: "ab፴\U0010AAAAcƊe",
+		},
+		{
+			name:         "insert ASCII before long string",
+			initialText:  repeat('a', 4096),
+			insertPos:    0,
+			insertChar:   'x',
+			expectedText: "x" + repeat('a', 4096),
+		},
+		{
+			name:         "insert 2-byte char before long string",
+			initialText:  repeat('£', 4096),
+			insertPos:    0,
+			insertChar:   'ô',
+			expectedText: "ô" + repeat('£', 4096),
+		},
+		{
+			name:         "insert 3-byte char before long string",
+			initialText:  repeat('፴', 4096),
+			insertPos:    0,
+			insertChar:   'ऴ',
+			expectedText: "ऴ" + repeat('፴', 4096),
+		},
+		{
+			name:         "insert 4-byte char before long string",
+			initialText:  repeat('\U0010AAAA', 4096),
+			insertPos:    0,
+			insertChar:   '\U0010BBBB',
+			expectedText: "\U0010BBBB" + repeat('\U0010AAAA', 4096),
+		},
+		{
+			name:         "insert ASCII in middle of long string",
+			initialText:  repeat('a', 4096),
+			insertPos:    2000,
+			insertChar:   'x',
+			expectedText: repeat('a', 2000) + "x" + repeat('a', 2096),
+		},
+		{
+			name:         "insert 2-byte char in middle of  long string",
+			initialText:  repeat('£', 4096),
+			insertPos:    2000,
+			insertChar:   'ô',
+			expectedText: repeat('£', 2000) + "ô" + repeat('£', 2096),
+		},
+		{
+			name:         "insert 3-byte char in middle of  long string",
+			initialText:  repeat('፴', 4096),
+			insertPos:    2000,
+			insertChar:   'ऴ',
+			expectedText: repeat('፴', 2000) + "ऴ" + repeat('፴', 2096),
+		},
+		{
+			name:         "insert 4-byte char in middle of  long string",
+			initialText:  repeat('\U0010AAAA', 4096),
+			insertPos:    2000,
+			insertChar:   '\U0010BBBB',
+			expectedText: repeat('\U0010AAAA', 2000) + "\U0010BBBB" + repeat('\U0010AAAA', 2096),
+		},
+		{
+			name:         "insert ASCII at end of long string",
+			initialText:  repeat('a', 4096),
+			insertPos:    4096,
+			insertChar:   'x',
+			expectedText: repeat('a', 4096) + "x",
+		},
+		{
+			name:         "insert 2-byte char at end of  long string",
+			initialText:  repeat('£', 4096),
+			insertPos:    4096,
+			insertChar:   'ô',
+			expectedText: repeat('£', 4096) + "ô",
+		},
+		{
+			name:         "insert 3-byte char at end of  long string",
+			initialText:  repeat('፴', 4096),
+			insertPos:    4096,
+			insertChar:   'ऴ',
+			expectedText: repeat('፴', 4096) + "ऴ",
+		},
+		{
+			name:         "insert 4-byte char at end of  long string",
+			initialText:  repeat('\U0010AAAA', 4096),
+			insertPos:    4096,
+			insertChar:   '\U0010BBBB',
+			expectedText: repeat('\U0010AAAA', 4096) + "\U0010BBBB",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.initialText)
+			require.NoError(t, err)
+			err = tree.InsertAtPosition(tc.insertPos, tc.insertChar)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
+		})
+	}
+}
+
+func TestInsertManySequential(t *testing.T) {
+	testCases := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "several ASCII chars",
+			text: "abcd",
+		},
+		{
+			name: "several 2-byte chars",
+			text: "£ôƊ",
+		},
+		{
+			name: "several 3-byte chars",
+			text: "፴ऴஅ",
+		},
+		{
+			name: "several 4-byte chars",
+			text: "\U0010AAAA\U0010BBBB\U0010CCCC",
+		},
+		{
+			name: "many ASCII chars",
+			text: repeat('a', 4096),
+		},
+		{
+			name: "many 2-byte chars",
+			text: repeat('Ɗ', 4096),
+		},
+		{
+			name: "many 3-byte chars",
+			text: repeat('፴', 4096),
+		},
+		{
+			name: "many 4-byte chars",
+			text: repeat('\U0010AAAA', 4096),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := NewTree()
+			i := uint64(0)
+			for _, c := range tc.text {
+				err := tree.InsertAtPosition(i, c)
+				require.NoError(t, err)
+				i++
+			}
+			actualText := allTextFromTree(t, tree)
+			assert.Equal(t, tc.text, actualText, "input text len %v, output text len %v", len(tc.text), len(actualText))
+		})
+	}
+}
+
+func TestInsertNewline(t *testing.T) {
+	testCases := []struct {
+		name            string
+		initialText     string
+		insertPos       uint64
+		retrieveLineNum uint64
+		expectedLine    string
+	}{
+		{
+			name:            "empty string",
+			initialText:     "",
+			insertPos:       0,
+			retrieveLineNum: 1,
+			expectedLine:    "",
+		},
+		{
+			name:            "middle of string",
+			initialText:     "abcdefgh",
+			insertPos:       3,
+			retrieveLineNum: 1,
+			expectedLine:    "defgh",
+		},
+		{
+			name:            "after existing newline",
+			initialText:     "ab\nhijkl",
+			insertPos:       5,
+			retrieveLineNum: 2,
+			expectedLine:    "jkl",
+		},
+		{
+			name:            "very long string",
+			initialText:     repeat('a', 4096),
+			insertPos:       4095,
+			retrieveLineNum: 1,
+			expectedLine:    "a",
+		},
+		{
+			name:            "very long string with existing newlines",
+			initialText:     lines(4096, 10),
+			insertPos:       1000,
+			retrieveLineNum: 4096,
+			expectedLine:    "NNNNNNNNNN",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.initialText)
+			require.NoError(t, err)
+
+			err = tree.InsertAtPosition(tc.insertPos, '\n')
+			require.NoError(t, err)
+
+			cursor := tree.CursorAtLine(tc.retrieveLineNum)
+			text, err := ioutil.ReadAll(cursor)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedLine, string(text))
+		})
+	}
+}
+
+func TestInsertInvalidUtf8(t *testing.T) {
+	tree := NewTree()
+	err := tree.InsertAtPosition(0, rune(-1))
+	assert.Error(t, err)
+	assert.Equal(t, "", allTextFromTree(t, tree))
+}
+
 func TestDeleteAtPosition(t *testing.T) {
 	testCases := []struct {
 		name         string

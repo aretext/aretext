@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"unicode/utf8"
 )
 
 // text.Tree is a data structure for representing UTF-8 text.
@@ -125,6 +126,31 @@ func buildTreeFromLeaves(leafGroups []nodeGroup) *innerNode {
 	}
 }
 
+// InsertAtPosition inserts a UTF-8 character at the specified position (0-indexed).
+// If charPos is past the end of the text, it will be appended at the end.
+// Returns an error if c is not a valid UTF-8 character.
+func (t *Tree) InsertAtPosition(charPos uint64, c rune) error {
+	invalidateKeys, splitNode, err := t.root.insertAtPosition(charPos, c)
+	if err != nil {
+		return err
+	}
+
+	if invalidateKeys {
+		t.root.recalculateChildKeys()
+	}
+
+	if splitNode != nil {
+		newGroup := innerNodeGroup{numNodes: 2}
+		newGroup.nodes[0] = *t.root
+		newGroup.nodes[1] = *splitNode
+
+		t.root = &innerNode{child: &newGroup}
+		t.root.recalculateChildKeys()
+	}
+
+	return nil
+}
+
 // DeleteAtPosition removes the UTF-8 character at the specified position (0-indexed).
 // If charPos is past the end of the text, this has no effect.
 func (t *Tree) DeleteAtPosition(charPos uint64) {
@@ -197,6 +223,7 @@ const maxBytesPerLeaf = 63
 // nodeGroup is either an inner node group or a leaf node group.
 type nodeGroup interface {
 	keys() []indexKey
+	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
 	cursorAtPosition(nodeIdx uint64, charPos uint64) *Cursor
 	cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *Cursor
@@ -226,6 +253,50 @@ func (g *innerNodeGroup) keys() []indexKey {
 	return keys
 }
 
+func (g *innerNodeGroup) insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error) {
+	invalidateKeys, splitNode, err := g.nodes[nodeIdx].insertAtPosition(charPos, c)
+	if err != nil {
+		return false, nil, err
+	}
+
+	if splitNode == nil {
+		return false, nil, nil
+	}
+
+	splitIdx := nodeIdx + 1
+	if g.numNodes < maxNodesPerGroup {
+		g.insertNode(splitIdx, splitNode)
+		return true, nil, nil
+	}
+
+	splitGroup := g.split()
+	if splitIdx < g.numNodes {
+		g.insertNode(splitIdx, splitNode)
+	} else {
+		splitGroup.insertNode(splitIdx-g.numNodes, splitNode)
+	}
+
+	return true, splitGroup, nil
+}
+
+func (g *innerNodeGroup) insertNode(nodeIdx uint64, node *innerNode) {
+	for i := int(g.numNodes) - 1; i > int(nodeIdx); i-- {
+		g.nodes[i] = g.nodes[i-1]
+	}
+	g.nodes[nodeIdx] = *node
+	g.numNodes++
+}
+
+func (g *innerNodeGroup) split() *innerNodeGroup {
+	mid := g.numNodes / 2
+	splitGroup := innerNodeGroup{numNodes: g.numNodes - mid}
+	for i := uint64(0); i < splitGroup.numNodes; i++ {
+		splitGroup.nodes[i] = g.nodes[mid+i]
+	}
+	g.numNodes = mid
+	return &splitGroup
+}
+
 func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
@@ -243,7 +314,7 @@ func (g *innerNodeGroup) cursorAfterNewline(nodeIdx uint64, newlinePos uint64) *
 // +-----------------------------+
 // | child | numKeys |  keys[64] |
 // +-----------------------------+
-//     8        1         1024     = 1032 bytes
+//     8        8         1024     = 1032 bytes
 //
 type innerNode struct {
 	child   nodeGroup
@@ -269,6 +340,33 @@ func (n *innerNode) recalculateChildKeys() {
 		n.keys[i] = key
 	}
 	n.numKeys = uint64(len(childKeys))
+}
+
+func (n *innerNode) insertAtPosition(charPos uint64, c rune) (invalidateKeys bool, splitNode *innerNode, err error) {
+	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
+
+	invalidateKeys, splitGroup, err := n.child.insertAtPosition(nodeIdx, adjustedCharPos, c)
+	if err != nil {
+		return false, nil, err
+	}
+
+	if invalidateKeys {
+		n.recalculateChildKeys()
+	} else {
+		key := &n.keys[nodeIdx]
+		key.numChars++
+		if c == '\n' {
+			key.numNewlines++
+		}
+	}
+
+	if splitGroup == nil {
+		return false, nil, nil
+	}
+
+	splitNode = &innerNode{child: splitGroup}
+	splitNode.recalculateChildKeys()
+	return true, splitNode, nil
 }
 
 func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
@@ -330,6 +428,55 @@ func (g *leafNodeGroup) keys() []indexKey {
 	return keys
 }
 
+func (g *leafNodeGroup) insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error) {
+	splitNode, err := g.nodes[nodeIdx].insertAtPosition(charPos, c)
+	if err != nil {
+		return false, nil, err
+	}
+
+	if splitNode == nil {
+		return false, nil, nil
+	}
+
+	splitNodeIdx := nodeIdx + 1
+	if g.numNodes < maxNodesPerGroup {
+		g.insertNode(splitNodeIdx, splitNode)
+		return true, nil, nil
+	}
+
+	splitGroup := g.split()
+	if splitNodeIdx < g.numNodes {
+		g.insertNode(splitNodeIdx, splitNode)
+	} else {
+		splitGroup.insertNode(splitNodeIdx-g.numNodes, splitNode)
+	}
+	return true, splitGroup, nil
+}
+
+func (g *leafNodeGroup) insertNode(nodeIdx uint64, node *leafNode) {
+	for i := int(g.numNodes) - 1; i > int(nodeIdx); i-- {
+		g.nodes[i] = g.nodes[i-1]
+	}
+	g.nodes[nodeIdx] = *node
+	g.numNodes++
+}
+
+func (g *leafNodeGroup) split() *leafNodeGroup {
+	mid := g.numNodes / 2
+	splitGroup := &leafNodeGroup{numNodes: g.numNodes - mid}
+	for i := uint64(0); i < splitGroup.numNodes; i++ {
+		splitGroup.nodes[i] = g.nodes[mid+i]
+	}
+	g.numNodes = mid
+	if g.next != nil {
+		g.next.prev = splitGroup
+		splitGroup.next = g.next
+	}
+	splitGroup.prev = g
+	g.next = splitGroup
+	return splitGroup
+}
+
 func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
 	// Don't bother rebalancing the tree.  This leaves extra space in the leaves,
 	// but that's okay because usually the user will want to insert more text anyway.
@@ -377,6 +524,62 @@ func (l *leafNode) key() indexKey {
 		}
 	}
 	return key
+}
+
+func (l *leafNode) insertAtPosition(charPos uint64, c rune) (*leafNode, error) {
+	w := utf8.RuneLen(c)
+	if w < 0 {
+		return nil, errors.New("invalid UTF-8")
+	}
+
+	charWidth := uint64(w)
+
+	if uint64(l.numBytes)+charWidth <= maxBytesPerLeaf {
+		l.insertAtPositionNoSplit(charPos, charWidth, c)
+		return nil, nil
+	}
+
+	splitNode, numCharsRemaining := l.split()
+	if charPos < numCharsRemaining {
+		l.insertAtPositionNoSplit(charPos, charWidth, c)
+	} else {
+		splitNode.insertAtPositionNoSplit(charPos-numCharsRemaining, charWidth, c)
+	}
+
+	return splitNode, nil
+}
+
+func (l *leafNode) insertAtPositionNoSplit(charPos uint64, charWidth uint64, c rune) {
+	offset := l.byteOffsetForPosition(charPos)
+	l.numBytes += byte(charWidth)
+	for i := int(l.numBytes) - 1; i >= int(offset+charWidth); i-- {
+		l.textBytes[i] = l.textBytes[i-int(charWidth)]
+	}
+	utf8.EncodeRune(l.textBytes[offset:], c)
+}
+
+func (l *leafNode) split() (*leafNode, uint64) {
+	splitIdx, numCharsBeforeSplit := l.splitIdx()
+	splitNode := leafNode{numBytes: l.numBytes - splitIdx}
+	for i := byte(0); i < splitNode.numBytes; i++ {
+		splitNode.textBytes[i] = l.textBytes[i+splitIdx]
+	}
+	l.numBytes = splitIdx
+	return &splitNode, uint64(numCharsBeforeSplit)
+}
+
+func (l *leafNode) splitIdx() (splitIdx, numCharsBeforeSplit byte) {
+	mid := l.numBytes / 2
+	for i := byte(0); i < l.numBytes; i++ {
+		b := l.textBytes[i]
+		isStartByte := utf8StartByteIndicator[b] > 0
+		if i > mid && isStartByte {
+			return i, numCharsBeforeSplit
+		} else if isStartByte {
+			numCharsBeforeSplit++
+		}
+	}
+	return l.numBytes, numCharsBeforeSplit
 }
 
 func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {

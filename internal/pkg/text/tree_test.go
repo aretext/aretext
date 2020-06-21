@@ -895,7 +895,26 @@ func benchmarkRead(b *testing.B, numBytes int) {
 	}
 }
 
+func benchmarkInsert(b *testing.B, numBytesInTree int) {
+	text := repeat('a', numBytesInTree)
+	tree, err := NewTreeFromString(text)
+	if err != nil {
+		b.Fatalf("err = %v", err)
+	}
+
+	for n := 0; n < b.N; n++ {
+		// This is a little inaccurate because we're modifying the same tree on each iteration.
+		err = tree.InsertAtPosition(uint64(numBytesInTree/2), 'x')
+		if err != nil {
+			b.Fatalf("err = %v", err)
+		}
+	}
+}
+
 func BenchmarkLoad4096Bytes(b *testing.B)    { benchmarkLoad(b, 4096) }
 func BenchmarkLoad1048576Bytes(b *testing.B) { benchmarkLoad(b, 1048576) }
 func BenchmarkRead4096Bytes(b *testing.B)    { benchmarkRead(b, 4096) }
 func BenchmarkRead1048576Bytes(b *testing.B) { benchmarkRead(b, 1048576) }
+func BenchmarkInsertEmptyTree(b *testing.B)  { benchmarkInsert(b, 0) }
+func BenchmarkInsertSmallTree(b *testing.B)  { benchmarkInsert(b, 4096) }
+func BenchmarkInsertLargeTree(b *testing.B)  { benchmarkInsert(b, 1048576) }

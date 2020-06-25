@@ -30,7 +30,7 @@ func (r *singleByteReader) Read(p []byte) (n int, err error) {
 
 func tokenize(t *testing.T, reader io.Reader) []string {
 	scanner := bufio.NewScanner(reader)
-	scanner.Split(SplitNonCombiningCharacters)
+	scanner.Split(SplitUtf8Cells)
 	tokens := make([]string, 0)
 	for scanner.Scan() {
 		tokens = append(tokens, scanner.Text())
@@ -39,7 +39,7 @@ func tokenize(t *testing.T, reader io.Reader) []string {
 	return tokens
 }
 
-func TestSplitNonCombiningCharacters(t *testing.T) {
+func TestSplitUtf8Cells(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string
@@ -88,12 +88,12 @@ func TestSplitNonCombiningCharacters(t *testing.T) {
 		{
 			name:           "multiple zero-width joiners",
 			inputString:    "\u200d\u200d\u200d",
-			expectedTokens: []string{"\u200d\u200d\u200d"},
+			expectedTokens: []string{"\u200d", "\u200d", "\u200d"},
 		},
 		{
 			name:           "newline with linefeed",
 			inputString:    "ab\n\rc",
-			expectedTokens: []string{"a", "b\n\r", "c"},
+			expectedTokens: []string{"a", "b", "\n\r", "c"},
 		},
 	}
 
@@ -106,21 +106,23 @@ func TestSplitNonCombiningCharacters(t *testing.T) {
 	}
 }
 
-func TestSplitNonCombiningCharactersSingleByteReader(t *testing.T) {
+func TestSplitUtf8CellsSingleByteReader(t *testing.T) {
 	s := "abcd\U0001f468\u200d\U0001f469\u200d\U0001f466xyz\n\re\u0301"
 	reader := newSingleByteReader(s)
 	tokens := tokenize(t, reader)
 	expectedTokens := []string{
 		"a", "b", "c", "d",
 		"\U0001f468\u200d\U0001f469\u200d\U0001f466",
-		"x", "y", "z\n\r",
+		"x", "y", "z",
+		"\n\r",
 		"e\u0301",
 	}
 	assert.Equal(t, expectedTokens, tokens)
 }
 
-func TestSplitNonCombiningCharactersManyZeroWidth(t *testing.T) {
+func TestSplitUtf8CellsManyZeroWidth(t *testing.T) {
 	var sb strings.Builder
+	sb.WriteString("a")
 	for i := 0; i < 65536; i++ {
 		sb.WriteString("\u0301") // accent
 	}
@@ -132,6 +134,6 @@ func TestSplitNonCombiningCharactersManyZeroWidth(t *testing.T) {
 	// The test passes because the SplitFunc outputs a token when it has received a certain number of bytes,
 	// even if all the characters are zero-width.
 	tokens := tokenize(t, reader)
-	assert.Equal(t, 2048, len(tokens))
+	assert.Equal(t, 65505, len(tokens))
 	assert.Equal(t, s, strings.Join(tokens, ""))
 }

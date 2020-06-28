@@ -18,7 +18,7 @@ const zeroWidthJoiner = '\u200D'
 //     2) Two or more characters with width > 0 interleaved with zero-width joiners.
 //        Example: emoji of man + woman + child
 //     3) Zero-width characters at the start of the string (each one is put in its own cell).
-//     4) Newline characters, optionally followed by one or more zero-width characters (such as line feeds).
+//     4) Newline characters and line-feed characters.
 //
 // The function assumes that the input characters are valid UTF-8.
 func splitUtf8Cells(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -69,5 +69,5 @@ func splitUtf8Cells(data []byte, atEOF bool) (advance int, token []byte, err err
 }
 
 func isCombiningChar(r rune) bool {
-	return runewidth.RuneWidth(r) == 0 && r != '\n'
+	return runewidth.RuneWidth(r) == 0 && r != '\n' && r != '\r'
 }

@@ -93,7 +93,7 @@ func TestSplitUtf8Cells(t *testing.T) {
 		{
 			name:           "newline with linefeed",
 			inputString:    "ab\n\rc",
-			expectedTokens: []string{"a", "b", "\n\r", "c"},
+			expectedTokens: []string{"a", "b", "\n", "\r", "c"},
 		},
 	}
 
@@ -114,7 +114,7 @@ func TestSplitUtf8CellsSingleByteReader(t *testing.T) {
 		"a", "b", "c", "d",
 		"\U0001f468\u200d\U0001f469\u200d\U0001f466",
 		"x", "y", "z",
-		"\n\r",
+		"\n", "\r",
 		"e\u0301",
 	}
 	assert.Equal(t, expectedTokens, tokens)

@@ -10,7 +10,7 @@ import (
 const maxBytesPerToken = 64
 const zeroWidthJoiner = '\u200D'
 
-// SplitUtf8Cells splits UTF-8 characters into "cells" in a terminal display.
+// splitUtf8Cells splits UTF-8 characters into "cells" in a terminal display.
 //
 // Cells are defined as:
 //     1) A character with width > 0, optionally followed by one or more zero-width characters.
@@ -21,7 +21,7 @@ const zeroWidthJoiner = '\u200D'
 //     4) Newline characters, optionally followed by one or more zero-width characters (such as line feeds).
 //
 // The function assumes that the input characters are valid UTF-8.
-func SplitUtf8Cells(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func splitUtf8Cells(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	prevRune := '\x00'
 	i := 0
 

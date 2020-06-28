@@ -30,7 +30,7 @@ func (r *singleByteReader) Read(p []byte) (n int, err error) {
 
 func tokenize(t *testing.T, reader io.Reader) []string {
 	scanner := bufio.NewScanner(reader)
-	scanner.Split(SplitUtf8Cells)
+	scanner.Split(splitUtf8Cells)
 	tokens := make([]string, 0)
 	for scanner.Scan() {
 		tokens = append(tokens, scanner.Text())

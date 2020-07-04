@@ -1,4 +1,4 @@
-package boundaries
+package breaks
 
 import (
 	"testing"

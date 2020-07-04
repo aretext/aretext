@@ -1,13 +1,20 @@
 package breaks
 
-//go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_clusters_props.go
-//go:generate go run gen_tests.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_clusters_generated_test.go
+import (
+	"bufio"
+	"io"
+	"unicode/utf8"
+)
 
-// GraphemeClusterBreakFinder identifies valid breakpoints between grapheme clusters.
+//go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_clusters_props.go
+
+// GraphemeClusterBreakIter identifies valid breakpoints between grapheme clusters.
 // A grapheme cluster is a user-perceived character.  These may be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
-type GraphemeClusterBreakFinder struct {
-	startOfText                      bool
+type GraphemeClusterBreakIter struct {
+	runeScanner                      *bufio.Scanner
+	runeCount                        uint64
+	endOfText                        bool
 	lastProp                         gbProp
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
@@ -15,21 +22,42 @@ type GraphemeClusterBreakFinder struct {
 	lastPropsWereRIEven              bool
 }
 
-// NewGraphemeClusterBreakFinder initializes a new finder.
-// The finder assumes that the first character it receives is at a break point
+// NewGraphemeClusterBreakIter initializes a new iterator.
+// The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
-func NewGraphemeClusterBreakFinder() *GraphemeClusterBreakFinder {
-	return &GraphemeClusterBreakFinder{startOfText: true}
+// The input reader MUST produce valid UTF-8 codepoints.
+func NewGraphemeClusterBreakIter(in io.Reader) *GraphemeClusterBreakIter {
+	runeScanner := bufio.NewScanner(in)
+	runeScanner.Split(bufio.ScanRunes)
+	return &GraphemeClusterBreakIter{runeScanner: runeScanner}
 }
 
-// Reset resets the finder to its initial state.
-func (g *GraphemeClusterBreakFinder) Reset() {
-	*g = GraphemeClusterBreakFinder{startOfText: true}
+// NextBreak implements BreakIterator#NextBreak()
+func (g *GraphemeClusterBreakIter) NextBreak() (uint64, error) {
+	for g.runeScanner.Scan() {
+		c, _ := utf8.DecodeRune(g.runeScanner.Bytes())
+		canBreakBefore := g.processRune(c)
+		g.runeCount++
+		if canBreakBefore {
+			return g.runeCount - 1, nil
+		}
+	}
+
+	if err := g.runeScanner.Err(); err != nil {
+		return 0, err
+	}
+
+	if !g.endOfText {
+		g.endOfText = true
+		return g.runeCount, nil
+	}
+
+	return 0, io.EOF
 }
 
-// ProcessCharacter determines whether the position before the character is a valid breakpoint (starts a new grapheme cluster).
-func (g *GraphemeClusterBreakFinder) ProcessCharacter(c rune) (canBreakBefore bool) {
-	prop := gbPropForRune(c)
+// processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
+func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
+	prop := gbPropForRune(r)
 
 	defer func() {
 		g.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && g.lastPropsWereRIOdd)
@@ -42,13 +70,12 @@ func (g *GraphemeClusterBreakFinder) ProcessCharacter(c rune) (canBreakBefore bo
 	}()
 
 	// GB1: sot ÷ Any
-	if g.startOfText {
-		g.startOfText = false
+	if g.runeCount == 0 {
 		return true
 	}
 
 	// GB2: Any ÷ eot
-	// We don't implement this rule, because we can't detect the end of the file.
+	// This rule is implemented by the caller, which is able to detect EOF.
 
 	// GB3: CR × LF
 	if prop == gbPropLF && g.lastProp == gbPropCR {

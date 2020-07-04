@@ -212,8 +212,6 @@ func (c *Reader) Read(b []byte) (int, error) {
 			c.textByteOffset = 0
 		}
 	}
-
-	return 0, nil
 }
 
 const maxKeysPerNode = 64

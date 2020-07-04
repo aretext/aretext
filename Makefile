@@ -1,8 +1,11 @@
-all: fmt build test
+all: generate fmt build vet test
 
 fmt:
 	goimports -w ./internal/..
 	goimports -w ./cmd/..
+
+generate:
+	go generate ./...
 
 build:
 	go build ./...

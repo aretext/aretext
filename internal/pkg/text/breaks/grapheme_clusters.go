@@ -1,9 +1,9 @@
 package breaks
 
 import (
-	"bufio"
 	"io"
-	"unicode/utf8"
+
+	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 //go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_clusters_props.go
@@ -12,7 +12,7 @@ import (
 // A grapheme cluster is a user-perceived character.  These may be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
 type GraphemeClusterBreakIter struct {
-	runeScanner                      *bufio.Scanner
+	runeIter                         text.CloneableRuneIter
 	runeCount                        uint64
 	endOfText                        bool
 	lastProp                         gbProp
@@ -26,25 +26,26 @@ type GraphemeClusterBreakIter struct {
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterBreakIter(in io.Reader) *GraphemeClusterBreakIter {
-	runeScanner := bufio.NewScanner(in)
-	runeScanner.Split(bufio.ScanRunes)
-	return &GraphemeClusterBreakIter{runeScanner: runeScanner}
+func NewGraphemeClusterBreakIter(in text.CloneableReader) *GraphemeClusterBreakIter {
+	runeIter := text.NewForwardRuneIter(in)
+	return &GraphemeClusterBreakIter{runeIter: runeIter}
 }
 
-// NextBreak implements BreakIterator#NextBreak()
+// NextBreak implements BreakIter#NextBreak()
 func (g *GraphemeClusterBreakIter) NextBreak() (uint64, error) {
-	for g.runeScanner.Scan() {
-		c, _ := utf8.DecodeRune(g.runeScanner.Bytes())
-		canBreakBefore := g.processRune(c)
+	for {
+		r, err := g.runeIter.NextRune()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return 0, err
+		}
+
+		canBreakBefore := g.processRune(r)
 		g.runeCount++
 		if canBreakBefore {
 			return g.runeCount - 1, nil
 		}
-	}
-
-	if err := g.runeScanner.Err(); err != nil {
-		return 0, err
 	}
 
 	if !g.endOfText {

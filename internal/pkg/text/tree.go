@@ -159,7 +159,7 @@ func (t *Tree) DeleteAtPosition(charPos uint64) {
 
 // ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtPosition(charPos uint64) *Reader {
+func (t *Tree) ReaderAtPosition(charPos uint64) CloneableReader {
 	return t.root.readerAtPosition(charPos)
 }
 
@@ -167,51 +167,13 @@ func (t *Tree) ReaderAtPosition(charPos uint64) *Reader {
 // For line zero, this is the first character in the tree; for subsequent lines, this is the first
 // character after the newline character.
 // If the line number is greater than the maximum line number, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtLine(lineNum uint64) *Reader {
+func (t *Tree) ReaderAtLine(lineNum uint64) CloneableReader {
 	if lineNum == 0 {
 		// Special case the first line, since it's the only line that doesn't immediately follow a newline character.
 		return t.root.readerAtPosition(0)
 	}
 
 	return t.root.readerAfterNewline(lineNum - 1)
-}
-
-// text.Reader reads UTF-8 bytes from a text.Tree.
-// It implements io.Reader.
-// text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
-type Reader struct {
-	group          *leafNodeGroup
-	nodeIdx        uint64
-	textByteOffset uint64
-}
-
-func (c *Reader) Read(b []byte) (int, error) {
-	i := 0
-	for {
-		if i == len(b) {
-			return i, nil
-		}
-
-		if c.group == nil {
-			return i, io.EOF
-		}
-
-		node := &c.group.nodes[c.nodeIdx]
-		bytesWritten := copy(b[i:], node.textBytes[c.textByteOffset:node.numBytes])
-		c.textByteOffset += uint64(bytesWritten)
-		i += bytesWritten
-
-		if c.textByteOffset == uint64(node.numBytes) {
-			c.nodeIdx++
-			c.textByteOffset = 0
-		}
-
-		if c.nodeIdx == c.group.numNodes {
-			c.group = c.group.next
-			c.nodeIdx = 0
-			c.textByteOffset = 0
-		}
-	}
 }
 
 const maxKeysPerNode = 64
@@ -223,8 +185,8 @@ type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
-	readerAtPosition(nodeIdx uint64, charPos uint64) *Reader
-	readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader
+	readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader
+	readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -299,11 +261,11 @@ func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDe
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) *Reader {
+func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader {
 	return g.nodes[nodeIdx].readerAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader {
+func (g *innerNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader {
 	return g.nodes[nodeIdx].readerAfterNewline(newlinePos)
 }
 
@@ -379,12 +341,12 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 	return
 }
 
-func (n *innerNode) readerAtPosition(charPos uint64) *Reader {
+func (n *innerNode) readerAtPosition(charPos uint64) CloneableReader {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
 	return n.child.readerAtPosition(nodeIdx, adjustedCharPos)
 }
 
-func (n *innerNode) readerAfterNewline(newlinePos uint64) *Reader {
+func (n *innerNode) readerAfterNewline(newlinePos uint64) CloneableReader {
 	c := uint64(0)
 	for i := uint64(0); i < n.numKeys-1; i++ {
 		nc := n.keys[i].numNewlines
@@ -481,18 +443,18 @@ func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDel
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) *Reader {
+func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
-	return &Reader{
+	return &treeReader{
 		group:          g,
 		nodeIdx:        nodeIdx,
 		textByteOffset: textByteOffset,
 	}
 }
 
-func (g *leafNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) *Reader {
+func (g *leafNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetAfterNewline(newlinePos)
-	return &Reader{
+	return &treeReader{
 		group:          g,
 		nodeIdx:        nodeIdx,
 		textByteOffset: textByteOffset,

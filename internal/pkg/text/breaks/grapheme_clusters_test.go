@@ -3,18 +3,18 @@ package breaks
 import (
 	"io"
 	"strconv"
-	"strings"
 	"testing"
 	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 //go:generate go run gen_test_cases.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_clusters_test_cases.go
 
 func TestGraphemeClusterBreakIterEmptyString(t *testing.T) {
-	reader := strings.NewReader("")
+	reader := text.NewCloneableReaderFromString("")
 	finder := NewGraphemeClusterBreakIter(reader)
 	bp, err := finder.NextBreak()
 	require.NoError(t, err)
@@ -22,7 +22,7 @@ func TestGraphemeClusterBreakIterEmptyString(t *testing.T) {
 }
 
 func TestGraphemeClusterBreakIterPastEOF(t *testing.T) {
-	reader := strings.NewReader("abc")
+	reader := text.NewCloneableReaderFromString("abc")
 	finder := NewGraphemeClusterBreakIter(reader)
 	bp, _ := finder.NextBreak()
 	assert.Equal(t, uint64(0), bp)
@@ -39,7 +39,7 @@ func TestGraphemeClusterBreakIterPastEOF(t *testing.T) {
 func TestGraphemeClusterBreakIterUnicodeTestCases(t *testing.T) {
 	for i, tc := range graphemeBreakTestCases() {
 		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {
-			reader := strings.NewReader(tc.inputString)
+			reader := text.NewCloneableReaderFromString(tc.inputString)
 			finder := NewGraphemeClusterBreakIter(reader)
 			breakPoints := make([]uint64, 0)
 			for {
@@ -67,6 +67,10 @@ func (r *infiniteCharReader) Read(p []byte) (n int, err error) {
 		n += utf8.EncodeRune(p, r.c)
 	}
 	return n, nil
+}
+
+func (r *infiniteCharReader) Clone() text.CloneableReader {
+	return &infiniteCharReader{c: r.c}
 }
 
 func BenchmarkGraphemeClusterBreakIter(b *testing.B) {

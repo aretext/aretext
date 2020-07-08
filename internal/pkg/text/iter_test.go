@@ -59,7 +59,7 @@ func TestForwardRuneIter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := NewCloneableReaderFromString(tc.inputString)
-			iter := NewForwardRuneIter(reader)
+			iter := NewCloneableForwardRuneIter(reader)
 			runes := collectRunes(t, iter)
 			assert.Equal(t, runes, tc.expectedRunes)
 		})
@@ -126,7 +126,7 @@ func TestBackwardRuneIter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := NewCloneableReaderFromString(tc.inputString)
-			iter := NewBackwardRuneIter(reader)
+			iter := NewCloneableBackwardRuneIter(reader)
 			runes := collectRunes(t, iter)
 			assert.Equal(t, runes, tc.expectedRunes)
 		})
@@ -160,7 +160,7 @@ func (r *singleByteReader) Clone() CloneableReader {
 
 func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
 	reader := newSingleByteReader("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC")
-	iter := NewForwardRuneIter(reader)
+	iter := NewCloneableForwardRuneIter(reader)
 	runes := collectRunes(t, iter)
 	assert.Equal(t, runes, []rune{
 		'£',
@@ -177,7 +177,7 @@ func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
 
 func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
 	reader := newSingleByteReader(reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"))
-	iter := NewBackwardRuneIter(reader)
+	iter := NewCloneableBackwardRuneIter(reader)
 	runes := collectRunes(t, iter)
 	assert.Equal(t, runes, []rune{
 		'\U0010CCCC',
@@ -194,7 +194,7 @@ func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
 
 func TestForwardRuneIterLookahead(t *testing.T) {
 	reader := newSingleByteReader("£ôƊ፴ऴஅ")
-	iter := NewForwardRuneIter(reader)
+	iter := NewCloneableForwardRuneIter(reader)
 	r, err := iter.NextRune()
 	require.NoError(t, err)
 	assert.Equal(t, '£', r)
@@ -207,7 +207,7 @@ func TestForwardRuneIterLookahead(t *testing.T) {
 
 func TestBackwardRuneIterLookahead(t *testing.T) {
 	reader := newSingleByteReader(reverse("£ôƊ"))
-	iter := NewBackwardRuneIter(reader)
+	iter := NewCloneableBackwardRuneIter(reader)
 	r, err := iter.NextRune()
 	require.NoError(t, err)
 	assert.Equal(t, 'Ɗ', r)

@@ -5,12 +5,15 @@ import (
 	"unicode/utf8"
 )
 
-// CloneableRuneIter iterates over UTF-8 codepoints (runes).
-// It can be cloned to produce a new, independent iterator at the same position
-// as the original iterator.
-type CloneableRuneIter interface {
+// RuneIter iterates over UTF-8 codepoints (runes).
+type RuneIter interface {
 	// NextRune returns the next available rune.  If no rune is available, it returns the error io.EOF.
 	NextRune() (rune, error)
+}
+
+// CloneableRuneIter is a RuneIter that can be cloned to produce a new, independent iterator at the same position as the original iterator.
+type CloneableRuneIter interface {
+	RuneIter
 
 	// Clone returns a new, independent iterator at the same position as the original iterator.
 	Clone() CloneableRuneIter
@@ -27,18 +30,18 @@ type runeIter struct {
 	eof                bool
 }
 
-// NewForwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes.
+// NewCloneableForwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes.
 // It assumes the provided reader produces a stream of valid UTF-8 bytes.
-func NewForwardRuneIter(in CloneableReader) CloneableRuneIter {
+func NewCloneableForwardRuneIter(in CloneableReader) CloneableRuneIter {
 	return &runeIter{
-		in:           in,
-		pendingRunes: make([]rune, 0),
+		inputReversed: false,
+		in:            in,
+		pendingRunes:  make([]rune, 0),
 	}
 }
 
-// NewBackwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes received in reverse order.
-// It iterates through the runes in reverse order.
-func NewBackwardRuneIter(in CloneableReader) CloneableRuneIter {
+// If inputReversed is true, then it interprets the reader output in reverse order.
+func NewCloneableBackwardRuneIter(in CloneableReader) CloneableRuneIter {
 	return &runeIter{
 		inputReversed: true,
 		in:            in,
@@ -46,7 +49,7 @@ func NewBackwardRuneIter(in CloneableReader) CloneableRuneIter {
 	}
 }
 
-// NextRune implements CloneableRuneIter#NextRune.
+// NextRune implements RuneIter#NextRune.
 // It panics if the input bytes contain invalid UTF-8 codepoints.
 func (ri *runeIter) NextRune() (rune, error) {
 	if ri.pendingRunesOffset >= len(ri.pendingRunes) && !ri.eof {

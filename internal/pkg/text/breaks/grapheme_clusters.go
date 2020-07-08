@@ -12,7 +12,7 @@ import (
 // A grapheme cluster is a user-perceived character.  These may be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
 type GraphemeClusterBreakIter struct {
-	runeIter                         text.CloneableRuneIter
+	runeIter                         text.RuneIter
 	runeCount                        uint64
 	endOfText                        bool
 	lastProp                         gbProp
@@ -26,8 +26,7 @@ type GraphemeClusterBreakIter struct {
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterBreakIter(in text.CloneableReader) *GraphemeClusterBreakIter {
-	runeIter := text.NewForwardRuneIter(in)
+func NewGraphemeClusterBreakIter(runeIter text.RuneIter) *GraphemeClusterBreakIter {
 	return &GraphemeClusterBreakIter{runeIter: runeIter}
 }
 

@@ -40,7 +40,7 @@ func (v *TextView) Draw() {
 }
 
 func (v *TextView) drawText(width, height int) {
-	reader := v.tree.ReaderAtPosition(0)
+	reader := v.tree.ReaderAtPosition(0, text.ReadDirectionForward)
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(splitUtf8Cells)
 

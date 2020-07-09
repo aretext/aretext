@@ -66,15 +66,6 @@ func TestForwardRuneIter(t *testing.T) {
 	}
 }
 
-func reverse(s string) string {
-	bytes := []byte(s)
-	reversedBytes := make([]byte, len(bytes))
-	for i := 0; i < len(reversedBytes); i++ {
-		reversedBytes[i] = bytes[len(bytes)-1-i]
-	}
-	return string(reversedBytes)
-}
-
 func TestBackwardRuneIter(t *testing.T) {
 	testCases := []struct {
 		name          string
@@ -88,27 +79,27 @@ func TestBackwardRuneIter(t *testing.T) {
 		},
 		{
 			name:          "multiple ASCII",
-			inputString:   reverse("abcd"),
+			inputString:   Reverse("abcd"),
 			expectedRunes: []rune{'d', 'c', 'b', 'a'},
 		},
 		{
 			name:          "two-byte char",
-			inputString:   reverse("£"),
+			inputString:   Reverse("£"),
 			expectedRunes: []rune{'£'},
 		},
 		{
 			name:          "three-byte char",
-			inputString:   reverse("ऴ"),
+			inputString:   Reverse("ऴ"),
 			expectedRunes: []rune{'ऴ'},
 		},
 		{
 			name:          "four-byte char",
-			inputString:   reverse("\U0010AAAA"),
+			inputString:   Reverse("\U0010AAAA"),
 			expectedRunes: []rune{'\U0010AAAA'},
 		},
 		{
 			name:        "multi-byte characters",
-			inputString: reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"),
+			inputString: Reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"),
 			expectedRunes: []rune{
 				'\U0010CCCC',
 				'\U0010BBBB',
@@ -133,33 +124,8 @@ func TestBackwardRuneIter(t *testing.T) {
 	}
 }
 
-type singleByteReader struct {
-	s string
-	i int
-}
-
-func newSingleByteReader(s string) CloneableReader {
-	return &singleByteReader{s, 0}
-}
-
-func (r *singleByteReader) Read(p []byte) (n int, err error) {
-	n = copy(p, r.s[r.i:r.i+1])
-	r.i++
-	if r.i >= len(r.s) {
-		err = io.EOF
-	}
-	return
-}
-
-func (r *singleByteReader) Clone() CloneableReader {
-	return &singleByteReader{
-		s: r.s,
-		i: r.i,
-	}
-}
-
 func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
-	reader := newSingleByteReader("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC")
+	reader := NewSingleByteReader("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC")
 	iter := NewCloneableForwardRuneIter(reader)
 	runes := collectRunes(t, iter)
 	assert.Equal(t, runes, []rune{
@@ -176,7 +142,7 @@ func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
 }
 
 func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
-	reader := newSingleByteReader(reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"))
+	reader := NewSingleByteReader(Reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"))
 	iter := NewCloneableBackwardRuneIter(reader)
 	runes := collectRunes(t, iter)
 	assert.Equal(t, runes, []rune{
@@ -193,7 +159,7 @@ func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
 }
 
 func TestForwardRuneIterLookahead(t *testing.T) {
-	reader := newSingleByteReader("£ôƊ፴ऴஅ")
+	reader := NewSingleByteReader("£ôƊ፴ऴஅ")
 	iter := NewCloneableForwardRuneIter(reader)
 	r, err := iter.NextRune()
 	require.NoError(t, err)
@@ -206,7 +172,7 @@ func TestForwardRuneIterLookahead(t *testing.T) {
 }
 
 func TestBackwardRuneIterLookahead(t *testing.T) {
-	reader := newSingleByteReader(reverse("£ôƊ"))
+	reader := NewSingleByteReader(Reverse("£ôƊ"))
 	iter := NewCloneableBackwardRuneIter(reader)
 	r, err := iter.NextRune()
 	require.NoError(t, err)

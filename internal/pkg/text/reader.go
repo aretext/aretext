@@ -40,6 +40,13 @@ func (r *stringReader) Clone() CloneableReader {
 	}
 }
 
+type ReadDirection int
+
+const (
+	ReadDirectionForward = ReadDirection(iota)
+	ReadDirectionBackward
+)
+
 // treeReader reads UTF-8 bytes from a text.Tree.
 // It implements io.Reader and CloneableReader.
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
@@ -47,10 +54,27 @@ type treeReader struct {
 	group          *leafNodeGroup
 	nodeIdx        uint64
 	textByteOffset uint64
+	direction      ReadDirection
+}
+
+func newTreeReader(group *leafNodeGroup, nodeIdx uint64, textByteOffset uint64, direction ReadDirection) CloneableReader {
+	return &treeReader{
+		group:          group,
+		nodeIdx:        nodeIdx,
+		textByteOffset: textByteOffset,
+		direction:      direction,
+	}
 }
 
 // Read implements io.Reader#Read
 func (r *treeReader) Read(b []byte) (int, error) {
+	if r.direction == ReadDirectionBackward {
+		return r.readBackward(b)
+	}
+	return r.readForward(b)
+}
+
+func (r *treeReader) readForward(b []byte) (int, error) {
 	i := 0
 	for {
 		if i == len(b) {
@@ -79,11 +103,50 @@ func (r *treeReader) Read(b []byte) (int, error) {
 	}
 }
 
+func (r *treeReader) readBackward(b []byte) (int, error) {
+	i := 0
+	for {
+		if i == len(b) {
+			return i, nil
+		}
+
+		if r.group == nil {
+			return i, io.EOF
+		}
+
+		node := &r.group.nodes[r.nodeIdx]
+		bytesWritten := 0
+		for i+bytesWritten < len(b) && r.textByteOffset > uint64(bytesWritten) {
+			b[i+bytesWritten] = node.textBytes[r.textByteOffset-1-uint64(bytesWritten)]
+			bytesWritten++
+		}
+		r.textByteOffset -= uint64(bytesWritten)
+		i += bytesWritten
+
+		if r.textByteOffset > 0 {
+			continue
+		}
+
+		if r.nodeIdx > 0 {
+			r.nodeIdx--
+			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
+			continue
+		}
+
+		r.group = r.group.prev
+		if r.group != nil {
+			r.nodeIdx = r.group.numNodes - 1
+			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
+		}
+	}
+}
+
 // Clone implements CloneableReader#Clone
 func (r *treeReader) Clone() CloneableReader {
 	return &treeReader{
 		group:          r.group,
 		nodeIdx:        r.nodeIdx,
 		textByteOffset: r.textByteOffset,
+		direction:      r.direction,
 	}
 }

@@ -159,21 +159,21 @@ func (t *Tree) DeleteAtPosition(charPos uint64) {
 
 // ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtPosition(charPos uint64) CloneableReader {
-	return t.root.readerAtPosition(charPos)
+func (t *Tree) ReaderAtPosition(charPos uint64, direction ReadDirection) CloneableReader {
+	return t.root.readerAtPosition(charPos, direction)
 }
 
 // ReaderAtLine returns a reader starting at the first character at the specified line (0-indexed).
 // For line zero, this is the first character in the tree; for subsequent lines, this is the first
 // character after the newline character.
 // If the line number is greater than the maximum line number, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtLine(lineNum uint64) CloneableReader {
+func (t *Tree) ReaderAtLine(lineNum uint64, direction ReadDirection) CloneableReader {
 	if lineNum == 0 {
 		// Special case the first line, since it's the only line that doesn't immediately follow a newline character.
-		return t.root.readerAtPosition(0)
+		return t.root.readerAtPosition(0, direction)
 	}
 
-	return t.root.readerAfterNewline(lineNum - 1)
+	return t.root.readerAfterNewline(lineNum-1, direction)
 }
 
 const maxKeysPerNode = 64
@@ -185,8 +185,8 @@ type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
-	readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader
-	readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader
+	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader
+	readerAfterNewline(nodeIdx uint64, newlinePos uint64, direction ReadDirection) CloneableReader
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -261,12 +261,12 @@ func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDe
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader {
-	return g.nodes[nodeIdx].readerAtPosition(charPos)
+func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader {
+	return g.nodes[nodeIdx].readerAtPosition(charPos, direction)
 }
 
-func (g *innerNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader {
-	return g.nodes[nodeIdx].readerAfterNewline(newlinePos)
+func (g *innerNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64, direction ReadDirection) CloneableReader {
+	return g.nodes[nodeIdx].readerAfterNewline(newlinePos, direction)
 }
 
 // innerNode is used to navigate to the leaf node containing a character offset or line number.
@@ -341,22 +341,22 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 	return
 }
 
-func (n *innerNode) readerAtPosition(charPos uint64) CloneableReader {
+func (n *innerNode) readerAtPosition(charPos uint64, direction ReadDirection) CloneableReader {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
-	return n.child.readerAtPosition(nodeIdx, adjustedCharPos)
+	return n.child.readerAtPosition(nodeIdx, adjustedCharPos, direction)
 }
 
-func (n *innerNode) readerAfterNewline(newlinePos uint64) CloneableReader {
+func (n *innerNode) readerAfterNewline(newlinePos uint64, direction ReadDirection) CloneableReader {
 	c := uint64(0)
 	for i := uint64(0); i < n.numKeys-1; i++ {
 		nc := n.keys[i].numNewlines
 		if newlinePos < c+nc {
-			return n.child.readerAfterNewline(i, newlinePos-c)
+			return n.child.readerAfterNewline(i, newlinePos-c, direction)
 		}
 		c += nc
 	}
 
-	return n.child.readerAfterNewline(n.numKeys-1, newlinePos-c)
+	return n.child.readerAfterNewline(n.numKeys-1, newlinePos-c, direction)
 }
 
 func (n *innerNode) locatePosition(charPos uint64) (nodeIdx, adjustedCharPos uint64) {
@@ -443,22 +443,14 @@ func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDel
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) CloneableReader {
+func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
-	return &treeReader{
-		group:          g,
-		nodeIdx:        nodeIdx,
-		textByteOffset: textByteOffset,
-	}
+	return newTreeReader(g, nodeIdx, textByteOffset, direction)
 }
 
-func (g *leafNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64) CloneableReader {
+func (g *leafNodeGroup) readerAfterNewline(nodeIdx uint64, newlinePos uint64, direction ReadDirection) CloneableReader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetAfterNewline(newlinePos)
-	return &treeReader{
-		group:          g,
-		nodeIdx:        nodeIdx,
-		textByteOffset: textByteOffset,
-	}
+	return newTreeReader(g, nodeIdx, textByteOffset, direction)
 }
 
 // leafNode is a node that stores UTF-8 text as a byte array.

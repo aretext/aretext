@@ -8,25 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wedaly/aretext/internal/pkg/text"
 )
-
-type singleByteReader struct {
-	s string
-	i int
-}
-
-func newSingleByteReader(s string) io.Reader {
-	return &singleByteReader{s, 0}
-}
-
-func (r *singleByteReader) Read(p []byte) (n int, err error) {
-	n = copy(p, r.s[r.i:r.i+1])
-	r.i++
-	if r.i >= len(r.s) {
-		err = io.EOF
-	}
-	return
-}
 
 func tokenize(t *testing.T, reader io.Reader) []string {
 	scanner := bufio.NewScanner(reader)
@@ -108,7 +91,7 @@ func TestSplitUtf8Cells(t *testing.T) {
 
 func TestSplitUtf8CellsSingleByteReader(t *testing.T) {
 	s := "abcd\U0001f468\u200d\U0001f469\u200d\U0001f466xyz\n\re\u0301"
-	reader := newSingleByteReader(s)
+	reader := text.NewSingleByteReader(s)
 	tokens := tokenize(t, reader)
 	expectedTokens := []string{
 		"a", "b", "c", "d",
@@ -128,7 +111,7 @@ func TestSplitUtf8CellsManyZeroWidth(t *testing.T) {
 	}
 	s := sb.String()
 
-	reader := newSingleByteReader(s)
+	reader := text.NewSingleByteReader(s)
 
 	// If the SplitFunc were to wait indefinitely for a non-combining character, bufio.Scanner would panic here.
 	// The test passes because the SplitFunc outputs a token when it has received a certain number of bytes,

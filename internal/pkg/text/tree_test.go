@@ -35,7 +35,7 @@ func lines(numLines int, charsPerLine int) string {
 }
 
 func allTextFromTree(t *testing.T, tree *Tree) string {
-	reader := tree.ReaderAtPosition(0)
+	reader := tree.ReaderAtPosition(0, ReadDirectionForward)
 	retrievedBytes, err := ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	return string(retrievedBytes)
@@ -127,7 +127,7 @@ func TestReaderStartLocation(t *testing.T) {
 
 			// Check a reader starting from each character position to the end
 			for i := 0; i < len(tc.runes); i++ {
-				reader := tree.ReaderAtPosition(uint64(i))
+				reader := tree.ReaderAtPosition(uint64(i), ReadDirectionForward)
 				retrieved, err := ioutil.ReadAll(reader)
 				require.NoError(t, err)
 				require.Equal(t, string(tc.runes[i:]), string(retrieved), "invalid substring starting from character at position %d (expected len = %d, actual len = %d)", i, len(string(tc.runes[i:])), len(string(retrieved)))
@@ -178,7 +178,7 @@ func TestReaderPastLastCharacter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			reader := tree.ReaderAtPosition(tc.pos)
+			reader := tree.ReaderAtPosition(tc.pos, ReadDirectionForward)
 			retrieved, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
@@ -240,7 +240,7 @@ func TestReaderAtLine(t *testing.T) {
 	linesFromTree := func(tree *Tree, numLines int) []string {
 		lines := make([]string, 0, numLines)
 		for i := 0; i < numLines; i++ {
-			reader := tree.ReaderAtLine(uint64(i))
+			reader := tree.ReaderAtLine(uint64(i), ReadDirectionForward)
 			scanner := bufio.NewScanner(reader)
 			scanner.Split(bufio.ScanLines)
 
@@ -310,10 +310,62 @@ func TestReaderPastLastLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			reader := tree.ReaderAtLine(tc.lineNum)
+			reader := tree.ReaderAtLine(tc.lineNum, ReadDirectionForward)
 			retrieved, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
+		})
+	}
+}
+
+func TestReadBackwards(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		position    uint64
+		expected    string
+	}{
+		{
+			name:        "empty",
+			position:    0,
+			inputString: "",
+			expected:    "",
+		},
+		{
+			name:        "single ASCII character",
+			position:    1,
+			inputString: "a",
+			expected:    "a",
+		},
+		{
+			name:        "multiple ASCII characters",
+			position:    2,
+			inputString: "abcd",
+			expected:    "ba",
+		},
+		{
+			name:        "multiple non-ASCII characters",
+			position:    3,
+			inputString: "a£፴cd",
+			expected:    Reverse("a£፴"),
+		},
+		{
+			name:        "long string with non-ASCII characters",
+			inputString: repeat('፴', 4096),
+			position:    2048,
+			expected:    Reverse(repeat('፴', 2048)),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+
+			reader := tree.ReaderAtPosition(tc.position, ReadDirectionBackward)
+			retrieved, err := ioutil.ReadAll(reader)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, string(retrieved))
 		})
 	}
 }
@@ -698,7 +750,7 @@ func TestInsertNewline(t *testing.T) {
 			err = tree.InsertAtPosition(tc.insertPos, '\n')
 			require.NoError(t, err)
 
-			reader := tree.ReaderAtLine(tc.retrieveLineNum)
+			reader := tree.ReaderAtLine(tc.retrieveLineNum, ReadDirectionForward)
 			text, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedLine, string(text))
@@ -857,13 +909,13 @@ func TestDeleteNewline(t *testing.T) {
 	tree, err := NewTreeFromString(lines(4096, 100))
 	require.NoError(t, err)
 
-	reader := tree.ReaderAtLine(4094) // read last two lines
+	reader := tree.ReaderAtLine(4094, ReadDirectionForward) // read last two lines
 	text, err := ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	assert.Equal(t, 201, len(text))
 
-	tree.DeleteAtPosition(100)       // delete first newline
-	reader = tree.ReaderAtLine(4094) // read last line
+	tree.DeleteAtPosition(100)                             // delete first newline
+	reader = tree.ReaderAtLine(4094, ReadDirectionForward) // read last line
 	text, err = ioutil.ReadAll(reader)
 	require.NoError(t, err)
 	assert.Equal(t, 100, len(text))
@@ -911,7 +963,7 @@ func BenchmarkRead(b *testing.B) {
 			}
 
 			for n := 0; n < b.N; n++ {
-				reader := tree.ReaderAtPosition(0)
+				reader := tree.ReaderAtPosition(0, ReadDirectionForward)
 				_, err := ioutil.ReadAll(reader)
 				if err != nil {
 					b.Fatalf("err = %v", err)

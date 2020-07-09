@@ -210,7 +210,7 @@ func writeOutputFile(prefix string, path string, propNames []string, runeMap map
 
 	package breaks
 
-	{{ with $input := . }}
+	{{ $input := . }}
 
 	type {{ $input.Prefix }}Prop byte
 
@@ -235,8 +235,6 @@ func writeOutputFile(prefix string, path string, propNames []string, runeMap map
 			return {{ $input.Prefix }}PropOther
 		}
 	}
-
-	{{ end }}
 	`)
 	if err != nil {
 		return err

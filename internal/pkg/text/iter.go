@@ -158,7 +158,7 @@ func (ri *runeIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesConsumed i
 
 // Clone implements CloneableRuneIter#Clone
 func (ri *runeIter) Clone() CloneableRuneIter {
-	pendingRunes := make([]rune, 0, len(ri.pendingRunes))
+	pendingRunes := make([]rune, len(ri.pendingRunes))
 	copy(pendingRunes, ri.pendingRunes)
 
 	return &runeIter{

@@ -118,3 +118,158 @@ func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
 	// GB999: Any ÷ Any
 	return true
 }
+
+// ReverseGraphemeClusterBreakIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.
+type ReverseGraphemeClusterBreakIter struct {
+	runeIter    text.CloneableRuneIter
+	runeCount   uint64
+	startOfText bool
+	lastProp    gbProp
+}
+
+// NewReverseGraphemeClusterBreakIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
+func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) *ReverseGraphemeClusterBreakIter {
+	return &ReverseGraphemeClusterBreakIter{runeIter: runeIter}
+}
+
+// NextBreak implements BreakIter#NextBreak()
+// The returned locations are relative to the end of the text.
+func (g *ReverseGraphemeClusterBreakIter) NextBreak() (uint64, error) {
+	for {
+		r, err := g.runeIter.NextRune()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return 0, err
+		}
+
+		// "After" is relative to the original (non-reversed) rune order.
+		// So if the original string was "abcd" and we're iterating through it backwards,
+		// then the break between "b" and "c" would be *after* "b".
+		canBreakAfter := g.processRune(r)
+		g.runeCount++
+		if canBreakAfter {
+			return g.runeCount - 1, nil
+		}
+	}
+
+	if !g.startOfText {
+		g.startOfText = true
+		return g.runeCount, nil
+	}
+
+	return 0, io.EOF
+}
+
+func (g *ReverseGraphemeClusterBreakIter) processRune(r rune) (canBreakAfter bool) {
+	prop := gbPropForRune(r)
+	defer func() { g.lastProp = prop }()
+
+	// GB1: sot ÷ Any
+	// This rule is implemented by the caller, which is able to detect EOF in the reversed input.
+
+	// GB2: Any ÷ eot
+	if g.runeCount == 0 {
+		return true
+	}
+
+	// GB3: CR × LF
+	if prop == gbPropCR && g.lastProp == gbPropLF {
+		return false
+	}
+
+	// GB4: (Control | CR | LF) ÷
+	if prop == gbPropControl || prop == gbPropCR || prop == gbPropLF {
+		return true
+	}
+
+	// GB5: ÷ (Control | CR | LF)
+	if g.lastProp == gbPropControl || g.lastProp == gbPropCR || g.lastProp == gbPropLF {
+		return true
+	}
+
+	// GB6: L × (L | V | LV | LVT)
+	if prop == gbPropL && (g.lastProp == gbPropL || g.lastProp == gbPropV || g.lastProp == gbPropLV || g.lastProp == gbPropLVT) {
+		return false
+	}
+
+	// GB7: (LV | V) × (V | T)
+	if (prop == gbPropLV || prop == gbPropV) && (g.lastProp == gbPropV || g.lastProp == gbPropT) {
+		return false
+	}
+
+	// GB8: (LVT | T) × T
+	if (prop == gbPropLVT || prop == gbPropT) && g.lastProp == gbPropT {
+		return false
+	}
+
+	// GB9: × (Extend | ZWJ)
+	if g.lastProp == gbPropExtend || g.lastProp == gbPropZWJ {
+		return false
+	}
+
+	// GB9a: × SpacingMark
+	if g.lastProp == gbPropSpacingMark {
+		return false
+	}
+
+	// GB9b: Prepend ×
+	if prop == gbPropPrepend {
+		return false
+	}
+
+	// GB11: \p{Extended_Pictographic} Extend* ZWJ × \p{Extended_Pictographic}
+	if prop == gbPropZWJ && g.lastProp == gbPropExtended_Pictographic && g.lookaheadExtendedPictographicSequence() {
+		return false
+	}
+
+	// GB12: sot (RI RI)* RI × RI
+	// GB13: [^RI] (RI RI)* RI × RI
+	if g.lastProp == gbPropRegional_Indicator && prop == gbPropRegional_Indicator && g.lookaheadEvenRI() {
+		return false
+	}
+
+	// GB999: Any ÷ Any
+	return true
+}
+
+func (g *ReverseGraphemeClusterBreakIter) lookaheadExtendedPictographicSequence() bool {
+	iterClone := g.runeIter.Clone()
+
+	// Check for Extend* followed by \p{Extended_Pictographic}
+	for {
+		r, err := iterClone.NextRune()
+		if err != nil {
+			return false
+		}
+
+		prop := gbPropForRune(r)
+		if prop == gbPropExtend {
+			continue
+		} else if prop == gbPropExtended_Pictographic {
+			return true
+		} else {
+			return false
+		}
+	}
+}
+
+func (g *ReverseGraphemeClusterBreakIter) lookaheadEvenRI() bool {
+	riCount := 0
+	iterClone := g.runeIter.Clone()
+	for {
+		r, err := iterClone.NextRune()
+		if err != nil {
+			break
+		}
+
+		prop := gbPropForRune(r)
+		if prop == gbPropRegional_Indicator {
+			riCount++
+		} else {
+			break
+		}
+	}
+
+	return riCount%2 == 0
+}

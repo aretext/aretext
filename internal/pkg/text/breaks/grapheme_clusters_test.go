@@ -18,6 +18,12 @@ func graphemeClusterBreakIterFromString(s string) BreakIter {
 	return NewGraphemeClusterBreakIter(runeIter)
 }
 
+func reverseGraphemeClusterBreakIterFromString(s string) BreakIter {
+	reader := text.NewCloneableReaderFromString(text.Reverse(s))
+	runeIter := text.NewCloneableBackwardRuneIter(reader)
+	return NewReverseGraphemeClusterBreakIter(runeIter)
+}
+
 func TestGraphemeClusterBreakIterEmptyString(t *testing.T) {
 	iter := graphemeClusterBreakIterFromString("")
 	bp, err := iter.NextBreak()
@@ -55,6 +61,40 @@ func TestGraphemeClusterBreakIterUnicodeTestCases(t *testing.T) {
 				breakPoints = append(breakPoints, bp)
 			}
 			assert.Equal(t, tc.breakPoints, breakPoints, tc.description)
+		})
+	}
+}
+
+func reverseBreakpoints(breakpoints []uint64) []uint64 {
+	if len(breakpoints) == 0 {
+		return breakpoints
+	}
+
+	reversed := make([]uint64, len(breakpoints))
+	numRunes := breakpoints[len(breakpoints)-1]
+	for i := 0; i < len(breakpoints); i++ {
+		reversed[i] = numRunes - breakpoints[len(breakpoints)-i-1]
+	}
+	return reversed
+}
+
+func TestReverseGraphemeClusterBreakIterUnicodeTestCases(t *testing.T) {
+	for i, tc := range graphemeBreakTestCases() {
+		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {
+			iter := reverseGraphemeClusterBreakIterFromString(tc.inputString)
+			breakPoints := make([]uint64, 0)
+			for {
+				bp, err := iter.NextBreak()
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					require.NoError(t, err, tc.description)
+				}
+
+				breakPoints = append(breakPoints, bp)
+			}
+			expectedBreakPoints := reverseBreakpoints(tc.breakPoints)
+			assert.Equal(t, expectedBreakPoints, breakPoints, tc.description)
 		})
 	}
 }

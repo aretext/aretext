@@ -126,6 +126,16 @@ func buildTreeFromLeaves(leafGroups []nodeGroup) *innerNode {
 	}
 }
 
+// NumChars returns the total number of characters (runes) in the tree.
+func (t *Tree) NumChars() uint64 {
+	return t.root.numChars()
+}
+
+// NumLines returns the total number of lines in the tree.
+func (t *Tree) NumLines() uint64 {
+	return t.root.numNewlines() + 1
+}
+
 // InsertAtPosition inserts a UTF-8 character at the specified position (0-indexed).
 // If charPos is past the end of the text, it will be appended at the end.
 // Returns an error if c is not a valid UTF-8 character.
@@ -292,6 +302,22 @@ func (n *innerNode) key() indexKey {
 		nodeKey.numNewlines += key.numNewlines
 	}
 	return nodeKey
+}
+
+func (n *innerNode) numChars() uint64 {
+	numChars := uint64(0)
+	for i := uint64(0); i < n.numKeys; i++ {
+		numChars += n.keys[i].numChars
+	}
+	return numChars
+}
+
+func (n *innerNode) numNewlines() uint64 {
+	numNewlines := uint64(0)
+	for i := uint64(0); i < n.numKeys; i++ {
+		numNewlines += n.keys[i].numNewlines
+	}
+	return numNewlines
 }
 
 func (n *innerNode) recalculateChildKeys() {

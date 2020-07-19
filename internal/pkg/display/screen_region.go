@@ -67,6 +67,23 @@ func (r *ScreenRegion) SetContent(x int, y int, mainc rune, combc []rune, style 
 	r.screen.SetContent(x+r.x, y+r.y, mainc, combc, style)
 }
 
+// HideCursor prevents the cursor from being displayed.
+func (r *ScreenRegion) HideCursor() {
+	r.screen.ShowCursor(-1, -1)
+}
+
+// ShowCursor sets the location of the cursor on the screen.
+// The x and y coordinates are relative to the origin of the region.
+// If the coodinates are outside of the screen region, the cursor will be hidden.
+func (r *ScreenRegion) ShowCursor(x, y int) {
+	if x < 0 || y < 0 || x >= r.width || y >= r.height {
+		r.HideCursor()
+		return
+	}
+
+	r.screen.ShowCursor(x+r.x, y+r.y)
+}
+
 // Size returns the width and height of the screen region.
 func (r *ScreenRegion) Size() (width int, height int) {
 	return r.width, r.height

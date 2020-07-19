@@ -2,7 +2,7 @@ package exec
 
 // Mutator modifies the state of the cursor or text.
 type Mutator interface {
-	Mutate(state *State) error
+	Mutate(state *State)
 }
 
 // cursorMutator updates the current location of the cursor.
@@ -15,7 +15,6 @@ func NewCursorMutator(loc Locator) Mutator {
 	return &cursorMutator{loc}
 }
 
-func (cpm *cursorMutator) Mutate(state *State) error {
+func (cpm *cursorMutator) Mutate(state *State) {
 	state.cursor = cpm.loc.Locate(state)
-	return nil
 }

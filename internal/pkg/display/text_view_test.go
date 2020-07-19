@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell"
 
 	"github.com/stretchr/testify/require"
+	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -14,7 +15,8 @@ func textViewWithString(t *testing.T, screen tcell.Screen, s string) *TextView {
 	region := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
-	return NewTextView(tree, region)
+	execState := exec.NewState(tree, 0)
+	return NewTextView(execState, region)
 }
 
 func TestTextViewDraw(t *testing.T) {

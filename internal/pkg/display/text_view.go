@@ -7,18 +7,19 @@ import (
 
 	"github.com/gdamore/tcell"
 	runewidth "github.com/mattn/go-runewidth"
+	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // TextView displays text in a terminal, clipping and scrolling as necessary.
 type TextView struct {
-	tree         *text.Tree
+	execState    *exec.State
 	screenRegion *ScreenRegion
 }
 
 // NewTextView initializes a text view for a text tree and screen.
-func NewTextView(tree *text.Tree, screenRegion *ScreenRegion) *TextView {
-	return &TextView{tree, screenRegion}
+func NewTextView(execState *exec.State, screenRegion *ScreenRegion) *TextView {
+	return &TextView{execState, screenRegion}
 }
 
 // Resize notifies the text view that the terminal size has changed.
@@ -29,6 +30,7 @@ func (v *TextView) Resize(width, height int) {
 // Draw draws text to the screen.
 func (v *TextView) Draw() {
 	width, height := v.screenRegion.Size()
+	v.screenRegion.HideCursor()
 
 	if width < 2 {
 		// If the view is too narrow to display full-width characters (occupying 2 cells), just fill it.
@@ -40,13 +42,20 @@ func (v *TextView) Draw() {
 }
 
 func (v *TextView) drawText(width, height int) {
-	reader := v.tree.ReaderAtPosition(0, text.ReadDirectionForward)
+	reader := v.execState.Tree().ReaderAtPosition(0, text.ReadDirectionForward)
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(splitUtf8Cells)
 
+	pos := uint64(0)
 	x, y := 0, 0
 	for scanner.Scan() {
 		s := scanner.Text()
+
+		if pos == v.execState.CursorPosition() {
+			v.screenRegion.ShowCursor(x, y)
+		}
+
+		pos += uint64(utf8.RuneCountInString(s))
 
 		// If newline, skip to the next line.
 		if s[0] == '\n' {

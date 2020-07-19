@@ -6,46 +6,59 @@ import (
 	"github.com/gdamore/tcell"
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/display"
+	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/input"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Editor is a terminal-based text editing program.
 type Editor struct {
-	path     string
-	tree     *text.Tree
-	textView *display.TextView
-	screen   tcell.Screen
-	quitChan chan struct{}
+	path             string
+	inputInterpreter *input.Interpreter
+	execState        *exec.State
+	textView         *display.TextView
+	screen           tcell.Screen
+	quitChan         chan struct{}
 }
 
 // NewEditor instantiates a new editor that uses the provided screen and file path.
 func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
-	tree, err := initializeTree(path)
+	execState, err := initializeExecState(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "initializing tree")
 	}
-
+	inputInterpreter := input.NewInterpreter()
 	screenWidth, screenHeight := screen.Size()
-	textView := display.NewTextView(tree, display.NewScreenRegion(screen, 0, 0, screenWidth, screenHeight))
+	screenRegion := display.NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
+	textView := display.NewTextView(execState, screenRegion)
 	quitChan := make(chan struct{})
-	editor := &Editor{path, tree, textView, screen, quitChan}
+	editor := &Editor{path, inputInterpreter, execState, textView, screen, quitChan}
 	return editor, nil
 }
 
-func initializeTree(path string) (*text.Tree, error) {
+func initializeExecState(path string) (*exec.State, error) {
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
-		return text.NewTree(), nil
+		emptyState := exec.NewState(text.NewTree(), 0)
+		return emptyState, nil
 	} else if err != nil {
 		return nil, errors.Wrapf(err, "opening file at %s", path)
 	}
 	defer file.Close()
-	return text.NewTreeFromReader(file)
+
+	tree, err := text.NewTreeFromReader(file)
+	if err != nil {
+		return nil, err
+	}
+
+	execState := exec.NewState(tree, 0)
+	return execState, nil
 }
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	e.redrawAndSync()
+	e.redraw()
+	e.screen.Sync()
 
 	go func() {
 		for {
@@ -62,9 +75,9 @@ func (e *Editor) RunEventLoop() {
 	<-e.quitChan
 }
 
-// Stop terminates the event loop.
+// Quit terminates the event loop.
 // Calling this more than once will panic
-func (e *Editor) Stop() {
+func (e *Editor) Quit() {
 	close(e.quitChan)
 }
 
@@ -78,20 +91,24 @@ func (e *Editor) handleEvent(event tcell.Event) {
 }
 
 func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
-	switch event.Key() {
-	case tcell.KeyEscape, tcell.KeyEnter, tcell.KeyCtrlC:
-		close(e.quitChan)
+	switch cmd := e.inputInterpreter.ProcessKeyEvent(event).(type) {
+	case *input.QuitCommand:
+		e.Quit()
+	case *input.ExecCommand:
+		cmd.Mutator.Mutate(e.execState)
+		e.redraw()
+		e.screen.Show()
 	}
 }
 
 func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 	screenWidth, screenHeight := e.screen.Size()
 	e.textView.Resize(screenWidth, screenHeight)
-	e.redrawAndSync()
+	e.redraw()
+	e.screen.Sync()
 }
 
-func (e *Editor) redrawAndSync() {
+func (e *Editor) redraw() {
 	e.screen.Clear()
 	e.textView.Draw()
-	e.screen.Sync()
 }

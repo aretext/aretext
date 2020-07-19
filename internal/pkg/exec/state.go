@@ -10,6 +10,21 @@ type State struct {
 	cursor cursorState
 }
 
+func NewState(tree *text.Tree, cursorPosition uint64) *State {
+	return &State{
+		tree:   tree,
+		cursor: cursorState{position: cursorPosition},
+	}
+}
+
+func (s *State) Tree() *text.Tree {
+	return s.tree
+}
+
+func (s *State) CursorPosition() uint64 {
+	return s.cursor.position
+}
+
 // cursorState is the current state of the cursor.
 type cursorState struct {
 	// position is a position within the text tree where the cursor appears.

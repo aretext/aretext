@@ -2,41 +2,39 @@ package input
 
 import (
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Interpreter translates key events to commands.
-type Interpreter struct{}
+type Interpreter struct {
+	currentMode ModeType
+	modes       map[ModeType]Mode
+}
 
 // NewInterpreter creates a new interpreter.
 func NewInterpreter() *Interpreter {
-	return &Interpreter{}
+	return &Interpreter{
+		currentMode: ModeTypeNormal,
+		modes: map[ModeType]Mode{
+			ModeTypeNormal: newNormalMode(),
+			ModeTypeInsert: newInsertMode(),
+		},
+	}
 }
 
 // ProcessKeyEvent interprets a key input event, producing a command if necessary.
 // A return value of nil means no command occurred.
 func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey) Command {
-	switch event.Key() {
-	case tcell.KeyEscape, tcell.KeyEnter, tcell.KeyCtrlC:
+	if event.Key() == tcell.KeyCtrlC {
 		return &QuitCommand{}
-	case tcell.KeyLeft:
-		return inp.cursorLeftCmd()
-	case tcell.KeyRight:
-		return inp.cursorRightCmd()
-	default:
-		return nil
 	}
+
+	mode := inp.modes[inp.currentMode]
+	cmd, nextMode := mode.ProcessKeyEvent(event)
+	inp.currentMode = nextMode
+	return cmd
 }
 
-func (inp *Interpreter) cursorLeftCmd() Command {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
-}
-
-func (inp *Interpreter) cursorRightCmd() Command {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+// Mode returns the current input mode of the interpreter.
+func (inp *Interpreter) Mode() ModeType {
+	return inp.currentMode
 }

@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
@@ -9,6 +10,8 @@ import (
 
 // Locator finds the position of the cursor according to some criteria.
 type Locator interface {
+	fmt.Stringer
+
 	// Locate finds the next position of the cursor based on the current state and criteria for this locator.
 	Locate(state *State) cursorState
 }
@@ -24,6 +27,14 @@ type charInLineLocator struct {
 // The count arg is the maximum number of characters to move the cursor.
 func NewCharInLineLocator(direction text.ReadDirection, count uint64) Locator {
 	return &charInLineLocator{direction, count}
+}
+
+func (loc *charInLineLocator) String() string {
+	direction := "forward"
+	if loc.direction == text.ReadDirectionBackward {
+		direction = "backward"
+	}
+	return fmt.Sprintf("CharInLineLocator(%s, %d)", direction, loc.count)
 }
 
 // Locate finds a character to the right of the cursor on the current line.

@@ -1,0 +1,93 @@
+package input
+
+import (
+	"testing"
+
+	"github.com/gdamore/tcell"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestInterpreter(t *testing.T) {
+	testCases := []struct {
+		name             string
+		inputEvents      []*tcell.EventKey
+		expectedCommands []string
+	}{
+		{
+			name: "quit using ctrl-c in normal mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"Quit()"},
+		},
+		{
+			name: "quit using ctrl-c in insert mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Quit()"},
+		},
+		{
+			name: "move cursor left using arrow key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyLeft, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1)))"},
+		},
+		{
+			name: "move cursor right using arrow key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRight, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1)))"},
+		},
+		{
+			name: "move cursor left using 'h' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1)))"},
+		},
+		{
+			name: "move cursor right using 'l' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1)))"},
+		},
+		{
+			name: "insert and return to normal mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"",
+				"Exec(InsertRune(a))",
+				"Exec(InsertRune(b))",
+				"",
+				"Exec(MutateCursor(CharInLineLocator(forward, 1)))",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			interpreter := NewInterpreter()
+			commands := make([]string, 0, len(tc.inputEvents))
+			for _, event := range tc.inputEvents {
+				cmd := interpreter.ProcessKeyEvent(event)
+				if cmd == nil {
+					commands = append(commands, "")
+				} else {
+					commands = append(commands, cmd.String())
+				}
+			}
+			assert.Equal(t, tc.expectedCommands, commands)
+		})
+	}
+}

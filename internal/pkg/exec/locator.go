@@ -68,8 +68,14 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 	reader := state.tree.ReaderAtPosition(startPos, text.ReadDirectionBackward)
 	runeIter := text.NewCloneableBackwardRuneIter(reader)
 	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter.Clone())
-	var moveCount, prevBreak uint64
-	for moveCount < loc.count {
+
+	// Ignore the breakpoint at the end of the text
+	if err := breaks.SkipBreak(gcIter); err != nil {
+		panic(err)
+	}
+
+	var prevBreak uint64
+	for i := uint64(0); i < loc.count; i++ {
 		nextBreak, err := gcIter.NextBreak()
 		if err == io.EOF {
 			break
@@ -89,12 +95,6 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 		}
 
 		prevBreak = nextBreak
-
-		// The first break is always at the start of the text, which we can ignore
-		// because it won't move the cursor.
-		if nextBreak > 0 {
-			moveCount++
-		}
 	}
 
 	return startPos - prevBreak
@@ -106,8 +106,14 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	eofBreak := state.tree.NumChars() - startPos
 	gcIter := breaks.NewGraphemeClusterBreakIter(runeIter.Clone())
-	var moveCount, prevBreak, prevPrevBreak uint64
-	for moveCount <= loc.count {
+
+	// Ignore the breakpoint at the start of the text
+	if err := breaks.SkipBreak(gcIter); err != nil {
+		panic(err)
+	}
+
+	var prevBreak, prevPrevBreak uint64
+	for i := uint64(0); i <= loc.count; i++ {
 		nextBreak, err := gcIter.NextBreak()
 		if err == io.EOF {
 			break
@@ -128,12 +134,6 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 
 		prevPrevBreak = prevBreak
 		prevBreak = nextBreak
-
-		// The first break is always at the start of the text, which we can ignore
-		// because it won't move the cursor.
-		if nextBreak > 0 {
-			moveCount++
-		}
 	}
 
 	return startPos + prevPrevBreak

@@ -55,6 +55,14 @@ func (g *GraphemeClusterBreakIter) NextBreak() (uint64, error) {
 	return 0, io.EOF
 }
 
+// SkipBreak implements BreakIter#SkipBreak()
+func (g *GraphemeClusterBreakIter) SkipBreak() error {
+	if _, err := g.NextBreak(); err != nil && err != io.EOF {
+		return err
+	}
+	return nil
+}
+
 // processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
 func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
 	prop := gbPropForRune(r)

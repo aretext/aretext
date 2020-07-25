@@ -74,6 +74,23 @@ func TestInterpreter(t *testing.T) {
 			},
 		},
 		{
+			name: "append and return to normal mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '1', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Exec(MutateCursor(CharInLineLocator(forward, 1, true)))",
+				"Exec(InsertRune('1'))",
+				"Exec(InsertRune('2'))",
+				"Exec(MutateCursor(OntoLineLocator()))",
+				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+			},
+		},
+		{
 			name: "delete character using 'x' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),

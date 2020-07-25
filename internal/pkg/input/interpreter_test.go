@@ -33,28 +33,28 @@ func TestInterpreter(t *testing.T) {
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyLeft, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1)))"},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1, false)))"},
 		},
 		{
 			name: "move cursor right using arrow key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRight, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1)))"},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
 		},
 		{
 			name: "move cursor left using 'h' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1)))"},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1, false)))"},
 		},
 		{
 			name: "move cursor right using 'l' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1)))"},
+			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
 		},
 		{
 			name: "insert and return to normal mode",
@@ -70,7 +70,7 @@ func TestInterpreter(t *testing.T) {
 				"Exec(InsertRune('a'))",
 				"Exec(InsertRune('b'))",
 				"Exec(MutateCursor(OntoLineLocator()))",
-				"Exec(MutateCursor(CharInLineLocator(forward, 1)))",
+				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
 			},
 		},
 		{
@@ -79,7 +79,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(Composite(Delete(CharInLineLocator(forward, 1)),MutateCursor(OntoLineLocator())))",
+				"Exec(Composite(Delete(CharInLineLocator(forward, 1, true)),MutateCursor(OntoLineLocator())))",
 			},
 		},
 		{
@@ -88,7 +88,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
 		},
 		{
 			name: "delete character using backspace key in insert mode",
@@ -96,7 +96,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
 		},
 		{
 			name: "delete character using backspace2 key in insert mode",
@@ -104,7 +104,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace2, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
 		},
 		{
 			name: "insert newline",

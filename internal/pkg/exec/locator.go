@@ -35,7 +35,7 @@ func (loc *charInLineLocator) String() string {
 	if loc.direction == text.ReadDirectionBackward {
 		direction = "backward"
 	}
-	return fmt.Sprintf("CharInLineLocator(%s, %d)", direction, loc.count)
+	return fmt.Sprintf("CharInLineLocator(%s, %d, %t)", direction, loc.count, loc.includeEndOfLineOrFile)
 }
 
 // Locate finds a character to the right of the cursor on the current line.

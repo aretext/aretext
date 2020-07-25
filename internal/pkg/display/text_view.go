@@ -102,6 +102,10 @@ func (v *TextView) drawText(width, height int) {
 		}
 	}
 
+	if pos == v.execState.CursorPosition() {
+		v.screenRegion.ShowCursor(x, y)
+	}
+
 	if err := scanner.Err(); err != nil {
 		// This should never happen because splitUtf8Cells never returns errors.
 		log.Fatalf("error scanning text: %v", err)

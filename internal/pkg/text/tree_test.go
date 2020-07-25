@@ -355,6 +355,12 @@ func TestReadBackwards(t *testing.T) {
 			position:    2048,
 			expected:    Reverse(repeat('፴', 2048)),
 		},
+		{
+			name: "all characters from end",
+			inputString: "abcdefgh",
+			position: 8,
+			expected: Reverse("abcdefgh"),
+		},
 	}
 
 	for _, tc := range testCases {

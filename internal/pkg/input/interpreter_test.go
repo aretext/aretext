@@ -69,8 +69,17 @@ func TestInterpreter(t *testing.T) {
 				"",
 				"Exec(InsertRune(a))",
 				"Exec(InsertRune(b))",
-				"",
+				"Exec(MutateCursor(OntoLineLocator()))",
 				"Exec(MutateCursor(CharInLineLocator(forward, 1)))",
+			},
+		},
+		{
+			name: "delete character using 'x' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Exec(Composite(Delete(CharInLineLocator(forward, 1)),MutateCursor(OntoLineLocator())))",
 			},
 		},
 	}

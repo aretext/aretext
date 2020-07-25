@@ -48,6 +48,8 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 		return m.cursorLeftCmd(), ModeTypeNormal
 	case 'l':
 		return m.cursorRightCmd(), ModeTypeNormal
+	case 'x':
+		return m.deleteNextCharCmd(), ModeTypeNormal
 	case 'i':
 		return nil, ModeTypeInsert
 	default:
@@ -56,14 +58,23 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 }
 
 func (m *normalMode) cursorLeftCmd() Command {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1)
+	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
 	mutator := exec.NewCursorMutator(loc)
 	return &ExecCommand{mutator}
 }
 
 func (m *normalMode) cursorRightCmd() Command {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1)
+	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, false)
 	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) deleteNextCharCmd() Command {
+	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
+	mutator := exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteMutator(loc),
+		exec.NewCursorMutator(exec.NewOntoLineLocator()),
+	})
 	return &ExecCommand{mutator}
 }
 
@@ -80,11 +91,17 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 	case tcell.KeyRune:
 		return m.insertCmd(event.Rune()), ModeTypeInsert
 	default:
-		return nil, ModeTypeNormal
+		return m.moveCursorOntoLineCmd(), ModeTypeNormal
 	}
 }
 
 func (m *insertMode) insertCmd(r rune) Command {
 	mutator := exec.NewInsertRuneMutator(r)
+	return &ExecCommand{mutator}
+}
+
+func (m *insertMode) moveCursorOntoLineCmd() Command {
+	loc := exec.NewOntoLineLocator()
+	mutator := exec.NewCursorMutator(loc)
 	return &ExecCommand{mutator}
 }

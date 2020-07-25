@@ -18,15 +18,16 @@ type Locator interface {
 
 // charInLineLocator locates a character (grapheme cluster) in the current line.
 type charInLineLocator struct {
-	direction text.ReadDirection
-	count     uint64
+	direction              text.ReadDirection
+	count                  uint64
+	includeEndOfLineOrFile bool
 }
 
 // NewCharInLineLocator builds a new locator for a character on the same line as the cursor.
 // The direction arg indicates whether to read forward or backwards from the cursor.
 // The count arg is the maximum number of characters to move the cursor.
-func NewCharInLineLocator(direction text.ReadDirection, count uint64) Locator {
-	return &charInLineLocator{direction, count}
+func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEndOfLineOrFile bool) Locator {
+	return &charInLineLocator{direction, count, includeEndOfLineOrFile}
 }
 
 func (loc *charInLineLocator) String() string {
@@ -90,7 +91,7 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 		// Check if the next grapheme cluster contains a newline.
 		// This will consume runes from `runeIter`, which is a clone of the rune iter
 		// used by gcIter.  This keeps both gcIter and runeIter synchronized.
-		if loc.gcHasNewline(runeIter, nextBreak-prevBreak) {
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
 			break
 		}
 
@@ -104,7 +105,6 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 	startPos := state.cursor.position
 	reader := state.tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
-	eofBreak := state.tree.NumChars() - startPos
 	gcIter := breaks.NewGraphemeClusterBreakIter(runeIter.Clone())
 
 	// Ignore the breakpoint at the start of the text
@@ -112,23 +112,22 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 		panic(err)
 	}
 
+	var endOfLineOrFile bool
 	var prevBreak, prevPrevBreak uint64
 	for i := uint64(0); i <= loc.count; i++ {
 		nextBreak, err := gcIter.NextBreak()
 		if err == io.EOF {
+			endOfLineOrFile = true
 			break
 		} else if err != nil {
 			panic(err) // We assume the input is valid UTF-8, so this should never happen.
 		}
 
-		if nextBreak > eofBreak {
-			break
-		}
-
 		// Check if the next grapheme cluster contains a newline.
 		// This will consume runes from `runeIter`, which is a clone of the rune iter
 		// used by gcIter.  This keeps both gcIter and runeIter synchronized.
-		if loc.gcHasNewline(runeIter, nextBreak-prevBreak) {
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			endOfLineOrFile = true
 			break
 		}
 
@@ -136,10 +135,96 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 		prevBreak = nextBreak
 	}
 
+	if endOfLineOrFile && loc.includeEndOfLineOrFile {
+		return startPos + prevBreak
+	}
 	return startPos + prevPrevBreak
 }
 
-func (loc *charInLineLocator) gcHasNewline(runeIter text.RuneIter, gcLen uint64) bool {
+// ontoLineLocator finds the closest grapheme cluster on a line (not newline or past end of text).
+// This is useful for "resetting" the cursor onto a line
+// (for example, after deleting the last character on the line or exiting insert mode).
+type ontoLineLocator struct {
+}
+
+func NewOntoLineLocator() Locator {
+	return &ontoLineLocator{}
+}
+
+// Locate finds the closest grapheme cluster on a line (not newline or past end of text).
+func (loc *ontoLineLocator) Locate(state *State) cursorState {
+	// If past the end of the text, return the start of the last grapheme cluster.
+	numChars := state.tree.NumChars()
+	if state.cursor.position >= numChars {
+		newPos := loc.findPrevGraphemeCluster(state.tree, numChars, 1)
+		return cursorState{position: newPos}
+	}
+
+	// If on a grapheme cluster with a newline (either "\n" or "\r\n"), return the start
+	// of the last grapheme cluster before the current grapheme cluster.
+	if hasNewline, afterNewlinePos := loc.findNewlineAtPos(state.tree, state.cursor.position); hasNewline {
+		newPos := loc.findPrevGraphemeCluster(state.tree, afterNewlinePos, 2)
+		return cursorState{position: newPos}
+	}
+
+	// The cursor is already on a line, so do nothing.
+	return cursorState{position: state.cursor.position}
+}
+
+func (loc *ontoLineLocator) findNewlineAtPos(tree *text.Tree, pos uint64) (bool, uint64) {
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(reader)
+	gcIter := breaks.NewGraphemeClusterBreakIter(runeIter.Clone())
+
+	// Skip break at start of text.
+	if err := breaks.SkipBreak(gcIter); err != nil {
+		panic(err)
+	}
+
+	// Check if the next grapheme cluster has a newline.
+	nextBreak, err := gcIter.NextBreak()
+	if err == io.EOF {
+		return false, 0
+	} else if err != nil {
+		panic(err)
+	}
+
+	if gcHasNewline(runeIter, nextBreak) {
+		return true, pos + nextBreak
+	}
+
+	return false, 0
+}
+
+func (loc *ontoLineLocator) findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
+	runeIter := text.NewCloneableBackwardRuneIter(reader)
+	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter)
+
+	for i := 0; i < count; i++ {
+		if err := breaks.SkipBreak(gcIter); err != nil {
+			panic(err)
+		}
+	}
+
+	nextBreak, err := gcIter.NextBreak()
+	if err == io.EOF {
+		return 0
+	} else if err != nil {
+		panic(err)
+	}
+	return pos - nextBreak
+}
+
+func (loc *ontoLineLocator) String() string {
+	return "OntoLineLocator()"
+}
+
+// Check if the current grapheme cluster contains a newline.
+// runeIter must be positioned at the beginning of the grapheme cluster.
+// This will consume from runeIter, so callers that want to retain the current position
+// should provide a clone of the iterator.
+func gcHasNewline(runeIter text.RuneIter, gcLen uint64) bool {
 	for i := uint64(0); i < gcLen; i++ {
 		r, err := runeIter.NextRune()
 		if err != nil {

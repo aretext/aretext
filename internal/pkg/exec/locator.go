@@ -92,6 +92,9 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 		// This will consume runes from `runeIter`, which is a clone of the rune iter
 		// used by gcIter.  This keeps both gcIter and runeIter synchronized.
 		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			if loc.includeEndOfLineOrFile {
+				prevBreak = nextBreak
+			}
 			break
 		}
 

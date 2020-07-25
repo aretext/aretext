@@ -239,6 +239,14 @@ func TestPrevCharInLine(t *testing.T) {
 			numChars:       1,
 			expectedCursor: cursorState{position: 0, logicalOffset: 2},
 		},
+		{
+			name:                   "include end of previous line",
+			inputString:            "abcd\nefgh",
+			initialCursor:          cursorState{position: 5},
+			numChars:               1,
+			includeEndOfLineOrFile: true,
+			expectedCursor:         cursorState{position: 4},
+		},
 	}
 
 	for _, tc := range testCases {

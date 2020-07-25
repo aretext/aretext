@@ -82,6 +82,30 @@ func TestInterpreter(t *testing.T) {
 				"Exec(Composite(Delete(CharInLineLocator(forward, 1)),MutateCursor(OntoLineLocator())))",
 			},
 		},
+		{
+			name: "delete character using delete key in insert mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+		},
+		{
+			name: "delete character using backspace key in insert mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+		},
+		{
+			name: "delete character using backspace2 key in insert mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyBackspace2, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -90,6 +90,8 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 	switch event.Key() {
 	case tcell.KeyRune:
 		return m.insertCmd(event.Rune()), ModeTypeInsert
+	case tcell.KeyDelete, tcell.KeyBackspace, tcell.KeyBackspace2:
+		return m.deletePrevCharCmd(), ModeTypeInsert
 	default:
 		return m.moveCursorOntoLineCmd(), ModeTypeNormal
 	}
@@ -97,6 +99,12 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 
 func (m *insertMode) insertCmd(r rune) Command {
 	mutator := exec.NewInsertRuneMutator(r)
+	return &ExecCommand{mutator}
+}
+
+func (m *insertMode) deletePrevCharCmd() Command {
+	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
+	mutator := exec.NewDeleteMutator(loc)
 	return &ExecCommand{mutator}
 }
 

@@ -67,8 +67,8 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"",
-				"Exec(InsertRune(a))",
-				"Exec(InsertRune(b))",
+				"Exec(InsertRune('a'))",
+				"Exec(InsertRune('b'))",
 				"Exec(MutateCursor(OntoLineLocator()))",
 				"Exec(MutateCursor(CharInLineLocator(forward, 1)))",
 			},
@@ -105,6 +105,14 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyBackspace2, '\x00', tcell.ModNone),
 			},
 			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1)))"},
+		},
+		{
+			name: "insert newline",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Exec(InsertRune('\\n'))"},
 		},
 	}
 

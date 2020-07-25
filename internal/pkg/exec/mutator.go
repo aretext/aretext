@@ -76,7 +76,7 @@ func (irm *insertRuneMutator) Mutate(state *State) {
 }
 
 func (irm *insertRuneMutator) String() string {
-	return fmt.Sprintf("InsertRune(%c)", irm.r)
+	return fmt.Sprintf("InsertRune(%q)", irm.r)
 }
 
 // deleteMutator deletes characters from the cursor up to a location.

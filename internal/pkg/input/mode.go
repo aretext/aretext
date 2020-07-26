@@ -92,7 +92,7 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 	switch event.Key() {
 	case tcell.KeyRune:
 		return m.insertCmd(event.Rune()), ModeTypeInsert
-	case tcell.KeyDelete, tcell.KeyBackspace, tcell.KeyBackspace2:
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		return m.deletePrevCharCmd(), ModeTypeInsert
 	case tcell.KeyEnter:
 		return m.insertCmd('\n'), ModeTypeInsert

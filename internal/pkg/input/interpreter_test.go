@@ -100,14 +100,6 @@ func TestInterpreter(t *testing.T) {
 			},
 		},
 		{
-			name: "delete character using delete key in insert mode",
-			inputEvents: []*tcell.EventKey{
-				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
-			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
-		},
-		{
 			name: "delete character using backspace key in insert mode",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),

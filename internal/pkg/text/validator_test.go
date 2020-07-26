@@ -50,3 +50,17 @@ func TestValidateFile(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, v.ValidateBytes(data))
 }
+
+func BenchmarkValidateAscii(b *testing.B) {
+	s := make([]byte, 4096)
+	for i := 0; i < len(s); i++ {
+		s[i] = 'a'
+	}
+
+	var valid bool
+	for n := 0; n < b.N; n++ {
+		v := NewValidator()
+		valid = v.ValidateBytes(s) && v.ValidateEnd()
+	}
+	b.Log(valid)
+}

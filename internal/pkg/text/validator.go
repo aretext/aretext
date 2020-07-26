@@ -126,10 +126,9 @@ func (v *Validator) processByte(b byte) {
 }
 
 func isAscii(buf []byte) bool {
+	var x byte
 	for _, b := range buf {
-		if b>>7 != 0 {
-			return false
-		}
+		x |= (b & 0x80)
 	}
-	return true
+	return x == 0
 }

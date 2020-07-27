@@ -326,7 +326,7 @@ func TestOntoLineLocator(t *testing.T) {
 			name:           "cursor on newline preceded by newline",
 			inputString:    "abcd\n\nefgh",
 			initialCursor:  cursorState{position: 5},
-			expectedCursor: cursorState{position: 4},
+			expectedCursor: cursorState{position: 5},
 		},
 		{
 			name:           "cursor at newline in file with only newline",
@@ -338,7 +338,7 @@ func TestOntoLineLocator(t *testing.T) {
 			name:           "cursor at newline in file with multiple newlines",
 			inputString:    "\n\n\n",
 			initialCursor:  cursorState{position: 2},
-			expectedCursor: cursorState{position: 1},
+			expectedCursor: cursorState{position: 2},
 		},
 		{
 			name:           "cursor at newline with carriage return, on line feed",

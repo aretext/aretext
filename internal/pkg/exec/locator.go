@@ -201,20 +201,43 @@ func (loc *ontoLineLocator) findNewlineAtPos(tree *text.Tree, pos uint64) (bool,
 func (loc *ontoLineLocator) findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
 	runeIter := text.NewCloneableBackwardRuneIter(reader)
-	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter)
+	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter.Clone())
 
+	// Iterate backward by `count` grapheme clusters.
+	var prevBreak uint64
 	for i := 0; i < count; i++ {
-		if err := breaks.SkipBreak(gcIter); err != nil {
+		nextBreak, err := gcIter.NextBreak()
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			panic(err)
 		}
+
+		// Advance the cloned rune iter to keep up with gcIter.
+		for j := uint64(0); j < nextBreak-prevBreak; j++ {
+			if _, err := runeIter.NextRune(); err != nil {
+				panic(err)
+			}
+		}
+
+		prevBreak = nextBreak
 	}
 
+	// Check the next grapheme cluster after `count` clusters.
 	nextBreak, err := gcIter.NextBreak()
 	if err == io.EOF {
 		return 0
 	} else if err != nil {
 		panic(err)
 	}
+
+	// If the immediately preceding cluster is a newline, then we're on
+	// an empty line, in which case we shouldn't move the cursor.
+	if gcHasNewline(runeIter, nextBreak-prevBreak) {
+		return pos - prevBreak
+	}
+
+	// Otherwise, move the cursor back a cluster to position it at the end of the previous line.
 	return pos - nextBreak
 }
 

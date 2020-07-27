@@ -35,6 +35,10 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 		return m.cursorLeftCmd(), ModeTypeNormal
 	case tcell.KeyRight:
 		return m.cursorRightCmd(false), ModeTypeNormal
+	case tcell.KeyUp:
+		return m.cursorUpCmd(), ModeTypeNormal
+	case tcell.KeyDown:
+		return m.cursorDownCmd(), ModeTypeNormal
 	case tcell.KeyRune:
 		return m.processRuneKey(event.Rune())
 	default:
@@ -48,6 +52,10 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 		return m.cursorLeftCmd(), ModeTypeNormal
 	case 'l':
 		return m.cursorRightCmd(false), ModeTypeNormal
+	case 'k':
+		return m.cursorUpCmd(), ModeTypeNormal
+	case 'j':
+		return m.cursorDownCmd(), ModeTypeNormal
 	case 'x':
 		return m.deleteNextCharCmd(), ModeTypeNormal
 	case 'i':
@@ -67,6 +75,18 @@ func (m *normalMode) cursorLeftCmd() Command {
 
 func (m *normalMode) cursorRightCmd(allowPastEndOfLineOrFile bool) Command {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, allowPastEndOfLineOrFile)
+	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorUpCmd() Command {
+	loc := exec.NewRelativeLineLocator(text.ReadDirectionBackward, 1)
+	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorDownCmd() Command {
+	loc := exec.NewRelativeLineLocator(text.ReadDirectionForward, 1)
 	mutator := exec.NewCursorMutator(loc)
 	return &ExecCommand{mutator}
 }

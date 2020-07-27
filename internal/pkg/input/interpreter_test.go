@@ -43,6 +43,20 @@ func TestInterpreter(t *testing.T) {
 			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
 		},
 		{
+			name: "move cursor up using arrow key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyUp, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(backward, 1)))"},
+		},
+		{
+			name: "move cursor down using arrow key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyDown, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(forward, 1)))"},
+		},
+		{
 			name: "move cursor left using 'h' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone),
@@ -55,6 +69,20 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
+		},
+		{
+			name: "move cursor up using 'k' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'k', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(backward, 1)))"},
+		},
+		{
+			name: "move cursor down using 'j' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(forward, 1)))"},
 		},
 		{
 			name: "insert and return to normal mode",

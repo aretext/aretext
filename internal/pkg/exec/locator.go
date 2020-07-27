@@ -222,6 +222,174 @@ func (loc *ontoLineLocator) String() string {
 	return "OntoLineLocator()"
 }
 
+// relativeLineLocator finds a position at the same offset above or below the current line.
+type relativeLineLocator struct {
+	direction text.ReadDirection
+	count     uint64
+}
+
+// NewRelativeLineLocator returns a locator for moving the cursor up or down by some number of lines.
+// Count is the number of lines to move, and it must be at least one.
+// Direction indicates whether to move up (ReadDirectionBackward) or down (ReadDirectionForward).
+func NewRelativeLineLocator(direction text.ReadDirection, count uint64) Locator {
+	if count == 0 {
+		panic("Count must be greater than zero")
+	}
+	return &relativeLineLocator{direction, count}
+}
+
+// Locate returns a cursor position at the same offset above or below the current line.
+// It does nothing when moving up from the first line or down from the last line.
+// If the target line has fewer characters than the starting line, then the extra characters
+// will be counted the cursor's logical offset.
+// If the target line has more characters than the starting line, then the cursor will move
+// as close as possible to the logical offset.
+func (loc *relativeLineLocator) Locate(state *State) cursorState {
+	targetOffset := loc.findOffsetFromLineStart(state)
+	lineStartPos, newlineCount := loc.findStartOfLine(state.tree, state.cursor.position)
+	if newlineCount == 0 {
+		return state.cursor
+	}
+
+	newPos, actualOffset := loc.advanceToOffset(state.tree, lineStartPos, targetOffset)
+	return cursorState{
+		position:      newPos,
+		logicalOffset: targetOffset - actualOffset,
+	}
+}
+
+func (loc *relativeLineLocator) findOffsetFromLineStart(state *State) uint64 {
+	reader := state.tree.ReaderAtPosition(state.cursor.position, text.ReadDirectionBackward)
+	runeIter := text.NewCloneableBackwardRuneIter(reader)
+	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter.Clone())
+
+	if err := breaks.SkipBreak(gcIter); err != nil {
+		panic(err)
+	}
+
+	var offset, prevBreak uint64
+	for {
+		nextBreak, err := gcIter.NextBreak()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			break
+		}
+
+		prevBreak = nextBreak
+		offset++
+	}
+
+	return offset + state.cursor.logicalOffset
+}
+
+func (loc *relativeLineLocator) findStartOfLine(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
+	if loc.direction == text.ReadDirectionBackward {
+		return loc.findStartOfLineAbove(tree, pos)
+	} else {
+		return loc.findStartOfLineBelow(tree, pos)
+	}
+}
+
+func (loc *relativeLineLocator) findStartOfLineAbove(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
+	runeIter := text.NewCloneableBackwardRuneIter(reader)
+	gcIter := breaks.NewReverseGraphemeClusterBreakIter(runeIter.Clone())
+
+	var prevBreak uint64
+	for {
+		nextBreak, err := gcIter.NextBreak()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			newlineCount++
+			if newlineCount > loc.count {
+				break
+			}
+		}
+
+		prevBreak = nextBreak
+	}
+
+	return pos - prevBreak, newlineCount
+}
+
+func (loc *relativeLineLocator) findStartOfLineBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(reader)
+	gcIter := breaks.NewGraphemeClusterBreakIter(runeIter.Clone())
+
+	var prevBreak uint64
+	for newlineCount < loc.count {
+		nextBreak, err := gcIter.NextBreak()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			newlineCount++
+		}
+
+		prevBreak = nextBreak
+	}
+
+	return pos + prevBreak, newlineCount
+}
+
+func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos uint64, targetOffset uint64) (newPos, actualOffset uint64) {
+	reader := tree.ReaderAtPosition(lineStartPos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(reader)
+	gcIter := breaks.NewGraphemeClusterBreakIter(runeIter.Clone())
+
+	if err := breaks.SkipBreak(gcIter); err != nil {
+		panic(err)
+	}
+
+	var endOfLineOrFile bool
+	var prevPrevBreak, prevBreak, offset uint64
+	for offset < targetOffset {
+		nextBreak, err := gcIter.NextBreak()
+		if err == io.EOF {
+			endOfLineOrFile = true
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		if gcHasNewline(runeIter, nextBreak-prevBreak) {
+			endOfLineOrFile = true
+			break
+		}
+
+		offset++
+		prevPrevBreak = prevBreak
+		prevBreak = nextBreak
+	}
+
+	if endOfLineOrFile {
+		if offset > 0 {
+			offset--
+		}
+		return lineStartPos + prevPrevBreak, offset
+	}
+
+	return lineStartPos + prevBreak, offset
+}
+
+func (loc *relativeLineLocator) String() string {
+	return fmt.Sprintf("RelativeLineLocator(%s, %d)", directionString(loc.direction), loc.count)
+}
+
 // Check if the current grapheme cluster contains a newline.
 // runeIter must be positioned at the beginning of the grapheme cluster.
 // This will consume from runeIter, so callers that want to retain the current position

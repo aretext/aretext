@@ -27,15 +27,14 @@ type charInLineLocator struct {
 // The direction arg indicates whether to read forward or backwards from the cursor.
 // The count arg is the maximum number of characters to move the cursor.
 func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEndOfLineOrFile bool) Locator {
+	if count == 0 {
+		panic("Count must be greater than zero")
+	}
 	return &charInLineLocator{direction, count, includeEndOfLineOrFile}
 }
 
 func (loc *charInLineLocator) String() string {
-	direction := "forward"
-	if loc.direction == text.ReadDirectionBackward {
-		direction = "backward"
-	}
-	return fmt.Sprintf("CharInLineLocator(%s, %d, %t)", direction, loc.count, loc.includeEndOfLineOrFile)
+	return fmt.Sprintf("CharInLineLocator(%s, %d, %t)", directionString(loc.direction), loc.count, loc.includeEndOfLineOrFile)
 }
 
 // Locate finds a character to the right of the cursor on the current line.
@@ -242,4 +241,15 @@ func gcHasNewline(runeIter text.RuneIter, gcLen uint64) bool {
 	}
 
 	return false
+}
+
+func directionString(direction text.ReadDirection) string {
+	switch direction {
+	case text.ReadDirectionForward:
+		return "forward"
+	case text.ReadDirectionBackward:
+		return "backward"
+	default:
+		panic("Unrecognized direction")
+	}
 }

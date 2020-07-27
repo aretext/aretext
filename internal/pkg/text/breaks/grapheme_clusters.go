@@ -26,7 +26,7 @@ type GraphemeClusterBreakIter struct {
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterBreakIter(runeIter text.RuneIter) *GraphemeClusterBreakIter {
+func NewGraphemeClusterBreakIter(runeIter text.RuneIter) BreakIter {
 	return &GraphemeClusterBreakIter{runeIter: runeIter}
 }
 
@@ -53,14 +53,6 @@ func (g *GraphemeClusterBreakIter) NextBreak() (uint64, error) {
 	}
 
 	return 0, io.EOF
-}
-
-// SkipBreak implements BreakIter#SkipBreak()
-func (g *GraphemeClusterBreakIter) SkipBreak() error {
-	if _, err := g.NextBreak(); err != nil && err != io.EOF {
-		return err
-	}
-	return nil
 }
 
 // processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
@@ -136,7 +128,7 @@ type ReverseGraphemeClusterBreakIter struct {
 }
 
 // NewReverseGraphemeClusterBreakIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
-func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) *ReverseGraphemeClusterBreakIter {
+func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) BreakIter {
 	return &ReverseGraphemeClusterBreakIter{runeIter: runeIter}
 }
 

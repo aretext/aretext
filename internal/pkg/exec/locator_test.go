@@ -585,6 +585,22 @@ func TestRelativeLineLocator(t *testing.T) {
 			initialCursor:  cursorState{position: 12},
 			expectedCursor: cursorState{position: 2},
 		},
+		{
+			name:           "move down past newline at end of text",
+			inputString:    "abcd\nefgh\nijkl\n",
+			direction:      text.ReadDirectionForward,
+			count:          1,
+			initialCursor:  cursorState{position: 12},
+			expectedCursor: cursorState{position: 12},
+		},
+		{
+			name:           "move down past single newline",
+			inputString:    "\n",
+			direction:      text.ReadDirectionForward,
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
 	}
 
 	for _, tc := range testCases {

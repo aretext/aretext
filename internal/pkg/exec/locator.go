@@ -285,10 +285,19 @@ func (loc *relativeLineLocator) findStartOfLineAbove(tree *text.Tree, pos uint64
 func (loc *relativeLineLocator) findStartOfLineBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
 	segmentIter := newGraphemeClusterSegmentIter(tree, pos, text.ReadDirectionForward)
 
+	// Lookahead one grapheme cluster.
+	nextSegmentIter := segmentIter.clone()
+	nextSegmentIter.nextSegment()
+
 	var offset uint64
 	for newlineCount < loc.count {
 		segment, eof := segmentIter.nextSegment()
-		if eof {
+		_, lookaheadEof := nextSegmentIter.nextSegment()
+
+		// POSIX allows the last newline to be treated as EOF,
+		// so if the current segment is a newline and the next segment is EOF
+		// then stop advancing the cursor.
+		if eof || (segmentHasNewline(segment) && lookaheadEof) {
 			break
 		}
 

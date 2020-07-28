@@ -12,7 +12,7 @@ import (
 // A grapheme cluster is a user-perceived character.  These may be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
 type GraphemeClusterBreakIter struct {
-	runeIter                         text.RuneIter
+	runeIter                         text.CloneableRuneIter
 	runeCount                        uint64
 	endOfText                        bool
 	lastProp                         gbProp
@@ -26,8 +26,16 @@ type GraphemeClusterBreakIter struct {
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterBreakIter(runeIter text.RuneIter) BreakIter {
+func NewGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) CloneableBreakIter {
 	return &GraphemeClusterBreakIter{runeIter: runeIter}
+}
+
+// Clone implements CloneableBreakIter#Clone()
+func (g *GraphemeClusterBreakIter) Clone() CloneableBreakIter {
+	var clone GraphemeClusterBreakIter
+	clone = *g
+	clone.runeIter = g.runeIter.Clone()
+	return &clone
 }
 
 // NextBreak implements BreakIter#NextBreak()
@@ -128,8 +136,16 @@ type ReverseGraphemeClusterBreakIter struct {
 }
 
 // NewReverseGraphemeClusterBreakIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
-func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) BreakIter {
+func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) CloneableBreakIter {
 	return &ReverseGraphemeClusterBreakIter{runeIter: runeIter}
+}
+
+// Clone implements CloneableBreakIter#Clone()
+func (g *ReverseGraphemeClusterBreakIter) Clone() CloneableBreakIter {
+	var clone ReverseGraphemeClusterBreakIter
+	clone = *g
+	clone.runeIter = g.runeIter.Clone()
+	return &clone
 }
 
 // NextBreak implements BreakIter#NextBreak()

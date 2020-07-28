@@ -9,8 +9,8 @@ import (
 
 // SegementIter iterates through rune slices segmented by a break iterator.
 type segmentIter struct {
-	runeIter  text.RuneIter
-	breakIter breaks.BreakIter
+	runeIter  text.CloneableRuneIter
+	breakIter breaks.CloneableBreakIter
 	prevBreak uint64
 }
 
@@ -60,6 +60,15 @@ func (iter *segmentIter) nextSegment() (segment []rune, eof bool) {
 		if len(segment) > 0 {
 			return segment, false
 		}
+	}
+}
+
+// clone returns a new, independent iterator at the same position as the original iterator.
+func (iter *segmentIter) clone() *segmentIter {
+	return &segmentIter{
+		runeIter:  iter.runeIter.Clone(),
+		breakIter: iter.breakIter.Clone(),
+		prevBreak: iter.prevBreak,
 	}
 }
 

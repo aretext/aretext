@@ -7,3 +7,10 @@ type BreakIter interface {
 	// If there are no more breakpoints, NextBreak returns an io.EOF error.
 	NextBreak() (uint64, error)
 }
+
+// CloneableBreakIter is a break iterator that can be cloned to produce a new, independent iterator.
+type CloneableBreakIter interface {
+	BreakIter
+
+	Clone() CloneableBreakIter
+}

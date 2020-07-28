@@ -45,22 +45,6 @@ func TestGraphemeClusterBreakIterPastEOF(t *testing.T) {
 	assert.Equal(t, io.EOF, err)
 }
 
-func TestGraphemeClusterBreakIterSkipBreak(t *testing.T) {
-	iter := graphemeClusterBreakIterFromString("abc")
-	err := SkipBreak(iter)
-	require.NoError(t, err)
-	bp, _ := iter.NextBreak()
-	assert.Equal(t, uint64(1), bp)
-}
-
-func TestGraphemeClusterBreakIterSkipBreakEmptyString(t *testing.T) {
-	iter := graphemeClusterBreakIterFromString("")
-	err := SkipBreak(iter)
-	require.NoError(t, err)
-	_, err = iter.NextBreak()
-	assert.Equal(t, err, io.EOF)
-}
-
 func TestGraphemeClusterBreakIterUnicodeTestCases(t *testing.T) {
 	for i, tc := range graphemeBreakTestCases() {
 		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {

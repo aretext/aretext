@@ -927,6 +927,19 @@ func TestDeleteNewline(t *testing.T) {
 	assert.Equal(t, 100, len(text))
 }
 
+func TestNodeSplit(t *testing.T) {
+	s := repeat('x', 1339)
+	tree, err := NewTreeFromString(s)
+	require.NoError(t, err)
+
+	assert.Equal(t, uint64(1339), tree.NumChars())
+	assert.Equal(t, 1339, len(allTextFromTree(t, tree)))
+	require.NoError(t, tree.InsertAtPosition(0, 'a'))
+	require.NoError(t, tree.InsertAtPosition(1, 'b'))
+	assert.Equal(t, uint64(1341), tree.NumChars())
+	assert.Equal(t, 1341, len(allTextFromTree(t, tree)))
+}
+
 func BenchmarkLoad(b *testing.B) {
 	benchmarks := []struct {
 		name     string

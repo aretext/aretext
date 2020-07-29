@@ -250,7 +250,7 @@ func (g *innerNodeGroup) insertAtPosition(nodeIdx uint64, charPos uint64, c rune
 }
 
 func (g *innerNodeGroup) insertNode(nodeIdx uint64, node *innerNode) {
-	for i := int(g.numNodes) - 1; i > int(nodeIdx); i-- {
+	for i := int(g.numNodes); i > int(nodeIdx); i-- {
 		g.nodes[i] = g.nodes[i-1]
 	}
 	g.nodes[nodeIdx] = *node
@@ -440,7 +440,7 @@ func (g *leafNodeGroup) insertAtPosition(nodeIdx uint64, charPos uint64, c rune)
 }
 
 func (g *leafNodeGroup) insertNode(nodeIdx uint64, node *leafNode) {
-	for i := int(g.numNodes) - 1; i > int(nodeIdx); i-- {
+	for i := int(g.numNodes); i > int(nodeIdx); i-- {
 		g.nodes[i] = g.nodes[i-1]
 	}
 	g.nodes[nodeIdx] = *node

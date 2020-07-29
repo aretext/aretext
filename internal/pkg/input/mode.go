@@ -58,10 +58,20 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 		return m.cursorDownCmd(), ModeTypeNormal
 	case 'x':
 		return m.deleteNextCharCmd(), ModeTypeNormal
+	case '0':
+		return m.cursorLineStartCmd(), ModeTypeNormal
+	case '^':
+		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeNormal
+	case '$':
+		return m.cursorLineEndCmd(false), ModeTypeNormal
 	case 'i':
 		return nil, ModeTypeInsert
+	case 'I':
+		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeInsert
 	case 'a':
 		return m.cursorRightCmd(true), ModeTypeInsert
+	case 'A':
+		return m.cursorLineEndCmd(true), ModeTypeInsert
 	default:
 		return nil, ModeTypeNormal
 	}
@@ -87,6 +97,28 @@ func (m *normalMode) cursorUpCmd() Command {
 
 func (m *normalMode) cursorDownCmd() Command {
 	loc := exec.NewRelativeLineLocator(text.ReadDirectionForward, 1)
+	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorLineStartCmd() Command {
+	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorLineStartNonWhitespaceCmd() Command {
+	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator(text.ReadDirectionForward)
+	mutator := exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(lineStartLoc),
+		exec.NewCursorMutator(firstNonWhitespaceLoc),
+	})
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorLineEndCmd(includeEndOfLineOrFile bool) Command {
+	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, includeEndOfLineOrFile)
 	mutator := exec.NewCursorMutator(loc)
 	return &ExecCommand{mutator}
 }

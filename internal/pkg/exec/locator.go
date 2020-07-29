@@ -347,6 +347,107 @@ func (loc *relativeLineLocator) String() string {
 	return fmt.Sprintf("RelativeLineLocator(%s, %d)", directionString(loc.direction), loc.count)
 }
 
+// lineBoundaryLocator locates the start or end of the current line.
+type lineBoundaryLocator struct {
+	direction              text.ReadDirection
+	includeEndOfLineOrFile bool
+}
+
+// NewLineBoundaryLocator constructs a line boundary locator.
+// Direction determines whether to locate the start (ReadDirectionBackward) or end (ReadDirectionForward) of the line.
+// If includeEndOfLineOrFile is true, position the cursor at the newline or one past the last character in the text.
+func NewLineBoundaryLocator(direction text.ReadDirection, includeEndOfLineOrFile bool) Locator {
+	return &lineBoundaryLocator{direction, includeEndOfLineOrFile}
+}
+
+func (loc *lineBoundaryLocator) String() string {
+	return fmt.Sprintf("LineBoundaryLocator(%s, %t)", directionString(loc.direction), loc.includeEndOfLineOrFile)
+}
+
+// Locate the start or end of the current line.
+// This assumes that the cursor is positioned on a line (not a newline character); if not, the result is undefined.
+func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
+	segmentIter := newGraphemeClusterSegmentIter(state.tree, state.cursor.position, loc.direction)
+
+	var prevOffset, offset uint64
+	for {
+		segment, eof := segmentIter.nextSegment()
+		if eof || segmentHasNewline(segment) {
+			break
+		}
+
+		prevOffset = offset
+		offset += uint64(len(segment))
+	}
+
+	newPosition := state.cursor.position
+	if loc.direction == text.ReadDirectionForward {
+		if loc.includeEndOfLineOrFile {
+			newPosition += offset
+		} else {
+			newPosition += prevOffset
+		}
+	} else {
+		newPosition -= offset
+	}
+
+	if newPosition == state.cursor.position {
+		return state.cursor
+	}
+
+	return cursorState{position: newPosition}
+}
+
+// nonWhitespaceLocator finds the nearest non-whitespace character in the specified direction.
+type nonWhitespaceLocator struct {
+	direction text.ReadDirection
+}
+
+func NewNonWhitespaceLocator(direction text.ReadDirection) Locator {
+	return &nonWhitespaceLocator{direction}
+}
+
+func (loc *nonWhitespaceLocator) String() string {
+	return fmt.Sprintf("NonWhitespaceLocator(%s)", directionString(loc.direction))
+}
+
+// Locate finds the nearest non-whitespace character in the specified direction.
+func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
+	segmentIter := newGraphemeClusterSegmentIter(state.tree, state.cursor.position, loc.direction)
+
+	var offset uint64
+	for {
+		segment, eof := segmentIter.nextSegment()
+		if eof || !segmentIsWhitespace(segment) {
+			break
+		}
+
+		offset += uint64(len(segment))
+	}
+
+	newPosition := state.cursor.position
+	if loc.direction == text.ReadDirectionForward {
+		newPosition += offset
+	} else {
+		if offset > 0 {
+			// When iterating backward, need to advance an additional segment
+			// to position the cursor at the start of the non-whitespace character.
+			segment, eof := segmentIter.nextSegment()
+			if !eof {
+				offset += uint64(len(segment))
+			}
+		}
+
+		newPosition -= offset
+	}
+
+	if newPosition == state.cursor.position {
+		return state.cursor
+	}
+
+	return cursorState{position: newPosition}
+}
+
 func directionString(direction text.ReadDirection) string {
 	switch direction {
 	case text.ReadDirectionForward:

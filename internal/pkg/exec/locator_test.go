@@ -614,3 +614,175 @@ func TestRelativeLineLocator(t *testing.T) {
 		})
 	}
 }
+
+func TestLineBoundaryLocator(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		inputString            string
+		initialCursor          cursorState
+		direction              text.ReadDirection
+		includeEndOfLineOrFile bool
+		expectedCursor         cursorState
+	}{
+		{
+			name:           "empty, read forward",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			direction:      text.ReadDirectionForward,
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "empty, read backward",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			direction:      text.ReadDirectionBackward,
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "read backward, first line",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 2},
+			direction:      text.ReadDirectionBackward,
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "read backward to line break",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 8},
+			direction:      text.ReadDirectionBackward,
+			expectedCursor: cursorState{position: 5},
+		},
+		{
+			name:           "read forward to line break",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 2},
+			direction:      text.ReadDirectionForward,
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "read forward, last line",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 6},
+			direction:      text.ReadDirectionForward,
+			expectedCursor: cursorState{position: 8},
+		},
+		{
+			name:                   "read forward, include end of line",
+			inputString:            "abcd\nefgh",
+			initialCursor:          cursorState{position: 2},
+			direction:              text.ReadDirectionForward,
+			includeEndOfLineOrFile: true,
+			expectedCursor:         cursorState{position: 4},
+		},
+		{
+			name:           "read forward, include end of file",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 6},
+			direction:      text.ReadDirectionForward,
+			expectedCursor: cursorState{position: 8},
+		},
+		{
+			name:           "read backward with movement resets logical offset",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 8, logicalOffset: 2},
+			direction:      text.ReadDirectionBackward,
+			expectedCursor: cursorState{position: 5},
+		},
+		{
+			name:           "read forward at end of line preserves logical offset",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 8, logicalOffset: 2},
+			direction:      text.ReadDirectionForward,
+			expectedCursor: cursorState{position: 8, logicalOffset: 2},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := State{tree, tc.initialCursor}
+			loc := NewLineBoundaryLocator(tc.direction, tc.includeEndOfLineOrFile)
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
+func TestNonWhitespaceLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		direction      text.ReadDirection
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty, read forward",
+			inputString:    "",
+			direction:      text.ReadDirectionForward,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "empty, read backward",
+			inputString:    "",
+			direction:      text.ReadDirectionBackward,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "read forward, no movement",
+			inputString:    "   abcd   ",
+			direction:      text.ReadDirectionForward,
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "read backward, no movement",
+			inputString:    "   abcd   ",
+			direction:      text.ReadDirectionBackward,
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "read forward, movement",
+			inputString:    "   abcd   ",
+			direction:      text.ReadDirectionForward,
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "read backward, movement",
+			inputString:    "   abcd   ",
+			direction:      text.ReadDirectionBackward,
+			initialCursor:  cursorState{position: 8},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "read backward, movement resets logical offset",
+			inputString:    "   abcd   ",
+			direction:      text.ReadDirectionBackward,
+			initialCursor:  cursorState{position: 9, logicalOffset: 10},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "read backward, no movement preserves logical offset",
+			inputString:    "abcd\nefgh",
+			direction:      text.ReadDirectionBackward,
+			initialCursor:  cursorState{position: 3, logicalOffset: 10},
+			expectedCursor: cursorState{position: 3, logicalOffset: 10},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := State{tree, tc.initialCursor}
+			loc := NewNonWhitespaceLocator(tc.direction)
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}

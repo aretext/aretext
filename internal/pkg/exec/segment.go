@@ -2,6 +2,7 @@ package exec
 
 import (
 	"io"
+	"unicode"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/breaks"
@@ -80,4 +81,14 @@ func segmentHasNewline(segment []rune) bool {
 		}
 	}
 	return false
+}
+
+// segmentIsWhitespace checks whether a segment contains all whitespace runes (spaces, tabs, etc).
+func segmentIsWhitespace(segment []rune) bool {
+	for _, r := range segment {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return true
 }

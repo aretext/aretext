@@ -85,6 +85,27 @@ func TestInterpreter(t *testing.T) {
 			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(forward, 1)))"},
 		},
 		{
+			name: "move cursor to end of line using '$' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(LineBoundaryLocator(forward, false)))"},
+		},
+		{
+			name: "move cursor to start of line using '0' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '0', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(MutateCursor(LineBoundaryLocator(backward, false)))"},
+		},
+		{
+			name: "move cursor to start of line using '^' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '^', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceLocator(forward))))"},
+		},
+		{
 			name: "insert and return to normal mode",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
@@ -102,6 +123,23 @@ func TestInterpreter(t *testing.T) {
 			},
 		},
 		{
+			name: "insert at beginning of line and return to normal mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceLocator(forward))))",
+				"Exec(InsertRune('a'))",
+				"Exec(InsertRune('b'))",
+				"Exec(MutateCursor(OntoLineLocator()))",
+				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+			},
+		},
+		{
 			name: "append and return to normal mode",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
@@ -112,6 +150,23 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"Exec(MutateCursor(CharInLineLocator(forward, 1, true)))",
+				"Exec(InsertRune('1'))",
+				"Exec(InsertRune('2'))",
+				"Exec(MutateCursor(OntoLineLocator()))",
+				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+			},
+		},
+		{
+			name: "append to end of line and return to normal mode",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '1', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Exec(MutateCursor(LineBoundaryLocator(forward, true)))",
 				"Exec(InsertRune('1'))",
 				"Exec(InsertRune('2'))",
 				"Exec(MutateCursor(OntoLineLocator()))",

@@ -1,4 +1,4 @@
-package breaks
+package segment
 
 import (
 	"io"
@@ -8,13 +8,12 @@ import (
 
 //go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_clusters_props.go
 
-// GraphemeClusterBreakIter identifies valid breakpoints between grapheme clusters.
-// A grapheme cluster is a user-perceived character.  These may be composed of multiple unicode codepoints.
+// GraphemeClusterIter segments text into grapheme clusters.
+// A grapheme cluster is a user-perceived character, which can be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
-type GraphemeClusterBreakIter struct {
+type GraphemeClusterIter struct {
+	currentSegment                   *Segment
 	runeIter                         text.CloneableRuneIter
-	runeCount                        uint64
-	endOfText                        bool
 	lastProp                         gbProp
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
@@ -22,49 +21,56 @@ type GraphemeClusterBreakIter struct {
 	lastPropsWereRIEven              bool
 }
 
-// NewGraphemeClusterBreakIter initializes a new iterator.
+// NewGraphemeClusterIter initializes a new iterator.
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) CloneableBreakIter {
-	return &GraphemeClusterBreakIter{runeIter: runeIter}
+func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
+	return &GraphemeClusterIter{
+		runeIter:       runeIter,
+		currentSegment: NewSegment(),
+	}
 }
 
-// Clone implements CloneableBreakIter#Clone()
-func (g *GraphemeClusterBreakIter) Clone() CloneableBreakIter {
-	var clone GraphemeClusterBreakIter
+// Clone implements CloneableSegmentIter#Clone()
+func (g *GraphemeClusterIter) Clone() CloneableSegmentIter {
+	var clone GraphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
+	clone.currentSegment = g.currentSegment.Clone()
 	return &clone
 }
 
-// NextBreak implements BreakIter#NextBreak()
-func (g *GraphemeClusterBreakIter) NextBreak() (uint64, error) {
+// NextSegment implements SegmentIter#NextSegment()
+func (g *GraphemeClusterIter) NextSegment() (*Segment, error) {
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return 0, err
+			return nil, err
 		}
 
-		canBreakBefore := g.processRune(r)
-		g.runeCount++
-		if canBreakBefore {
-			return g.runeCount - 1, nil
+		if canBreakBefore := g.processRune(r); canBreakBefore && g.currentSegment.NumRunes() > 0 {
+			seg := g.currentSegment
+			g.currentSegment = NewSegment().Append(r)
+			return seg, nil
 		}
+
+		g.currentSegment.Append(r)
 	}
 
-	if !g.endOfText {
-		g.endOfText = true
-		return g.runeCount, nil
+	if g.currentSegment != nil && g.currentSegment.NumRunes() > 0 {
+		seg := g.currentSegment
+		g.currentSegment = nil
+		return seg, nil
 	}
 
-	return 0, io.EOF
+	return nil, io.EOF
 }
 
 // processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
-func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
+func (g *GraphemeClusterIter) processRune(r rune) (canBreakBefore bool) {
 	prop := gbPropForRune(r)
 
 	defer func() {
@@ -78,12 +84,8 @@ func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
 	}()
 
 	// GB1: sot ÷ Any
-	if g.runeCount == 0 {
-		return true
-	}
-
 	// GB2: Any ÷ eot
-	// This rule is implemented by the caller, which is able to detect EOF.
+	// We don't need to implement these because we're only interested in non-empty segments.
 
 	// GB3: CR × LF
 	if prop == gbPropLF && g.lastProp == gbPropCR {
@@ -127,67 +129,69 @@ func (g *GraphemeClusterBreakIter) processRune(r rune) (canBreakBefore bool) {
 	return true
 }
 
-// ReverseGraphemeClusterBreakIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.
-type ReverseGraphemeClusterBreakIter struct {
-	runeIter    text.CloneableRuneIter
-	runeCount   uint64
-	startOfText bool
-	lastProp    gbProp
+// ReverseGraphemeClusterIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.
+type ReverseGraphemeClusterIter struct {
+	currentSegment *Segment
+	runeIter       text.CloneableRuneIter
+	lastProp       gbProp
 }
 
-// NewReverseGraphemeClusterBreakIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
-func NewReverseGraphemeClusterBreakIter(runeIter text.CloneableRuneIter) CloneableBreakIter {
-	return &ReverseGraphemeClusterBreakIter{runeIter: runeIter}
+// NewReverseGraphemeClusterIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
+func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
+	return &ReverseGraphemeClusterIter{
+		currentSegment: NewSegment(),
+		runeIter:       runeIter,
+	}
 }
 
-// Clone implements CloneableBreakIter#Clone()
-func (g *ReverseGraphemeClusterBreakIter) Clone() CloneableBreakIter {
-	var clone ReverseGraphemeClusterBreakIter
+// Clone implements CloneableSegmentIter#Clone()
+func (g *ReverseGraphemeClusterIter) Clone() CloneableSegmentIter {
+	var clone ReverseGraphemeClusterIter
 	clone = *g
+	clone.currentSegment = g.currentSegment.Clone()
 	clone.runeIter = g.runeIter.Clone()
 	return &clone
 }
 
-// NextBreak implements BreakIter#NextBreak()
+// NextBreak implements SegmentIter#NextSegment()
 // The returned locations are relative to the end of the text.
-func (g *ReverseGraphemeClusterBreakIter) NextBreak() (uint64, error) {
+func (g *ReverseGraphemeClusterIter) NextSegment() (*Segment, error) {
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return 0, err
+			return nil, err
 		}
 
 		// "After" is relative to the original (non-reversed) rune order.
 		// So if the original string was "abcd" and we're iterating through it backwards,
 		// then the break between "b" and "c" would be *after* "b".
-		canBreakAfter := g.processRune(r)
-		g.runeCount++
-		if canBreakAfter {
-			return g.runeCount - 1, nil
+		if canBreakAfter := g.processRune(r); canBreakAfter && g.currentSegment.NumRunes() > 0 {
+			seg := g.currentSegment
+			g.currentSegment = NewSegment().Append(r)
+			return seg.ReverseRunes(), nil
 		}
+
+		g.currentSegment.Append(r)
 	}
 
-	if !g.startOfText {
-		g.startOfText = true
-		return g.runeCount, nil
+	if g.currentSegment != nil && g.currentSegment.NumRunes() > 0 {
+		seg := g.currentSegment
+		g.currentSegment = nil
+		return seg.ReverseRunes(), nil
 	}
 
-	return 0, io.EOF
+	return nil, io.EOF
 }
 
-func (g *ReverseGraphemeClusterBreakIter) processRune(r rune) (canBreakAfter bool) {
+func (g *ReverseGraphemeClusterIter) processRune(r rune) (canBreakAfter bool) {
 	prop := gbPropForRune(r)
 	defer func() { g.lastProp = prop }()
 
 	// GB1: sot ÷ Any
-	// This rule is implemented by the caller, which is able to detect EOF in the reversed input.
-
 	// GB2: Any ÷ eot
-	if g.runeCount == 0 {
-		return true
-	}
+	// We don't need to implement these because we're only interested in non-empty segments.
 
 	// GB3: CR × LF
 	if prop == gbPropCR && g.lastProp == gbPropLF {
@@ -249,7 +253,7 @@ func (g *ReverseGraphemeClusterBreakIter) processRune(r rune) (canBreakAfter boo
 	return true
 }
 
-func (g *ReverseGraphemeClusterBreakIter) lookaheadExtendedPictographicSequence() bool {
+func (g *ReverseGraphemeClusterIter) lookaheadExtendedPictographicSequence() bool {
 	iterClone := g.runeIter.Clone()
 
 	// Check for Extend* followed by \p{Extended_Pictographic}
@@ -270,7 +274,7 @@ func (g *ReverseGraphemeClusterBreakIter) lookaheadExtendedPictographicSequence(
 	}
 }
 
-func (g *ReverseGraphemeClusterBreakIter) lookaheadEvenRI() bool {
+func (g *ReverseGraphemeClusterIter) lookaheadEvenRI() bool {
 	riCount := 0
 	iterClone := g.runeIter.Clone()
 	for {

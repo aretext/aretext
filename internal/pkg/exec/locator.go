@@ -2,8 +2,10 @@ package exec
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
+	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
 // Locator finds the position of the cursor according to some criteria.
@@ -63,27 +65,27 @@ func (loc *charInLineLocator) findPosition(state *State) uint64 {
 
 func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 	startPos := state.cursor.position
-	segmentIter := newGraphemeClusterSegmentIter(state.tree, startPos, text.ReadDirectionBackward)
+	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionBackward)
 
 	var offset uint64
 	for i := uint64(0); i < loc.count; i++ {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			break
 		}
 
-		if offset+uint64(len(segment)) > startPos {
+		if offset+seg.NumRunes() > startPos {
 			return 0
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			if loc.includeEndOfLineOrFile {
-				offset += uint64(len(segment))
+				offset += seg.NumRunes()
 			}
 			break
 		}
 
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	return startPos - offset
@@ -91,24 +93,24 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 
 func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 	startPos := state.cursor.position
-	segmentIter := newGraphemeClusterSegmentIter(state.tree, startPos, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionForward)
 
 	var endOfLineOrFile bool
 	var prevPrevOffset, prevOffset uint64
 	for i := uint64(0); i <= loc.count; i++ {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			endOfLineOrFile = true
 			break
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			endOfLineOrFile = true
 			break
 		}
 
 		prevPrevOffset = prevOffset
-		prevOffset += uint64(len(segment))
+		prevOffset += seg.NumRunes()
 	}
 
 	if endOfLineOrFile && loc.includeEndOfLineOrFile {
@@ -148,47 +150,47 @@ func (loc *ontoLineLocator) Locate(state *State) cursorState {
 }
 
 func (loc *ontoLineLocator) findNewlineAtPos(tree *text.Tree, pos uint64) (bool, uint64) {
-	segmentIter := newGraphemeClusterSegmentIter(tree, pos, text.ReadDirectionForward)
-	segment, eof := segmentIter.nextSegment()
+	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionForward)
+	seg, eof := nextSegmentOrEof(segmentIter)
 	if eof {
 		return false, 0
 	}
 
-	if segmentHasNewline(segment) {
-		return true, pos + uint64(len(segment))
+	if seg.HasNewline() {
+		return true, pos + seg.NumRunes()
 	}
 
 	return false, 0
 }
 
 func (loc *ontoLineLocator) findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
-	segmentIter := newGraphemeClusterSegmentIter(tree, pos, text.ReadDirectionBackward)
+	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionBackward)
 
 	// Iterate backward by (count - 1) grapheme clusters.
 	var offset uint64
 	for i := 0; i < count-1; i++ {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			break
 		}
 
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	// Check the next grapheme cluster after (count - 1) grapheme clusters.
-	segment, eof := segmentIter.nextSegment()
+	seg, eof := nextSegmentOrEof(segmentIter)
 	if eof {
 		return 0
 	}
 
 	// If the immediately preceding cluster is a newline, then we're on
 	// an empty line, in which case we shouldn't move the cursor.
-	if segmentHasNewline(segment) {
+	if seg.HasNewline() {
 		return pos - offset
 	}
 
 	// Otherwise, move the cursor back a cluster to position it at the end of the previous line.
-	return pos - offset - uint64(len(segment))
+	return pos - offset - seg.NumRunes()
 }
 
 func (loc *ontoLineLocator) String() string {
@@ -232,16 +234,16 @@ func (loc *relativeLineLocator) Locate(state *State) cursorState {
 }
 
 func (loc *relativeLineLocator) findOffsetFromLineStart(state *State) uint64 {
-	segmentIter := newGraphemeClusterSegmentIter(state.tree, state.cursor.position, text.ReadDirectionBackward)
+	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionBackward)
 
 	var offset uint64
 	for {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			break
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			break
 		}
 
@@ -260,77 +262,77 @@ func (loc *relativeLineLocator) findStartOfLine(tree *text.Tree, pos uint64) (li
 }
 
 func (loc *relativeLineLocator) findStartOfLineAbove(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
-	segmentIter := newGraphemeClusterSegmentIter(tree, pos, text.ReadDirectionBackward)
+	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionBackward)
 
 	var offset uint64
 	for {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			break
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			newlineCount++
 			if newlineCount > loc.count {
 				break
 			}
 		}
 
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	return pos - offset, newlineCount
 }
 
 func (loc *relativeLineLocator) findStartOfLineBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
-	segmentIter := newGraphemeClusterSegmentIter(tree, pos, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionForward)
 
 	// Lookahead one grapheme cluster.
-	nextSegmentIter := segmentIter.clone()
-	nextSegmentIter.nextSegment()
+	nextSegmentIter := segmentIter.Clone()
+	nextSegmentIter.NextSegment()
 
 	var offset uint64
 	for newlineCount < loc.count {
-		segment, eof := segmentIter.nextSegment()
-		_, lookaheadEof := nextSegmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
+		_, lookaheadEof := nextSegmentOrEof(nextSegmentIter)
 
 		// POSIX allows the last newline to be treated as EOF,
 		// so if the current segment is a newline and the next segment is EOF
 		// then stop advancing the cursor.
-		if eof || (segmentHasNewline(segment) && lookaheadEof) {
+		if eof || (seg.HasNewline() && lookaheadEof) {
 			break
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			newlineCount++
 		}
 
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	return pos + offset, newlineCount
 }
 
 func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos uint64, targetOffset uint64) (newPos, actualOffset uint64) {
-	segmentIter := newGraphemeClusterSegmentIter(tree, lineStartPos, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(tree, lineStartPos, text.ReadDirectionForward)
 
 	var endOfLineOrFile bool
 	var prevPosOffset, posOffset, gcOffset uint64
 	for gcOffset < targetOffset {
-		segment, eof := segmentIter.nextSegment()
+		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			endOfLineOrFile = true
 			break
 		}
 
-		if segmentHasNewline(segment) {
+		if seg.HasNewline() {
 			endOfLineOrFile = true
 			break
 		}
 
 		gcOffset++
 		prevPosOffset = posOffset
-		posOffset += uint64(len(segment))
+		posOffset += seg.NumRunes()
 	}
 
 	if endOfLineOrFile {
@@ -367,17 +369,17 @@ func (loc *lineBoundaryLocator) String() string {
 // Locate the start or end of the current line.
 // This assumes that the cursor is positioned on a line (not a newline character); if not, the result is undefined.
 func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
-	segmentIter := newGraphemeClusterSegmentIter(state.tree, state.cursor.position, loc.direction)
+	segmentIter := gcIterForTree(state.tree, state.cursor.position, loc.direction)
 
 	var prevOffset, offset uint64
 	for {
-		segment, eof := segmentIter.nextSegment()
-		if eof || segmentHasNewline(segment) {
+		seg, eof := nextSegmentOrEof(segmentIter)
+		if eof || seg.HasNewline() {
 			break
 		}
 
 		prevOffset = offset
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	newPosition := state.cursor.position
@@ -413,16 +415,16 @@ func (loc *nonWhitespaceLocator) String() string {
 
 // Locate finds the nearest non-whitespace character in the specified direction.
 func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
-	segmentIter := newGraphemeClusterSegmentIter(state.tree, state.cursor.position, loc.direction)
+	segmentIter := gcIterForTree(state.tree, state.cursor.position, loc.direction)
 
 	var offset uint64
 	for {
-		segment, eof := segmentIter.nextSegment()
-		if eof || !segmentIsWhitespace(segment) {
+		seg, eof := nextSegmentOrEof(segmentIter)
+		if eof || !seg.IsWhitespace() {
 			break
 		}
 
-		offset += uint64(len(segment))
+		offset += seg.NumRunes()
 	}
 
 	newPosition := state.cursor.position
@@ -432,9 +434,9 @@ func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
 		if offset > 0 {
 			// When iterating backward, need to advance an additional segment
 			// to position the cursor at the start of the non-whitespace character.
-			segment, eof := segmentIter.nextSegment()
+			seg, eof := nextSegmentOrEof(segmentIter)
 			if !eof {
-				offset += uint64(len(segment))
+				offset += seg.NumRunes()
 			}
 		}
 
@@ -446,6 +448,33 @@ func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
 	}
 
 	return cursorState{position: newPosition}
+}
+
+// gcIterForTree constructs a grapheme cluster iterator for the tree.
+func gcIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) segment.CloneableSegmentIter {
+	reader := tree.ReaderAtPosition(pos, direction)
+	if direction == text.ReadDirectionBackward {
+		runeIter := text.NewCloneableBackwardRuneIter(reader)
+		return segment.NewReverseGraphemeClusterIter(runeIter)
+	} else {
+		runeIter := text.NewCloneableForwardRuneIter(reader)
+		return segment.NewGraphemeClusterIter(runeIter)
+	}
+}
+
+// nextSegmentOrEof returns the next segment and a flag indicating end of file.
+// If an error occurs (e.g. due to invalid UTF-8), it panics.
+func nextSegmentOrEof(segmentIter segment.SegmentIter) (seg *segment.Segment, eof bool) {
+	seg, err := segmentIter.NextSegment()
+	if err == io.EOF {
+		return nil, true
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return seg, false
 }
 
 func directionString(direction text.ReadDirection) string {

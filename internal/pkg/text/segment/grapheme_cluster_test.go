@@ -10,7 +10,7 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-//go:generate go run gen_test_cases.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_clusters_test_cases.go
+//go:generate go run gen_test_cases.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_cluster_test_cases.go
 
 func graphemeClusterIterFromString(s string) SegmentIter {
 	reader := text.NewCloneableReaderFromString(s)

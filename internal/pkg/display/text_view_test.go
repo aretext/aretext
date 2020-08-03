@@ -5,17 +5,18 @@ import (
 
 	"github.com/gdamore/tcell"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-func textViewWithString(t *testing.T, screen tcell.Screen, s string) *TextView {
+func textViewWithStringAndCursorPos(t *testing.T, screen tcell.Screen, s string, cursorPos uint64) *TextView {
 	screenWidth, screenHeight := screen.Size()
 	region := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
-	execState := exec.NewState(tree, 0)
+	execState := exec.NewState(tree, cursorPos)
 	return NewTextView(execState, region)
 }
 
@@ -127,7 +128,7 @@ func TestTextViewDraw(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				view := textViewWithString(t, s, tc.inputString)
+				view := textViewWithStringAndCursorPos(t, s, tc.inputString, 0)
 				view.Draw()
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)
@@ -138,13 +139,146 @@ func TestTextViewDraw(t *testing.T) {
 
 func TestTextViewDrawSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(1, 2)
-		view := textViewWithString(t, s, "abcd1234")
+		s.SetSize(1, 4)
+		view := textViewWithStringAndCursorPos(t, s, "ab界cd", 0)
 		view.Draw()
 		s.Sync()
 		assertCellContents(t, s, [][]rune{
+			{'a'},
+			{'b'},
 			{'~'},
-			{'~'},
+			{'c'},
 		})
 	})
+}
+
+func TestTextViewCursor(t *testing.T) {
+	testCases := []struct {
+		name                  string
+		inputString           string
+		cursorPosition        uint64
+		expectedCursorVisible bool
+		expectedCursorCol     int
+		expectedCursorRow     int
+	}{
+		{
+			name:                  "empty",
+			inputString:           "",
+			cursorPosition:        0,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "single character",
+			inputString:           "a",
+			cursorPosition:        0,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "single character, past end of line",
+			inputString:           "a",
+			cursorPosition:        1,
+			expectedCursorVisible: true,
+			expectedCursorCol:     1,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "multiple characters, within line",
+			inputString:           "abcde",
+			cursorPosition:        3,
+			expectedCursorVisible: true,
+			expectedCursorCol:     3,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "multiple characters, at end of line",
+			inputString:           "abcde",
+			cursorPosition:        4,
+			expectedCursorVisible: true,
+			expectedCursorCol:     4,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "multiple characters, past end of wrapped line",
+			inputString:           "abcdefghijkl",
+			cursorPosition:        5,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     1,
+		},
+		{
+			name:                  "multiple characters, on newline",
+			inputString:           "ab\ncdefghijkl",
+			cursorPosition:        2,
+			expectedCursorVisible: true,
+			expectedCursorCol:     2,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "multiple characters, past newline",
+			inputString:           "ab\ncdefghijkl",
+			cursorPosition:        3,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     1,
+		},
+		{
+			name:                  "single newline, on newline",
+			inputString:           "\n",
+			cursorPosition:        0,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     0,
+		},
+		{
+			name:                  "single newline, past newline",
+			inputString:           "\n",
+			cursorPosition:        1,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     1,
+		},
+		{
+			name:                  "multiple lines, at end of file",
+			inputString:           "ab\ncdefghi\njkl",
+			cursorPosition:        13,
+			expectedCursorVisible: true,
+			expectedCursorCol:     2,
+			expectedCursorRow:     3,
+		},
+		{
+			name:                  "multiple lines, past end of file",
+			inputString:           "ab\ncdefghi\njkl",
+			cursorPosition:        14,
+			expectedCursorVisible: true,
+			expectedCursorCol:     3,
+			expectedCursorRow:     3,
+		},
+		{
+			name:                  "cursor past end of screen",
+			inputString:           "abcdefghijklmnopqrstuvwxyz",
+			cursorPosition:        26,
+			expectedCursorVisible: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(5, 5)
+				view := textViewWithStringAndCursorPos(t, s, tc.inputString, tc.cursorPosition)
+				view.Draw()
+				s.Sync()
+				cursorCol, cursorRow, cursorVisible := s.GetCursor()
+				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
+				if tc.expectedCursorVisible {
+					assert.Equal(t, tc.expectedCursorCol, cursorCol)
+					assert.Equal(t, tc.expectedCursorRow, cursorRow)
+				}
+			})
+		})
+	}
 }

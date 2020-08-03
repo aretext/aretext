@@ -1,14 +1,13 @@
 package display
 
 import (
-	"bufio"
-	"log"
-	"unicode/utf8"
+	"io"
 
 	"github.com/gdamore/tcell"
 	runewidth "github.com/mattn/go-runewidth"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
+	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
 // TextView displays text in a terminal, clipping and scrolling as necessary.
@@ -29,85 +28,90 @@ func (v *TextView) Resize(width, height int) {
 
 // Draw draws text to the screen.
 func (v *TextView) Draw() {
-	width, height := v.screenRegion.Size()
 	v.screenRegion.HideCursor()
+	width, height := v.screenRegion.Size()
 
-	if width < 2 {
-		// If the view is too narrow to display full-width characters (occupying 2 cells), just fill it.
-		// Everything after this point assumes that there's space on each line for at least one full-width char.
-		v.screenRegion.Fill('~', tcell.StyleDefault.Dim(true))
-	} else if height > 0 {
-		v.drawText(width, height)
+	startPos := uint64(0)
+	pos := startPos
+	reader := v.execState.Tree().ReaderAtPosition(pos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(reader)
+	wrapConfig := segment.NewLineWrapConfig(uint64(width), v.graphemeClusterWidth)
+	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
+
+	for row := 0; row < height; row++ {
+		wrappedLine, err := wrappedLineIter.NextSegment()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+		v.drawLineAndSetCursor(pos, row, width, wrappedLine)
+		pos += wrappedLine.NumRunes()
+	}
+
+	// Text view is empty, with cursor positioned in the first cell.
+	if pos-startPos == 0 && pos == v.execState.CursorPosition() {
+		v.screenRegion.ShowCursor(0, 0)
 	}
 }
 
-func (v *TextView) drawText(width, height int) {
-	reader := v.execState.Tree().ReaderAtPosition(0, text.ReadDirectionForward)
-	scanner := bufio.NewScanner(reader)
-	scanner.Split(splitUtf8Cells)
+func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment) {
+	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
+	gcIter := segment.NewGraphemeClusterIter(runeIter)
+	var lastGc *segment.Segment
+	totalWidth := uint64(0)
+	col := 0
 
-	pos := uint64(0)
-	x, y := 0, 0
-	for scanner.Scan() {
-		s := scanner.Text()
+	for {
+		gc, err := gcIter.NextSegment()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		gcRunes := gc.Runes()
+		gcWidth := v.graphemeClusterWidth(gcRunes)
+		totalWidth += gcWidth
+
+		if totalWidth > uint64(maxLineWidth) {
+			// If there isn't enough space to show the line, fill it with a placeholder.
+			v.drawLineTooLong(row, maxLineWidth)
+			return
+		}
+
+		v.screenRegion.SetContent(col, row, gcRunes[0], gcRunes[1:], tcell.StyleDefault)
 
 		if pos == v.execState.CursorPosition() {
-			v.screenRegion.ShowCursor(x, y)
+			v.screenRegion.ShowCursor(col, row)
 		}
 
-		pos += uint64(utf8.RuneCountInString(s))
-
-		// If newline, skip to the next line.
-		if s[0] == '\n' {
-			x = 0
-			y++
-			continue
-		}
-
-		r, n := utf8.DecodeRune([]byte(s))
-		if n == 1 && r == utf8.RuneError {
-			// This should never happen because text.Tree validates UTF-8 characters.
-			log.Fatal("invalid rune")
-		}
-
-		rw := runewidth.RuneWidth(r)
-
-		// If a full-width character would be clipped, push it to the next line.
-		if x+rw > width {
-			x = 0
-			y++
-			if y >= height {
-				break
-			}
-		}
-
-		if rw > 0 {
-			// Display the characters in this cell.  The first rune is a non-zero-width character,
-			// and subsequent runes are combining characters (like accent marks).
-			v.screenRegion.SetContent(x, y, r, []rune(s[n:]), tcell.StyleDefault)
-		} else {
-			// Replace non-displayable character.  This won't happen unless a zero-width character is in the wrong location
-			// (for example, a combining accent mark at the very beginning of the string).
-			v.screenRegion.SetContent(x, y, utf8.RuneError, nil, tcell.StyleDefault)
-		}
-
-		// Move the cursor forward, wrapping to the next line if necessary.
-		x += rw
-		if x >= width {
-			x = 0
-			y++
-			if y >= height {
-				break
-			}
-		}
+		pos += gc.NumRunes()
+		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
+		lastGc = gc
 	}
 
 	if pos == v.execState.CursorPosition() {
-		v.screenRegion.ShowCursor(x, y)
+		if lastGc != nil && lastGc.HasNewline() {
+			// If the line ended on a newline, show the cursor at the start of the next line.
+			v.screenRegion.ShowCursor(0, row+1)
+		} else {
+			// Otherwise, show the cursor at the end of the current line.
+			v.screenRegion.ShowCursor(col, row)
+		}
+	}
+}
+
+func (v *TextView) drawLineTooLong(row int, maxLineWidth int) {
+	for col := 0; col < maxLineWidth; col++ {
+		v.screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
+	}
+}
+
+func (v *TextView) graphemeClusterWidth(gc []rune) uint64 {
+	if len(gc) == 0 {
+		return 0
 	}
 
-	if err := scanner.Err(); err != nil {
-		// This should never happen because splitUtf8Cells never returns errors.
-		log.Fatalf("error scanning text: %v", err)
-	}
+	return uint64(runewidth.RuneWidth(gc[0]))
 }

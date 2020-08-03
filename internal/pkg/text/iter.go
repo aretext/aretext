@@ -19,8 +19,40 @@ type CloneableRuneIter interface {
 	Clone() CloneableRuneIter
 }
 
-// runeIter implements CloneableRuneIter for a stream of UTF-8 bytes.
-type runeIter struct {
+// runeIterForSlice iterates over the runes in a slice.
+type runeIterForSlice struct {
+	idx       int
+	runeSlice []rune
+}
+
+// NewRuneIterForSlice returns a RuneIter over the given slice.
+// This assumes that runeSlice will be immutable for the lifetime of the iterator.
+func NewRuneIterForSlice(runeSlice []rune) CloneableRuneIter {
+	return &runeIterForSlice{0, runeSlice}
+}
+
+// NextRune implements RuneIter#NextRune()
+func (iter *runeIterForSlice) NextRune() (rune, error) {
+	if iter.idx >= len(iter.runeSlice) {
+		iter.runeSlice = nil
+		return '\x00', io.EOF
+	}
+
+	r := iter.runeSlice[iter.idx]
+	iter.idx++
+	return r, nil
+}
+
+// Clone implements CloneableRuneIter#Clone()
+func (iter *runeIterForSlice) Clone() CloneableRuneIter {
+	return &runeIterForSlice{
+		idx:       iter.idx,
+		runeSlice: iter.runeSlice,
+	}
+}
+
+// decodingRuneIter implements CloneableRuneIter for a stream of UTF-8 bytes.
+type decodingRuneIter struct {
 	inputReversed      bool
 	in                 CloneableReader
 	pendingRunes       []rune
@@ -33,7 +65,7 @@ type runeIter struct {
 // NewCloneableForwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes.
 // It assumes the provided reader produces a stream of valid UTF-8 bytes.
 func NewCloneableForwardRuneIter(in CloneableReader) CloneableRuneIter {
-	return &runeIter{
+	return &decodingRuneIter{
 		inputReversed: false,
 		in:            in,
 		pendingRunes:  make([]rune, 0),
@@ -42,7 +74,7 @@ func NewCloneableForwardRuneIter(in CloneableReader) CloneableRuneIter {
 
 // If inputReversed is true, then it interprets the reader output in reverse order.
 func NewCloneableBackwardRuneIter(in CloneableReader) CloneableRuneIter {
-	return &runeIter{
+	return &decodingRuneIter{
 		inputReversed: true,
 		in:            in,
 		pendingRunes:  make([]rune, 0),
@@ -51,7 +83,7 @@ func NewCloneableBackwardRuneIter(in CloneableReader) CloneableRuneIter {
 
 // NextRune implements RuneIter#NextRune.
 // It panics if the input bytes contain invalid UTF-8 codepoints.
-func (ri *runeIter) NextRune() (rune, error) {
+func (ri *decodingRuneIter) NextRune() (rune, error) {
 	if ri.pendingRunesOffset >= len(ri.pendingRunes) && !ri.eof {
 		ri.pendingRunesOffset = 0
 		ri.pendingRunes = ri.pendingRunes[:0]
@@ -69,7 +101,7 @@ func (ri *runeIter) NextRune() (rune, error) {
 	return r, nil
 }
 
-func (ri *runeIter) loadRunesFromReader() error {
+func (ri *decodingRuneIter) loadRunesFromReader() error {
 	var buf [64]byte
 	for len(ri.pendingRunes) == 0 && !ri.eof {
 		n := copy(buf[:], ri.overflow[:ri.overflowLen])
@@ -96,7 +128,7 @@ func (ri *runeIter) loadRunesFromReader() error {
 	return nil
 }
 
-func (ri *runeIter) loadRunesFromBuffer(buf []byte) (bytesConsumed int) {
+func (ri *decodingRuneIter) loadRunesFromBuffer(buf []byte) (bytesConsumed int) {
 	for bytesConsumed < len(buf) {
 		r, size := utf8.DecodeRune(buf[bytesConsumed:])
 		if r == utf8.RuneError && size == 1 {
@@ -111,7 +143,7 @@ func (ri *runeIter) loadRunesFromBuffer(buf []byte) (bytesConsumed int) {
 	return bytesConsumed
 }
 
-func (ri *runeIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesConsumed int) {
+func (ri *decodingRuneIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesConsumed int) {
 	for bytesConsumed < len(buf) {
 		var charWidth int
 		var nextRuneBytes [4]byte
@@ -157,11 +189,11 @@ func (ri *runeIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesConsumed i
 }
 
 // Clone implements CloneableRuneIter#Clone
-func (ri *runeIter) Clone() CloneableRuneIter {
+func (ri *decodingRuneIter) Clone() CloneableRuneIter {
 	pendingRunes := make([]rune, len(ri.pendingRunes))
 	copy(pendingRunes, ri.pendingRunes)
 
-	return &runeIter{
+	return &decodingRuneIter{
 		in:                 ri.in.Clone(),
 		inputReversed:      ri.inputReversed,
 		pendingRunes:       pendingRunes,

@@ -8,7 +8,6 @@ Design principles:
 3. Run fast.
 
 
-
 ## Roadmap
 
 - [ ] display file contents, with support for wide characters and grapheme clustering

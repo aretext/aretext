@@ -37,7 +37,9 @@ func (g *graphemeClusterIter) Clone() CloneableSegmentIter {
 	var clone graphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
-	clone.currentSegment = g.currentSegment.Clone()
+	if g.currentSegment != nil {
+		clone.currentSegment = g.currentSegment.Clone()
+	}
 	return &clone
 }
 

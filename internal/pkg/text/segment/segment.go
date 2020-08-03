@@ -20,6 +20,14 @@ func (seg *Segment) Append(r rune) *Segment {
 	return seg
 }
 
+// Extend appends all runes from the slice.
+func (seg *Segment) Extend(runes []rune) *Segment {
+	for _, r := range runes {
+		seg.runes = append(seg.runes, r)
+	}
+	return seg
+}
+
 // ReverseRunes reverses the order of the runes in the segment.
 func (seg *Segment) ReverseRunes() *Segment {
 	i := 0

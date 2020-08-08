@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/gdamore/tcell"
-	runewidth "github.com/mattn/go-runewidth"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
@@ -14,11 +13,12 @@ import (
 type TextView struct {
 	execState    *exec.State
 	screenRegion *ScreenRegion
+	origin       uint64 // Position in the text displayed in the top-left corner of the view.
 }
 
 // NewTextView initializes a text view for a text tree and screen.
 func NewTextView(execState *exec.State, screenRegion *ScreenRegion) *TextView {
-	return &TextView{execState, screenRegion}
+	return &TextView{execState, screenRegion, 0}
 }
 
 // Resize notifies the text view that the terminal size has changed.
@@ -26,16 +26,21 @@ func (v *TextView) Resize(width, height int) {
 	v.screenRegion.Resize(width, height)
 }
 
+// ScrollToCursor adjusts the view origin such that the cursor is visible.
+func (v *TextView) ScrollToCursor() {
+	width, height := v.screenRegion.Size()
+	v.origin = ScrollToCursor(v.execState.CursorPosition(), v.execState.Tree(), v.origin, width, height)
+}
+
 // Draw draws text to the screen.
 func (v *TextView) Draw() {
 	v.screenRegion.HideCursor()
 	width, height := v.screenRegion.Size()
 
-	startPos := uint64(0)
-	pos := startPos
+	pos := v.origin
 	reader := v.execState.Tree().ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
-	wrapConfig := segment.NewLineWrapConfig(uint64(width), v.graphemeClusterWidth)
+	wrapConfig := segment.NewLineWrapConfig(uint64(width), GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 
 	for row := 0; row < height; row++ {
@@ -50,7 +55,7 @@ func (v *TextView) Draw() {
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
-	if pos-startPos == 0 && pos == v.execState.CursorPosition() {
+	if pos-v.origin == 0 && pos == v.execState.CursorPosition() {
 		v.screenRegion.ShowCursor(0, 0)
 	}
 }
@@ -71,7 +76,7 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := v.graphemeClusterWidth(gcRunes)
+		gcWidth := GraphemeClusterWidth(gcRunes)
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {
@@ -106,12 +111,4 @@ func (v *TextView) drawLineTooLong(row int, maxLineWidth int) {
 	for col := 0; col < maxLineWidth; col++ {
 		v.screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
 	}
-}
-
-func (v *TextView) graphemeClusterWidth(gc []rune) uint64 {
-	if len(gc) == 0 {
-		return 0
-	}
-
-	return uint64(runewidth.RuneWidth(gc[0]))
 }

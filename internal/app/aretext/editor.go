@@ -111,6 +111,7 @@ func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
 		e.Quit()
 	case *input.ExecCommand:
 		cmd.Mutator.Mutate(e.execState)
+		e.textView.ScrollToCursor()
 		e.redraw()
 		e.screen.Show()
 	}
@@ -125,6 +126,7 @@ func (e *Editor) splitEscapeSequence(event *tcell.EventKey) (*tcell.EventKey, *t
 func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 	screenWidth, screenHeight := e.screen.Size()
 	e.textView.Resize(screenWidth, screenHeight)
+	e.textView.ScrollToCursor()
 	e.redraw()
 	e.screen.Sync()
 }

@@ -263,6 +263,14 @@ func TestTextViewCursor(t *testing.T) {
 			cursorPosition:        26,
 			expectedCursorVisible: false,
 		},
+		{
+			name:                  "cursor past end of screen width",
+			inputString:           "abcde",
+			cursorPosition:        5,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     1,
+		},
 	}
 
 	for _, tc := range testCases {

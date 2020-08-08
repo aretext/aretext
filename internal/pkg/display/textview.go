@@ -92,8 +92,8 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 	}
 
 	if pos == v.execState.CursorPosition() {
-		if lastGc != nil && lastGc.HasNewline() {
-			// If the line ended on a newline, show the cursor at the start of the next line.
+		if lastGc != nil && (lastGc.HasNewline() || pos == uint64(maxLineWidth)) {
+			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
 			v.screenRegion.ShowCursor(0, row+1)
 		} else {
 			// Otherwise, show the cursor at the end of the current line.

@@ -1,10 +1,10 @@
 package text
 
 import (
-	"bufio"
 	"io/ioutil"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -186,7 +186,7 @@ func TestReaderPastLastCharacter(t *testing.T) {
 	}
 }
 
-func TestReaderAtLine(t *testing.T) {
+func TestLineStartPosition(t *testing.T) {
 	testCases := []struct {
 		name string
 		text string
@@ -237,33 +237,31 @@ func TestReaderAtLine(t *testing.T) {
 		},
 	}
 
-	linesFromTree := func(tree *Tree, numLines int) []string {
-		lines := make([]string, 0, numLines)
+	linePositionsFromTree := func(tree *Tree, numLines int) []uint64 {
+		linePositions := make([]uint64, 0, numLines)
 		for i := 0; i < numLines; i++ {
-			reader := tree.ReaderAtLine(uint64(i), ReadDirectionForward)
-			scanner := bufio.NewScanner(reader)
-			scanner.Split(bufio.ScanLines)
-
-			for scanner.Scan() {
-				lines = append(lines, scanner.Text())
-				break
-			}
+			linePositions = append(linePositions, tree.LineStartPosition(uint64(i)))
 		}
-		return lines
+		return linePositions
+	}
+
+	linePositionsFromString := func(s string) []uint64 {
+		var pos uint64
+		linePositions := make([]uint64, 0)
+		for _, line := range strings.Split(s, "\n") {
+			linePositions = append(linePositions, pos)
+			pos += uint64(utf8.RuneCountInString(line)) + 1
+		}
+		return linePositions
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			lines := strings.Split(tc.text, "\n")
-			if len(lines) > 0 && lines[len(lines)-1] == "" {
-				// match bufio.ScanLines behavior, which ignores last empty line
-				lines = lines[:len(lines)-1]
-			}
-
+			expectedLinePositions := linePositionsFromString(tc.text)
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			actualLines := linesFromTree(tree, len(lines))
-			assert.Equal(t, lines, actualLines, "expected lines = %v, actual lines = %v", len(lines), len(actualLines))
+			actualLinePositions := linePositionsFromTree(tree, len(expectedLinePositions))
+			assert.Equal(t, expectedLinePositions, actualLinePositions)
 		})
 	}
 }
@@ -310,10 +308,9 @@ func TestReaderPastLastLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			reader := tree.ReaderAtLine(tc.lineNum, ReadDirectionForward)
-			retrieved, err := ioutil.ReadAll(reader)
-			require.NoError(t, err)
-			assert.Equal(t, "", string(retrieved))
+			lineStartPos := tree.LineStartPosition(tc.lineNum)
+			expectedLineStartPos := uint64(utf8.RuneCountInString(tc.text))
+			assert.Equal(t, expectedLineStartPos, lineStartPos)
 		})
 	}
 }
@@ -756,7 +753,8 @@ func TestInsertNewline(t *testing.T) {
 			err = tree.InsertAtPosition(tc.insertPos, '\n')
 			require.NoError(t, err)
 
-			reader := tree.ReaderAtLine(tc.retrieveLineNum, ReadDirectionForward)
+			lineStartPos := tree.LineStartPosition(tc.retrieveLineNum)
+			reader := tree.ReaderAtPosition(lineStartPos, ReadDirectionForward)
 			text, err := ioutil.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedLine, string(text))
@@ -915,16 +913,14 @@ func TestDeleteNewline(t *testing.T) {
 	tree, err := NewTreeFromString(lines(4096, 100))
 	require.NoError(t, err)
 
-	reader := tree.ReaderAtLine(4094, ReadDirectionForward) // read last two lines
-	text, err := ioutil.ReadAll(reader)
-	require.NoError(t, err)
-	assert.Equal(t, 201, len(text))
+	lineStart := tree.LineStartPosition(4094)
+	expectedLineStart := uint64(413494)
+	assert.Equal(t, expectedLineStart, lineStart)
 
-	tree.DeleteAtPosition(100)                             // delete first newline
-	reader = tree.ReaderAtLine(4094, ReadDirectionForward) // read last line
-	text, err = ioutil.ReadAll(reader)
-	require.NoError(t, err)
-	assert.Equal(t, 100, len(text))
+	tree.DeleteAtPosition(100) // delete first newline
+	lineStart = tree.LineStartPosition(4094)
+	expectedLineStart += 100
+	assert.Equal(t, expectedLineStart, lineStart)
 }
 
 func TestNodeSplit(t *testing.T) {

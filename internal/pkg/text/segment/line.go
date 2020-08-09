@@ -7,7 +7,7 @@ import (
 )
 
 // GraphemeClusterWidthFunc returns the width in cells for a given grapheme cluster.
-type GraphemeClusterWidthFunc func([]rune) uint64
+type GraphemeClusterWidthFunc func(gc []rune, offsetInLine uint64) uint64
 
 // LineWrapConfig controls how lines should be soft-wrapped.
 type LineWrapConfig struct {
@@ -73,7 +73,7 @@ func (iter *wrappedLineIter) NextSegment() (*Segment, error) {
 			return seg, nil
 		}
 
-		gcWidth := iter.wrapConfig.widthFunc(gc.Runes())
+		gcWidth := iter.wrapConfig.widthFunc(gc.Runes(), iter.currentWidth)
 		if iter.currentWidth+gcWidth > iter.wrapConfig.maxLineWidth {
 			if iter.currentWidth == 0 {
 				// This grapheme cluster is too large to fit on the line, so give it its own line.

@@ -206,6 +206,14 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{"", "Exec(InsertRune('\\n'))"},
 		},
+		{
+			name: "insert tab",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyTab, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "Exec(InsertRune('\\t'))"},
+		},
 	}
 
 	for _, tc := range testCases {

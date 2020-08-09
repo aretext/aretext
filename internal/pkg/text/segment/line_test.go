@@ -10,7 +10,7 @@ import (
 )
 
 func gcWidthFunc(defaultWidth uint64) GraphemeClusterWidthFunc {
-	return func(gc []rune) uint64 {
+	return func(gc []rune, offsetInLine uint64) uint64 {
 		if len(gc) == 0 {
 			return 0
 		}

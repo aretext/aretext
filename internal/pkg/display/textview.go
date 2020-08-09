@@ -76,7 +76,7 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := GraphemeClusterWidth(gcRunes)
+		gcWidth := GraphemeClusterWidth(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {

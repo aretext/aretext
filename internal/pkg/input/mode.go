@@ -148,6 +148,8 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 		return m.deletePrevCharCmd(), ModeTypeInsert
 	case tcell.KeyEnter:
 		return m.insertCmd('\n'), ModeTypeInsert
+	case tcell.KeyTab:
+		return m.insertCmd('\t'), ModeTypeInsert
 	default:
 		return m.moveCursorOntoLineCmd(), ModeTypeNormal
 	}

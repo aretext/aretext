@@ -106,6 +106,13 @@ func TestInterpreter(t *testing.T) {
 			expectedCommands: []string{"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceLocator(forward))))"},
 		},
 		{
+			name: "move cursor to start of last line using 'G' key",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),
+			},
+			expectedCommands: []string{"Exec(Composite(MutateCursor(LastLineLocator()),MutateCursor(NonWhitespaceLocator(forward))))"},
+		},
+		{
 			name: "insert and return to normal mode",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),

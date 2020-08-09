@@ -786,3 +786,60 @@ func TestNonWhitespaceLocator(t *testing.T) {
 		})
 	}
 }
+
+func TestLastLineLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "single newline",
+			inputString:    "\n",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "multiple newlines",
+			inputString:    "\n\n\n\n",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "from first line to last line, no POSIX newline",
+			inputString:    "ab\ncd\nef",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "from first line to last line, POSIX newline",
+			inputString:    "ab\ncd\nef\n",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "already on last line, move to start of line",
+			inputString:    "ab\ncd\nef\n",
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 6},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := State{tree, tc.initialCursor}
+			loc := NewLastLineLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}

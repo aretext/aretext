@@ -64,6 +64,8 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeNormal
 	case '$':
 		return m.cursorLineEndCmd(false), ModeTypeNormal
+	case 'G':
+		return m.cursorStartOfLastLineCmd(), ModeTypeNormal
 	case 'i':
 		return nil, ModeTypeInsert
 	case 'I':
@@ -120,6 +122,16 @@ func (m *normalMode) cursorLineStartNonWhitespaceCmd() Command {
 func (m *normalMode) cursorLineEndCmd(includeEndOfLineOrFile bool) Command {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, includeEndOfLineOrFile)
 	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorStartOfLastLineCmd() Command {
+	lastLineLoc := exec.NewLastLineLocator()
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator(text.ReadDirectionForward)
+	mutator := exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(lastLineLoc),
+		exec.NewCursorMutator(firstNonWhitespaceLoc),
+	})
 	return &ExecCommand{mutator}
 }
 

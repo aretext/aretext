@@ -450,6 +450,42 @@ func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
 	return cursorState{position: newPosition}
 }
 
+// lastLineLocator finds the start of the last line.
+type lastLineLocator struct{}
+
+func NewLastLineLocator() Locator {
+	return &lastLineLocator{}
+}
+
+// Locate returns the cursor position at the start of the last line.
+func (loc *lastLineLocator) Locate(state *State) cursorState {
+	tree := state.tree
+	numLines := tree.NumLines()
+	if numLines == 0 {
+		return cursorState{position: 0}
+	}
+
+	targetLineNum := numLines - 1
+	if loc.endsWithNewline(tree) {
+		// POSIX says the last newline in a file means "end of file", so don't count it as one of the lines.
+		targetLineNum--
+	}
+
+	return cursorState{
+		position: tree.LineStartPosition(targetLineNum),
+	}
+}
+
+func (loc *lastLineLocator) endsWithNewline(tree *text.Tree) bool {
+	segmentIter := gcIterForTree(tree, tree.NumChars(), text.ReadDirectionBackward)
+	seg, eof := nextSegmentOrEof(segmentIter)
+	return !eof && seg.HasNewline()
+}
+
+func (loc *lastLineLocator) String() string {
+	return "LastLineLocator()"
+}
+
 // gcIterForTree constructs a grapheme cluster iterator for the tree.
 func gcIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) segment.CloneableSegmentIter {
 	reader := tree.ReaderAtPosition(pos, direction)

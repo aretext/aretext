@@ -10,14 +10,14 @@ Design principles:
 
 ## Roadmap
 
-- [ ] display file contents, with support for wide characters and grapheme clustering
-- [ ] exit
-- [ ] handle terminal resize
-- [ ] navigate up/down/left/right
-- [ ] scroll file contents vertically
-- [ ] scroll file contents horizontally, handle long lines
-- [ ] insert text
-- [ ] delete text
+- [x] display file contents, with support for wide characters and grapheme clustering
+- [x] exit
+- [x] handle terminal resize
+- [x] navigate up/down/left/right
+- [x] scroll file contents vertically
+- [x] scroll file contents horizontally, handle long lines
+- [x] insert text
+- [x] delete text
 - [ ] save changes
 - [ ] check for unsaved changes on exit
 - [ ] detect when file changed automatically, prompt for reload
@@ -25,16 +25,15 @@ Design principles:
 - [ ] status line showing file edited
 - [ ] copy/paste using system clipboard integration
 - [ ] line numbers
-- [ ] handle tabs
-- [ ] soft-wrap long lines
+- [x] handle tabs
+- [x] soft-wrap long lines
 - [ ] undo/redo
 - [ ] vim-style navigation for words, lines, and sections
 - [ ] vim-style edit commands
 - [ ] forward search through file
 - [ ] backward search through file
-- [ ] incremental read from pipe
 - [ ] option to display non-printable characters
-- [ ] syntax highlighting using textmate definitions
+- [ ] syntax highlighting
 - [ ] repeat last action
 - [ ] macros
 - [ ] autoindent

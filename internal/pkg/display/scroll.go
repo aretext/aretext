@@ -3,6 +3,7 @@ package display
 import (
 	"io"
 
+	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
@@ -20,7 +21,7 @@ const scrollMargin = 3
 // ScrollToCursor returns a new view origin such that the cursor is visible.
 // It attempts to display a few lines before/after the cursor to help the user navigate.
 func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin uint64, viewWidth, viewHeight int) uint64 {
-	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), GraphemeClusterWidth)
+	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), exec.GraphemeClusterWidth)
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)
 	if cursorPos < rng.startPos {
 		// scroll backward

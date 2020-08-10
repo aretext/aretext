@@ -1,4 +1,4 @@
-package display
+package exec
 
 import (
 	runewidth "github.com/mattn/go-runewidth"

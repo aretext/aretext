@@ -40,7 +40,7 @@ func (v *TextView) Draw() {
 	pos := v.origin
 	reader := v.execState.Tree().ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
-	wrapConfig := segment.NewLineWrapConfig(uint64(width), GraphemeClusterWidth)
+	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 
 	for row := 0; row < height; row++ {
@@ -76,7 +76,7 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := GraphemeClusterWidth(gcRunes, totalWidth)
+		gcWidth := exec.GraphemeClusterWidth(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {

@@ -601,6 +601,38 @@ func TestRelativeLineLocator(t *testing.T) {
 			initialCursor:  cursorState{position: 0},
 			expectedCursor: cursorState{position: 0},
 		},
+		{
+			name:           "move up to tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			direction:      text.ReadDirectionBackward,
+			count:          1,
+			initialCursor:  cursorState{position: 13},
+			expectedCursor: cursorState{position: 6, logicalOffset: 1},
+		},
+		{
+			name:           "move down to tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			direction:      text.ReadDirectionForward,
+			count:          1,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 6, logicalOffset: 2},
+		},
+		{
+			name:           "move up from tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			direction:      text.ReadDirectionBackward,
+			count:          1,
+			initialCursor:  cursorState{position: 6, logicalOffset: 2},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "move down from tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			direction:      text.ReadDirectionForward,
+			count:          1,
+			initialCursor:  cursorState{position: 6, logicalOffset: 1},
+			expectedCursor: cursorState{position: 13},
+		},
 	}
 
 	for _, tc := range testCases {

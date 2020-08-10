@@ -30,7 +30,7 @@ type cursorState struct {
 	// position is a position within the text tree where the cursor appears.
 	position uint64
 
-	// logicalOffset is the number of grapheme clusters after the end of the line
+	// logicalOffset is the number of cells after the end of the line
 	// for the cursor's logical (not necessarily visible) position.
 	// This is used for navigating up/down.
 	// For example, consider this text, where [m] is the current cursor position.

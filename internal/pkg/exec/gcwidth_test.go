@@ -1,4 +1,4 @@
-package display
+package exec
 
 import (
 	"testing"

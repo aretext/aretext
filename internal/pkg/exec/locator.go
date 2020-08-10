@@ -221,7 +221,7 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) Locator 
 // as close as possible to the logical offset.
 func (loc *relativeLineLocator) Locate(state *State) cursorState {
 	targetOffset := loc.findOffsetFromLineStart(state)
-	lineStartPos, newlineCount := loc.findStartOfLine(state.tree, state.cursor.position)
+	lineStartPos, newlineCount := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
 	if newlineCount == 0 {
 		return state.cursor
 	}
@@ -234,26 +234,41 @@ func (loc *relativeLineLocator) Locate(state *State) cursorState {
 }
 
 func (loc *relativeLineLocator) findOffsetFromLineStart(state *State) uint64 {
-	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionBackward)
+	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
+	segmentIter := gcIterForTree(state.tree, lineStartPos, text.ReadDirectionForward)
 
-	var offset uint64
+	pos, offset := lineStartPos, uint64(0)
 	for {
 		seg, eof := nextSegmentOrEof(segmentIter)
-		if eof {
+		if eof || pos >= state.cursor.position {
 			break
 		}
 
-		if seg.HasNewline() {
-			break
-		}
-
-		offset++
+		offset += GraphemeClusterWidth(seg.Runes(), offset)
+		pos += seg.NumRunes()
 	}
 
 	return offset + state.cursor.logicalOffset
 }
 
-func (loc *relativeLineLocator) findStartOfLine(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
+func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint64 {
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
+	runeIter := text.NewCloneableBackwardRuneIter(reader)
+	for {
+		r, err := runeIter.NextRune()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		} else if r == '\n' {
+			break
+		}
+		pos--
+	}
+	return pos
+}
+
+func (loc *relativeLineLocator) findStartOfLineAboveOrBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
 	if loc.direction == text.ReadDirectionBackward {
 		return loc.findStartOfLineAbove(tree, pos)
 	} else {
@@ -317,8 +332,8 @@ func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos ui
 	segmentIter := gcIterForTree(tree, lineStartPos, text.ReadDirectionForward)
 
 	var endOfLineOrFile bool
-	var prevPosOffset, posOffset, gcOffset uint64
-	for gcOffset < targetOffset {
+	var prevPosOffset, posOffset, cellOffset uint64
+	for {
 		seg, eof := nextSegmentOrEof(segmentIter)
 		if eof {
 			endOfLineOrFile = true
@@ -330,19 +345,24 @@ func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos ui
 			break
 		}
 
-		gcOffset++
+		gcWidth := GraphemeClusterWidth(seg.Runes(), cellOffset)
+		if cellOffset+gcWidth > targetOffset {
+			break
+		}
+
+		cellOffset += gcWidth
 		prevPosOffset = posOffset
 		posOffset += seg.NumRunes()
 	}
 
 	if endOfLineOrFile {
-		if gcOffset > 0 {
-			gcOffset--
+		if cellOffset > 0 {
+			cellOffset--
 		}
-		return lineStartPos + prevPosOffset, gcOffset
+		return lineStartPos + prevPosOffset, cellOffset
 	}
 
-	return lineStartPos + posOffset, gcOffset
+	return lineStartPos + posOffset, cellOffset
 }
 
 func (loc *relativeLineLocator) String() string {

@@ -1,6 +1,9 @@
 package input
 
 import (
+	"regexp"
+	"strconv"
+
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
@@ -23,23 +26,30 @@ type Mode interface {
 
 // normalMode is used for navigating text.
 type normalMode struct {
-	previousRune rune
+	buffer []rune
 }
 
 func newNormalMode() Mode {
-	return &normalMode{}
+	return &normalMode{
+		buffer: make([]rune, 0, 8),
+	}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) {
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (cmd Command, mode ModeType) {
 	defer func() {
-		if event.Key() == tcell.KeyRune {
-			m.previousRune = event.Rune()
-		} else {
-			m.previousRune = '\x00'
+		if cmd != nil {
+			m.buffer = m.buffer[:0]
 		}
 	}()
 
-	switch event.Key() {
+	if event.Key() == tcell.KeyRune {
+		return m.processRuneKey(event.Rune())
+	}
+	return m.processSpecialKey(event.Key())
+}
+
+func (m *normalMode) processSpecialKey(key tcell.Key) (Command, ModeType) {
+	switch key {
 	case tcell.KeyLeft:
 		return m.cursorLeftCmd(), ModeTypeNormal
 	case tcell.KeyRight:
@@ -48,50 +58,68 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) 
 		return m.cursorUpCmd(), ModeTypeNormal
 	case tcell.KeyDown:
 		return m.cursorDownCmd(), ModeTypeNormal
-	case tcell.KeyRune:
-		return m.processRuneKey(event.Rune())
 	default:
 		return nil, ModeTypeNormal
 	}
 }
 
 func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
-	switch r {
-	case 'h':
+	m.buffer = append(m.buffer, r)
+	count, cmd := m.parseSequence(m.buffer)
+
+	switch cmd {
+	case "h":
 		return m.cursorLeftCmd(), ModeTypeNormal
-	case 'l':
+	case "l":
 		return m.cursorRightCmd(false), ModeTypeNormal
-	case 'k':
+	case "k":
 		return m.cursorUpCmd(), ModeTypeNormal
-	case 'j':
+	case "j":
 		return m.cursorDownCmd(), ModeTypeNormal
-	case 'x':
+	case "x":
 		return m.deleteNextCharCmd(), ModeTypeNormal
-	case '0':
+	case "0":
 		return m.cursorLineStartCmd(), ModeTypeNormal
-	case '^':
+	case "^":
 		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeNormal
-	case '$':
+	case "$":
 		return m.cursorLineEndCmd(false), ModeTypeNormal
-	case 'g':
-		if m.previousRune == 'g' {
-			return m.cursorStartOfFirstLineCmd(), ModeTypeNormal
-		} else {
-			return nil, ModeTypeNormal
-		}
-	case 'G':
+	case "gg":
+		return m.cursorStartOfLineNumCmd(count), ModeTypeNormal
+	case "G":
 		return m.cursorStartOfLastLineCmd(), ModeTypeNormal
-	case 'i':
+	case "i":
 		return nil, ModeTypeInsert
-	case 'I':
+	case "I":
 		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeInsert
-	case 'a':
+	case "a":
 		return m.cursorRightCmd(true), ModeTypeInsert
-	case 'A':
+	case "A":
 		return m.cursorLineEndCmd(true), ModeTypeInsert
 	default:
 		return nil, ModeTypeNormal
 	}
+}
+
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A)$`)
+
+func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
+	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
+
+	if submatches == nil {
+		return 0, ""
+	}
+
+	countStr, cmdStr := submatches[1], submatches[2]
+	if len(countStr) > 0 {
+		count, err := strconv.ParseUint(countStr, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		return count, cmdStr
+	}
+
+	return 0, cmdStr
 }
 
 func (m *normalMode) cursorLeftCmd() Command {
@@ -140,11 +168,17 @@ func (m *normalMode) cursorLineEndCmd(includeEndOfLineOrFile bool) Command {
 	return &ExecCommand{mutator}
 }
 
-func (m *normalMode) cursorStartOfFirstLineCmd() Command {
-	firstLineLoc := exec.NewLineNumLocator(0)
+func (m *normalMode) cursorStartOfLineNumCmd(count uint64) Command {
+	// Convert 1-indexed count to 0-indexed line num
+	var lineNum uint64
+	if count > 0 {
+		lineNum = count - 1
+	}
+
+	lineNumLoc := exec.NewLineNumLocator(lineNum)
 	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator(text.ReadDirectionForward)
 	mutator := exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(firstLineLoc),
+		exec.NewCursorMutator(lineNumLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
 	})
 	return &ExecCommand{mutator}

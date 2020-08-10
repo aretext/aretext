@@ -114,6 +114,25 @@ func TestInterpreter(t *testing.T) {
 			expectedCommands: []string{"", "Exec(Composite(MutateCursor(LineNumLocator(0)),MutateCursor(NonWhitespaceLocator(forward))))"},
 		},
 		{
+			name: "move cursor to single-digit line number using 'g'",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "", "Exec(Composite(MutateCursor(LineNumLocator(4)),MutateCursor(NonWhitespaceLocator(forward))))"},
+		},
+		{
+			name: "move cursor to double-digit line number using 'g'",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '1', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '0', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+			},
+			expectedCommands: []string{"", "", "", "Exec(Composite(MutateCursor(LineNumLocator(9)),MutateCursor(NonWhitespaceLocator(forward))))"},
+		},
+		{
 			name: "move cursor to start of last line using 'G' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),

@@ -450,6 +450,26 @@ func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
 	return cursorState{position: newPosition}
 }
 
+// lineNumLocator locates the start of a given line number.
+type lineNumLocator struct {
+	lineNum uint64
+}
+
+func NewLineNumLocator(lineNum uint64) Locator {
+	return &lineNumLocator{lineNum}
+}
+
+// Locate finds the start of the given line number.
+func (loc *lineNumLocator) Locate(state *State) cursorState {
+	lineNum := closestValidLineNum(state.tree, loc.lineNum)
+	pos := state.tree.LineStartPosition(lineNum)
+	return cursorState{position: pos}
+}
+
+func (loc *lineNumLocator) String() string {
+	return fmt.Sprintf("LineNumLocator(%d)", loc.lineNum)
+}
+
 // lastLineLocator finds the start of the last line.
 type lastLineLocator struct{}
 
@@ -457,29 +477,13 @@ func NewLastLineLocator() Locator {
 	return &lastLineLocator{}
 }
 
-// Locate returns the cursor position at the start of the last line.
+// locate returns the cursor position at the start of the last line.
 func (loc *lastLineLocator) Locate(state *State) cursorState {
 	tree := state.tree
-	numLines := tree.NumLines()
-	if numLines == 0 {
-		return cursorState{position: 0}
-	}
-
-	targetLineNum := numLines - 1
-	if loc.endsWithNewline(tree) {
-		// POSIX says the last newline in a file means "end of file", so don't count it as one of the lines.
-		targetLineNum--
-	}
-
+	lineNum := closestValidLineNum(tree, tree.NumLines())
 	return cursorState{
-		position: tree.LineStartPosition(targetLineNum),
+		position: tree.LineStartPosition(lineNum),
 	}
-}
-
-func (loc *lastLineLocator) endsWithNewline(tree *text.Tree) bool {
-	segmentIter := gcIterForTree(tree, tree.NumChars(), text.ReadDirectionBackward)
-	seg, eof := nextSegmentOrEof(segmentIter)
-	return !eof && seg.HasNewline()
 }
 
 func (loc *lastLineLocator) String() string {
@@ -511,6 +515,36 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter) (seg *segment.Segment, eo
 	}
 
 	return seg, false
+}
+
+// closestValidLineNum finds the line number in the text that is closest to the target.
+// It correctly interprets a line feed at the end of the file as a POSIX EOF marker, not a newline.
+func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
+	numLines := tree.NumLines()
+	if numLines == 0 {
+		return 0
+	}
+
+	lastRealLine := numLines - 1
+	if endsWithLineFeed(tree) {
+		// POSIX end-of-file marker is not considered the start of a new line.
+		lastRealLine--
+	}
+
+	if targetLineNum > lastRealLine {
+		return lastRealLine
+	}
+	return targetLineNum
+}
+
+// endsWithLineFeed returns whether the text ends with a line feed character.
+func endsWithLineFeed(tree *text.Tree) bool {
+	reader := tree.ReaderAtPosition(tree.NumChars(), text.ReadDirectionBackward)
+	var buf [1]byte
+	if n, err := reader.Read(buf[:]); err != nil || n == 0 {
+		return false
+	}
+	return buf[0] == '\n'
 }
 
 func directionString(direction text.ReadDirection) string {

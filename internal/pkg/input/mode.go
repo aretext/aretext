@@ -23,6 +23,7 @@ type Mode interface {
 
 // normalMode is used for navigating text.
 type normalMode struct {
+	previousRune rune
 }
 
 func newNormalMode() Mode {
@@ -30,6 +31,14 @@ func newNormalMode() Mode {
 }
 
 func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) {
+	defer func() {
+		if event.Key() == tcell.KeyRune {
+			m.previousRune = event.Rune()
+		} else {
+			m.previousRune = '\x00'
+		}
+	}()
+
 	switch event.Key() {
 	case tcell.KeyLeft:
 		return m.cursorLeftCmd(), ModeTypeNormal
@@ -64,6 +73,12 @@ func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
 		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeNormal
 	case '$':
 		return m.cursorLineEndCmd(false), ModeTypeNormal
+	case 'g':
+		if m.previousRune == 'g' {
+			return m.cursorStartOfFirstLineCmd(), ModeTypeNormal
+		} else {
+			return nil, ModeTypeNormal
+		}
 	case 'G':
 		return m.cursorStartOfLastLineCmd(), ModeTypeNormal
 	case 'i':
@@ -122,6 +137,16 @@ func (m *normalMode) cursorLineStartNonWhitespaceCmd() Command {
 func (m *normalMode) cursorLineEndCmd(includeEndOfLineOrFile bool) Command {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, includeEndOfLineOrFile)
 	mutator := exec.NewCursorMutator(loc)
+	return &ExecCommand{mutator}
+}
+
+func (m *normalMode) cursorStartOfFirstLineCmd() Command {
+	firstLineLoc := exec.NewLineNumLocator(0)
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator(text.ReadDirectionForward)
+	mutator := exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(firstLineLoc),
+		exec.NewCursorMutator(firstNonWhitespaceLoc),
+	})
 	return &ExecCommand{mutator}
 }
 

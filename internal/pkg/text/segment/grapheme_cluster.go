@@ -12,8 +12,8 @@ import (
 // A grapheme cluster is a user-perceived character, which can be composed of multiple unicode codepoints.
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
 type graphemeClusterIter struct {
-	currentSegment                   *Segment
 	runeIter                         text.CloneableRuneIter
+	buffer                           []rune
 	lastProp                         gbProp
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
@@ -27,8 +27,8 @@ type graphemeClusterIter struct {
 // The input reader MUST produce valid UTF-8 codepoints.
 func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
 	return &graphemeClusterIter{
-		runeIter:       runeIter,
-		currentSegment: NewSegment(),
+		runeIter: runeIter,
+		buffer:   make([]rune, 0, 1),
 	}
 }
 
@@ -37,38 +37,38 @@ func (g *graphemeClusterIter) Clone() CloneableSegmentIter {
 	var clone graphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
-	if g.currentSegment != nil {
-		clone.currentSegment = g.currentSegment.Clone()
-	}
+	clone.buffer = make([]rune, len(g.buffer))
+	copy(clone.buffer, g.buffer)
 	return &clone
 }
 
 // NextSegment implements SegmentIter#NextSegment()
-func (g *graphemeClusterIter) NextSegment() (*Segment, error) {
+func (g *graphemeClusterIter) NextSegment(segment *Segment) error {
+	segment.Clear()
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, err
+			return err
 		}
 
-		if canBreakBefore := g.processRune(r); canBreakBefore && g.currentSegment.NumRunes() > 0 {
-			seg := g.currentSegment
-			g.currentSegment = NewSegment().Append(r)
-			return seg, nil
+		if canBreakBefore := g.processRune(r); canBreakBefore && len(g.buffer) > 0 {
+			segment.Extend(g.buffer)
+			g.buffer = append(g.buffer[:0], r)
+			return nil
 		}
 
-		g.currentSegment.Append(r)
+		g.buffer = append(g.buffer, r)
 	}
 
-	if g.currentSegment != nil && g.currentSegment.NumRunes() > 0 {
-		seg := g.currentSegment
-		g.currentSegment = nil
-		return seg, nil
+	if len(g.buffer) > 0 {
+		segment.Extend(g.buffer)
+		g.buffer = g.buffer[:0]
+		return nil
 	}
 
-	return nil, io.EOF
+	return io.EOF
 }
 
 // processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
@@ -133,16 +133,16 @@ func (g *graphemeClusterIter) processRune(r rune) (canBreakBefore bool) {
 
 // reverseGraphemeClusterIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.
 type reverseGraphemeClusterIter struct {
-	currentSegment *Segment
-	runeIter       text.CloneableRuneIter
-	lastProp       gbProp
+	runeIter text.CloneableRuneIter
+	buffer   []rune
+	lastProp gbProp
 }
 
 // NewReverseGraphemeClusterIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
 func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
 	return &reverseGraphemeClusterIter{
-		currentSegment: NewSegment(),
-		runeIter:       runeIter,
+		runeIter: runeIter,
+		buffer:   make([]rune, 0, 1),
 	}
 }
 
@@ -150,41 +150,43 @@ func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSeg
 func (g *reverseGraphemeClusterIter) Clone() CloneableSegmentIter {
 	var clone reverseGraphemeClusterIter
 	clone = *g
-	clone.currentSegment = g.currentSegment.Clone()
 	clone.runeIter = g.runeIter.Clone()
+	clone.buffer = make([]rune, len(g.buffer))
+	copy(clone.buffer, g.buffer)
 	return &clone
 }
 
 // NextBreak implements SegmentIter#NextSegment()
 // The returned locations are relative to the end of the text.
-func (g *reverseGraphemeClusterIter) NextSegment() (*Segment, error) {
+func (g *reverseGraphemeClusterIter) NextSegment(segment *Segment) error {
+	segment.Clear()
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, err
+			return err
 		}
 
 		// "After" is relative to the original (non-reversed) rune order.
 		// So if the original string was "abcd" and we're iterating through it backwards,
 		// then the break between "b" and "c" would be *after* "b".
-		if canBreakAfter := g.processRune(r); canBreakAfter && g.currentSegment.NumRunes() > 0 {
-			seg := g.currentSegment
-			g.currentSegment = NewSegment().Append(r)
-			return seg.ReverseRunes(), nil
+		if canBreakAfter := g.processRune(r); canBreakAfter && len(g.buffer) > 0 {
+			segment.Extend(g.buffer).ReverseRunes()
+			g.buffer = append(g.buffer[:0], r)
+			return nil
 		}
 
-		g.currentSegment.Append(r)
+		g.buffer = append(g.buffer, r)
 	}
 
-	if g.currentSegment != nil && g.currentSegment.NumRunes() > 0 {
-		seg := g.currentSegment
-		g.currentSegment = nil
-		return seg.ReverseRunes(), nil
+	if len(g.buffer) > 0 {
+		segment.Extend(g.buffer).ReverseRunes()
+		g.buffer = g.buffer[:0]
+		return nil
 	}
 
-	return nil, io.EOF
+	return io.EOF
 }
 
 func (g *reverseGraphemeClusterIter) processRune(r rune) (canBreakAfter bool) {

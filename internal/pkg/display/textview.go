@@ -42,9 +42,10 @@ func (v *TextView) Draw() {
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
+	wrappedLine := segment.NewSegment()
 
 	for row := 0; row < height; row++ {
-		wrappedLine, err := wrappedLineIter.NextSegment()
+		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -63,12 +64,13 @@ func (v *TextView) Draw() {
 func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment) {
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	var lastGc *segment.Segment
+	gc := segment.NewSegment()
 	totalWidth := uint64(0)
 	col := 0
+	var lastGcWasNewline bool
 
 	for {
-		gc, err := gcIter.NextSegment()
+		err := gcIter.NextSegment(gc)
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -93,11 +95,11 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 
 		pos += gc.NumRunes()
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
-		lastGc = gc
+		lastGcWasNewline = gc.HasNewline()
 	}
 
 	if pos == v.execState.CursorPosition() {
-		if lastGc != nil && (lastGc.HasNewline() || pos == uint64(maxLineWidth)) {
+		if gc != nil && (lastGcWasNewline || pos == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
 			v.screenRegion.ShowCursor(0, row+1)
 		} else {

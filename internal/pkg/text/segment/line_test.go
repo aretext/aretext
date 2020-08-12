@@ -131,13 +131,14 @@ func TestWrappedLineIter(t *testing.T) {
 			runeIter := text.NewCloneableForwardRuneIter(reader)
 			wrappedLineIter := NewWrappedLineIter(runeIter, wrapConfig)
 			lines := make([]string, 0)
+			seg := NewSegment()
 			for {
-				seg, err := wrappedLineIter.NextSegment()
+				err := wrappedLineIter.NextSegment(seg)
 				if err == io.EOF {
 					break
 				}
 				require.NoError(t, err)
-				lines = append(lines, string(seg.Runes()))
+				lines = append(lines, string(seg.Clone().Runes()))
 			}
 			assert.Equal(t, tc.expectedLines, lines)
 		})

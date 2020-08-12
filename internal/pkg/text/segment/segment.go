@@ -14,9 +14,9 @@ func NewSegment() *Segment {
 	return &Segment{runes: make([]rune, 0, 1)}
 }
 
-// Append adds a rune to the end of the segment.
-func (seg *Segment) Append(r rune) *Segment {
-	seg.runes = append(seg.runes, r)
+// Clear removes all runes from the segment.
+func (seg *Segment) Clear() *Segment {
+	seg.runes = seg.runes[:0]
 	return seg
 }
 
@@ -40,16 +40,16 @@ func (seg *Segment) ReverseRunes() *Segment {
 	return seg
 }
 
-// NumRunes returns the number of runes in the segment.
-func (seg *Segment) NumRunes() uint64 {
-	return uint64(len(seg.runes))
-}
-
 // Clone returns a copy of the segment.
 func (seg *Segment) Clone() *Segment {
 	runes := make([]rune, len(seg.runes))
 	copy(runes, seg.runes)
 	return &Segment{runes}
+}
+
+// NumRunes returns the number of runes in the segment.
+func (seg *Segment) NumRunes() uint64 {
+	return uint64(len(seg.runes))
 }
 
 // Runes returns the runes contained in the segment.

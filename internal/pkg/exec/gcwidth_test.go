@@ -60,6 +60,31 @@ func TestGraphemeClusterWidth(t *testing.T) {
 			gc:            []rune{'a', '\u0300'},
 			expectedWidth: 1,
 		},
+		{
+			name:          "trademark symbol",
+			gc:            []rune{'™'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "left square double bracket",
+			gc:            []rune{'⟦'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "right square double bracket",
+			gc:            []rune{'⟧'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "left angle double bracket",
+			gc:            []rune{'⟪'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "right angle double bracket",
+			gc:            []rune{'⟫'},
+			expectedWidth: 1,
+		},
 	}
 
 	for _, tc := range testCases {

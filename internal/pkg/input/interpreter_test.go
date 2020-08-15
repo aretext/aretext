@@ -103,7 +103,7 @@ func TestInterpreter(t *testing.T) {
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, '^', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceLocator())))"},
+			expectedCommands: []string{"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
 		},
 		{
 			name: "move cursor to start of first line using 'gg'",
@@ -111,7 +111,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Composite(MutateCursor(LineNumLocator(0)),MutateCursor(NonWhitespaceLocator())))"},
+			expectedCommands: []string{"", "Exec(Composite(MutateCursor(LineNumLocator(0)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
 		},
 		{
 			name: "move cursor to single-digit line number using 'g'",
@@ -120,7 +120,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "", "Exec(Composite(MutateCursor(LineNumLocator(4)),MutateCursor(NonWhitespaceLocator())))"},
+			expectedCommands: []string{"", "", "Exec(Composite(MutateCursor(LineNumLocator(4)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
 		},
 		{
 			name: "move cursor to double-digit line number using 'g'",
@@ -130,14 +130,14 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "", "", "Exec(Composite(MutateCursor(LineNumLocator(9)),MutateCursor(NonWhitespaceLocator())))"},
+			expectedCommands: []string{"", "", "", "Exec(Composite(MutateCursor(LineNumLocator(9)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
 		},
 		{
 			name: "move cursor to start of last line using 'G' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(Composite(MutateCursor(LastLineLocator()),MutateCursor(NonWhitespaceLocator())))"},
+			expectedCommands: []string{"Exec(Composite(MutateCursor(LastLineLocator()),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
 		},
 		{
 			name: "insert and return to normal mode",
@@ -166,7 +166,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceLocator())))",
+				"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())))",
 				"Exec(InsertRune('a'))",
 				"Exec(InsertRune('b'))",
 				"Exec(MutateCursor(OntoLineLocator()))",

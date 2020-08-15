@@ -429,26 +429,26 @@ func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
 	return cursorState{position: newPosition}
 }
 
-// nonWhitespaceLocator finds the next non-whitespace character on or after the cursor.
-type nonWhitespaceLocator struct{}
+// nonWhitespaceOrNewlineLocator finds the next non-whitespace character or newline on or after the cursor.
+type nonWhitespaceOrNewlineLocator struct{}
 
-func NewNonWhitespaceLocator() Locator {
-	return &nonWhitespaceLocator{}
+func NewNonWhitespaceOrNewlineLocator() Locator {
+	return &nonWhitespaceOrNewlineLocator{}
 }
 
-func (loc *nonWhitespaceLocator) String() string {
-	return fmt.Sprintf("NonWhitespaceLocator()")
+func (loc *nonWhitespaceOrNewlineLocator) String() string {
+	return fmt.Sprintf("NonWhitespaceOrNewlineLocator()")
 }
 
-// Locate finds the nearest non-whitespace character on or after the cursor.
-func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
+// Locate finds the nearest non-whitespace character or newline on or after the cursor.
+func (loc *nonWhitespaceOrNewlineLocator) Locate(state *State) cursorState {
 	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var offset uint64
 
 	for {
 		eof := nextSegmentOrEof(segmentIter, seg)
-		if eof || !seg.IsWhitespace() {
+		if eof || !seg.IsWhitespace() || seg.HasNewline() {
 			break
 		}
 

@@ -154,7 +154,7 @@ func (m *normalMode) cursorLineStartCmd() Command {
 
 func (m *normalMode) cursorLineStartNonWhitespaceCmd() Command {
 	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator()
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
 	mutator := exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineStartLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
@@ -176,7 +176,7 @@ func (m *normalMode) cursorStartOfLineNumCmd(count uint64) Command {
 	}
 
 	lineNumLoc := exec.NewLineNumLocator(lineNum)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator()
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
 	mutator := exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineNumLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
@@ -186,7 +186,7 @@ func (m *normalMode) cursorStartOfLineNumCmd(count uint64) Command {
 
 func (m *normalMode) cursorStartOfLastLineCmd() Command {
 	lastLineLoc := exec.NewLastLineLocator()
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceLocator()
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
 	mutator := exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lastLineLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),

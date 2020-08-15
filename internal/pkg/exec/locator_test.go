@@ -741,7 +741,7 @@ func TestLineBoundaryLocator(t *testing.T) {
 	}
 }
 
-func TestNonWhitespaceLocator(t *testing.T) {
+func TestNonWhitespaceOrNewlineLocator(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string
@@ -778,6 +778,18 @@ func TestNonWhitespaceLocator(t *testing.T) {
 			initialCursor:  cursorState{position: 3, logicalOffset: 10},
 			expectedCursor: cursorState{position: 3, logicalOffset: 10},
 		},
+		{
+			name:           "stop before newline on empty line",
+			inputString:    "abcd\n\n\nefgh",
+			initialCursor:  cursorState{position: 5},
+			expectedCursor: cursorState{position: 5},
+		},
+		{
+			name:           "stop before newline at end of line",
+			inputString:    "abcd\nefghi",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -785,7 +797,7 @@ func TestNonWhitespaceLocator(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			state := State{tree, tc.initialCursor}
-			loc := NewNonWhitespaceLocator()
+			loc := NewNonWhitespaceOrNewlineLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
 		})

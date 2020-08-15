@@ -429,22 +429,20 @@ func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
 	return cursorState{position: newPosition}
 }
 
-// nonWhitespaceLocator finds the nearest non-whitespace character in the specified direction.
-type nonWhitespaceLocator struct {
-	direction text.ReadDirection
-}
+// nonWhitespaceLocator finds the next non-whitespace character on or after the cursor.
+type nonWhitespaceLocator struct{}
 
-func NewNonWhitespaceLocator(direction text.ReadDirection) Locator {
-	return &nonWhitespaceLocator{direction}
+func NewNonWhitespaceLocator() Locator {
+	return &nonWhitespaceLocator{}
 }
 
 func (loc *nonWhitespaceLocator) String() string {
-	return fmt.Sprintf("NonWhitespaceLocator(%s)", directionString(loc.direction))
+	return fmt.Sprintf("NonWhitespaceLocator()")
 }
 
-// Locate finds the nearest non-whitespace character in the specified direction.
+// Locate finds the nearest non-whitespace character on or after the cursor.
 func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
-	segmentIter := gcIterForTree(state.tree, state.cursor.position, loc.direction)
+	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var offset uint64
 
@@ -457,22 +455,7 @@ func (loc *nonWhitespaceLocator) Locate(state *State) cursorState {
 		offset += seg.NumRunes()
 	}
 
-	newPosition := state.cursor.position
-	if loc.direction == text.ReadDirectionForward {
-		newPosition += offset
-	} else {
-		if offset > 0 {
-			// When iterating backward, need to advance an additional segment
-			// to position the cursor at the start of the non-whitespace character.
-			eof := nextSegmentOrEof(segmentIter, seg)
-			if !eof {
-				offset += seg.NumRunes()
-			}
-		}
-
-		newPosition -= offset
-	}
-
+	newPosition := state.cursor.position + offset
 	if newPosition == state.cursor.position {
 		return state.cursor
 	}

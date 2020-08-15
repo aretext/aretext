@@ -437,7 +437,7 @@ func NewNonWhitespaceOrNewlineLocator() Locator {
 }
 
 func (loc *nonWhitespaceOrNewlineLocator) String() string {
-	return fmt.Sprintf("NonWhitespaceOrNewlineLocator()")
+	return "NonWhitespaceOrNewlineLocator()"
 }
 
 // Locate finds the nearest non-whitespace character or newline on or after the cursor.

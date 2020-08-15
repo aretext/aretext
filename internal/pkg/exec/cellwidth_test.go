@@ -85,6 +85,51 @@ func TestGraphemeClusterWidth(t *testing.T) {
 			gc:            []rune{'⟫'},
 			expectedWidth: 1,
 		},
+		{
+			name:          "thai",
+			gc:            []rune{3588, 3657, 3635},
+			expectedWidth: 2,
+		},
+		{
+			name:          "combining character (angstrom)",
+			gc:            []rune{'A', '\u030a'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "emoticon (blowing a kiss)",
+			gc:            []rune{'\U0001f618'},
+			expectedWidth: 2,
+		},
+		{
+			name:          "emoji (airplane)",
+			gc:            []rune{'\u2708'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "emoji (clover symbol)",
+			gc:            []rune{'\u2318'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "enclosed exclamation",
+			gc:            []rune{'!', '\u20e3'},
+			expectedWidth: 1,
+		},
+		{
+			name:          "emoji zero-width joiner (female vampire)",
+			gc:            []rune{'\U0001f9db', '\u200d', '\u2640'},
+			expectedWidth: 2,
+		},
+		{
+			name:          "emoji zero-width joiner (family, woman+girl+girl)",
+			gc:            []rune{'\U0001f469', '\u200d', '\U0001f467', '\u200d', '\U0001f467'},
+			expectedWidth: 2,
+		},
+		{
+			name:          "region (usa)",
+			gc:            []rune{'\U0001f1fa', '\U0001f1f8'},
+			expectedWidth: 1,
+		},
 	}
 
 	for _, tc := range testCases {

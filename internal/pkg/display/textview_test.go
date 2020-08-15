@@ -169,6 +169,63 @@ func TestTextViewDraw(t *testing.T) {
 	}
 }
 
+func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		expectedCellRunes [][]rune
+	}{
+		{
+			name:        "ascii",
+			inputString: "abcd1234",
+			expectedCellRunes: [][]rune{
+				{'a'}, {'b'}, {'c'}, {'d'}, {'1'}, {'2'}, {'3'}, {'4'},
+			},
+		},
+		{
+			name:        "thai",
+			inputString: "\u0E04\u0E49\u0E33",
+			expectedCellRunes: [][]rune{
+				{'\u0E04', '\u0E49'}, {'\u0E33'},
+			},
+		},
+		{
+			name:        "emoji with zero-width joiner",
+			inputString: "\U0001f9db\u200d\u2640\U0001f469\u200d\U0001f467\u200d\U0001f467",
+			expectedCellRunes: [][]rune{
+				{'\U0001f9db', '\u200d', '\u2640'},
+				{'X'},
+				{'\U0001f469', '\u200d', '\U0001f467', '\u200d', '\U0001f467'},
+				{'X'},
+			},
+		},
+		{
+			name:        "regional indicator",
+			inputString: "\U0001f1fa\U0001f1f8 (usa!)",
+			expectedCellRunes: [][]rune{
+				{'\U0001f1fa', '\U0001f1f8'},
+				{' '}, {'('}, {'u'}, {'s'}, {'a'}, {'!'}, {')'},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(100, 1)
+				view := textViewWithStringAndCursorPos(t, s, tc.inputString, 0)
+				view.Draw()
+				s.Sync()
+
+				contents, _, _ := s.GetContents()
+				for i, expectedRunes := range tc.expectedCellRunes {
+					assert.Equal(t, expectedRunes, contents[i].Runes)
+				}
+			})
+		})
+	}
+}
+
 func TestTextViewDrawSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)

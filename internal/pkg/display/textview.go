@@ -87,7 +87,7 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 			return
 		}
 
-		v.screenRegion.SetContent(col, row, gcRunes[0], gcRunes[1:], tcell.StyleDefault)
+		v.drawGraphemeCluster(col, row, gcRunes, tcell.StyleDefault)
 
 		if pos == v.execState.CursorPosition() {
 			v.screenRegion.ShowCursor(col, row)
@@ -106,6 +106,35 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 			// Otherwise, show the cursor at the end of the current line.
 			v.screenRegion.ShowCursor(col, row)
 		}
+	}
+}
+
+func (v *TextView) drawGraphemeCluster(col, row int, gc []rune, style tcell.Style) {
+	// Emoji and regional indicator sequences are usually rendered using the
+	// width of the first rune.  This won't support every terminal, but it's probably
+	// the best we can do without knowing how the terminal will render the glyphs.
+	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
+		v.screenRegion.SetContent(col, row, gc[0], gc[1:], style)
+		return
+	}
+
+	// For other sequences, we break the grapheme cluster into cells.
+	// Each cell starts with a main rune, followed by zero or more combining runes.
+	// In most cases, the entire grapheme cluster will fit in a single cell,
+	// but there are exceptions (for example, some Thai sequences).
+	i := 0
+	for i < len(gc) {
+		j := i + 1
+		for j < len(gc) {
+			r := gc[j]
+			if exec.RuneWidth(r) > 0 {
+				break
+			}
+			j++
+		}
+		v.screenRegion.SetContent(col, row, gc[i], gc[i+1:j], style)
+		col += int(exec.RuneWidth(gc[i]))
+		i = j
 	}
 }
 

@@ -72,7 +72,7 @@ func TestDeleteMutator(t *testing.T) {
 		name           string
 		inputString    string
 		initialCursor  cursorState
-		locator        Locator
+		locator        CursorLocator
 		expectedCursor cursorState
 		expectedText   string
 	}{

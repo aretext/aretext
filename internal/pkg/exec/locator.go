@@ -8,8 +8,8 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
-// Locator finds the position of the cursor according to some criteria.
-type Locator interface {
+// CursorLocator finds the position of the cursor according to some criteria.
+type CursorLocator interface {
 	fmt.Stringer
 
 	// Locate finds the next position of the cursor based on the current state and criteria for this locator.
@@ -26,7 +26,7 @@ type charInLineLocator struct {
 // NewCharInLineLocator builds a new locator for a character on the same line as the cursor.
 // The direction arg indicates whether to read forward or backwards from the cursor.
 // The count arg is the maximum number of characters to move the cursor.
-func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEndOfLineOrFile bool) Locator {
+func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEndOfLineOrFile bool) CursorLocator {
 	if count == 0 {
 		panic("Count must be greater than zero")
 	}
@@ -127,7 +127,7 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
 type ontoLineLocator struct {
 }
 
-func NewOntoLineLocator() Locator {
+func NewOntoLineLocator() CursorLocator {
 	return &ontoLineLocator{}
 }
 
@@ -210,7 +210,7 @@ type relativeLineLocator struct {
 // NewRelativeLineLocator returns a locator for moving the cursor up or down by some number of lines.
 // Count is the number of lines to move, and it must be at least one.
 // Direction indicates whether to move up (ReadDirectionBackward) or down (ReadDirectionForward).
-func NewRelativeLineLocator(direction text.ReadDirection, count uint64) Locator {
+func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLocator {
 	if count == 0 {
 		panic("Count must be greater than zero")
 	}
@@ -386,7 +386,7 @@ type lineBoundaryLocator struct {
 // NewLineBoundaryLocator constructs a line boundary locator.
 // Direction determines whether to locate the start (ReadDirectionBackward) or end (ReadDirectionForward) of the line.
 // If includeEndOfLineOrFile is true, position the cursor at the newline or one past the last character in the text.
-func NewLineBoundaryLocator(direction text.ReadDirection, includeEndOfLineOrFile bool) Locator {
+func NewLineBoundaryLocator(direction text.ReadDirection, includeEndOfLineOrFile bool) CursorLocator {
 	return &lineBoundaryLocator{direction, includeEndOfLineOrFile}
 }
 
@@ -432,7 +432,7 @@ func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
 // nonWhitespaceOrNewlineLocator finds the next non-whitespace character or newline on or after the cursor.
 type nonWhitespaceOrNewlineLocator struct{}
 
-func NewNonWhitespaceOrNewlineLocator() Locator {
+func NewNonWhitespaceOrNewlineLocator() CursorLocator {
 	return &nonWhitespaceOrNewlineLocator{}
 }
 
@@ -468,7 +468,7 @@ type lineNumLocator struct {
 	lineNum uint64
 }
 
-func NewLineNumLocator(lineNum uint64) Locator {
+func NewLineNumLocator(lineNum uint64) CursorLocator {
 	return &lineNumLocator{lineNum}
 }
 
@@ -486,7 +486,7 @@ func (loc *lineNumLocator) String() string {
 // lastLineLocator finds the start of the last line.
 type lastLineLocator struct{}
 
-func NewLastLineLocator() Locator {
+func NewLastLineLocator() CursorLocator {
 	return &lastLineLocator{}
 }
 

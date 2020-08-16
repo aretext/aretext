@@ -39,11 +39,11 @@ func (cm *CompositeMutator) String() string {
 
 // cursorMutator updates the current location of the cursor.
 type cursorMutator struct {
-	loc Locator
+	loc CursorLocator
 }
 
 // NewCursorMutator returns a mutator that updates the cursor location.
-func NewCursorMutator(loc Locator) Mutator {
+func NewCursorMutator(loc CursorLocator) Mutator {
 	return &cursorMutator{loc}
 }
 
@@ -97,10 +97,10 @@ func (irm *insertRuneMutator) String() string {
 
 // deleteMutator deletes characters from the cursor up to a location.
 type deleteMutator struct {
-	loc Locator
+	loc CursorLocator
 }
 
-func NewDeleteMutator(loc Locator) Mutator {
+func NewDeleteMutator(loc CursorLocator) Mutator {
 	return &deleteMutator{loc}
 }
 

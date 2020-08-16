@@ -24,9 +24,9 @@ func NewInterpreter() *Interpreter {
 
 // ProcessKeyEvent interprets a key input event, producing a mutator if necessary.
 // A return value of nil means no mutator occurred.
-func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey) exec.Mutator {
+func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
 	mode := inp.modes[inp.currentMode]
-	mutator, nextMode := mode.ProcessKeyEvent(event)
+	mutator, nextMode := mode.ProcessKeyEvent(event, config)
 	inp.currentMode = nextMode
 	return mutator
 }

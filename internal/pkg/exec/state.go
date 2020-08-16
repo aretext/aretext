@@ -68,5 +68,5 @@ type viewState struct {
 
 	// width and height can be changed only through a resize event;
 	// mutators should not modify these.
-	width, height  uint64
+	width, height uint64
 }

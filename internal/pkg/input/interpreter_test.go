@@ -12,6 +12,7 @@ func TestInterpreter(t *testing.T) {
 		name             string
 		inputEvents      []*tcell.EventKey
 		expectedCommands []string
+		config           Config
 	}{
 		{
 			name: "move cursor left using arrow key",
@@ -68,6 +69,38 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
 			},
 			expectedCommands: []string{"Composite(MutateCursor(RelativeLineLocator(forward, 1)),ScrollToCursor())"},
+		},
+		{
+			name: "scroll up using ctrl-u, scroll lines zero",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
+			},
+			config:           Config{ScrollLines: 0},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(backward, 1)),MutateCursor(LineBoundaryLocator(backward, false)),SetViewOriginZero()),ScrollToCursor())"},
+		},
+		{
+			name: "scroll up using ctrl-u, scroll lines greater than zero",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
+			},
+			config:           Config{ScrollLines: 25},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(backward, 25)),MutateCursor(LineBoundaryLocator(backward, false)),SetViewOriginZero()),ScrollToCursor())"},
+		},
+		{
+			name: "scroll down using ctrl-d, scroll lines zero",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
+			},
+			config:           Config{ScrollLines: 0},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(forward, 1)),MutateCursor(LineBoundaryLocator(backward, false)),SetViewOriginToCursor()),ScrollToCursor())"},
+		},
+		{
+			name: "scroll down using ctrl-d, scroll lines greater than zero",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
+			},
+			config:           Config{ScrollLines: 25},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(forward, 25)),MutateCursor(LineBoundaryLocator(backward, false)),SetViewOriginToCursor()),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to end of line using '$' key",
@@ -240,7 +273,7 @@ func TestInterpreter(t *testing.T) {
 			interpreter := NewInterpreter()
 			commands := make([]string, 0, len(tc.inputEvents))
 			for _, event := range tc.inputEvents {
-				cmd := interpreter.ProcessKeyEvent(event)
+				cmd := interpreter.ProcessKeyEvent(event, tc.config)
 				if cmd == nil {
 					commands = append(commands, "")
 				} else {

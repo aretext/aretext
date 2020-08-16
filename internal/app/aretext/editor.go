@@ -111,7 +111,7 @@ func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
 		return
 	}
 
-	mutator := e.inputInterpreter.ProcessKeyEvent(event)
+	mutator := e.inputInterpreter.ProcessKeyEvent(event, e.inputConfig())
 	if mutator != nil {
 		mutator.Mutate(e.execState)
 		e.redraw()
@@ -137,4 +137,12 @@ func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 func (e *Editor) redraw() {
 	e.screen.Clear()
 	e.textView.Draw()
+}
+
+func (e *Editor) inputConfig() input.Config {
+	_, screenHeight := e.screen.Size()
+	scrollLines := uint64(screenHeight) / 2
+	return input.Config{
+		ScrollLines: scrollLines,
+	}
 }

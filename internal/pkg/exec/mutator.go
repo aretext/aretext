@@ -130,3 +130,35 @@ func (dm *deleteMutator) deleteCharacters(tree *text.Tree, pos uint64, count uin
 func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
 }
+
+// viewOriginZeroMutator sets the view origin to position zero.
+type viewOriginZeroMutator struct{}
+
+// NewViewOriginZeroMutator returns a mutator that sets the view origin to position zero.
+func NewViewOriginZeroMutator() Mutator {
+	return &viewOriginZeroMutator{}
+}
+
+func (vm *viewOriginZeroMutator) Mutate(state *State) {
+	state.view.origin = 0
+}
+
+func (vm *viewOriginZeroMutator) String() string {
+	return "SetViewOriginZero()"
+}
+
+// viewOriginAtCursorMutator sets the view origin to position of the cursor.
+type viewOriginAtCursorMutator struct{}
+
+// NewViewOriginAtCursorMutator returns a mutator that sets the view origin to the position of the cursor.
+func NewViewOriginAtCursorMutator() Mutator {
+	return &viewOriginAtCursorMutator{}
+}
+
+func (vm *viewOriginAtCursorMutator) Mutate(state *State) {
+	state.view.origin = state.cursor.position
+}
+
+func (vm *viewOriginAtCursorMutator) String() string {
+	return "SetViewOriginToCursor()"
+}

@@ -21,7 +21,7 @@ type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
 	// It will return any user-initiated mutator resulting from the keypress
 	// as well as the next input mode (which could be the same as the current mode).
-	ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType)
+	ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType)
 }
 
 // normalMode is used for navigating text.
@@ -35,8 +35,8 @@ func newNormalMode() Mode {
 	}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
-	mutator, nextMode := m.processKeyEvent(event)
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
+	mutator, nextMode := m.processKeyEvent(event, config)
 	if mutator != nil {
 		m.buffer = m.buffer[:0]
 	}
@@ -44,14 +44,14 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeT
 	return appendScrollToCursor(mutator), nextMode
 }
 
-func (m *normalMode) processKeyEvent(event *tcell.EventKey) (mutator exec.Mutator, mode ModeType) {
+func (m *normalMode) processKeyEvent(event *tcell.EventKey, config Config) (mutator exec.Mutator, mode ModeType) {
 	if event.Key() == tcell.KeyRune {
 		return m.processRuneKey(event.Rune())
 	}
-	return m.processSpecialKey(event.Key())
+	return m.processSpecialKey(event.Key(), config)
 }
 
-func (m *normalMode) processSpecialKey(key tcell.Key) (exec.Mutator, ModeType) {
+func (m *normalMode) processSpecialKey(key tcell.Key, config Config) (exec.Mutator, ModeType) {
 	switch key {
 	case tcell.KeyLeft:
 		return m.cursorLeft(), ModeTypeNormal
@@ -61,6 +61,10 @@ func (m *normalMode) processSpecialKey(key tcell.Key) (exec.Mutator, ModeType) {
 		return m.cursorUp(), ModeTypeNormal
 	case tcell.KeyDown:
 		return m.cursorDown(), ModeTypeNormal
+	case tcell.KeyCtrlU:
+		return m.scrollUp(config.ScrollLines), ModeTypeNormal
+	case tcell.KeyCtrlD:
+		return m.scrollDown(config.ScrollLines), ModeTypeNormal
 	default:
 		return nil, ModeTypeNormal
 	}
@@ -145,6 +149,40 @@ func (m *normalMode) cursorDown() exec.Mutator {
 	return exec.NewCursorMutator(loc)
 }
 
+func (m *normalMode) scrollUp(scrollLines uint64) exec.Mutator {
+	if scrollLines < 1 {
+		scrollLines = 1
+	}
+
+	// Move the cursor to the start of a line above and set the view origin to zero.
+	// Because every mutator ends with ScrollToCursor, the cursor will be positioned
+	// at the bottom of the view.
+	lineAboveLoc := exec.NewRelativeLineLocator(text.ReadDirectionBackward, scrollLines)
+	startOfLineLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(lineAboveLoc),
+		exec.NewCursorMutator(startOfLineLoc),
+		exec.NewViewOriginZeroMutator(),
+	})
+}
+
+func (m *normalMode) scrollDown(scrollLines uint64) exec.Mutator {
+	if scrollLines < 1 {
+		scrollLines = 1
+	}
+
+	// Move the cursor to the start of a line below and set the view origin at the cursor.
+	// Because every mutator ends with ScrollToCursor, the view origin will be positioned
+	// a few (soft-wrapped) lines before the cursor.
+	lineBelowLoc := exec.NewRelativeLineLocator(text.ReadDirectionForward, scrollLines)
+	startOfLineLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(lineBelowLoc),
+		exec.NewCursorMutator(startOfLineLoc),
+		exec.NewViewOriginAtCursorMutator(),
+	})
+}
+
 func (m *normalMode) cursorLineStart() exec.Mutator {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	return exec.NewCursorMutator(loc)
@@ -204,7 +242,7 @@ func newInsertMode() Mode {
 	return &insertMode{}
 }
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
 	mutator, nextMode := m.processKeyEvent(event)
 	return appendScrollToCursor(mutator), nextMode
 }

@@ -14,96 +14,81 @@ func TestInterpreter(t *testing.T) {
 		expectedCommands []string
 	}{
 		{
-			name: "quit using ctrl-c in normal mode",
-			inputEvents: []*tcell.EventKey{
-				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
-			},
-			expectedCommands: []string{"Quit()"},
-		},
-		{
-			name: "quit using ctrl-c in insert mode",
-			inputEvents: []*tcell.EventKey{
-				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
-			},
-			expectedCommands: []string{"", "Quit()"},
-		},
-		{
 			name: "move cursor left using arrow key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyLeft, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(CharInLineLocator(backward, 1, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor right using arrow key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRight, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor up using arrow key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyUp, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(backward, 1)))"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineLocator(backward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor down using arrow key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyDown, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(forward, 1)))"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineLocator(forward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor left using 'h' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(backward, 1, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(CharInLineLocator(backward, 1, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor right using 'l' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor up using 'k' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'k', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(backward, 1)))"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineLocator(backward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor down using 'j' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(RelativeLineLocator(forward, 1)))"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineLocator(forward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to end of line using '$' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(LineBoundaryLocator(forward, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(LineBoundaryLocator(forward, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to start of line using '0' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, '0', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(MutateCursor(LineBoundaryLocator(backward, false)))"},
+			expectedCommands: []string{"Composite(MutateCursor(LineBoundaryLocator(backward, false)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to start of line using '^' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, '^', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to start of first line using 'gg'",
@@ -111,7 +96,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Composite(MutateCursor(LineNumLocator(0)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
+			expectedCommands: []string{"", "Composite(Composite(MutateCursor(LineNumLocator(0)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to single-digit line number using 'g'",
@@ -120,7 +105,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "", "Exec(Composite(MutateCursor(LineNumLocator(4)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
+			expectedCommands: []string{"", "", "Composite(Composite(MutateCursor(LineNumLocator(4)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to double-digit line number using 'g'",
@@ -130,14 +115,14 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "", "", "Exec(Composite(MutateCursor(LineNumLocator(9)),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
+			expectedCommands: []string{"", "", "", "Composite(Composite(MutateCursor(LineNumLocator(9)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to start of last line using 'G' key",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),
 			},
-			expectedCommands: []string{"Exec(Composite(MutateCursor(LastLineLocator()),MutateCursor(NonWhitespaceOrNewlineLocator())))"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(LastLineLocator()),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())"},
 		},
 		{
 			name: "insert and return to normal mode",
@@ -150,10 +135,10 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{
 				"",
-				"Exec(InsertRune('a'))",
-				"Exec(InsertRune('b'))",
-				"Exec(MutateCursor(OntoLineLocator()))",
-				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+				"Composite(InsertRune('a'),ScrollToCursor())",
+				"Composite(InsertRune('b'),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
 			},
 		},
 		{
@@ -166,11 +151,11 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())))",
-				"Exec(InsertRune('a'))",
-				"Exec(InsertRune('b'))",
-				"Exec(MutateCursor(OntoLineLocator()))",
-				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+				"Composite(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())",
+				"Composite(InsertRune('a'),ScrollToCursor())",
+				"Composite(InsertRune('b'),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
 			},
 		},
 		{
@@ -183,11 +168,11 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(MutateCursor(CharInLineLocator(forward, 1, true)))",
-				"Exec(InsertRune('1'))",
-				"Exec(InsertRune('2'))",
-				"Exec(MutateCursor(OntoLineLocator()))",
-				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, true)),ScrollToCursor())",
+				"Composite(InsertRune('1'),ScrollToCursor())",
+				"Composite(InsertRune('2'),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
 			},
 		},
 		{
@@ -200,11 +185,11 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(MutateCursor(LineBoundaryLocator(forward, true)))",
-				"Exec(InsertRune('1'))",
-				"Exec(InsertRune('2'))",
-				"Exec(MutateCursor(OntoLineLocator()))",
-				"Exec(MutateCursor(CharInLineLocator(forward, 1, false)))",
+				"Composite(MutateCursor(LineBoundaryLocator(forward, true)),ScrollToCursor())",
+				"Composite(InsertRune('1'),ScrollToCursor())",
+				"Composite(InsertRune('2'),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
 			},
 		},
 		{
@@ -213,7 +198,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Exec(Composite(Delete(CharInLineLocator(forward, 1, true)),MutateCursor(OntoLineLocator())))",
+				"Composite(Composite(Delete(CharInLineLocator(forward, 1, true)),MutateCursor(OntoLineLocator())),ScrollToCursor())",
 			},
 		},
 		{
@@ -222,7 +207,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
+			expectedCommands: []string{"", "Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())"},
 		},
 		{
 			name: "delete character using backspace2 key in insert mode",
@@ -230,7 +215,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace2, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(Delete(CharInLineLocator(backward, 1, true)))"},
+			expectedCommands: []string{"", "Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())"},
 		},
 		{
 			name: "insert newline",
@@ -238,7 +223,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(InsertRune('\\n'))"},
+			expectedCommands: []string{"", "Composite(InsertRune('\\n'),ScrollToCursor())"},
 		},
 		{
 			name: "insert tab",
@@ -246,7 +231,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyTab, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Exec(InsertRune('\\t'))"},
+			expectedCommands: []string{"", "Composite(InsertRune('\\t'),ScrollToCursor())"},
 		},
 	}
 

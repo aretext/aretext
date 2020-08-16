@@ -1,4 +1,4 @@
-package display
+package exec
 
 import (
 	"testing"
@@ -22,8 +22,8 @@ func TestScrollToCursor(t *testing.T) {
 		inputString  string
 		cursorPos    uint64
 		viewStartPos uint64
-		viewWidth    int
-		viewHeight   int
+		viewWidth    uint64
+		viewHeight   uint64
 		expectedPos  uint64
 	}{
 		{

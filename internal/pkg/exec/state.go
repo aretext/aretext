@@ -4,16 +4,18 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-// State is the current state of the text and cursor.
+// State is the current state of the document open in the editor.
 type State struct {
 	tree   *text.Tree
 	cursor cursorState
+	view   viewState
 }
 
-func NewState(tree *text.Tree, cursorPosition uint64) *State {
+func NewState(tree *text.Tree, cursorPosition, viewWidth, viewHeight uint64) *State {
 	return &State{
 		tree:   tree,
 		cursor: cursorState{position: cursorPosition},
+		view:   viewState{0, viewWidth, viewHeight},
 	}
 }
 
@@ -23,6 +25,15 @@ func (s *State) Tree() *text.Tree {
 
 func (s *State) CursorPosition() uint64 {
 	return s.cursor.position
+}
+
+func (s *State) ViewOrigin() uint64 {
+	return s.view.origin
+}
+
+func (s *State) SetViewSize(width, height uint64) {
+	s.view.width = width
+	s.view.height = height
 }
 
 // cursorState is the current state of the cursor.
@@ -49,4 +60,13 @@ type cursorState struct {
 	//     3: fox jumped over the lazy dog
 	// where [i] is the character directly above the logical position.
 	logicalOffset uint64
+}
+
+// viewState represents the current view of the document.
+type viewState struct {
+	origin uint64
+
+	// width and height can be changed only through a resize event;
+	// mutators should not modify these.
+	width, height  uint64
 }

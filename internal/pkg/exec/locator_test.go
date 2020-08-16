@@ -145,7 +145,10 @@ func TestNextCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewCharInLineLocator(text.ReadDirectionForward, tc.numChars, tc.includeEndOfLineOrFile)
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -253,7 +256,10 @@ func TestPrevCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewCharInLineLocator(text.ReadDirectionBackward, tc.numChars, tc.includeEndOfLineOrFile)
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -376,7 +382,10 @@ func TestOntoLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewOntoLineLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -639,7 +648,10 @@ func TestRelativeLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewRelativeLineLocator(tc.direction, tc.count)
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -733,7 +745,10 @@ func TestLineBoundaryLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewLineBoundaryLocator(tc.direction, tc.includeEndOfLineOrFile)
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -796,7 +811,10 @@ func TestNonWhitespaceOrNewlineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewNonWhitespaceOrNewlineLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -860,7 +878,10 @@ func TestLineNumLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewLineNumLocator(tc.lineNum)
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -917,7 +938,10 @@ func TestLastLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			loc := NewLastLineLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)

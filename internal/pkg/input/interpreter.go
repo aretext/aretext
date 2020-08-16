@@ -2,6 +2,7 @@ package input
 
 import (
 	"github.com/gdamore/tcell"
+	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
 // Interpreter translates key events to commands.
@@ -21,17 +22,13 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
-// ProcessKeyEvent interprets a key input event, producing a command if necessary.
-// A return value of nil means no command occurred.
-func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey) Command {
-	if event.Key() == tcell.KeyCtrlC {
-		return &QuitCommand{}
-	}
-
+// ProcessKeyEvent interprets a key input event, producing a mutator if necessary.
+// A return value of nil means no mutator occurred.
+func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey) exec.Mutator {
 	mode := inp.modes[inp.currentMode]
-	cmd, nextMode := mode.ProcessKeyEvent(event)
+	mutator, nextMode := mode.ProcessKeyEvent(event)
 	inp.currentMode = nextMode
-	return cmd
+	return mutator
 }
 
 // Mode returns the current input mode of the interpreter.

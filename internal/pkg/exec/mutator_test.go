@@ -55,7 +55,10 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(&state)
 			assert.Equal(t, tc.expectedCursor, state.cursor)
@@ -111,7 +114,10 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{tree, tc.initialCursor}
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(&state)
 			assert.Equal(t, tc.expectedCursor, state.cursor)

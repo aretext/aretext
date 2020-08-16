@@ -16,7 +16,7 @@ func textViewWithStringAndCursorPos(t *testing.T, screen tcell.Screen, s string,
 	region := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
-	execState := exec.NewState(tree, cursorPos)
+	execState := exec.NewState(tree, cursorPos, uint64(screenWidth), uint64(screenHeight))
 	return NewTextView(execState, region)
 }
 

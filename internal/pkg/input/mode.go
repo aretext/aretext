@@ -19,9 +19,9 @@ const (
 // Mode represents an input mode, which is a way of interpreting key events.
 type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
-	// It will return any user-initiated command resulting from the keypress
+	// It will return any user-initiated mutator resulting from the keypress
 	// as well as the next input mode (which could be the same as the current mode).
-	ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType)
+	ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType)
 }
 
 // normalMode is used for navigating text.
@@ -35,67 +35,70 @@ func newNormalMode() Mode {
 	}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (cmd Command, mode ModeType) {
-	defer func() {
-		if cmd != nil {
-			m.buffer = m.buffer[:0]
-		}
-	}()
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
+	mutator, nextMode := m.processKeyEvent(event)
+	if mutator != nil {
+		m.buffer = m.buffer[:0]
+	}
 
+	return appendScrollToCursor(mutator), nextMode
+}
+
+func (m *normalMode) processKeyEvent(event *tcell.EventKey) (mutator exec.Mutator, mode ModeType) {
 	if event.Key() == tcell.KeyRune {
 		return m.processRuneKey(event.Rune())
 	}
 	return m.processSpecialKey(event.Key())
 }
 
-func (m *normalMode) processSpecialKey(key tcell.Key) (Command, ModeType) {
+func (m *normalMode) processSpecialKey(key tcell.Key) (exec.Mutator, ModeType) {
 	switch key {
 	case tcell.KeyLeft:
-		return m.cursorLeftCmd(), ModeTypeNormal
+		return m.cursorLeft(), ModeTypeNormal
 	case tcell.KeyRight:
-		return m.cursorRightCmd(false), ModeTypeNormal
+		return m.cursorRight(false), ModeTypeNormal
 	case tcell.KeyUp:
-		return m.cursorUpCmd(), ModeTypeNormal
+		return m.cursorUp(), ModeTypeNormal
 	case tcell.KeyDown:
-		return m.cursorDownCmd(), ModeTypeNormal
+		return m.cursorDown(), ModeTypeNormal
 	default:
 		return nil, ModeTypeNormal
 	}
 }
 
-func (m *normalMode) processRuneKey(r rune) (Command, ModeType) {
+func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 	m.buffer = append(m.buffer, r)
 	count, cmd := m.parseSequence(m.buffer)
 
 	switch cmd {
 	case "h":
-		return m.cursorLeftCmd(), ModeTypeNormal
+		return m.cursorLeft(), ModeTypeNormal
 	case "l":
-		return m.cursorRightCmd(false), ModeTypeNormal
+		return m.cursorRight(false), ModeTypeNormal
 	case "k":
-		return m.cursorUpCmd(), ModeTypeNormal
+		return m.cursorUp(), ModeTypeNormal
 	case "j":
-		return m.cursorDownCmd(), ModeTypeNormal
+		return m.cursorDown(), ModeTypeNormal
 	case "x":
-		return m.deleteNextCharCmd(), ModeTypeNormal
+		return m.deleteNextChar(), ModeTypeNormal
 	case "0":
-		return m.cursorLineStartCmd(), ModeTypeNormal
+		return m.cursorLineStart(), ModeTypeNormal
 	case "^":
-		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeNormal
+		return m.cursorLineStartNonWhitespace(), ModeTypeNormal
 	case "$":
-		return m.cursorLineEndCmd(false), ModeTypeNormal
+		return m.cursorLineEnd(false), ModeTypeNormal
 	case "gg":
-		return m.cursorStartOfLineNumCmd(count), ModeTypeNormal
+		return m.cursorStartOfLineNum(count), ModeTypeNormal
 	case "G":
-		return m.cursorStartOfLastLineCmd(), ModeTypeNormal
+		return m.cursorStartOfLastLine(), ModeTypeNormal
 	case "i":
 		return nil, ModeTypeInsert
 	case "I":
-		return m.cursorLineStartNonWhitespaceCmd(), ModeTypeInsert
+		return m.cursorLineStartNonWhitespace(), ModeTypeInsert
 	case "a":
-		return m.cursorRightCmd(true), ModeTypeInsert
+		return m.cursorRight(true), ModeTypeInsert
 	case "A":
-		return m.cursorLineEndCmd(true), ModeTypeInsert
+		return m.cursorLineEnd(true), ModeTypeInsert
 	default:
 		return nil, ModeTypeNormal
 	}
@@ -122,53 +125,46 @@ func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	return 0, cmdStr
 }
 
-func (m *normalMode) cursorLeftCmd() Command {
+func (m *normalMode) cursorLeft() exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorRightCmd(allowPastEndOfLineOrFile bool) Command {
+func (m *normalMode) cursorRight(allowPastEndOfLineOrFile bool) exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, allowPastEndOfLineOrFile)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorUpCmd() Command {
+func (m *normalMode) cursorUp() exec.Mutator {
 	loc := exec.NewRelativeLineLocator(text.ReadDirectionBackward, 1)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorDownCmd() Command {
+func (m *normalMode) cursorDown() exec.Mutator {
 	loc := exec.NewRelativeLineLocator(text.ReadDirectionForward, 1)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorLineStartCmd() Command {
+func (m *normalMode) cursorLineStart() exec.Mutator {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorLineStartNonWhitespaceCmd() Command {
+func (m *normalMode) cursorLineStartNonWhitespace() exec.Mutator {
 	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
+	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineStartLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
 	})
-	return &ExecCommand{mutator}
 }
 
-func (m *normalMode) cursorLineEndCmd(includeEndOfLineOrFile bool) Command {
+func (m *normalMode) cursorLineEnd(includeEndOfLineOrFile bool) exec.Mutator {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, includeEndOfLineOrFile)
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
 }
 
-func (m *normalMode) cursorStartOfLineNumCmd(count uint64) Command {
+func (m *normalMode) cursorStartOfLineNum(count uint64) exec.Mutator {
 	// Convert 1-indexed count to 0-indexed line num
 	var lineNum uint64
 	if count > 0 {
@@ -177,30 +173,27 @@ func (m *normalMode) cursorStartOfLineNumCmd(count uint64) Command {
 
 	lineNumLoc := exec.NewLineNumLocator(lineNum)
 	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
+	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineNumLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
 	})
-	return &ExecCommand{mutator}
 }
 
-func (m *normalMode) cursorStartOfLastLineCmd() Command {
+func (m *normalMode) cursorStartOfLastLine() exec.Mutator {
 	lastLineLoc := exec.NewLastLineLocator()
 	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
+	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lastLineLoc),
 		exec.NewCursorMutator(firstNonWhitespaceLoc),
 	})
-	return &ExecCommand{mutator}
 }
 
-func (m *normalMode) deleteNextCharCmd() Command {
+func (m *normalMode) deleteNextChar() exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
+	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewDeleteMutator(loc),
 		exec.NewCursorMutator(exec.NewOntoLineLocator()),
 	})
-	return &ExecCommand{mutator}
 }
 
 // insertMode is used for inserting characters into text.
@@ -211,34 +204,48 @@ func newInsertMode() Mode {
 	return &insertMode{}
 }
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (Command, ModeType) {
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
+	mutator, nextMode := m.processKeyEvent(event)
+	return appendScrollToCursor(mutator), nextMode
+}
+
+func (m *insertMode) processKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
 	switch event.Key() {
 	case tcell.KeyRune:
-		return m.insertCmd(event.Rune()), ModeTypeInsert
+		return m.insert(event.Rune()), ModeTypeInsert
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return m.deletePrevCharCmd(), ModeTypeInsert
+		return m.deletePrevChar(), ModeTypeInsert
 	case tcell.KeyEnter:
-		return m.insertCmd('\n'), ModeTypeInsert
+		return m.insert('\n'), ModeTypeInsert
 	case tcell.KeyTab:
-		return m.insertCmd('\t'), ModeTypeInsert
+		return m.insert('\t'), ModeTypeInsert
 	default:
-		return m.moveCursorOntoLineCmd(), ModeTypeNormal
+		return m.moveCursorOntoLine(), ModeTypeNormal
 	}
 }
 
-func (m *insertMode) insertCmd(r rune) Command {
-	mutator := exec.NewInsertRuneMutator(r)
-	return &ExecCommand{mutator}
+func (m *insertMode) insert(r rune) exec.Mutator {
+	return exec.NewInsertRuneMutator(r)
 }
 
-func (m *insertMode) deletePrevCharCmd() Command {
+func (m *insertMode) deletePrevChar() exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
-	mutator := exec.NewDeleteMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewDeleteMutator(loc)
 }
 
-func (m *insertMode) moveCursorOntoLineCmd() Command {
+func (m *insertMode) moveCursorOntoLine() exec.Mutator {
 	loc := exec.NewOntoLineLocator()
-	mutator := exec.NewCursorMutator(loc)
-	return &ExecCommand{mutator}
+	return exec.NewCursorMutator(loc)
+}
+
+// appendScrollToCursor appends a mutator to scroll the view so the cursor is visible.
+func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
+	if mutator == nil {
+		return nil
+	}
+
+	return exec.NewCompositeMutator([]exec.Mutator{
+		mutator,
+		exec.NewScrollToCursorMutator(),
+	})
 }

@@ -1,9 +1,8 @@
-package display
+package exec
 
 import (
 	"io"
 
-	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
@@ -20,8 +19,8 @@ const scrollMargin = 3
 
 // ScrollToCursor returns a new view origin such that the cursor is visible.
 // It attempts to display a few lines before/after the cursor to help the user navigate.
-func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin uint64, viewWidth, viewHeight int) uint64 {
-	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), exec.GraphemeClusterWidth)
+func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight uint64) uint64 {
+	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), GraphemeClusterWidth)
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)
 	if cursorPos < rng.startPos {
 		// scroll backward
@@ -35,7 +34,7 @@ func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin uint64, viewWi
 	}
 }
 
-func maxLinesAboveCursorScrollBackward(viewHeight int) int {
+func maxLinesAboveCursorScrollBackward(viewHeight uint64) uint64 {
 	// ===================
 	// |  scroll margin  | <- return this height
 	// -------------------
@@ -51,7 +50,7 @@ func maxLinesAboveCursorScrollBackward(viewHeight int) int {
 	}
 }
 
-func maxLinesAboveCursorScrollForward(viewHeight int) int {
+func maxLinesAboveCursorScrollForward(viewHeight uint64) uint64 {
 	// ===================
 	// |                 |
 	// |                 | <- return this height
@@ -71,7 +70,7 @@ func maxLinesAboveCursorScrollForward(viewHeight int) int {
 // visibleRangeWithinMargin returns a range of visible characters, excluding the scroll margin at the top and bottom.
 // Cursor movements within this range will NOT trigger scrolling.
 // This is an important performance optimization because scrolling is computationally expensive.
-func visibleRangeWithinMargin(tree *text.Tree, viewOrigin uint64, wrapConfig segment.LineWrapConfig, viewHeight int) posRange {
+func visibleRangeWithinMargin(tree *text.Tree, viewOrigin uint64, wrapConfig segment.LineWrapConfig, viewHeight uint64) posRange {
 	lines := visibleLineRanges(tree, viewOrigin, wrapConfig, viewHeight)
 
 	if len(lines) == 0 {
@@ -103,7 +102,7 @@ func visibleRangeWithinMargin(tree *text.Tree, viewOrigin uint64, wrapConfig seg
 
 // visibleLineRanges returns the range for each soft- or hard-wrapped line visible in the current view.
 // For hard-wrapped lines, the newline character position is included in the line it terminates.
-func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.LineWrapConfig, viewHeight int) []posRange {
+func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.LineWrapConfig, viewHeight uint64) []posRange {
 	reader := tree.ReaderAtPosition(viewOrigin, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
@@ -111,7 +110,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 	pos := viewOrigin
 	lineRanges := make([]posRange, 0, viewHeight)
 
-	for row := 0; row < viewHeight; row++ {
+	for row := uint64(0); row < viewHeight; row++ {
 		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {
 			break
@@ -133,15 +132,16 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 // scrollToCursor returns a view origin at the start of a line such that the cursor is visible.
 // It attempts to display maxLinesAboveCursor before the cursor's line unless this would go past the start of the text.
 // The complexity is worst-case O(n) for n runes in the text due to the scan backwards for the start of the cursor's line.
-func scrollToCursor(cursorPos uint64, maxLinesAboveCursor int, tree *text.Tree, wrapConfig segment.LineWrapConfig) uint64 {
+func scrollToCursor(cursorPos uint64, maxLinesAboveCursor uint64, tree *text.Tree, wrapConfig segment.LineWrapConfig) uint64 {
 	lineStartPos := startOfLine(cursorPos, tree)
 	wrappedLines := softWrapLineUntil(lineStartPos, tree, wrapConfig, func(rng posRange) bool {
 		return cursorPos >= rng.startPos && cursorPos < rng.endPos
 	})
 
 	// If we've found enough lines before the cursor, we're done.
-	if len(wrappedLines) > maxLinesAboveCursor {
-		return wrappedLines[len(wrappedLines)-1-maxLinesAboveCursor].startPos
+	numWrappedLines := uint64(len(wrappedLines))
+	if numWrappedLines > maxLinesAboveCursor {
+		return wrappedLines[numWrappedLines-1-maxLinesAboveCursor].startPos
 	}
 
 	if lineStartPos == 0 {
@@ -150,7 +150,7 @@ func scrollToCursor(cursorPos uint64, maxLinesAboveCursor int, tree *text.Tree, 
 
 	// We still need more lines before the cursor, so recurse.
 	endOfPrevLine := lineStartPos - 1
-	remainingLines := maxLinesAboveCursor - len(wrappedLines)
+	remainingLines := maxLinesAboveCursor - numWrappedLines
 	return scrollToCursor(endOfPrevLine, remainingLines, tree, wrapConfig)
 }
 

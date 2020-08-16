@@ -23,23 +23,23 @@ type Editor struct {
 
 // NewEditor instantiates a new editor that uses the provided screen and file path.
 func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
-	execState, err := initializeExecState(path)
+	screenWidth, screenHeight := screen.Size()
+	screenRegion := display.NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
+	execState, err := initializeExecState(path, uint64(screenWidth), uint64(screenHeight))
 	if err != nil {
 		return nil, errors.Wrapf(err, "initializing tree")
 	}
 	inputInterpreter := input.NewInterpreter()
-	screenWidth, screenHeight := screen.Size()
-	screenRegion := display.NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
 	textView := display.NewTextView(execState, screenRegion)
 	quitChan := make(chan struct{})
 	editor := &Editor{path, inputInterpreter, execState, textView, screen, quitChan}
 	return editor, nil
 }
 
-func initializeExecState(path string) (*exec.State, error) {
+func initializeExecState(path string, viewWidth uint64, viewHeight uint64) (*exec.State, error) {
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
-		emptyState := exec.NewState(text.NewTree(), 0)
+		emptyState := exec.NewState(text.NewTree(), 0, viewWidth, viewHeight)
 		return emptyState, nil
 	} else if err != nil {
 		return nil, errors.Wrapf(err, "opening file at %s", path)
@@ -51,7 +51,7 @@ func initializeExecState(path string) (*exec.State, error) {
 		return nil, err
 	}
 
-	execState := exec.NewState(tree, 0)
+	execState := exec.NewState(tree, 0, viewWidth, viewHeight)
 	return execState, nil
 }
 
@@ -106,12 +106,14 @@ func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
 		return
 	}
 
-	switch cmd := e.inputInterpreter.ProcessKeyEvent(event).(type) {
-	case *input.QuitCommand:
+	if event.Key() == tcell.KeyCtrlC {
 		e.Quit()
-	case *input.ExecCommand:
-		cmd.Mutator.Mutate(e.execState)
-		e.textView.ScrollToCursor()
+		return
+	}
+
+	mutator := e.inputInterpreter.ProcessKeyEvent(event)
+	if mutator != nil {
+		mutator.Mutate(e.execState)
 		e.redraw()
 		e.screen.Show()
 	}
@@ -125,8 +127,9 @@ func (e *Editor) splitEscapeSequence(event *tcell.EventKey) (*tcell.EventKey, *t
 
 func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 	screenWidth, screenHeight := e.screen.Size()
+	e.execState.SetViewSize(uint64(screenWidth), uint64(screenHeight))
+	exec.NewScrollToCursorMutator().Mutate(e.execState)
 	e.textView.Resize(screenWidth, screenHeight)
-	e.textView.ScrollToCursor()
 	e.redraw()
 	e.screen.Sync()
 }

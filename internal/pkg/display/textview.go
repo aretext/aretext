@@ -13,12 +13,11 @@ import (
 type TextView struct {
 	execState    *exec.State
 	screenRegion *ScreenRegion
-	origin       uint64 // Position in the text displayed in the top-left corner of the view.
 }
 
 // NewTextView initializes a text view for a text tree and screen.
 func NewTextView(execState *exec.State, screenRegion *ScreenRegion) *TextView {
-	return &TextView{execState, screenRegion, 0}
+	return &TextView{execState, screenRegion}
 }
 
 // Resize notifies the text view that the terminal size has changed.
@@ -26,18 +25,13 @@ func (v *TextView) Resize(width, height int) {
 	v.screenRegion.Resize(width, height)
 }
 
-// ScrollToCursor adjusts the view origin such that the cursor is visible.
-func (v *TextView) ScrollToCursor() {
-	width, height := v.screenRegion.Size()
-	v.origin = ScrollToCursor(v.execState.CursorPosition(), v.execState.Tree(), v.origin, width, height)
-}
-
 // Draw draws text to the screen.
 func (v *TextView) Draw() {
 	v.screenRegion.HideCursor()
 	width, height := v.screenRegion.Size()
 
-	pos := v.origin
+	viewOrigin := v.execState.ViewOrigin()
+	pos := viewOrigin
 	reader := v.execState.Tree().ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
@@ -56,7 +50,7 @@ func (v *TextView) Draw() {
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
-	if pos-v.origin == 0 && pos == v.execState.CursorPosition() {
+	if pos-viewOrigin == 0 && pos == v.execState.CursorPosition() {
 		v.screenRegion.ShowCursor(0, 0)
 	}
 }

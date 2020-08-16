@@ -55,6 +55,22 @@ func (cpm *cursorMutator) String() string {
 	return fmt.Sprintf("MutateCursor(%s)", cpm.loc)
 }
 
+// scrollToCursorMutator updates the view origin so that the cursor is visible.
+type scrollToCursorMutator struct{}
+
+// NewScrollToCursorMutator returns a mutator that updates the view origin so that the cursor is visible.
+func NewScrollToCursorMutator() Mutator {
+	return &scrollToCursorMutator{}
+}
+
+func (sm *scrollToCursorMutator) Mutate(state *State) {
+	state.view.origin = ScrollToCursor(state.cursor.position, state.tree, state.view.origin, state.view.width, state.view.height)
+}
+
+func (sm *scrollToCursorMutator) String() string {
+	return "ScrollToCursor()"
+}
+
 // insertRuneMutator inserts a rune at the current cursor location.
 type insertRuneMutator struct {
 	r rune

@@ -76,7 +76,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 0},
-			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(backward, 1)),MutateCursor(LineBoundaryLocator(backward, false))),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(backward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll up using ctrl-u, scroll lines greater than zero",
@@ -84,7 +84,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 25},
-			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(backward, 25)),MutateCursor(LineBoundaryLocator(backward, false))),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(backward, 25)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll down using ctrl-d, scroll lines zero",
@@ -92,7 +92,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 0},
-			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(forward, 1)),MutateCursor(LineBoundaryLocator(backward, false))),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(forward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll down using ctrl-d, scroll lines greater than zero",
@@ -100,7 +100,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 25},
-			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineLocator(forward, 25)),MutateCursor(LineBoundaryLocator(backward, false))),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(forward, 25)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to end of line using '$' key",

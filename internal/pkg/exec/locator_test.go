@@ -393,6 +393,73 @@ func TestOntoLineLocator(t *testing.T) {
 	}
 }
 
+func TestRelativeLineStartLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		direction      text.ReadDirection
+		count          uint64
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty, read forward",
+			inputString:    "",
+			direction:      text.ReadDirectionForward,
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "empty, read backward",
+			inputString:    "",
+			direction:      text.ReadDirectionBackward,
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "start of line above",
+			inputString:    "abcd\nefgh\nijkl\nmnop",
+			direction:      text.ReadDirectionBackward,
+			count:          2,
+			initialCursor:  cursorState{position: 17},
+			expectedCursor: cursorState{position: 5},
+		},
+		{
+			name:           "start of line below",
+			inputString:    "abcd\nefgh\nijkl\nmnop",
+			direction:      text.ReadDirectionForward,
+			count:          2,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "posix end-of-file",
+			inputString:    "abcd\nefgh\nijkl\n",
+			direction:      text.ReadDirectionForward,
+			count:          5,
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 10},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := State{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
+			loc := NewRelativeLineStartLocator(tc.direction, tc.count)
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+
+}
+
 func TestRelativeLineLocator(t *testing.T) {
 	testCases := []struct {
 		name           string

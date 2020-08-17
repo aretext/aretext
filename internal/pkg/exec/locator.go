@@ -201,6 +201,44 @@ func (loc *ontoLineLocator) String() string {
 	return "OntoLineLocator()"
 }
 
+// relativeLineStartLocator finds the start of a line above or below the cursor.
+type relativeLineStartLocator struct {
+	direction text.ReadDirection
+	count     uint64
+}
+
+// NewRelativeLineStartLocator returns a locator that finds the start of a line above or below the cursor.
+func NewRelativeLineStartLocator(direction text.ReadDirection, count uint64) CursorLocator {
+	return &relativeLineStartLocator{direction, count}
+}
+
+func (loc *relativeLineStartLocator) Locate(state *State) cursorState {
+	newPos := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
+	return cursorState{position: newPos}
+}
+
+func (loc *relativeLineStartLocator) findStartOfLineAboveOrBelow(tree *text.Tree, pos uint64) uint64 {
+	currentLineNum := tree.LineNumForPosition(pos)
+	targetLineNum := loc.targetLineNum(currentLineNum)
+	return tree.LineStartPosition(closestValidLineNum(tree, targetLineNum))
+}
+
+func (loc *relativeLineStartLocator) targetLineNum(currentLineNum uint64) uint64 {
+	if loc.direction == text.ReadDirectionForward {
+		return currentLineNum + loc.count
+	}
+
+	if currentLineNum < loc.count {
+		return 0
+	}
+
+	return currentLineNum - loc.count
+}
+
+func (loc *relativeLineStartLocator) String() string {
+	return fmt.Sprintf("RelativeLineStartLocator(%s, %d)", directionString(loc.direction), loc.count)
+}
+
 // relativeLineLocator finds a position at the same offset above or below the current line.
 type relativeLineLocator struct {
 	direction text.ReadDirection
@@ -225,7 +263,7 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLo
 // as close as possible to the logical offset.
 func (loc *relativeLineLocator) Locate(state *State) cursorState {
 	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
-	targetLineStartPos := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
+	targetLineStartPos := loc.findTargetLineStartPos(state)
 	if targetLineStartPos == lineStartPos {
 		return state.cursor
 	}
@@ -241,6 +279,10 @@ func (loc *relativeLineLocator) Locate(state *State) cursorState {
 func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint64 {
 	lineNum := tree.LineNumForPosition(pos)
 	return tree.LineStartPosition(lineNum)
+}
+
+func (loc *relativeLineLocator) findTargetLineStartPos(state *State) uint64 {
+	return NewRelativeLineStartLocator(loc.direction, loc.count).Locate(state).position
 }
 
 func (loc *relativeLineLocator) findStartOfLineAboveOrBelow(tree *text.Tree, pos uint64) uint64 {

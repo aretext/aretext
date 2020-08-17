@@ -266,6 +266,109 @@ func TestLineStartPosition(t *testing.T) {
 	}
 }
 
+func TestLineNumForPosition(t *testing.T) {
+	testCases := []struct {
+		name            string
+		text            string
+		position        uint64
+		expectedLineNum uint64
+	}{
+		{
+			name:            "empty",
+			text:            "",
+			position:        0,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "single line, start of line",
+			text:            "abcd",
+			position:        0,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "single line, middle of line",
+			text:            "abcd",
+			position:        2,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "single line, end of line",
+			text:            "abcd",
+			position:        3,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "single line, past end of line",
+			text:            "abcd",
+			position:        4,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "single line ending in newline, middle of line",
+			text:            "abcd\n",
+			position:        2,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "multiple lines, on first line",
+			text:            "abcd\nefgh",
+			position:        2,
+			expectedLineNum: 0,
+		},
+		{
+			name:            "multiple lines, on newline",
+			text:            "abcd\nefgh",
+			position:        5,
+			expectedLineNum: 1,
+		},
+		{
+			name:            "multiple lines, on start of second line",
+			text:            "abcd\nefgh",
+			position:        6,
+			expectedLineNum: 1,
+		},
+		{
+			name:            "multiple lines, on end of second line",
+			text:            "abcd\nefgh",
+			position:        9,
+			expectedLineNum: 1,
+		},
+		{
+			name:            "multiple newlines",
+			text:            "\n\n\n\n\n",
+			position:        2,
+			expectedLineNum: 2,
+		},
+		{
+			name:            "many lines",
+			text:            lines(4096, 1024),
+			position:        1025 * 100,
+			expectedLineNum: 100,
+		},
+		{
+			name:            "many lines, newline on previous leaf",
+			text:            lines(1024, maxBytesPerLeaf-1),
+			position:        maxBytesPerLeaf * 100,
+			expectedLineNum: 100,
+		},
+		{
+			name:            "many lines, past end of file",
+			text:            lines(4096, 1024),
+			position:        1025 * 4096,
+			expectedLineNum: 4095,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.text)
+			require.NoError(t, err)
+			lineNum := tree.LineNumForPosition(tc.position)
+			assert.Equal(t, tc.expectedLineNum, lineNum)
+		})
+	}
+}
+
 func TestReaderPastLastLine(t *testing.T) {
 	testCases := []struct {
 		name    string

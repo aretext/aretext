@@ -184,6 +184,12 @@ func (t *Tree) LineStartPosition(lineNum uint64) uint64 {
 	return t.root.positionAfterNewline(lineNum - 1)
 }
 
+// LineNumForPosition returns the line number (0-indexed) for the line containing the specified position.
+// This interprets a line feed at the end of the file ast the start of a new line, not a POSIX end-of-file indicator.
+func (t *Tree) LineNumForPosition(charPos uint64) uint64 {
+	return t.root.numNewlinesBeforePosition(charPos)
+}
+
 const maxKeysPerNode = 64
 const maxNodesPerGroup = maxKeysPerNode
 const maxBytesPerLeaf = 63
@@ -195,6 +201,7 @@ type nodeGroup interface {
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
 	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader
 	positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64
+	numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64
 }
 
 // indexKey is used to navigate from an inner node to the child node containing a particular line or character offset.
@@ -275,6 +282,10 @@ func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direct
 
 func (g *innerNodeGroup) positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64 {
 	return g.nodes[nodeIdx].positionAfterNewline(newlineIdx)
+}
+
+func (g *innerNodeGroup) numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64 {
+	return g.nodes[nodeIdx].numNewlinesBeforePosition(charPos)
 }
 
 // innerNode is used to navigate to the leaf node containing a character offset or line number.
@@ -383,6 +394,19 @@ func (n *innerNode) positionAfterNewline(newlineIdx uint64) uint64 {
 	return charsBefore + n.child.positionAfterNewline(n.numKeys-1, newlineIdx-newlinesBefore)
 }
 
+func (n *innerNode) numNewlinesBeforePosition(charPos uint64) uint64 {
+	var charsBefore, newlinesBefore uint64
+	for i := uint64(0); i < n.numKeys-1; i++ {
+		numChars := n.keys[i].numChars
+		if charPos < charsBefore+numChars {
+			return newlinesBefore + n.child.numNewlinesBeforePosition(i, charPos-charsBefore)
+		}
+		charsBefore += numChars
+		newlinesBefore += n.keys[i].numNewlines
+	}
+	return newlinesBefore + n.child.numNewlinesBeforePosition(n.numKeys-1, charPos-charsBefore)
+}
+
 func (n *innerNode) locatePosition(charPos uint64) (nodeIdx, adjustedCharPos uint64) {
 	c := uint64(0)
 	for i := uint64(0); i < n.numKeys; i++ {
@@ -474,6 +498,10 @@ func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, directi
 
 func (g *leafNodeGroup) positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64 {
 	return g.nodes[nodeIdx].positionAfterNewline(newlineIdx)
+}
+
+func (g *leafNodeGroup) numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64 {
+	return g.nodes[nodeIdx].numNewlinesBeforePosition(charPos)
 }
 
 // leafNode is a node that stores UTF-8 text as a byte array.
@@ -598,4 +626,20 @@ func (l *leafNode) positionAfterNewline(newlineIdx uint64) uint64 {
 		}
 	}
 	return pos
+}
+
+func (l *leafNode) numNewlinesBeforePosition(charPos uint64) uint64 {
+	var newlineCount, pos uint64
+	for _, b := range l.textBytes[:l.numBytes] {
+		if pos == charPos {
+			break
+		}
+		if b == '\n' {
+			newlineCount++
+		}
+		if utf8StartByteIndicator[b] > 0 {
+			pos++
+		}
+	}
+	return newlineCount
 }

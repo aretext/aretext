@@ -224,21 +224,44 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLo
 // If the target line has more characters than the starting line, then the cursor will move
 // as close as possible to the logical offset.
 func (loc *relativeLineLocator) Locate(state *State) cursorState {
-	targetOffset := loc.findOffsetFromLineStart(state)
-	lineStartPos, newlineCount := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
-	if newlineCount == 0 {
+	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
+	targetLineStartPos := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
+	if targetLineStartPos == lineStartPos {
 		return state.cursor
 	}
 
-	newPos, actualOffset := loc.advanceToOffset(state.tree, lineStartPos, targetOffset)
+	targetOffset := loc.findOffsetFromLineStart(state, lineStartPos)
+	newPos, actualOffset := loc.advanceToOffset(state.tree, targetLineStartPos, targetOffset)
 	return cursorState{
 		position:      newPos,
 		logicalOffset: targetOffset - actualOffset,
 	}
 }
 
-func (loc *relativeLineLocator) findOffsetFromLineStart(state *State) uint64 {
-	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
+func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint64 {
+	lineNum := tree.LineNumForPosition(pos)
+	return tree.LineStartPosition(lineNum)
+}
+
+func (loc *relativeLineLocator) findStartOfLineAboveOrBelow(tree *text.Tree, pos uint64) uint64 {
+	currentLineNum := tree.LineNumForPosition(pos)
+	targetLineNum := loc.targetLineNum(currentLineNum)
+	return tree.LineStartPosition(closestValidLineNum(tree, targetLineNum))
+}
+
+func (loc *relativeLineLocator) targetLineNum(currentLineNum uint64) uint64 {
+	if loc.direction == text.ReadDirectionForward {
+		return currentLineNum + loc.count
+	}
+
+	if currentLineNum < loc.count {
+		return 0
+	}
+
+	return currentLineNum - loc.count
+}
+
+func (loc *relativeLineLocator) findOffsetFromLineStart(state *State, lineStartPos uint64) uint64 {
 	segmentIter := gcIterForTree(state.tree, lineStartPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	pos, offset := lineStartPos, uint64(0)
@@ -254,85 +277,6 @@ func (loc *relativeLineLocator) findOffsetFromLineStart(state *State) uint64 {
 	}
 
 	return offset + state.cursor.logicalOffset
-}
-
-func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint64 {
-	reader := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
-	runeIter := text.NewCloneableBackwardRuneIter(reader)
-	for {
-		r, err := runeIter.NextRune()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			panic(err)
-		} else if r == '\n' {
-			break
-		}
-		pos--
-	}
-	return pos
-}
-
-func (loc *relativeLineLocator) findStartOfLineAboveOrBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
-	if loc.direction == text.ReadDirectionBackward {
-		return loc.findStartOfLineAbove(tree, pos)
-	} else {
-		return loc.findStartOfLineBelow(tree, pos)
-	}
-}
-
-func (loc *relativeLineLocator) findStartOfLineAbove(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
-	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
-	var offset uint64
-
-	for {
-		eof := nextSegmentOrEof(segmentIter, seg)
-		if eof {
-			break
-		}
-
-		if seg.HasNewline() {
-			newlineCount++
-			if newlineCount > loc.count {
-				break
-			}
-		}
-
-		offset += seg.NumRunes()
-	}
-
-	return pos - offset, newlineCount
-}
-
-func (loc *relativeLineLocator) findStartOfLineBelow(tree *text.Tree, pos uint64) (lineStartPos, newlineCount uint64) {
-	segmentIter := gcIterForTree(tree, pos, text.ReadDirectionForward)
-
-	// Lookahead one grapheme cluster.
-	seg, lookaheadSeg := segment.NewSegment(), segment.NewSegment()
-	nextSegmentIter := segmentIter.Clone()
-	nextSegmentIter.NextSegment(seg)
-
-	var offset uint64
-	for newlineCount < loc.count {
-		eof := nextSegmentOrEof(segmentIter, seg)
-		lookaheadEof := nextSegmentOrEof(nextSegmentIter, lookaheadSeg)
-
-		// POSIX allows the last newline to be treated as EOF,
-		// so if the current segment is a newline and the next segment is EOF
-		// then stop advancing the cursor.
-		if eof || (seg.HasNewline() && lookaheadEof) {
-			break
-		}
-
-		if seg.HasNewline() {
-			newlineCount++
-		}
-
-		offset += seg.NumRunes()
-	}
-
-	return pos + offset, newlineCount
 }
 
 func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos uint64, targetOffset uint64) (newPos, actualOffset uint64) {

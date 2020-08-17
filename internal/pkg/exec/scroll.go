@@ -133,7 +133,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 // It attempts to display maxLinesAboveCursor before the cursor's line unless this would go past the start of the text.
 // The complexity is worst-case O(n) for n runes in the text due to the scan backwards for the start of the cursor's line.
 func scrollToCursor(cursorPos uint64, maxLinesAboveCursor uint64, tree *text.Tree, wrapConfig segment.LineWrapConfig) uint64 {
-	lineStartPos := startOfLine(cursorPos, tree)
+	lineStartPos := tree.LineStartPosition(tree.LineNumForPosition(cursorPos))
 	wrappedLines := softWrapLineUntil(lineStartPos, tree, wrapConfig, func(rng posRange) bool {
 		return cursorPos >= rng.startPos && cursorPos < rng.endPos
 	})
@@ -152,25 +152,6 @@ func scrollToCursor(cursorPos uint64, maxLinesAboveCursor uint64, tree *text.Tre
 	endOfPrevLine := lineStartPos - 1
 	remainingLines := maxLinesAboveCursor - numWrappedLines
 	return scrollToCursor(endOfPrevLine, remainingLines, tree, wrapConfig)
-}
-
-// startOfLine returns the position of the first character in the line containing cursorPos.
-func startOfLine(cursorPos uint64, tree *text.Tree) uint64 {
-	reader := tree.ReaderAtPosition(cursorPos, text.ReadDirectionBackward)
-	runeIter := text.NewCloneableBackwardRuneIter(reader)
-	pos := cursorPos
-	for {
-		r, err := runeIter.NextRune()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			panic(err)
-		} else if r == '\n' {
-			break
-		}
-		pos--
-	}
-	return pos
 }
 
 // softWrapLineUntil returns ranges for soft-wrapped lines in a line until a given stop condition occurs.

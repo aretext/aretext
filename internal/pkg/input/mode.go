@@ -157,7 +157,10 @@ func (m *normalMode) scrollUp(scrollLines uint64) exec.Mutator {
 	// Move the cursor to the start of a line above.  We rely on ScrollToCursorMutator
 	// (appended later to every mutator) to reposition the view.
 	loc := exec.NewRelativeLineStartLocator(text.ReadDirectionBackward, scrollLines)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(loc),
+		exec.NewScrollLinesMutator(text.ReadDirectionBackward, scrollLines),
+	})
 }
 
 func (m *normalMode) scrollDown(scrollLines uint64) exec.Mutator {
@@ -168,7 +171,10 @@ func (m *normalMode) scrollDown(scrollLines uint64) exec.Mutator {
 	// Move the cursor to the start of a line below.  We rely on ScrollToCursorMutator
 	// (appended later to every mutator) to reposition the view.
 	loc := exec.NewRelativeLineStartLocator(text.ReadDirectionForward, scrollLines)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(loc),
+		exec.NewScrollLinesMutator(text.ReadDirectionForward, scrollLines),
+	})
 }
 
 func (m *normalMode) cursorLineStart() exec.Mutator {

@@ -37,7 +37,6 @@ func (cm *CompositeMutator) String() string {
 	return fmt.Sprintf("Composite(%s)", strings.Join(args, ","))
 }
 
-// cursorMutator updates the current location of the cursor.
 type cursorMutator struct {
 	loc CursorLocator
 }
@@ -55,14 +54,13 @@ func (cpm *cursorMutator) String() string {
 	return fmt.Sprintf("MutateCursor(%s)", cpm.loc)
 }
 
-// scrollToCursorMutator updates the view origin so that the cursor is visible.
 type scrollToCursorMutator struct{}
 
-// NewScrollToCursorMutator returns a mutator that updates the view origin so that the cursor is visible.
 func NewScrollToCursorMutator() Mutator {
 	return &scrollToCursorMutator{}
 }
 
+// Mutate updates the view origin so that the cursor is visible.
 func (sm *scrollToCursorMutator) Mutate(state *State) {
 	state.view.origin = ScrollToCursor(state.cursor.position, state.tree, state.view.origin, state.view.width, state.view.height)
 }
@@ -71,16 +69,57 @@ func (sm *scrollToCursorMutator) String() string {
 	return "ScrollToCursor()"
 }
 
-// insertRuneMutator inserts a rune at the current cursor location.
+type scrollLinesMutator struct {
+	direction text.ReadDirection
+	numLines  uint64
+}
+
+func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutator {
+	return &scrollLinesMutator{direction, numLines}
+}
+
+// Mutate moves the view origin up/down by the specified number of lines.
+func (sm *scrollLinesMutator) Mutate(state *State) {
+	lineNum := state.tree.LineNumForPosition(state.view.origin)
+	if sm.direction == text.ReadDirectionForward {
+		lineNum += sm.numLines
+	} else if lineNum >= sm.numLines {
+		lineNum -= sm.numLines
+	} else {
+		lineNum = 0
+	}
+
+	lineNum = closestValidLineNum(state.tree, lineNum)
+
+	// When scrolling to the end of the file, we want most of the last lines to remain visible.
+	// To achieve this, set the view origin (viewHeight - scrollMargin) lines above
+	// the last line.  This will leave a few blank lines past the end of the document
+	// (the scroll margin) for consistency with ScrollToCursor.
+	lastLineNum := closestValidLineNum(state.tree, state.tree.NumLines())
+	if lastLineNum-lineNum < state.view.height {
+		if lastLineNum+scrollMargin+1 > state.view.height {
+			lineNum = lastLineNum + scrollMargin + 1 - state.view.height
+		} else {
+			lineNum = 0
+		}
+	}
+
+	state.view.origin = state.tree.LineStartPosition(lineNum)
+}
+
+func (sm *scrollLinesMutator) String() string {
+	return fmt.Sprintf("ScrollLines(%s, %d)", directionString(sm.direction), sm.numLines)
+}
+
 type insertRuneMutator struct {
 	r rune
 }
 
-// NewInsertRuneMutator returns a mutator that inserts a rune at the current cursor location.
 func NewInsertRuneMutator(r rune) Mutator {
 	return &insertRuneMutator{r}
 }
 
+// Mutate inserts a rune at the current cursor location.
 func (irm *insertRuneMutator) Mutate(state *State) {
 	startPos := state.cursor.position
 	if err := state.tree.InsertAtPosition(startPos, irm.r); err != nil {
@@ -95,7 +134,6 @@ func (irm *insertRuneMutator) String() string {
 	return fmt.Sprintf("InsertRune(%q)", irm.r)
 }
 
-// deleteMutator deletes characters from the cursor up to a location.
 type deleteMutator struct {
 	loc CursorLocator
 }

@@ -76,7 +76,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 0},
-			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(backward, 1)),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineStartLocator(backward, 1)),ScrollLines(backward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll up using ctrl-u, scroll lines greater than zero",
@@ -84,7 +84,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlU, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 25},
-			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(backward, 25)),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineStartLocator(backward, 25)),ScrollLines(backward, 25)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll down using ctrl-d, scroll lines zero",
@@ -92,7 +92,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 0},
-			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(forward, 1)),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineStartLocator(forward, 1)),ScrollLines(forward, 1)),ScrollToCursor())"},
 		},
 		{
 			name: "scroll down using ctrl-d, scroll lines greater than zero",
@@ -100,7 +100,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			config:           Config{ScrollLines: 25},
-			expectedCommands: []string{"Composite(MutateCursor(RelativeLineStartLocator(forward, 25)),ScrollToCursor())"},
+			expectedCommands: []string{"Composite(Composite(MutateCursor(RelativeLineStartLocator(forward, 25)),ScrollLines(forward, 25)),ScrollToCursor())"},
 		},
 		{
 			name: "move cursor to end of line using '$' key",

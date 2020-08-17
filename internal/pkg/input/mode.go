@@ -154,15 +154,13 @@ func (m *normalMode) scrollUp(scrollLines uint64) exec.Mutator {
 		scrollLines = 1
 	}
 
-	// Move the cursor to the start of a line above and set the view origin to zero.
-	// Because every mutator ends with ScrollToCursor, the cursor will be positioned
-	// at the bottom of the view.
+	// Move the cursor to the start of a line above.  We rely on ScrollToCursorMutator
+	// (appended later to every mutator) to reposition the view.
 	lineAboveLoc := exec.NewRelativeLineLocator(text.ReadDirectionBackward, scrollLines)
 	startOfLineLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineAboveLoc),
 		exec.NewCursorMutator(startOfLineLoc),
-		exec.NewViewOriginZeroMutator(),
 	})
 }
 
@@ -171,15 +169,13 @@ func (m *normalMode) scrollDown(scrollLines uint64) exec.Mutator {
 		scrollLines = 1
 	}
 
-	// Move the cursor to the start of a line below and set the view origin at the cursor.
-	// Because every mutator ends with ScrollToCursor, the view origin will be positioned
-	// a few (soft-wrapped) lines before the cursor.
+	// Move the cursor to the start of a line below.  We rely on ScrollToCursorMutator
+	// (appended later to every mutator) to reposition the view.
 	lineBelowLoc := exec.NewRelativeLineLocator(text.ReadDirectionForward, scrollLines)
 	startOfLineLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewCursorMutator(lineBelowLoc),
 		exec.NewCursorMutator(startOfLineLoc),
-		exec.NewViewOriginAtCursorMutator(),
 	})
 }
 

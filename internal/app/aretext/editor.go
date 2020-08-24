@@ -18,6 +18,7 @@ type Editor struct {
 	execState        *exec.State
 	textView         *display.TextView
 	screen           tcell.Screen
+	termEventChan    chan tcell.Event
 	quitChan         chan struct{}
 }
 
@@ -31,8 +32,17 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	}
 	inputInterpreter := input.NewInterpreter()
 	textView := display.NewTextView(execState, screenRegion)
+	termEventChan := make(chan tcell.Event, 1)
 	quitChan := make(chan struct{})
-	editor := &Editor{path, inputInterpreter, execState, textView, screen, quitChan}
+	editor := &Editor{
+		path,
+		inputInterpreter,
+		execState,
+		textView,
+		screen,
+		termEventChan,
+		quitChan,
+	}
 	return editor, nil
 }
 
@@ -60,17 +70,8 @@ func (e *Editor) RunEventLoop() {
 	e.redraw()
 	e.screen.Sync()
 
-	go func() {
-		for {
-			select {
-			case <-e.quitChan:
-				break
-			default:
-				event := e.screen.PollEvent()
-				e.handleEvent(event)
-			}
-		}
-	}()
+	go e.pollTermEvents()
+	go e.runMainEventLoop()
 
 	<-e.quitChan
 }
@@ -81,7 +82,30 @@ func (e *Editor) Quit() {
 	close(e.quitChan)
 }
 
-func (e *Editor) handleEvent(event tcell.Event) {
+func (e *Editor) pollTermEvents() {
+	for {
+		select {
+		case <-e.quitChan:
+			break
+		default:
+			event := e.screen.PollEvent()
+			e.termEventChan <- event
+		}
+	}
+}
+
+func (e *Editor) runMainEventLoop() {
+	for {
+		select {
+		case <-e.quitChan:
+			break
+		case event := <-e.termEventChan:
+			e.handleTermEvent(event)
+		}
+	}
+}
+
+func (e *Editor) handleTermEvent(event tcell.Event) {
 	switch event := event.(type) {
 	case *tcell.EventKey:
 		e.handleKeyEvent(event)

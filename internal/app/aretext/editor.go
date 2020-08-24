@@ -16,7 +16,6 @@ type Editor struct {
 	path             string
 	inputInterpreter *input.Interpreter
 	execState        *exec.State
-	textView         *display.TextView
 	screen           tcell.Screen
 	termEventChan    chan tcell.Event
 	quitChan         chan struct{}
@@ -25,20 +24,17 @@ type Editor struct {
 // NewEditor instantiates a new editor that uses the provided screen and file path.
 func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	screenWidth, screenHeight := screen.Size()
-	screenRegion := display.NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
 	execState, err := initializeExecState(path, uint64(screenWidth), uint64(screenHeight))
 	if err != nil {
 		return nil, errors.Wrapf(err, "initializing tree")
 	}
 	inputInterpreter := input.NewInterpreter()
-	textView := display.NewTextView(execState, screenRegion)
 	termEventChan := make(chan tcell.Event, 1)
 	quitChan := make(chan struct{})
 	editor := &Editor{
 		path,
 		inputInterpreter,
 		execState,
-		textView,
 		screen,
 		termEventChan,
 		quitChan,
@@ -153,14 +149,16 @@ func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 	screenWidth, screenHeight := e.screen.Size()
 	e.execState.SetViewSize(uint64(screenWidth), uint64(screenHeight))
 	exec.NewScrollToCursorMutator().Mutate(e.execState)
-	e.textView.Resize(screenWidth, screenHeight)
 	e.redraw()
 	e.screen.Sync()
 }
 
 func (e *Editor) redraw() {
 	e.screen.Clear()
-	e.textView.Draw()
+
+	screenWidth, screenHeight := e.screen.Size()
+	screenRegion := display.NewScreenRegion(e.screen, 0, 0, screenWidth, screenHeight)
+	display.DrawText(screenRegion, e.execState.Tree(), e.execState.ViewOrigin(), e.execState.CursorPosition())
 }
 
 func (e *Editor) inputConfig() input.Config {

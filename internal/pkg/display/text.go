@@ -9,30 +9,13 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
-// TextView displays text in a terminal, clipping and scrolling as necessary.
-type TextView struct {
-	execState    *exec.State
-	screenRegion *ScreenRegion
-}
+// DrawText draws text to a screen region.
+func DrawText(screenRegion *ScreenRegion, tree *text.Tree, viewOrigin uint64, cursorPos uint64) {
+	screenRegion.HideCursor()
+	width, height := screenRegion.Size()
 
-// NewTextView initializes a text view for a text tree and screen.
-func NewTextView(execState *exec.State, screenRegion *ScreenRegion) *TextView {
-	return &TextView{execState, screenRegion}
-}
-
-// Resize notifies the text view that the terminal size has changed.
-func (v *TextView) Resize(width, height int) {
-	v.screenRegion.Resize(width, height)
-}
-
-// Draw draws text to the screen.
-func (v *TextView) Draw() {
-	v.screenRegion.HideCursor()
-	width, height := v.screenRegion.Size()
-
-	viewOrigin := v.execState.ViewOrigin()
 	pos := viewOrigin
-	reader := v.execState.Tree().ReaderAtPosition(pos, text.ReadDirectionForward)
+	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
@@ -45,17 +28,17 @@ func (v *TextView) Draw() {
 		} else if err != nil {
 			panic(err)
 		}
-		v.drawLineAndSetCursor(pos, row, width, wrappedLine)
+		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, cursorPos)
 		pos += wrappedLine.NumRunes()
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
-	if pos-viewOrigin == 0 && pos == v.execState.CursorPosition() {
-		v.screenRegion.ShowCursor(0, 0)
+	if pos-viewOrigin == 0 && pos == cursorPos {
+		screenRegion.ShowCursor(0, 0)
 	}
 }
 
-func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment) {
+func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, cursorPos uint64) {
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
 	gc := segment.NewSegment()
@@ -77,14 +60,14 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 
 		if totalWidth > uint64(maxLineWidth) {
 			// If there isn't enough space to show the line, fill it with a placeholder.
-			v.drawLineTooLong(row, maxLineWidth)
+			drawLineTooLong(screenRegion, row, maxLineWidth)
 			return
 		}
 
-		v.drawGraphemeCluster(col, row, gcRunes, tcell.StyleDefault)
+		drawGraphemeCluster(screenRegion, col, row, gcRunes, tcell.StyleDefault)
 
-		if pos == v.execState.CursorPosition() {
-			v.screenRegion.ShowCursor(col, row)
+		if pos == cursorPos {
+			screenRegion.ShowCursor(col, row)
 		}
 
 		pos += gc.NumRunes()
@@ -92,23 +75,23 @@ func (v *TextView) drawLineAndSetCursor(pos uint64, row int, maxLineWidth int, w
 		lastGcWasNewline = gc.HasNewline()
 	}
 
-	if pos == v.execState.CursorPosition() {
+	if pos == cursorPos {
 		if gc != nil && (lastGcWasNewline || pos == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
-			v.screenRegion.ShowCursor(0, row+1)
+			screenRegion.ShowCursor(0, row+1)
 		} else {
 			// Otherwise, show the cursor at the end of the current line.
-			v.screenRegion.ShowCursor(col, row)
+			screenRegion.ShowCursor(col, row)
 		}
 	}
 }
 
-func (v *TextView) drawGraphemeCluster(col, row int, gc []rune, style tcell.Style) {
+func drawGraphemeCluster(screenRegion *ScreenRegion, col, row int, gc []rune, style tcell.Style) {
 	// Emoji and regional indicator sequences are usually rendered using the
 	// width of the first rune.  This won't support every terminal, but it's probably
 	// the best we can do without knowing how the terminal will render the glyphs.
 	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
-		v.screenRegion.SetContent(col, row, gc[0], gc[1:], style)
+		screenRegion.SetContent(col, row, gc[0], gc[1:], style)
 		return
 	}
 
@@ -126,14 +109,14 @@ func (v *TextView) drawGraphemeCluster(col, row int, gc []rune, style tcell.Styl
 			}
 			j++
 		}
-		v.screenRegion.SetContent(col, row, gc[i], gc[i+1:j], style)
+		screenRegion.SetContent(col, row, gc[i], gc[i+1:j], style)
 		col += int(exec.RuneWidth(gc[i]))
 		i = j
 	}
 }
 
-func (v *TextView) drawLineTooLong(row int, maxLineWidth int) {
+func drawLineTooLong(screenRegion *ScreenRegion, row int, maxLineWidth int) {
 	for col := 0; col < maxLineWidth; col++ {
-		v.screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
+		screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
 	}
 }

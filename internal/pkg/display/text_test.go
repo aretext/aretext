@@ -7,20 +7,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-func textViewWithStringAndCursorPos(t *testing.T, screen tcell.Screen, s string, cursorPos uint64) *TextView {
-	screenWidth, screenHeight := screen.Size()
-	region := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
+func drawText(t *testing.T, screen tcell.Screen, s string, cursorPos uint64) {
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
-	execState := exec.NewState(tree, cursorPos, uint64(screenWidth), uint64(screenHeight))
-	return NewTextView(execState, region)
+	screenWidth, screenHeight := screen.Size()
+	screenRegion := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
+	DrawText(screenRegion, tree, 0, cursorPos)
+	screen.Sync()
 }
 
-func TestTextViewDraw(t *testing.T) {
+func TestDrawText(t *testing.T) {
 	testCases := []struct {
 		name             string
 		inputString      string
@@ -160,9 +159,7 @@ func TestTextViewDraw(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				view := textViewWithStringAndCursorPos(t, s, tc.inputString, 0)
-				view.Draw()
-				s.Sync()
+				drawText(t, s, tc.inputString, 0)
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -213,9 +210,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				view := textViewWithStringAndCursorPos(t, s, tc.inputString, 0)
-				view.Draw()
-				s.Sync()
+				drawText(t, s, tc.inputString, 0)
 
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
@@ -226,12 +221,11 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 	}
 }
 
-func TestTextViewDrawSizeTooSmall(t *testing.T) {
+func TestDrawTextSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		view := textViewWithStringAndCursorPos(t, s, "ab界cd", 0)
-		view.Draw()
-		s.Sync()
+		drawText(t, s, "ab界cd", 0)
+
 		assertCellContents(t, s, [][]rune{
 			{'a'},
 			{'b'},
@@ -241,7 +235,7 @@ func TestTextViewDrawSizeTooSmall(t *testing.T) {
 	})
 }
 
-func TestTextViewCursor(t *testing.T) {
+func TestDrawTextCursor(t *testing.T) {
 	testCases := []struct {
 		name                  string
 		inputString           string
@@ -366,9 +360,8 @@ func TestTextViewCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				view := textViewWithStringAndCursorPos(t, s, tc.inputString, tc.cursorPosition)
-				view.Draw()
-				s.Sync()
+				drawText(t, s, tc.inputString, tc.cursorPosition)
+
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
 				if tc.expectedCursorVisible {

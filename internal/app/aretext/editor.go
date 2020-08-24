@@ -149,8 +149,11 @@ func (e *Editor) splitEscapeSequence(event *tcell.EventKey) (*tcell.EventKey, *t
 
 func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
 	screenWidth, screenHeight := e.screen.Size()
-	e.state.FocusedBuffer().SetViewSize(uint64(screenWidth), uint64(screenHeight))
-	exec.NewScrollToCursorMutator().Mutate(e.state)
+	mutator := exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewResizeMutator(uint64(screenWidth), uint64(screenHeight)),
+		exec.NewScrollToCursorMutator(),
+	})
+	mutator.Mutate(e.state)
 	e.redraw()
 	e.screen.Sync()
 }

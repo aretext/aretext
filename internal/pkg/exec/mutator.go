@@ -178,3 +178,20 @@ func (dm *deleteMutator) deleteCharacters(tree *text.Tree, pos uint64, count uin
 func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
 }
+
+type resizeMutator struct {
+	width, height uint64
+}
+
+func NewResizeMutator(width, height uint64) Mutator {
+	return &resizeMutator{width, height}
+}
+
+// Mutate resizes the view to the specified width and height.
+func (rm *resizeMutator) Mutate(state *EditorState) {
+	state.documentBuffer.SetViewSize(rm.width, rm.height)
+}
+
+func (rm *resizeMutator) String() string {
+	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
+}

@@ -6,19 +6,15 @@ import (
 
 // EditorState represents the current state of the editor.
 type EditorState struct {
-	buffers       []*BufferState
-	focusedBuffer int
+	documentBuffer *BufferState
 }
 
 func NewEditorState(documentBuffer *BufferState) *EditorState {
-	return &EditorState{
-		buffers:       []*BufferState{documentBuffer},
-		focusedBuffer: 0,
-	}
+	return &EditorState{documentBuffer}
 }
 
 func (s *EditorState) FocusedBuffer() *BufferState {
-	return s.buffers[s.focusedBuffer]
+	return s.documentBuffer
 }
 
 // BufferState represents the current state of a text buffer.
@@ -81,9 +77,9 @@ type cursorState struct {
 
 // viewState represents the current view of the document.
 type viewState struct {
+	// origin is the location in the text tree of the first visible character.
 	origin uint64
 
-	// width and height can be changed only through a resize event;
-	// mutators should not modify these.
+	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
 }

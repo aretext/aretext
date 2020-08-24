@@ -145,7 +145,7 @@ func TestNextCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -256,7 +256,7 @@ func TestPrevCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -382,7 +382,7 @@ func TestOntoLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -448,7 +448,7 @@ func TestRelativeLineStartLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -715,7 +715,7 @@ func TestRelativeLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -812,7 +812,7 @@ func TestLineBoundaryLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -878,7 +878,7 @@ func TestNonWhitespaceOrNewlineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -945,7 +945,7 @@ func TestLineNumLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
@@ -1005,7 +1005,7 @@ func TestLastLineLocator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			state := BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}

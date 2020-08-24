@@ -9,11 +9,14 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
-// DrawText draws text to a screen region.
-func DrawText(screenRegion *ScreenRegion, tree *text.Tree, viewOrigin uint64, cursorPos uint64) {
+// DrawBuffer draws text buffer to a screen region.
+func DrawBuffer(screenRegion *ScreenRegion, bufferState *exec.BufferState) {
 	screenRegion.HideCursor()
 	width, height := screenRegion.Size()
 
+	tree := bufferState.Tree()
+	cursorPos := bufferState.CursorPosition()
+	viewOrigin := bufferState.ViewOrigin()
 	pos := viewOrigin
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)

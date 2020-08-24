@@ -4,34 +4,51 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-// State is the current state of the document open in the editor.
-type State struct {
+// EditorState represents the current state of the editor.
+type EditorState struct {
+	buffers       []*BufferState
+	focusedBuffer int
+}
+
+func NewEditorState(documentBuffer *BufferState) *EditorState {
+	return &EditorState{
+		buffers:       []*BufferState{documentBuffer},
+		focusedBuffer: 0,
+	}
+}
+
+func (s *EditorState) FocusedBuffer() *BufferState {
+	return s.buffers[s.focusedBuffer]
+}
+
+// BufferState represents the current state of a text buffer.
+type BufferState struct {
 	tree   *text.Tree
 	cursor cursorState
 	view   viewState
 }
 
-func NewState(tree *text.Tree, cursorPosition, viewWidth, viewHeight uint64) *State {
-	return &State{
+func NewBufferState(tree *text.Tree, cursorPosition, viewWidth, viewHeight uint64) *BufferState {
+	return &BufferState{
 		tree:   tree,
 		cursor: cursorState{position: cursorPosition},
 		view:   viewState{0, viewWidth, viewHeight},
 	}
 }
 
-func (s *State) Tree() *text.Tree {
+func (s *BufferState) Tree() *text.Tree {
 	return s.tree
 }
 
-func (s *State) CursorPosition() uint64 {
+func (s *BufferState) CursorPosition() uint64 {
 	return s.cursor.position
 }
 
-func (s *State) ViewOrigin() uint64 {
+func (s *BufferState) ViewOrigin() uint64 {
 	return s.view.origin
 }
 
-func (s *State) SetViewSize(width, height uint64) {
+func (s *BufferState) SetViewSize(width, height uint64) {
 	s.view.width = width
 	s.view.height = height
 }

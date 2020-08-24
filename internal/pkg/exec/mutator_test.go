@@ -55,14 +55,15 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			bufferState := &BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
+			state := NewEditorState(bufferState)
 			mutator := NewInsertRuneMutator(tc.insertRune)
-			mutator.Mutate(&state)
-			assert.Equal(t, tc.expectedCursor, state.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, state.tree))
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
+			assert.Equal(t, tc.expectedText, allTextFromTree(t, bufferState.tree))
 		})
 	}
 }
@@ -114,14 +115,15 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			bufferState := &BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
+			state := NewEditorState(bufferState)
 			mutator := NewDeleteMutator(tc.locator)
-			mutator.Mutate(&state)
-			assert.Equal(t, tc.expectedCursor, state.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, state.tree))
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
+			assert.Equal(t, tc.expectedText, allTextFromTree(t, bufferState.tree))
 		})
 	}
 }
@@ -194,13 +196,14 @@ func TestScrollLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := State{
+			bufferState := &BufferState{
 				tree: tree,
 				view: tc.initialView,
 			}
+			state := NewEditorState(bufferState)
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
-			mutator.Mutate(&state)
-			assert.Equal(t, tc.expectedOrigin, state.view.origin)
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedOrigin, bufferState.view.origin)
 		})
 	}
 }

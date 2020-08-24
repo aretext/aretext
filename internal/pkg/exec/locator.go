@@ -12,7 +12,7 @@ type CursorLocator interface {
 	fmt.Stringer
 
 	// Locate finds the next position of the cursor based on the current state and criteria for this locator.
-	Locate(state *State) cursorState
+	Locate(state *BufferState) cursorState
 }
 
 // charInLineLocator locates a character (grapheme cluster) in the current line.
@@ -37,7 +37,7 @@ func (loc *charInLineLocator) String() string {
 }
 
 // Locate finds a character to the right of the cursor on the current line.
-func (loc *charInLineLocator) Locate(state *State) cursorState {
+func (loc *charInLineLocator) Locate(state *BufferState) cursorState {
 	newPosition := loc.findPosition(state)
 
 	logicalOffset := uint64(0)
@@ -55,14 +55,14 @@ func (loc *charInLineLocator) Locate(state *State) cursorState {
 	}
 }
 
-func (loc *charInLineLocator) findPosition(state *State) uint64 {
+func (loc *charInLineLocator) findPosition(state *BufferState) uint64 {
 	if loc.direction == text.ReadDirectionBackward {
 		return loc.findPositionBeforeCursor(state)
 	}
 	return loc.findPositionAfterCursor(state)
 }
 
-func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
+func (loc *charInLineLocator) findPositionBeforeCursor(state *BufferState) uint64 {
 	startPos := state.cursor.position
 	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionBackward)
 	seg := segment.NewSegment()
@@ -91,7 +91,7 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *State) uint64 {
 	return startPos - offset
 }
 
-func (loc *charInLineLocator) findPositionAfterCursor(state *State) uint64 {
+func (loc *charInLineLocator) findPositionAfterCursor(state *BufferState) uint64 {
 	startPos := state.cursor.position
 	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
@@ -131,7 +131,7 @@ func NewOntoLineLocator() CursorLocator {
 }
 
 // Locate finds the closest grapheme cluster on a line (not newline or past end of text).
-func (loc *ontoLineLocator) Locate(state *State) cursorState {
+func (loc *ontoLineLocator) Locate(state *BufferState) cursorState {
 	// If past the end of the text, return the start of the last grapheme cluster.
 	numChars := state.tree.NumChars()
 	if state.cursor.position >= numChars {
@@ -211,7 +211,7 @@ func NewRelativeLineStartLocator(direction text.ReadDirection, count uint64) Cur
 	return &relativeLineStartLocator{direction, count}
 }
 
-func (loc *relativeLineStartLocator) Locate(state *State) cursorState {
+func (loc *relativeLineStartLocator) Locate(state *BufferState) cursorState {
 	newPos := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
 	return cursorState{position: newPos}
 }
@@ -260,7 +260,7 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLo
 // will be counted the cursor's logical offset.
 // If the target line has more characters than the starting line, then the cursor will move
 // as close as possible to the logical offset.
-func (loc *relativeLineLocator) Locate(state *State) cursorState {
+func (loc *relativeLineLocator) Locate(state *BufferState) cursorState {
 	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
 	targetLineStartPos := loc.findTargetLineStartPos(state)
 	if targetLineStartPos == lineStartPos {
@@ -280,7 +280,7 @@ func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint6
 	return tree.LineStartPosition(lineNum)
 }
 
-func (loc *relativeLineLocator) findTargetLineStartPos(state *State) uint64 {
+func (loc *relativeLineLocator) findTargetLineStartPos(state *BufferState) uint64 {
 	return NewRelativeLineStartLocator(loc.direction, loc.count).Locate(state).position
 }
 
@@ -302,7 +302,7 @@ func (loc *relativeLineLocator) targetLineNum(currentLineNum uint64) uint64 {
 	return currentLineNum - loc.count
 }
 
-func (loc *relativeLineLocator) findOffsetFromLineStart(state *State, lineStartPos uint64) uint64 {
+func (loc *relativeLineLocator) findOffsetFromLineStart(state *BufferState, lineStartPos uint64) uint64 {
 	segmentIter := gcIterForTree(state.tree, lineStartPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	pos, offset := lineStartPos, uint64(0)
@@ -381,7 +381,7 @@ func (loc *lineBoundaryLocator) String() string {
 
 // Locate the start or end of the current line.
 // This assumes that the cursor is positioned on a line (not a newline character); if not, the result is undefined.
-func (loc *lineBoundaryLocator) Locate(state *State) cursorState {
+func (loc *lineBoundaryLocator) Locate(state *BufferState) cursorState {
 	segmentIter := gcIterForTree(state.tree, state.cursor.position, loc.direction)
 	seg := segment.NewSegment()
 	var prevOffset, offset uint64
@@ -426,7 +426,7 @@ func (loc *nonWhitespaceOrNewlineLocator) String() string {
 }
 
 // Locate finds the nearest non-whitespace character or newline on or after the cursor.
-func (loc *nonWhitespaceOrNewlineLocator) Locate(state *State) cursorState {
+func (loc *nonWhitespaceOrNewlineLocator) Locate(state *BufferState) cursorState {
 	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var offset uint64
@@ -458,7 +458,7 @@ func NewLineNumLocator(lineNum uint64) CursorLocator {
 }
 
 // Locate finds the start of the given line number.
-func (loc *lineNumLocator) Locate(state *State) cursorState {
+func (loc *lineNumLocator) Locate(state *BufferState) cursorState {
 	lineNum := closestValidLineNum(state.tree, loc.lineNum)
 	pos := state.tree.LineStartPosition(lineNum)
 	return cursorState{position: pos}
@@ -476,7 +476,7 @@ func NewLastLineLocator() CursorLocator {
 }
 
 // locate returns the cursor position at the start of the last line.
-func (loc *lastLineLocator) Locate(state *State) cursorState {
+func (loc *lastLineLocator) Locate(state *BufferState) cursorState {
 	tree := state.tree
 	lineNum := closestValidLineNum(tree, tree.NumLines())
 	return cursorState{

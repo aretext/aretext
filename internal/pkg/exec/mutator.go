@@ -10,7 +10,7 @@ import (
 // Mutator modifies the state of the cursor or text.
 type Mutator interface {
 	fmt.Stringer
-	Mutate(state *State)
+	Mutate(state *EditorState)
 }
 
 // CompositeMutator executes a series of mutations.
@@ -23,7 +23,7 @@ func NewCompositeMutator(subMutators []Mutator) Mutator {
 }
 
 // Mutate executes a series of mutations in order.
-func (cm *CompositeMutator) Mutate(state *State) {
+func (cm *CompositeMutator) Mutate(state *EditorState) {
 	for _, mut := range cm.subMutators {
 		mut.Mutate(state)
 	}
@@ -46,8 +46,9 @@ func NewCursorMutator(loc CursorLocator) Mutator {
 	return &cursorMutator{loc}
 }
 
-func (cpm *cursorMutator) Mutate(state *State) {
-	state.cursor = cpm.loc.Locate(state)
+func (cpm *cursorMutator) Mutate(state *EditorState) {
+	bufferState := state.FocusedBuffer()
+	bufferState.cursor = cpm.loc.Locate(bufferState)
 }
 
 func (cpm *cursorMutator) String() string {
@@ -61,8 +62,14 @@ func NewScrollToCursorMutator() Mutator {
 }
 
 // Mutate updates the view origin so that the cursor is visible.
-func (sm *scrollToCursorMutator) Mutate(state *State) {
-	state.view.origin = ScrollToCursor(state.cursor.position, state.tree, state.view.origin, state.view.width, state.view.height)
+func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
+	bufferState := state.FocusedBuffer()
+	bufferState.view.origin = ScrollToCursor(
+		bufferState.cursor.position,
+		bufferState.tree,
+		bufferState.view.origin,
+		bufferState.view.width,
+		bufferState.view.height)
 }
 
 func (sm *scrollToCursorMutator) String() string {
@@ -79,8 +86,9 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 }
 
 // Mutate moves the view origin up/down by the specified number of lines.
-func (sm *scrollLinesMutator) Mutate(state *State) {
-	lineNum := state.tree.LineNumForPosition(state.view.origin)
+func (sm *scrollLinesMutator) Mutate(state *EditorState) {
+	bufferState := state.FocusedBuffer()
+	lineNum := bufferState.tree.LineNumForPosition(bufferState.view.origin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
 	} else if lineNum >= sm.numLines {
@@ -89,22 +97,22 @@ func (sm *scrollLinesMutator) Mutate(state *State) {
 		lineNum = 0
 	}
 
-	lineNum = closestValidLineNum(state.tree, lineNum)
+	lineNum = closestValidLineNum(bufferState.tree, lineNum)
 
 	// When scrolling to the end of the file, we want most of the last lines to remain visible.
 	// To achieve this, set the view origin (viewHeight - scrollMargin) lines above
 	// the last line.  This will leave a few blank lines past the end of the document
 	// (the scroll margin) for consistency with ScrollToCursor.
-	lastLineNum := closestValidLineNum(state.tree, state.tree.NumLines())
-	if lastLineNum-lineNum < state.view.height {
-		if lastLineNum+scrollMargin+1 > state.view.height {
-			lineNum = lastLineNum + scrollMargin + 1 - state.view.height
+	lastLineNum := closestValidLineNum(bufferState.tree, bufferState.tree.NumLines())
+	if lastLineNum-lineNum < bufferState.view.height {
+		if lastLineNum+scrollMargin+1 > bufferState.view.height {
+			lineNum = lastLineNum + scrollMargin + 1 - bufferState.view.height
 		} else {
 			lineNum = 0
 		}
 	}
 
-	state.view.origin = state.tree.LineStartPosition(lineNum)
+	bufferState.view.origin = bufferState.tree.LineStartPosition(lineNum)
 }
 
 func (sm *scrollLinesMutator) String() string {
@@ -120,14 +128,15 @@ func NewInsertRuneMutator(r rune) Mutator {
 }
 
 // Mutate inserts a rune at the current cursor location.
-func (irm *insertRuneMutator) Mutate(state *State) {
-	startPos := state.cursor.position
-	if err := state.tree.InsertAtPosition(startPos, irm.r); err != nil {
+func (irm *insertRuneMutator) Mutate(state *EditorState) {
+	bufferState := state.FocusedBuffer()
+	startPos := bufferState.cursor.position
+	if err := bufferState.tree.InsertAtPosition(startPos, irm.r); err != nil {
 		// Invalid UTF-8 character; ignore it.
 		return
 	}
 
-	state.cursor.position = startPos + 1
+	bufferState.cursor.position = startPos + 1
 }
 
 func (irm *insertRuneMutator) String() string {
@@ -146,16 +155,17 @@ func NewDeleteMutator(loc CursorLocator) Mutator {
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
-func (dm *deleteMutator) Mutate(state *State) {
-	startPos := state.cursor.position
-	deleteToPos := dm.loc.Locate(state).position
+func (dm *deleteMutator) Mutate(state *EditorState) {
+	bufferState := state.FocusedBuffer()
+	startPos := bufferState.cursor.position
+	deleteToPos := dm.loc.Locate(bufferState).position
 
 	if startPos < deleteToPos {
-		dm.deleteCharacters(state.tree, startPos, deleteToPos-startPos)
-		state.cursor = cursorState{position: startPos}
+		dm.deleteCharacters(bufferState.tree, startPos, deleteToPos-startPos)
+		bufferState.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		dm.deleteCharacters(state.tree, deleteToPos, startPos-deleteToPos)
-		state.cursor = cursorState{position: deleteToPos}
+		dm.deleteCharacters(bufferState.tree, deleteToPos, startPos-deleteToPos)
+		bufferState.cursor = cursorState{position: deleteToPos}
 	}
 }
 

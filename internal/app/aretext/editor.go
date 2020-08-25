@@ -113,21 +113,6 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 }
 
 func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
-	// Terminal escape sequences begin with an escape character,
-	// so sometimes tcell reports an escape keypress as a modifier on
-	// another key.  Tcell uses a 50ms delay to identify individual escape chars,
-	// but this strategy doesn't always work (e.g. due to network delays over
-	// an SSH connection).
-	// Because the escape key is used to return to normal mode, we never
-	// want to miss it.  So treat ALL modifiers as an escape key followed
-	// by an unmodified keypress.
-	if event.Modifiers() != tcell.ModNone {
-		escKeyEvent, unmodifiedKeyEvent := e.splitEscapeSequence(event)
-		e.handleKeyEvent(escKeyEvent)
-		e.handleKeyEvent(unmodifiedKeyEvent)
-		return
-	}
-
 	if event.Key() == tcell.KeyCtrlC {
 		e.Quit()
 		return
@@ -139,12 +124,6 @@ func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
 		e.redraw()
 		e.screen.Show()
 	}
-}
-
-func (e *Editor) splitEscapeSequence(event *tcell.EventKey) (*tcell.EventKey, *tcell.EventKey) {
-	escKeyEvent := tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone)
-	unmodifiedKeyEvent := tcell.NewEventKey(event.Key(), event.Rune(), tcell.ModNone)
-	return escKeyEvent, unmodifiedKeyEvent
 }
 
 func (e *Editor) handleResizeEvent(event *tcell.EventResize) {

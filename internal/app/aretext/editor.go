@@ -104,37 +104,19 @@ func (e *Editor) runMainEventLoop() {
 }
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		e.handleKeyEvent(event)
-	case *tcell.EventResize:
-		e.handleResizeEvent(event)
-	}
-}
-
-func (e *Editor) handleKeyEvent(event *tcell.EventKey) {
-	if event.Key() == tcell.KeyCtrlC {
-		e.Quit()
-		return
+	if event, ok := event.(*tcell.EventKey); ok {
+		if event.Key() == tcell.KeyCtrlC {
+			e.Quit()
+			return
+		}
 	}
 
-	mutator := e.inputInterpreter.ProcessKeyEvent(event, e.inputConfig())
+	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
 	if mutator != nil {
 		mutator.Mutate(e.state)
 		e.redraw()
 		e.screen.Show()
 	}
-}
-
-func (e *Editor) handleResizeEvent(event *tcell.EventResize) {
-	screenWidth, screenHeight := e.screen.Size()
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewResizeMutator(uint64(screenWidth), uint64(screenHeight)),
-		exec.NewScrollToCursorMutator(),
-	})
-	mutator.Mutate(e.state)
-	e.redraw()
-	e.screen.Sync()
 }
 
 func (e *Editor) redraw() {

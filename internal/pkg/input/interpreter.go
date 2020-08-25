@@ -22,9 +22,25 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
-// ProcessKeyEvent interprets a key input event, producing a mutator if necessary.
+// ProcessEvent interprets a terminal input event, producing a mutator if necessary.
 // A return value of nil means no mutator occurred.
-func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+func (inp *Interpreter) ProcessEvent(event tcell.Event, config Config) exec.Mutator {
+	switch event := event.(type) {
+	case *tcell.EventKey:
+		return inp.processKeyEvent(event, config)
+	case *tcell.EventResize:
+		return inp.processResizeEvent(event)
+	default:
+		return nil
+	}
+}
+
+// Mode returns the current input mode of the interpreter.
+func (inp *Interpreter) Mode() ModeType {
+	return inp.currentMode
+}
+
+func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
 	mutators := make([]exec.Mutator, 0, 2)
 	for _, event := range inp.splitEscapeSequence(event) {
 		mode := inp.modes[inp.currentMode]
@@ -35,11 +51,6 @@ func (inp *Interpreter) ProcessKeyEvent(event *tcell.EventKey, config Config) ex
 		}
 	}
 	return inp.combineMutators(mutators)
-}
-
-// Mode returns the current input mode of the interpreter.
-func (inp *Interpreter) Mode() ModeType {
-	return inp.currentMode
 }
 
 func (inp *Interpreter) splitEscapeSequence(event *tcell.EventKey) []*tcell.EventKey {
@@ -69,4 +80,12 @@ func (inp *Interpreter) combineMutators(mutators []exec.Mutator) exec.Mutator {
 	default:
 		return exec.NewCompositeMutator(mutators)
 	}
+}
+
+func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) exec.Mutator {
+	width, height := event.Size()
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewResizeMutator(uint64(width), uint64(height)),
+		exec.NewScrollToCursorMutator(),
+	})
 }

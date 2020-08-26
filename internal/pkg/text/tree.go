@@ -132,6 +132,7 @@ func (t *Tree) NumChars() uint64 {
 }
 
 // NumLines returns the total number of lines in the tree.
+// This interprets a line feed at the end of the file as the start of a new line, not a POSIX end-of-file indicator.
 func (t *Tree) NumLines() uint64 {
 	return t.root.numNewlines() + 1
 }
@@ -185,7 +186,7 @@ func (t *Tree) LineStartPosition(lineNum uint64) uint64 {
 }
 
 // LineNumForPosition returns the line number (0-indexed) for the line containing the specified position.
-// This interprets a line feed at the end of the file ast the start of a new line, not a POSIX end-of-file indicator.
+// This interprets a line feed at the end of the file as the start of a new line, not a POSIX end-of-file indicator.
 func (t *Tree) LineNumForPosition(charPos uint64) uint64 {
 	return t.root.numNewlinesBeforePosition(charPos)
 }

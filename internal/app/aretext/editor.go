@@ -24,7 +24,7 @@ type Editor struct {
 // NewEditor instantiates a new editor that uses the provided screen and file path.
 func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	screenWidth, screenHeight := screen.Size()
-	execState, err := initializeState(path, uint64(screenWidth), uint64(screenHeight))
+	state, err := initializeState(path, uint64(screenWidth), uint64(screenHeight))
 	if err != nil {
 		return nil, errors.Wrapf(err, "initializing tree")
 	}
@@ -34,7 +34,7 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	editor := &Editor{
 		path,
 		inputInterpreter,
-		execState,
+		state,
 		screen,
 		termEventChan,
 		quitChan,

@@ -62,7 +62,7 @@ func (inp *Interpreter) splitEscapeSequence(event *tcell.EventKey) []*tcell.Even
 	// Because the escape key is used to return to normal mode, we never
 	// want to miss it.  So treat ALL modifiers as an escape key followed
 	// by an unmodified keypress.
-	if event.Modifiers() != tcell.ModNone {
+	if event.Key() == tcell.KeyRune && event.Modifiers() != tcell.ModNone {
 		escKeyEvent := tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone)
 		unmodifiedKeyEvent := tcell.NewEventKey(event.Key(), event.Rune(), tcell.ModNone)
 		return []*tcell.EventKey{escKeyEvent, unmodifiedKeyEvent}

@@ -64,10 +64,10 @@ func NewScrollToCursorMutator() Mutator {
 // Mutate updates the view origin so that the cursor is visible.
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 	bufferState := state.FocusedBuffer()
-	bufferState.view.origin = ScrollToCursor(
+	bufferState.view.textOrigin = ScrollToCursor(
 		bufferState.cursor.position,
 		bufferState.tree,
-		bufferState.view.origin,
+		bufferState.view.textOrigin,
 		bufferState.view.width,
 		bufferState.view.height)
 }
@@ -88,7 +88,7 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 // Mutate moves the view origin up/down by the specified number of lines.
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 	bufferState := state.FocusedBuffer()
-	lineNum := bufferState.tree.LineNumForPosition(bufferState.view.origin)
+	lineNum := bufferState.tree.LineNumForPosition(bufferState.view.textOrigin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
 	} else if lineNum >= sm.numLines {
@@ -112,7 +112,7 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 		}
 	}
 
-	bufferState.view.origin = bufferState.tree.LineStartPosition(lineNum)
+	bufferState.view.textOrigin = bufferState.tree.LineStartPosition(lineNum)
 }
 
 func (sm *scrollLinesMutator) String() string {
@@ -189,6 +189,7 @@ func NewResizeMutator(width, height uint64) Mutator {
 
 // Mutate resizes the view to the specified width and height.
 func (rm *resizeMutator) Mutate(state *EditorState) {
+	state.SetScreenSize(rm.width, rm.height)
 	state.documentBuffer.SetViewSize(rm.width, rm.height)
 }
 

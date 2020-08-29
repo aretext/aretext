@@ -10,14 +10,15 @@ import (
 )
 
 // DrawBuffer draws text buffer to a screen region.
-func DrawBuffer(screenRegion *ScreenRegion, bufferState *exec.BufferState) {
-	screenRegion.HideCursor()
-	width, height := screenRegion.Size()
+func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
+	x, y, width, height := viewDimensions(bufferState)
+	screenRegion := NewScreenRegion(screen, x, y, width, height)
 
+	screenRegion.HideCursor()
 	tree := bufferState.Tree()
 	cursorPos := bufferState.CursorPosition()
-	viewOrigin := bufferState.ViewOrigin()
-	pos := viewOrigin
+	viewTextOrigin := bufferState.ViewTextOrigin()
+	pos := viewTextOrigin
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
@@ -36,9 +37,15 @@ func DrawBuffer(screenRegion *ScreenRegion, bufferState *exec.BufferState) {
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
-	if pos-viewOrigin == 0 && pos == cursorPos {
+	if pos-viewTextOrigin == 0 && pos == cursorPos {
 		screenRegion.ShowCursor(0, 0)
 	}
+}
+
+func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
+	x, y := bufferState.ViewOrigin()
+	width, height := bufferState.ViewSize()
+	return int(x), int(y), int(width), int(height)
 }
 
 func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, cursorPos uint64) {

@@ -15,9 +15,8 @@ func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64) {
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
 	screenWidth, screenHeight := screen.Size()
-	screenRegion := NewScreenRegion(screen, 0, 0, screenWidth, screenHeight)
-	bufferState := exec.NewBufferState(tree, cursorPos, uint64(screenWidth), uint64(screenHeight))
-	DrawBuffer(screenRegion, bufferState)
+	bufferState := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
+	DrawBuffer(screen, bufferState)
 	screen.Sync()
 }
 

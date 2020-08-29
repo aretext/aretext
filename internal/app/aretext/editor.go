@@ -45,8 +45,8 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 func initializeState(path string, viewWidth uint64, viewHeight uint64) (*exec.EditorState, error) {
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
-		emptyBufferState := exec.NewBufferState(text.NewTree(), 0, viewWidth, viewHeight)
-		state := exec.NewEditorState(emptyBufferState)
+		emptyBufferState := exec.NewBufferState(text.NewTree(), 0, 0, 0, viewWidth, viewHeight)
+		state := exec.NewEditorState(viewWidth, viewHeight, emptyBufferState)
 		return state, nil
 	} else if err != nil {
 		return nil, errors.Wrapf(err, "opening file at %s", path)
@@ -58,8 +58,8 @@ func initializeState(path string, viewWidth uint64, viewHeight uint64) (*exec.Ed
 		return nil, err
 	}
 
-	bufferState := exec.NewBufferState(tree, 0, viewWidth, viewHeight)
-	state := exec.NewEditorState(bufferState)
+	bufferState := exec.NewBufferState(tree, 0, 0, 0, viewWidth, viewHeight)
+	state := exec.NewEditorState(viewWidth, viewHeight, bufferState)
 	return state, nil
 }
 
@@ -121,12 +121,8 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 
 func (e *Editor) redraw() {
 	e.screen.Clear()
-
-	screenWidth, screenHeight := e.screen.Size()
-	screenRegion := display.NewScreenRegion(e.screen, 0, 0, screenWidth, screenHeight)
-
 	bufferState := e.state.FocusedBuffer()
-	display.DrawBuffer(screenRegion, bufferState)
+	display.DrawBuffer(e.screen, bufferState)
 }
 
 func (e *Editor) inputConfig() input.Config {

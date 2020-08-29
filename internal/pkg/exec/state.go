@@ -6,11 +6,25 @@ import (
 
 // EditorState represents the current state of the editor.
 type EditorState struct {
-	documentBuffer *BufferState
+	screenWidth, screenHeight uint64
+	documentBuffer            *BufferState
 }
 
-func NewEditorState(documentBuffer *BufferState) *EditorState {
-	return &EditorState{documentBuffer}
+func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
+	return &EditorState{
+		screenWidth:    screenWidth,
+		screenHeight:   screenHeight,
+		documentBuffer: documentBuffer,
+	}
+}
+
+func (s *EditorState) ScreenSize() (uint64, uint64) {
+	return s.screenWidth, s.screenHeight
+}
+
+func (s *EditorState) SetScreenSize(width, height uint64) {
+	s.screenWidth = width
+	s.screenHeight = height
 }
 
 func (s *EditorState) FocusedBuffer() *BufferState {
@@ -24,11 +38,17 @@ type BufferState struct {
 	view   viewState
 }
 
-func NewBufferState(tree *text.Tree, cursorPosition, viewWidth, viewHeight uint64) *BufferState {
+func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
 	return &BufferState{
 		tree:   tree,
 		cursor: cursorState{position: cursorPosition},
-		view:   viewState{0, viewWidth, viewHeight},
+		view: viewState{
+			textOrigin: 0,
+			x:          viewX,
+			y:          viewY,
+			width:      viewWidth,
+			height:     viewHeight,
+		},
 	}
 }
 
@@ -40,8 +60,16 @@ func (s *BufferState) CursorPosition() uint64 {
 	return s.cursor.position
 }
 
-func (s *BufferState) ViewOrigin() uint64 {
-	return s.view.origin
+func (s *BufferState) ViewTextOrigin() uint64 {
+	return s.view.textOrigin
+}
+
+func (s *BufferState) ViewOrigin() (uint64, uint64) {
+	return s.view.x, s.view.y
+}
+
+func (s *BufferState) ViewSize() (uint64, uint64) {
+	return s.view.width, s.view.height
 }
 
 func (s *BufferState) SetViewSize(width, height uint64) {
@@ -77,8 +105,11 @@ type cursorState struct {
 
 // viewState represents the current view of the document.
 type viewState struct {
-	// origin is the location in the text tree of the first visible character.
-	origin uint64
+	// textOrigin is the location in the text tree of the first visible character.
+	textOrigin uint64
+
+	// x and y are the screen coordinates of the top-left corner
+	x, y uint64
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64

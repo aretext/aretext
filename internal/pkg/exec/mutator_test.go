@@ -59,7 +59,7 @@ func TestInsertRuneMutator(t *testing.T) {
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
-			state := NewEditorState(bufferState)
+			state := NewEditorState(100, 100, bufferState)
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
@@ -119,7 +119,7 @@ func TestDeleteMutator(t *testing.T) {
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
-			state := NewEditorState(bufferState)
+			state := NewEditorState(100, 100, bufferState)
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
@@ -130,65 +130,65 @@ func TestDeleteMutator(t *testing.T) {
 
 func TestScrollLinesMutator(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		initialView    viewState
-		direction      text.ReadDirection
-		numLines       uint64
-		expectedOrigin uint64
+		name               string
+		inputString        string
+		initialView        viewState
+		direction          text.ReadDirection
+		numLines           uint64
+		expectedtextOrigin uint64
 	}{
 		{
-			name:           "empty, scroll up",
-			inputString:    "",
-			initialView:    viewState{origin: 0, height: 100, width: 100},
-			direction:      text.ReadDirectionBackward,
-			numLines:       1,
-			expectedOrigin: 0,
+			name:               "empty, scroll up",
+			inputString:        "",
+			initialView:        viewState{textOrigin: 0, height: 100, width: 100},
+			direction:          text.ReadDirectionBackward,
+			numLines:           1,
+			expectedtextOrigin: 0,
 		},
 		{
-			name:           "empty, scroll down",
-			inputString:    "",
-			initialView:    viewState{origin: 0, height: 100, width: 100},
-			direction:      text.ReadDirectionForward,
-			numLines:       1,
-			expectedOrigin: 0,
+			name:               "empty, scroll down",
+			inputString:        "",
+			initialView:        viewState{textOrigin: 0, height: 100, width: 100},
+			direction:          text.ReadDirectionForward,
+			numLines:           1,
+			expectedtextOrigin: 0,
 		},
 		{
-			name:           "scroll up",
-			inputString:    "ab\ncd\nef\ngh\nij\nkl\nmn",
-			initialView:    viewState{origin: 12, height: 2, width: 100},
-			direction:      text.ReadDirectionBackward,
-			numLines:       3,
-			expectedOrigin: 3,
+			name:               "scroll up",
+			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
+			initialView:        viewState{textOrigin: 12, height: 2, width: 100},
+			direction:          text.ReadDirectionBackward,
+			numLines:           3,
+			expectedtextOrigin: 3,
 		},
 		{
-			name:           "scroll down",
-			inputString:    "ab\ncd\nef\ngh\nij\nkl\nmn",
-			initialView:    viewState{origin: 3, height: 2, width: 100},
-			direction:      text.ReadDirectionForward,
-			numLines:       3,
-			expectedOrigin: 12,
+			name:               "scroll down",
+			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
+			initialView:        viewState{textOrigin: 3, height: 2, width: 100},
+			direction:          text.ReadDirectionForward,
+			numLines:           3,
+			expectedtextOrigin: 12,
 		},
 		{
-			name:           "scroll down to last line",
-			inputString:    "ab\ncd\nef\ngh\nij\nkl\nmn",
-			initialView:    viewState{origin: 0, height: 6, width: 100},
-			numLines:       10,
-			expectedOrigin: 12,
+			name:               "scroll down to last line",
+			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
+			initialView:        viewState{textOrigin: 0, height: 6, width: 100},
+			numLines:           10,
+			expectedtextOrigin: 12,
 		},
 		{
-			name:           "scroll down to last line, POSIX end-of-file",
-			inputString:    "ab\ncd\nef\ngh\nij\nkl\nmn\n",
-			initialView:    viewState{origin: 0, height: 6, width: 100},
-			numLines:       10,
-			expectedOrigin: 12,
+			name:               "scroll down to last line, POSIX end-of-file",
+			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn\n",
+			initialView:        viewState{textOrigin: 0, height: 6, width: 100},
+			numLines:           10,
+			expectedtextOrigin: 12,
 		},
 		{
-			name:           "scroll down view taller than document",
-			inputString:    "ab\ncd\nef\ngh",
-			initialView:    viewState{origin: 0, height: 100, width: 100},
-			numLines:       1,
-			expectedOrigin: 0,
+			name:               "scroll down view taller than document",
+			inputString:        "ab\ncd\nef\ngh",
+			initialView:        viewState{textOrigin: 0, height: 100, width: 100},
+			numLines:           1,
+			expectedtextOrigin: 0,
 		},
 	}
 
@@ -200,10 +200,10 @@ func TestScrollLinesMutator(t *testing.T) {
 				tree: tree,
 				view: tc.initialView,
 			}
-			state := NewEditorState(bufferState)
+			state := NewEditorState(100, 100, bufferState)
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
-			assert.Equal(t, tc.expectedOrigin, bufferState.view.origin)
+			assert.Equal(t, tc.expectedtextOrigin, bufferState.view.textOrigin)
 		})
 	}
 }

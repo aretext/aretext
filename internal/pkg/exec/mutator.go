@@ -2,6 +2,7 @@ package exec
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
@@ -213,7 +214,7 @@ func (lm *layoutMutator) Mutate(state *EditorState) {
 	} else if lm.layout == LayoutDocumentAndRepl {
 		lm.setLayoutDocumentAndRepl(state)
 	} else {
-		panic("Unrecognized layout")
+		log.Fatalf("Unrecognized layout: %d", lm.layout)
 	}
 
 	state.layout = lm.layout
@@ -269,7 +270,7 @@ func (lm *layoutMutator) String() string {
 	} else if lm.layout == LayoutDocumentAndRepl {
 		layout = "DocumentAndRepl"
 	} else {
-		panic("Unrecognized layout")
+		log.Fatalf("Unrecognized layout: %d", lm.layout)
 	}
 	return fmt.Sprintf("SetLayout(%s)", layout)
 }

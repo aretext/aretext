@@ -2,6 +2,7 @@ package exec
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
@@ -27,7 +28,7 @@ type charInLineLocator struct {
 // The count arg is the maximum number of characters to move the cursor.
 func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEndOfLineOrFile bool) CursorLocator {
 	if count == 0 {
-		panic("Count must be greater than zero")
+		log.Fatalf("Count must be greater than zero")
 	}
 	return &charInLineLocator{direction, count, includeEndOfLineOrFile}
 }
@@ -249,7 +250,7 @@ type relativeLineLocator struct {
 // Direction indicates whether to move up (ReadDirectionBackward) or down (ReadDirectionForward).
 func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLocator {
 	if count == 0 {
-		panic("Count must be greater than zero")
+		log.Fatalf("Count must be greater than zero")
 	}
 	return &relativeLineLocator{direction, count}
 }

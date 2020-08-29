@@ -2,6 +2,7 @@ package exec
 
 import (
 	"io"
+	"log"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
@@ -20,7 +21,7 @@ func gcIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) se
 }
 
 // nextSegmentOrEof finds the next segment and returns a flag indicating end of file.
-// If an error occurs (e.g. due to invalid UTF-8), it panics.
+// If an error occurs (e.g. due to invalid UTF-8), it exits with an error.
 func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eof bool) {
 	err := segmentIter.NextSegment(seg)
 	if err == io.EOF {
@@ -28,7 +29,7 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eo
 	}
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("%s", err)
 	}
 
 	return false
@@ -71,6 +72,7 @@ func directionString(direction text.ReadDirection) string {
 	case text.ReadDirectionBackward:
 		return "backward"
 	default:
-		panic("Unrecognized direction")
+		log.Fatalf("Unrecognized direction: %d", direction)
+		return ""
 	}
 }

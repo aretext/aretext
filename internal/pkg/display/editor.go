@@ -1,6 +1,8 @@
 package display
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 )
@@ -8,7 +10,7 @@ import (
 // DrawEditor draws the editor in the screen.
 func DrawEditor(screen tcell.Screen, editorState *exec.EditorState) {
 	screen.Clear()
-	switch editorState.Layout() {
+	switch layout := editorState.Layout(); layout {
 	case exec.LayoutDocumentOnly:
 		DrawBuffer(screen, editorState.DocumentBuffer())
 	case exec.LayoutDocumentAndRepl:
@@ -16,7 +18,7 @@ func DrawEditor(screen tcell.Screen, editorState *exec.EditorState) {
 		DrawBuffer(screen, editorState.ReplBuffer())
 		drawBorderAbove(screen, editorState.ReplBuffer())
 	default:
-		panic("Unrecognized layout")
+		log.Fatalf("Unrecognized layout %d", layout)
 	}
 }
 

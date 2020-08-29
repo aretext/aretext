@@ -1,6 +1,8 @@
 package display
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell"
 )
 
@@ -12,7 +14,7 @@ type ScreenRegion struct {
 
 // NewScreenRegion defines a new rectangular region within a screen.
 // If the dimensions are invalid (for example, if the width of the region is greater than the width of the screen),
-// then this will panic.
+// then this will exit with an error.
 func NewScreenRegion(screen tcell.Screen, x, y, width, height int) *ScreenRegion {
 	r := &ScreenRegion{screen, x, y, width, height}
 	r.validateDimensions()
@@ -20,7 +22,7 @@ func NewScreenRegion(screen tcell.Screen, x, y, width, height int) *ScreenRegion
 }
 
 // Resize changes the size of the region.
-// This will panic if the new width/height are invalid.
+// This will exit with an error if the new width/height are invalid.
 func (r *ScreenRegion) Resize(newWidth, newHeight int) {
 	r.width = newWidth
 	r.height = newHeight
@@ -30,7 +32,7 @@ func (r *ScreenRegion) Resize(newWidth, newHeight int) {
 func (r *ScreenRegion) validateDimensions() {
 	screenWidth, screenHeight := r.screen.Size()
 	if r.width > screenWidth || r.height > screenHeight || r.x >= screenWidth+r.width || r.y >= screenHeight+r.height {
-		panic("Invalid dimensions for screen region")
+		log.Fatalf("Invalid dimensions for screen region: screenWidth=%d, screenHeight=%d, x=%d, y=%d, width=%d, height=%d", screenWidth, screenHeight, r.x, r.y, r.width, r.height)
 	}
 }
 

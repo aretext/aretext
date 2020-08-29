@@ -2,6 +2,7 @@ package segment
 
 import (
 	"io"
+	"log"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
@@ -20,7 +21,7 @@ type LineWrapConfig struct {
 // widthFunc returns the width in cells for a given grapheme cluster.
 func NewLineWrapConfig(maxLineWidth uint64, widthFunc GraphemeClusterWidthFunc) LineWrapConfig {
 	if maxLineWidth == 0 {
-		panic("maxLineWidth must be greater than zero")
+		log.Fatalf("maxLineWidth (%d) must be greater than zero", maxLineWidth)
 	}
 
 	return LineWrapConfig{maxLineWidth, widthFunc}
@@ -87,7 +88,7 @@ func (iter *wrappedLineIter) NextSegment(segment *Segment) error {
 					// There's a newline grapheme cluster after the too-large grapheme cluster.
 					// Include the newline in this line so we don't accidentally introduce an empty line.
 					if err := iter.gcIter.NextSegment(iter.gcSegment); err != nil {
-						panic(err)
+						log.Fatalf("%s", err)
 					}
 					segment.Extend(iter.gcSegment.Runes())
 				}

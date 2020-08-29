@@ -2,6 +2,7 @@ package exec
 
 import (
 	"io"
+	"log"
 
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
@@ -115,7 +116,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			log.Fatalf("%s", err)
 		}
 
 		lineRanges = append(lineRanges, posRange{
@@ -168,7 +169,7 @@ func softWrapLineUntil(lineStartPos uint64, tree *text.Tree, wrapConfig segment.
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			log.Fatalf("%s", err)
 		}
 
 		lineRange := posRange{

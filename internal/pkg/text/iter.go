@@ -2,6 +2,7 @@ package text
 
 import (
 	"io"
+	"log"
 	"unicode/utf8"
 )
 
@@ -82,7 +83,7 @@ func NewCloneableBackwardRuneIter(in CloneableReader) CloneableRuneIter {
 }
 
 // NextRune implements RuneIter#NextRune.
-// It panics if the input bytes contain invalid UTF-8 codepoints.
+// It exits with an error if the input bytes contain invalid UTF-8 codepoints.
 func (ri *decodingRuneIter) NextRune() (rune, error) {
 	if ri.pendingRunesOffset >= len(ri.pendingRunes) && !ri.eof {
 		ri.pendingRunesOffset = 0
@@ -179,7 +180,7 @@ func (ri *decodingRuneIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesCo
 		// Now that the rune bytes are in sequential order, we can decode the rune.
 		r, size := utf8.DecodeRune(nextRuneBytes[:charWidth])
 		if r == utf8.RuneError && size == 1 {
-			panic("Invalid UTF-8")
+			log.Fatalf("Invalid UTF-8")
 		}
 
 		ri.pendingRunes = append(ri.pendingRunes, r)

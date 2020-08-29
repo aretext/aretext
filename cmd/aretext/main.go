@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"runtime/pprof"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/wedaly/aretext/internal/app/aretext"
 )
 
+var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func main() {
@@ -18,6 +21,18 @@ func main() {
 	if len(flag.Args()) == 0 {
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
+	if *logpath != "" {
+		logFile, err := os.Create(*logpath)
+		if err != nil {
+			exitWithError(err)
+		}
+		defer logFile.Close()
+		log.SetOutput(logFile)
+	} else {
+		log.SetOutput(ioutil.Discard)
 	}
 
 	if *cpuprofile != "" {

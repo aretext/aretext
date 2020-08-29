@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"log"
+
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/text"
@@ -125,7 +127,7 @@ func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	if len(countStr) > 0 {
 		count, err := strconv.ParseUint(countStr, 10, 64)
 		if err != nil {
-			panic(err)
+			log.Fatalf("%s", err)
 		}
 		return count, cmdStr
 	}

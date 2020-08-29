@@ -1,6 +1,8 @@
 package exec
 
 import (
+	"log"
+
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -50,7 +52,8 @@ func (s *EditorState) FocusedBuffer() *BufferState {
 	} else if s.replBuffer.focus {
 		return s.replBuffer
 	} else {
-		panic("No buffer in focus")
+		log.Fatalf("No buffer in focus")
+		return nil
 	}
 }
 

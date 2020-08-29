@@ -2,6 +2,7 @@ package display
 
 import (
 	"io"
+	"log"
 
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
@@ -29,7 +30,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			log.Fatalf("%s", err)
 		}
 		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, cursorPos)
 		pos += wrappedLine.NumRunes()
@@ -60,7 +61,7 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			log.Fatalf("%s", err)
 		}
 
 		gcRunes := gc.Runes()

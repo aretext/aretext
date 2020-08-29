@@ -9,12 +9,10 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
-// DrawBuffer draws text buffer to a screen region.
+// DrawBuffer draws text buffer in the screen.
 func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	x, y, width, height := viewDimensions(bufferState)
 	screenRegion := NewScreenRegion(screen, x, y, width, height)
-
-	screenRegion.HideCursor()
 	tree := bufferState.Tree()
 	cursorPos := bufferState.CursorPosition()
 	viewTextOrigin := bufferState.ViewTextOrigin()
@@ -25,6 +23,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
 
+	screenRegion.HideCursor()
 	for row := 0; row < height; row++ {
 		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {

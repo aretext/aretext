@@ -290,6 +290,34 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{"", "Composite(InsertRune('\\t'),ScrollToCursor())"},
 		},
+		{
+			name: "insert in REPL then return to document",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
+				"Composite(InsertRune('a'),ScrollToCursor())",
+				"SetLayout(DocumentOnly)",
+			},
+		},
+		{
+			name: "navigate REPL then return to document",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
+				"SetLayout(DocumentOnly)",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

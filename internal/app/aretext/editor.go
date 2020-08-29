@@ -65,7 +65,7 @@ func initializeState(path string, viewWidth uint64, viewHeight uint64) (*exec.Ed
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	e.redraw()
+	display.DrawEditor(e.screen, e.state)
 	e.screen.Sync()
 
 	go e.pollTermEvents()
@@ -114,15 +114,9 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
 	if mutator != nil {
 		mutator.Mutate(e.state)
-		e.redraw()
+		display.DrawEditor(e.screen, e.state)
 		e.screen.Show()
 	}
-}
-
-func (e *Editor) redraw() {
-	e.screen.Clear()
-	bufferState := e.state.FocusedBuffer()
-	display.DrawBuffer(e.screen, bufferState)
 }
 
 func (e *Editor) inputConfig() input.Config {

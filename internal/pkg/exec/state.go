@@ -7,14 +7,19 @@ import (
 // EditorState represents the current state of the editor.
 type EditorState struct {
 	screenWidth, screenHeight uint64
+	layout                    Layout
 	documentBuffer            *BufferState
+	replBuffer                *BufferState
 }
 
 func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
+	documentBuffer.focus = true
 	return &EditorState{
 		screenWidth:    screenWidth,
 		screenHeight:   screenHeight,
+		layout:         LayoutDocumentOnly,
 		documentBuffer: documentBuffer,
+		replBuffer:     NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
 	}
 }
 
@@ -27,15 +32,45 @@ func (s *EditorState) SetScreenSize(width, height uint64) {
 	s.screenHeight = height
 }
 
-func (s *EditorState) FocusedBuffer() *BufferState {
+func (s *EditorState) Layout() Layout {
+	return s.layout
+}
+
+func (s *EditorState) DocumentBuffer() *BufferState {
 	return s.documentBuffer
 }
+
+func (s *EditorState) ReplBuffer() *BufferState {
+	return s.replBuffer
+}
+
+func (s *EditorState) FocusedBuffer() *BufferState {
+	if s.documentBuffer.focus {
+		return s.documentBuffer
+	} else if s.replBuffer.focus {
+		return s.replBuffer
+	} else {
+		panic("No buffer in focus")
+	}
+}
+
+// Layout controls how buffers are displayed in the editor.
+type Layout int
+
+const (
+	// LayoutDocumentOnly means that only the document is displayed; the REPL is hidden.
+	LayoutDocumentOnly = Layout(iota)
+
+	// LayoutDocumentAndRepl means that both the document and REPL are displayed.
+	LayoutDocumentAndRepl
+)
 
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
 	tree   *text.Tree
 	cursor cursorState
 	view   viewState
+	focus  bool
 }
 
 func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
@@ -49,6 +84,7 @@ func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, vi
 			width:      viewWidth,
 			height:     viewHeight,
 		},
+		focus: false,
 	}
 }
 

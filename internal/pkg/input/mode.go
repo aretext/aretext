@@ -14,6 +14,8 @@ type ModeType int
 const (
 	ModeTypeNormal = ModeType(iota)
 	ModeTypeInsert
+	ModeTypeReplNormal
+	ModeTypeReplInsert
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.
@@ -103,12 +105,14 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 		return m.cursorRight(true), ModeTypeInsert
 	case "A":
 		return m.cursorLineEnd(true), ModeTypeInsert
+	case ":":
+		return m.openRepl(), ModeTypeReplInsert
 	default:
 		return nil, ModeTypeNormal
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|:)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -228,9 +232,18 @@ func (m *normalMode) deleteNextChar() exec.Mutator {
 	})
 }
 
-// insertMode is used for inserting characters into text.
-type insertMode struct {
+func (m *normalMode) openRepl() exec.Mutator {
+	lastLineLoc := exec.NewLastLineLocator()
+	lineEndLoc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewLayoutMutator(exec.LayoutDocumentAndRepl),
+		exec.NewCursorMutator(lastLineLoc),
+		exec.NewCursorMutator(lineEndLoc),
+	})
 }
+
+// insertMode is used for inserting characters into text.
+type insertMode struct{}
 
 func newInsertMode() Mode {
 	return &insertMode{}
@@ -268,6 +281,63 @@ func (m *insertMode) deletePrevChar() exec.Mutator {
 func (m *insertMode) moveCursorOntoLine() exec.Mutator {
 	loc := exec.NewOntoLineLocator()
 	return exec.NewCursorMutator(loc)
+}
+
+// replNormalMode is used to navigate the REPL buffer.
+type replNormalMode struct {
+	normalMode Mode
+}
+
+func newReplNormalMode() Mode {
+	return &replNormalMode{
+		normalMode: newNormalMode(),
+	}
+}
+
+func (m *replNormalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
+	if event.Key() == tcell.KeyCtrlC {
+		return closeRepl()
+	}
+	mutator, nextMode := m.normalMode.ProcessKeyEvent(event, config)
+	return mutator, translateModeToRepl(nextMode)
+}
+
+// replInsertMode is used to insert characters into the REPL buffer.
+type replInsertMode struct {
+	insertMode Mode
+}
+
+func newReplInsertMode() Mode {
+	return &replInsertMode{
+		insertMode: newInsertMode(),
+	}
+}
+
+func (m *replInsertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
+	if event.Key() == tcell.KeyCtrlC {
+		return closeRepl()
+	}
+
+	mutator, nextMode := m.insertMode.ProcessKeyEvent(event, config)
+	return mutator, translateModeToRepl(nextMode)
+}
+
+// translateModeToRepl converts regular modes into their REPL equivalents.
+func translateModeToRepl(mode ModeType) ModeType {
+	switch mode {
+	case ModeTypeInsert:
+		return ModeTypeReplInsert
+	case ModeTypeNormal:
+		return ModeTypeReplNormal
+	default:
+		return mode
+	}
+}
+
+// closeRepl hides the REPL and returns focus to the document.
+func closeRepl() (exec.Mutator, ModeType) {
+	mutator := exec.NewLayoutMutator(exec.LayoutDocumentOnly)
+	return mutator, ModeTypeNormal
 }
 
 // appendScrollToCursor appends a mutator to scroll the view so the cursor is visible.

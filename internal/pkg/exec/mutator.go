@@ -190,9 +190,86 @@ func NewResizeMutator(width, height uint64) Mutator {
 // Mutate resizes the view to the specified width and height.
 func (rm *resizeMutator) Mutate(state *EditorState) {
 	state.SetScreenSize(rm.width, rm.height)
-	state.documentBuffer.SetViewSize(rm.width, rm.height)
+
+	// The layout mutator will update the dimensions of each buffer according to the current layout.
+	NewLayoutMutator(state.layout).Mutate(state)
 }
 
 func (rm *resizeMutator) String() string {
 	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
+}
+
+type layoutMutator struct {
+	layout Layout
+}
+
+func NewLayoutMutator(layout Layout) Mutator {
+	return &layoutMutator{layout}
+}
+
+func (lm *layoutMutator) Mutate(state *EditorState) {
+	if lm.layout == LayoutDocumentOnly {
+		lm.setLayoutDocumentOnly(state)
+	} else if lm.layout == LayoutDocumentAndRepl {
+		lm.setLayoutDocumentAndRepl(state)
+	} else {
+		panic("Unrecognized layout")
+	}
+
+	state.layout = lm.layout
+}
+
+func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
+	state.documentBuffer.focus = true
+	state.replBuffer.focus = false
+
+	state.documentBuffer.view.x = 0
+	state.documentBuffer.view.y = 0
+	state.documentBuffer.view.width = state.screenWidth
+	state.documentBuffer.view.height = state.screenHeight
+
+	state.replBuffer.view.x = 0
+	state.replBuffer.view.y = 0
+	state.replBuffer.view.width = 0
+	state.replBuffer.view.height = 0
+}
+
+func (lm *layoutMutator) setLayoutDocumentAndRepl(state *EditorState) {
+	state.documentBuffer.focus = false
+	state.documentBuffer.view.x = 0
+	state.documentBuffer.view.y = 0
+	state.documentBuffer.view.width = state.screenWidth
+	state.replBuffer.view.height = 0
+
+	state.replBuffer.focus = true
+	state.replBuffer.view.x = 0
+	state.replBuffer.view.y = 0
+	state.replBuffer.view.width = state.screenWidth
+	state.replBuffer.view.height = 0
+
+	if state.screenHeight > 2 {
+		// Shrink the document to leave space for the REPL.
+		state.documentBuffer.view.height = state.screenHeight / 2
+
+		// Make the REPL visible, leaving one line at the top for a border.
+		state.replBuffer.view.y = state.documentBuffer.view.height + 1
+		state.replBuffer.view.width = state.screenWidth
+		state.replBuffer.view.height = state.screenHeight/2 - 1
+	} else if state.screenHeight > 0 {
+		// Display only the REPL
+		state.documentBuffer.view.height = 0
+		state.replBuffer.view.height = state.screenHeight
+	}
+}
+
+func (lm *layoutMutator) String() string {
+	var layout string
+	if lm.layout == LayoutDocumentOnly {
+		layout = "DocumentOnly"
+	} else if lm.layout == LayoutDocumentAndRepl {
+		layout = "DocumentAndRepl"
+	} else {
+		panic("Unrecognized layout")
+	}
+	return fmt.Sprintf("SetLayout(%s)", layout)
 }

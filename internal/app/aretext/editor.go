@@ -105,7 +105,7 @@ func (e *Editor) runMainEventLoop() {
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	if event, ok := event.(*tcell.EventKey); ok {
-		if event.Key() == tcell.KeyCtrlC {
+		if event.Key() == tcell.KeyCtrlD {
 			e.Quit()
 			return
 		}

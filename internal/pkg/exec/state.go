@@ -12,16 +12,18 @@ type EditorState struct {
 	layout                    Layout
 	documentBuffer            *BufferState
 	replBuffer                *BufferState
+	replInputStartPos         uint64
 }
 
 func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
 	documentBuffer.focus = true
 	return &EditorState{
-		screenWidth:    screenWidth,
-		screenHeight:   screenHeight,
-		layout:         LayoutDocumentOnly,
-		documentBuffer: documentBuffer,
-		replBuffer:     NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
+		screenWidth:       screenWidth,
+		screenHeight:      screenHeight,
+		layout:            LayoutDocumentOnly,
+		documentBuffer:    documentBuffer,
+		replBuffer:        NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
+		replInputStartPos: 0,
 	}
 }
 
@@ -55,6 +57,19 @@ func (s *EditorState) FocusedBuffer() *BufferState {
 		log.Fatalf("No buffer in focus")
 		return nil
 	}
+}
+
+func (s *EditorState) ReplInputStartPos() uint64 {
+	return s.replInputStartPos
+}
+
+func (s *EditorState) SetReplInputStartPos(pos uint64) {
+	endPos := s.replBuffer.tree.NumChars()
+	if pos > endPos {
+		pos = endPos
+	}
+
+	s.replInputStartPos = pos
 }
 
 // Layout controls how buffers are displayed in the editor.

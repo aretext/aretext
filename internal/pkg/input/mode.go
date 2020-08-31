@@ -285,63 +285,6 @@ func (m *insertMode) moveCursorOntoLine() exec.Mutator {
 	return exec.NewCursorMutator(loc)
 }
 
-// replNormalMode is used to navigate the REPL buffer.
-type replNormalMode struct {
-	normalMode Mode
-}
-
-func newReplNormalMode() Mode {
-	return &replNormalMode{
-		normalMode: newNormalMode(),
-	}
-}
-
-func (m *replNormalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
-	if event.Key() == tcell.KeyCtrlC {
-		return closeRepl()
-	}
-	mutator, nextMode := m.normalMode.ProcessKeyEvent(event, config)
-	return mutator, translateModeToRepl(nextMode)
-}
-
-// replInsertMode is used to insert characters into the REPL buffer.
-type replInsertMode struct {
-	insertMode Mode
-}
-
-func newReplInsertMode() Mode {
-	return &replInsertMode{
-		insertMode: newInsertMode(),
-	}
-}
-
-func (m *replInsertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
-	if event.Key() == tcell.KeyCtrlC {
-		return closeRepl()
-	}
-
-	mutator, nextMode := m.insertMode.ProcessKeyEvent(event, config)
-	return mutator, translateModeToRepl(nextMode)
-}
-
-// translateModeToRepl converts regular modes into their REPL equivalents.
-func translateModeToRepl(mode ModeType) ModeType {
-	switch mode {
-	case ModeTypeInsert:
-		return ModeTypeReplInsert
-	case ModeTypeNormal:
-		return ModeTypeReplNormal
-	default:
-		return mode
-	}
-}
-
-// closeRepl hides the REPL and returns focus to the document.
-func closeRepl() (exec.Mutator, ModeType) {
-	mutator := exec.NewLayoutMutator(exec.LayoutDocumentOnly)
-	return mutator, ModeTypeNormal
-}
-
 // appendScrollToCursor appends a mutator to scroll the view so the cursor is visible.
 func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
 	if mutator == nil {

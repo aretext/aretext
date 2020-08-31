@@ -295,7 +295,7 @@ func TestInterpreter(t *testing.T) {
 			inputEvents: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			expectedCommands: []string{
 				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
@@ -309,13 +309,51 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyCtrlC, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlD, '\x00', tcell.ModNone),
 			},
 			expectedCommands: []string{
 				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
 				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
 				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
 				"SetLayout(DocumentOnly)",
+			},
+		},
+		{
+			name: "submit to REPL in repl insert mode",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
+				"Composite(InsertRune('a'),ScrollToCursor())",
+				"Composite(InsertRune('b'),ScrollToCursor())",
+				"Composite(InsertRune('c'),ScrollToCursor())",
+				"SubmitRepl()",
+			},
+		},
+		{
+			name: "submit to REPL in repl normal mode",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(Composite(SetLayout(DocumentAndRepl),MutateCursor(LastLineLocator()),MutateCursor(LineBoundaryLocator(forward, true))),ScrollToCursor())",
+				"Composite(InsertRune('a'),ScrollToCursor())",
+				"Composite(InsertRune('b'),ScrollToCursor())",
+				"Composite(InsertRune('c'),ScrollToCursor())",
+				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
+				"Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor())",
+				"SubmitRepl()",
 			},
 		},
 	}

@@ -287,8 +287,21 @@ func newStubRepl() *stubRepl {
 	return &stubRepl{inputs: make([]string, 0, 1)}
 }
 
-func (r *stubRepl) SubmitInput(s string) {
+func (r *stubRepl) Start() error {
+	return nil
+}
+
+func (r *stubRepl) Terminate() error {
+	return nil
+}
+
+func (r *stubRepl) Interrupt() error {
+	return nil
+}
+
+func (r *stubRepl) SubmitInput(s string) error {
 	r.inputs = append(r.inputs, s)
+	return nil
 }
 
 func (r *stubRepl) PollOutput() (string, error) {

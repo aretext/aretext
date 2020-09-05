@@ -34,7 +34,11 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	}
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
-	repl := repl.NewDummyRepl()
+	repl := repl.NewPythonRepl()
+	if err := repl.Start(); err != nil {
+		return nil, errors.Wrapf(err, "starting REPL")
+	}
+
 	replOutputChan := make(chan string, 1)
 	quitChan := make(chan struct{})
 	editor := &Editor{
@@ -81,6 +85,10 @@ func (e *Editor) RunEventLoop() {
 	go e.runMainEventLoop()
 
 	<-e.quitChan
+
+	if err := e.repl.Terminate(); err != nil {
+		log.Printf("Error terminating REPL: %v", err)
+	}
 }
 
 // Quit terminates the event loop.
@@ -109,11 +117,27 @@ func (e *Editor) pollReplOutput() {
 		default:
 			output, err := e.repl.PollOutput()
 			if err != nil {
-				log.Fatalf("%s", err) // TODO: handle this gracefully, restart the REPL
+				log.Printf("Error polling REPL output: %v\n", err)
+				e.restartRepl()
+				output = "\n[Restarted]\n"
 			}
 			e.replOutputChan <- output
 		}
 	}
+}
+
+func (e *Editor) restartRepl() {
+	log.Printf("Terminating REPL...\n")
+	if err := e.repl.Terminate(); err != nil {
+		log.Printf("Error terminating REPL: %v\n", err)
+	}
+	log.Printf("REPL terminated\n")
+	log.Printf("Starting new REPL...\n")
+	e.repl = repl.NewPythonRepl()
+	if err := e.repl.Start(); err != nil {
+		log.Fatalf("Error starting REPL: %v\n", err)
+	}
+	log.Printf("New REPL started\n")
 }
 
 func (e *Editor) runMainEventLoop() {

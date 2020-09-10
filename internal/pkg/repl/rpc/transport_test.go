@@ -45,6 +45,10 @@ func (c *testClient) Receive() (ResponseHeader, []byte, error) {
 		return ResponseHeader{}, nil, err
 	}
 
+	if !header.Success {
+		return header, nil, nil
+	}
+
 	data, err := c.receiveFrame()
 	if err != nil {
 		return ResponseHeader{}, nil, err

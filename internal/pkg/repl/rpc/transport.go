@@ -15,6 +15,9 @@ type RequestHeader struct {
 	// The server will reject requests that don't match its API version.
 	ApiVersion string `json:"api_version"`
 
+	// ApiKey is a randomly generated key used to authorize clients.
+	ApiKey string `json:"api_key"`
+
 	// Endpoint is the endpoint targeted by the request.
 	// The endpoint determines the format of the request and response messages.
 	Endpoint string `json:"endpoint"`

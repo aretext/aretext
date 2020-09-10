@@ -1,0 +1,36 @@
+{
+  "endpoints": [
+    {
+      "name": "quit",
+      "description": "Quit the aretext editor.",
+      "task_constructor": "NewQuitTask",
+      "request_msg": "EmptyMsg",
+      "response_msg": "QuitResultMsg"
+    }
+  ],
+  "messages": [
+    {
+      "name": "EmptyMsg",
+      "description": "A message with no fields.",
+      "fields": []
+    },
+    {
+      "name": "QuitResultMsg",
+      "description": "A message describing the result of a quit request.",
+      "fields": [
+        {
+          "name": "accepted",
+          "type": "bool",
+          "description": "Whether the quit request was accepted.",
+          "default": true
+        },
+        {
+          "name": "reject_reason",
+          "type": "string",
+          "description": "The reason the quit request was rejected.",
+          "default": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 package rpc
 
+//go:generate go run ./gen.go
+
 import (
 	"crypto/rand"
 	"encoding/base64"
@@ -8,17 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 )
-
-// AsyncExecutor schedules tasks for asynchronous execution.
-type AsyncExecutor interface {
-	// ApiVersion returns an identifier for the API version supported by this executor.
-	ApiVersion() string
-
-	// ExecuteAsync schedules a task triggered by an RPC.
-	// It returns a channel that receives the response once the task has been executed.
-	// Implementations MUST send a response to the channel.
-	ExecuteAsync(endpoint string, data []byte) (chan []byte, error)
-}
 
 // Server schedules tasks based on remote procedure calls.
 type Server struct {

@@ -22,7 +22,9 @@ BANNER_MSG = """
 Aretext REPL, Python {}
     Type "help()" for interactive help.
     Type "quit()" to exit the program.
-    Use Ctrl-D to close the REPL.""".format(sys.version).strip()
+    Use Ctrl-D to close the REPL.""".format(
+    sys.version
+).strip()
 
 
 def main():

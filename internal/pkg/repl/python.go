@@ -66,8 +66,8 @@ func (r *pythonRepl) Start() error {
 	r.cmd = cmd
 	r.stdinPipe = stdinPipe
 
-	// Start goroutines to read command output and write runes to outputChan.
-	// We do these in a separate goroutine because the reads can block.
+	// Start a goroutine to read command output and write runes to outputChan.
+	// We do this in a separate goroutine because the reads can block.
 	go r.readCmdOutput(stdoutPipe)
 
 	return nil

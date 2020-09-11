@@ -1,6 +1,7 @@
 package repl
 
 import (
+	"net"
 	"os"
 	"testing"
 
@@ -12,8 +13,15 @@ func TestPythonRepl(t *testing.T) {
 	// Ensure that the pyaretext package is in the default PYTHONPATH.
 	os.Chdir("../../..")
 
-	repl := NewPythonRepl()
-	err := repl.Start()
+	listener, err := net.Listen("tcp", "127.0.0.1:")
+	require.NoError(t, err)
+	defer listener.Close()
+
+	apiKey := "abcd1234"
+	apiConfig := NewApiConfig(listener.Addr(), apiKey)
+
+	repl := NewPythonRepl(apiConfig)
+	err = repl.Start()
 	require.NoError(t, err)
 
 	defer func() {
@@ -32,5 +40,4 @@ func TestPythonRepl(t *testing.T) {
 	output = <-repl.OutputChan()
 	require.NoError(t, err)
 	assert.Equal(t, "sum=8\n>>> ", output)
-
 }

@@ -38,15 +38,16 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 
-	repl := repl.NewPythonRepl()
-	if err := repl.Start(); err != nil {
-		return nil, errors.Wrapf(err, "starting REPL")
-	}
-
 	rpcTaskBroker := rpc.NewTaskBroker()
 	rpcServer, err := rpc.NewServer(rpcTaskBroker)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating RPC server")
+	}
+
+	apiConfig := repl.NewApiConfig(rpcServer.Addr(), rpcServer.ApiKey())
+	repl := repl.NewPythonRepl(apiConfig)
+	if err := repl.Start(); err != nil {
+		return nil, errors.Wrapf(err, "starting REPL")
 	}
 
 	quitChan := make(chan struct{})
@@ -169,7 +170,8 @@ func (e *Editor) restartRepl() {
 	}
 	log.Printf("REPL terminated\n")
 	log.Printf("Starting new REPL...\n")
-	e.repl = repl.NewPythonRepl()
+	apiConfig := repl.NewApiConfig(e.rpcServer.Addr(), e.rpcServer.ApiKey())
+	e.repl = repl.NewPythonRepl(apiConfig)
 	if err := e.repl.Start(); err != nil {
 		log.Fatalf("Error starting REPL: %v\n", err)
 	}

@@ -21,13 +21,15 @@ type pythonRepl struct {
 	stdinPipe      io.Writer
 	stdoutPipe     io.Reader
 	stderrPipe     io.Reader
+	apiConfig      *ApiConfig
 	outputRuneChan chan rune
 	outputChan     chan string
 }
 
 // NewPythonRepl returns an instance of a Python REPL.
-func NewPythonRepl() Repl {
+func NewPythonRepl(apiConfig *ApiConfig) Repl {
 	return &pythonRepl{
+		apiConfig:      apiConfig,
 		outputRuneChan: make(chan rune, 1024),
 		outputChan:     make(chan string, 1),
 	}
@@ -43,6 +45,7 @@ func (r *pythonRepl) Start() error {
 	}
 
 	cmd := exec.Command("python", "-u", "-m", "pyaretext")
+	cmd.Env = append(os.Environ(), r.apiConfig.EnvVars()...)
 
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {

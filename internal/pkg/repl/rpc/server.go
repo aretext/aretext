@@ -107,8 +107,8 @@ func (s *Server) sendErrorResponse(transport *Transport, err error) error {
 }
 
 // Addr returns the network address the server is listening on.
-func (s *Server) Addr() (net.Addr, error) {
-	return s.listener.Addr(), nil
+func (s *Server) Addr() net.Addr {
+	return s.listener.Addr()
 }
 
 // ApiKey returns a randomly generated key clients must send to access the API.

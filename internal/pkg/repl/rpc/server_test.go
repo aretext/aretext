@@ -37,9 +37,7 @@ func withClientAndServer(t *testing.T, executor AsyncExecutor, f func(*testing.T
 	go server.ListenAndServe()
 	defer server.Terminate()
 
-	addr, err := server.Addr()
-	require.NoError(t, err)
-
+	addr := server.Addr()
 	clientConn, err := net.Dial(addr.Network(), addr.String())
 	require.NoError(t, err)
 	defer clientConn.Close()

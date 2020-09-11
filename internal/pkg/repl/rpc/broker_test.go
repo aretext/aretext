@@ -21,7 +21,7 @@ func TestTaskBroker(t *testing.T) {
 	require.NoError(t, err)
 
 	go func() {
-		task := broker.PollTask()
+		task := <-broker.TaskChan()
 		emptyState := exec.NewEditorState(0, 0, exec.NewBufferState(text.NewTree(), 0, 0, 0, 0, 0))
 		task.SendResponse(emptyState)
 	}()

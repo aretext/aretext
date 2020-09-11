@@ -21,10 +21,10 @@ type Task interface {
 	SendResponse(*exec.EditorState)
 }
 
-// TaskPoller retrieves tasks available for execution.
-type TaskPoller interface {
-	// PollTask returns the next available task, blocking until one is available.
-	PollTask() Task
+// TaskSource retrieves tasks available for execution.
+type TaskSource interface {
+	// TaskChan returns a channel of tasks available for execution.
+	TaskChan() chan Task
 }
 
 // AsyncExecutor schedules tasks for asynchronous execution.

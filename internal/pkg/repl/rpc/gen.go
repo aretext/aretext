@@ -140,7 +140,7 @@ import (
 
 // TaskBroker translates RPC requests/responses to executable tasks.
 // It implements AsyncExecutor so a server can schedule tasks for asynchronous execution.
-// It also implements TaskPoller so tasks can be retrieved and executed.
+// It also implements TaskSource so tasks can be retrieved and executed.
 type TaskBroker struct {
 	taskChan chan Task
 }
@@ -196,9 +196,9 @@ func (e *TaskBroker) ExecuteAsync(endpoint string, data []byte) (chan []byte, er
 	}
 }
 
-// PollTask implements TaskPoller#PollTask().
-func (e *TaskBroker) PollTask() Task {
-	return <-e.taskChan
+// TaskChan implements TaskSource#TaskChan().
+func (e *TaskBroker) TaskChan() chan Task {
+	return e.taskChan
 }
 `
 

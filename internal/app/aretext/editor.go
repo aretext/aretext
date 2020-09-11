@@ -25,7 +25,6 @@ type Editor struct {
 	repl             repl.Repl
 	rpcTaskBroker    *rpc.TaskBroker
 	rpcServer        *rpc.Server
-	rpcTaskChan      chan rpc.Task
 	quitChan         chan struct{}
 }
 
@@ -49,7 +48,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating RPC server")
 	}
-	rpcTaskChan := make(chan rpc.Task, 1)
 
 	quitChan := make(chan struct{})
 
@@ -62,7 +60,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 		repl,
 		rpcTaskBroker,
 		rpcServer,
-		rpcTaskChan,
 		quitChan,
 	}
 	return editor, nil
@@ -96,7 +93,6 @@ func (e *Editor) RunEventLoop() {
 
 	go e.rpcServer.ListenAndServe()
 	go e.pollTermEvents()
-	go e.pollRpcTaskBroker()
 	go e.runMainEventLoop()
 
 	<-e.quitChan
@@ -123,13 +119,6 @@ func (e *Editor) pollTermEvents() {
 	}
 }
 
-func (e *Editor) pollRpcTaskBroker() {
-	for {
-		task := e.rpcTaskBroker.PollTask()
-		e.rpcTaskChan <- task
-	}
-}
-
 func (e *Editor) runMainEventLoop() {
 	for {
 		select {
@@ -144,7 +133,7 @@ func (e *Editor) runMainEventLoop() {
 			} else {
 				e.restartRepl()
 			}
-		case task := <-e.rpcTaskChan:
+		case task := <-e.rpcTaskBroker.TaskChan():
 			e.handleRpcTask(task)
 		}
 	}

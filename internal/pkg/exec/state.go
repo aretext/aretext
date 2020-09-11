@@ -13,6 +13,7 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	replBuffer                *BufferState
 	replInputStartPos         uint64
+	quitFlag                  bool
 }
 
 func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
@@ -70,6 +71,10 @@ func (s *EditorState) SetReplInputStartPos(pos uint64) {
 	}
 
 	s.replInputStartPos = pos
+}
+
+func (s *EditorState) QuitFlag() bool {
+	return s.quitFlag
 }
 
 // Layout controls how buffers are displayed in the editor.

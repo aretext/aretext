@@ -49,9 +49,7 @@ func NewQuitTask(_ EmptyMsg, replyChan chan QuitResultMsg) (Task, error) {
 }
 
 func (t *quitTask) Mutator() exec.Mutator {
-	// TODO: quit the editor
-	fmt.Printf("DEBUG: received quit RPC\n")
-	return nil
+	return exec.NewQuitMutator()
 }
 
 func (t *quitTask) SendResponse(state *exec.EditorState) {

@@ -25,7 +25,6 @@ type Editor struct {
 	repl             repl.Repl
 	rpcTaskBroker    *rpc.TaskBroker
 	rpcServer        *rpc.Server
-	quitChan         chan struct{}
 }
 
 // NewEditor instantiates a new editor that uses the provided screen and file path.
@@ -50,8 +49,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 		return nil, errors.Wrapf(err, "starting REPL")
 	}
 
-	quitChan := make(chan struct{})
-
 	editor := &Editor{
 		path,
 		inputInterpreter,
@@ -61,7 +58,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 		repl,
 		rpcTaskBroker,
 		rpcServer,
-		quitChan,
 	}
 	return editor, nil
 }
@@ -94,9 +90,8 @@ func (e *Editor) RunEventLoop() {
 
 	go e.rpcServer.ListenAndServe()
 	go e.pollTermEvents()
-	go e.runMainEventLoop()
 
-	<-e.quitChan
+	e.runMainEventLoop()
 
 	if err := e.repl.Terminate(); err != nil {
 		log.Printf("Error terminating REPL: %v", err)
@@ -105,12 +100,6 @@ func (e *Editor) RunEventLoop() {
 	if err := e.rpcServer.Terminate(); err != nil {
 		log.Printf("Error terminating RPC server: %v", err)
 	}
-}
-
-// Quit terminates the event loop.
-// Calling this more than once will panic
-func (e *Editor) Quit() {
-	close(e.quitChan)
 }
 
 func (e *Editor) pollTermEvents() {
@@ -123,9 +112,6 @@ func (e *Editor) pollTermEvents() {
 func (e *Editor) runMainEventLoop() {
 	for {
 		select {
-		case <-e.quitChan:
-			log.Printf("Quit channel closed; exiting main event loop\n")
-			return
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
 		case output, ok := <-e.repl.OutputChan():
@@ -137,19 +123,16 @@ func (e *Editor) runMainEventLoop() {
 		case task := <-e.rpcTaskBroker.TaskChan():
 			e.handleRpcTask(task)
 		}
+
+		if e.state.QuitFlag() {
+			log.Printf("Quit flag set, exiting event loop...\n")
+			return
+		}
 	}
 }
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
-
-	if event, ok := event.(*tcell.EventKey); ok {
-		if event.Key() == tcell.KeyCtrlC {
-			e.Quit()
-			return
-		}
-	}
-
 	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
 	e.applyMutator(mutator)
 }

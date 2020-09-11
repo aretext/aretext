@@ -33,11 +33,14 @@ def main():
     sys.stderr = sys.stdout
 
     # Run the REPL.
-    code.interact(banner=BANNER_MSG, local={
-        "__name__": "__console__",
-        "__doc__": None,
-        "quit": pyaretext.api.editor.quit,
-    })
+    code.interact(
+        banner=BANNER_MSG,
+        local={
+            "__name__": "__console__",
+            "__doc__": None,
+            "quit": pyaretext.api.editor.quit,
+        },
+    )
 
 
 if __name__ == "__main__":

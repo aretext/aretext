@@ -383,3 +383,19 @@ func (srm *submitReplMutator) RestrictToReplInput() {}
 func (srm *submitReplMutator) String() string {
 	return "SubmitRepl()"
 }
+
+type quitMutator struct{}
+
+func NewQuitMutator() Mutator {
+	return &quitMutator{}
+}
+
+func (qm *quitMutator) Mutate(state *EditorState) {
+	state.quitFlag = true
+}
+
+func (qm *quitMutator) RestrictToReplInput() {}
+
+func (qm *quitMutator) String() string {
+	return "Quit()"
+}

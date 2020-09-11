@@ -21,7 +21,7 @@ func TestPythonRepl(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	output, err := repl.PollOutput()
+	output := <-repl.OutputChan()
 	require.NoError(t, err)
 	assert.Contains(t, output, "Aretext REPL")
 	assert.Contains(t, output, ">>>")
@@ -29,7 +29,7 @@ func TestPythonRepl(t *testing.T) {
 	err = repl.SubmitInput("print('sum={}'.format(1+7))")
 	require.NoError(t, err)
 
-	output, err = repl.PollOutput()
+	output = <-repl.OutputChan()
 	require.NoError(t, err)
 	assert.Equal(t, "sum=8\n>>> ", output)
 

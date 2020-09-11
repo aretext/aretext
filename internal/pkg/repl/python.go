@@ -15,19 +15,21 @@ import (
 )
 
 type pythonRepl struct {
-	mu         sync.Mutex
-	started    bool
-	cmd        *exec.Cmd
-	stdinPipe  io.Writer
-	stdoutPipe io.Reader
-	stderrPipe io.Reader
-	outputChan chan rune
+	mu             sync.Mutex
+	started        bool
+	cmd            *exec.Cmd
+	stdinPipe      io.Writer
+	stdoutPipe     io.Reader
+	stderrPipe     io.Reader
+	outputRuneChan chan rune
+	outputChan     chan string
 }
 
 // NewPythonRepl returns an instance of a Python REPL.
 func NewPythonRepl() Repl {
 	return &pythonRepl{
-		outputChan: make(chan rune, 1024),
+		outputRuneChan: make(chan rune, 1024),
+		outputChan:     make(chan string, 1),
 	}
 }
 
@@ -66,24 +68,40 @@ func (r *pythonRepl) Start() error {
 	r.cmd = cmd
 	r.stdinPipe = stdinPipe
 
-	// Start a goroutine to read command output and write runes to outputChan.
+	// Start a goroutine to read command output and write runes to outputRuneChan.
 	// We do this in a separate goroutine because the reads can block.
-	go r.readCmdOutput(stdoutPipe)
+	go r.readCmdOutputRunes(stdoutPipe)
+
+	// Start a goroutine to group runes from outputRuneChan into strings sent to outputChan for downstream consumption.
+	go r.groupOutputRunes()
 
 	return nil
 }
 
-func (r *pythonRepl) readCmdOutput(pipe io.Reader) {
+func (r *pythonRepl) readCmdOutputRunes(pipe io.Reader) {
 	scanner := bufio.NewScanner(pipe)
 	scanner.Split(bufio.ScanRunes)
 	for scanner.Scan() {
 		c, _ := utf8.DecodeRune(scanner.Bytes())
-		r.outputChan <- c
+		r.outputRuneChan <- c
 	}
 	if err := scanner.Err(); err != nil {
 		log.Printf("Error reading cmd output: %v", err)
 	}
-	close(r.outputChan)
+	close(r.outputRuneChan)
+}
+
+func (r *pythonRepl) groupOutputRunes() {
+	for {
+		output, err := r.pollOutput()
+		if err != nil {
+			log.Printf("Error polling cmd output: %v", err)
+			close(r.outputChan)
+			return
+		}
+
+		r.outputChan <- output
+	}
 }
 
 // Terminate stops the REPL.
@@ -148,10 +166,14 @@ func (r *pythonRepl) SubmitInput(s string) error {
 	return nil
 }
 
-// PollOutput blocks until output is available from the REPL.
+func (r *pythonRepl) OutputChan() chan string {
+	return r.outputChan
+}
+
+// pollOutput blocks until output is available from the REPL.
 // The output is guaranteed to be valid UTF-8 (invalid bytes will be represented
 // by the unicode replacement character).
-func (r *pythonRepl) PollOutput() (string, error) {
+func (r *pythonRepl) pollOutput() (string, error) {
 	// We do NOT acquire the mutex here to avoid a potential deadlock.
 	// 1) SubmitInput acquires the mutex, then blocks writing to stdin
 	// 2) Python subprocess blocks writing to stdout.
@@ -161,12 +183,12 @@ func (r *pythonRepl) PollOutput() (string, error) {
 	// This means that we can always unblock stdout by calling PollOutput(),
 	// even if other methods have acquired the mutex.
 	//
-	// This is safe because PollOutput uses only the outputChan, which is thread-safe.
+	// This is safe because PollOutput uses only the outputRuneChan, which is thread-safe.
 
 	var sb strings.Builder
 
 	// Block until we have at least one character to output.
-	c, ok := <-r.outputChan
+	c, ok := <-r.outputRuneChan
 	if !ok {
 		return "", errors.New("Repl output channel closed")
 	}
@@ -174,11 +196,11 @@ func (r *pythonRepl) PollOutput() (string, error) {
 		return "", errors.Wrapf(err, "WriteRune()")
 	}
 
-	// Read up to 1024 bytes from the outputChan.
+	// Read up to 1024 bytes from the outputRuneChan.
 	// If there aren't any immediately available, return what we have so far.
 	for {
 		select {
-		case c, ok := <-r.outputChan:
+		case c, ok := <-r.outputRuneChan:
 			if !ok {
 				// Output channel is closed, so return what we have so far.
 				return sb.String(), nil

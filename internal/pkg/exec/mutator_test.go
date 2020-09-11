@@ -304,8 +304,8 @@ func (r *stubRepl) SubmitInput(s string) error {
 	return nil
 }
 
-func (r *stubRepl) PollOutput() (string, error) {
-	return "", nil
+func (r *stubRepl) OutputChan() chan string {
+	return nil
 }
 
 func TestSubmitReplMutator(t *testing.T) {

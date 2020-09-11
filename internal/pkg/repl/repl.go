@@ -21,6 +21,7 @@ type Repl interface {
 	// another input is being evaluated.
 	SubmitInput(s string) error
 
-	// PollOutput blocks until the REPL produces some output.
-	PollOutput() (string, error)
+	// OutputChan returns a channel with output from the REPL.
+	// The channel is closed when the REPL terminates.
+	OutputChan() chan string
 }

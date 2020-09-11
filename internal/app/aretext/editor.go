@@ -23,7 +23,6 @@ type Editor struct {
 	screen           tcell.Screen
 	termEventChan    chan tcell.Event
 	repl             repl.Repl
-	replOutputChan   chan string
 	rpcTaskBroker    *rpc.TaskBroker
 	rpcServer        *rpc.Server
 	rpcTaskChan      chan rpc.Task
@@ -44,7 +43,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	if err := repl.Start(); err != nil {
 		return nil, errors.Wrapf(err, "starting REPL")
 	}
-	replOutputChan := make(chan string, 1)
 
 	rpcTaskBroker := rpc.NewTaskBroker()
 	rpcServer, err := rpc.NewServer(rpcTaskBroker)
@@ -62,7 +60,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 		screen,
 		termEventChan,
 		repl,
-		replOutputChan,
 		rpcTaskBroker,
 		rpcServer,
 		rpcTaskChan,
@@ -99,7 +96,6 @@ func (e *Editor) RunEventLoop() {
 
 	go e.rpcServer.ListenAndServe()
 	go e.pollTermEvents()
-	go e.pollReplOutput()
 	go e.pollRpcTaskBroker()
 	go e.runMainEventLoop()
 
@@ -127,37 +123,11 @@ func (e *Editor) pollTermEvents() {
 	}
 }
 
-func (e *Editor) pollReplOutput() {
-	for {
-		output, err := e.repl.PollOutput()
-		if err != nil {
-			log.Printf("Error polling REPL output: %v\n", err)
-			e.restartRepl()
-			output = "\n[Restarted]\n"
-		}
-		e.replOutputChan <- output
-	}
-}
-
 func (e *Editor) pollRpcTaskBroker() {
 	for {
 		task := e.rpcTaskBroker.PollTask()
 		e.rpcTaskChan <- task
 	}
-}
-
-func (e *Editor) restartRepl() {
-	log.Printf("Terminating REPL...\n")
-	if err := e.repl.Terminate(); err != nil {
-		log.Printf("Error terminating REPL: %v\n", err)
-	}
-	log.Printf("REPL terminated\n")
-	log.Printf("Starting new REPL...\n")
-	e.repl = repl.NewPythonRepl()
-	if err := e.repl.Start(); err != nil {
-		log.Fatalf("Error starting REPL: %v\n", err)
-	}
-	log.Printf("New REPL started\n")
 }
 
 func (e *Editor) runMainEventLoop() {
@@ -168,8 +138,12 @@ func (e *Editor) runMainEventLoop() {
 			return
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
-		case output := <-e.replOutputChan:
-			e.handleReplOutput(output)
+		case output, ok := <-e.repl.OutputChan():
+			if ok {
+				e.handleReplOutput(output)
+			} else {
+				e.restartRepl()
+			}
 		case task := <-e.rpcTaskChan:
 			e.handleRpcTask(task)
 		}
@@ -197,6 +171,20 @@ func (e *Editor) handleReplOutput(output string) {
 		exec.NewScrollToCursorMutator(),
 	})
 	e.applyMutator(mutator)
+}
+
+func (e *Editor) restartRepl() {
+	log.Printf("Terminating REPL...\n")
+	if err := e.repl.Terminate(); err != nil {
+		log.Printf("Error terminating REPL: %v\n", err)
+	}
+	log.Printf("REPL terminated\n")
+	log.Printf("Starting new REPL...\n")
+	e.repl = repl.NewPythonRepl()
+	if err := e.repl.Start(); err != nil {
+		log.Fatalf("Error starting REPL: %v\n", err)
+	}
+	log.Printf("New REPL started\n")
 }
 
 func (e *Editor) handleRpcTask(task rpc.Task) {

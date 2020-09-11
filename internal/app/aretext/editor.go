@@ -10,6 +10,7 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/input"
 	"github.com/wedaly/aretext/internal/pkg/repl"
+	"github.com/wedaly/aretext/internal/pkg/repl/rpc"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -22,6 +23,9 @@ type Editor struct {
 	termEventChan    chan tcell.Event
 	repl             repl.Repl
 	replOutputChan   chan string
+	rpcTaskBroker    *rpc.TaskBroker
+	rpcServer        *rpc.Server
+	rpcTaskChan      chan rpc.Task
 	quitChan         chan struct{}
 }
 
@@ -34,13 +38,22 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	}
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
+
 	repl := repl.NewPythonRepl()
 	if err := repl.Start(); err != nil {
 		return nil, errors.Wrapf(err, "starting REPL")
 	}
-
 	replOutputChan := make(chan string, 1)
+
+	rpcTaskBroker := rpc.NewTaskBroker()
+	rpcServer, err := rpc.NewServer(rpcTaskBroker)
+	if err != nil {
+		return nil, errors.Wrapf(err, "creating RPC server")
+	}
+	rpcTaskChan := make(chan rpc.Task, 1)
+
 	quitChan := make(chan struct{})
+
 	editor := &Editor{
 		path,
 		inputInterpreter,
@@ -49,6 +62,9 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 		termEventChan,
 		repl,
 		replOutputChan,
+		rpcTaskBroker,
+		rpcServer,
+		rpcTaskChan,
 		quitChan,
 	}
 	return editor, nil
@@ -80,14 +96,20 @@ func (e *Editor) RunEventLoop() {
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Sync()
 
+	go e.rpcServer.ListenAndServe()
 	go e.pollTermEvents()
 	go e.pollReplOutput()
+	go e.pollRpcTaskBroker()
 	go e.runMainEventLoop()
 
 	<-e.quitChan
 
 	if err := e.repl.Terminate(); err != nil {
 		log.Printf("Error terminating REPL: %v", err)
+	}
+
+	if err := e.rpcServer.Terminate(); err != nil {
+		log.Printf("Error terminating RPC server: %v", err)
 	}
 }
 
@@ -116,6 +138,13 @@ func (e *Editor) pollReplOutput() {
 	}
 }
 
+func (e *Editor) pollRpcTaskBroker() {
+	for {
+		task := e.rpcTaskBroker.PollTask()
+		e.rpcTaskChan <- task
+	}
+}
+
 func (e *Editor) restartRepl() {
 	log.Printf("Terminating REPL...\n")
 	if err := e.repl.Terminate(); err != nil {
@@ -139,6 +168,8 @@ func (e *Editor) runMainEventLoop() {
 			e.handleTermEvent(event)
 		case output := <-e.replOutputChan:
 			e.handleReplOutput(output)
+		case task := <-e.rpcTaskChan:
+			task.ExecuteAndSendResponse(e.state)
 		}
 	}
 }

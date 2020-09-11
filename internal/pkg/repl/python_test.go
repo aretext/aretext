@@ -97,7 +97,7 @@ func TestPythonReplConnectToRpcServer(t *testing.T) {
 
 		// Attempt to connect to the RPC server.
 		t.Log("Submitting input to REPL...")
-		err := repl.SubmitInput("from pyaretext.api.rpcclient import DEFAULT_CLIENT")
+		err := repl.SubmitInput("from pyaretext.api.rpcclient import default_client\nclient = default_client()\n")
 		require.NoError(t, err)
 
 		// Verify that the client connected.

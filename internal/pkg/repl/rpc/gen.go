@@ -230,8 +230,6 @@ from urllib.parse import urlparse
 
 
 API_VERSION = "{{ .Spec.Version }}"
-API_ADDR = os.environ["API_ADDRESS"]
-API_KEY = os.environ["API_KEY"]
 
 
 class Client:
@@ -286,7 +284,16 @@ class Client:
 		return json.loads(data.decode("utf8"))
 
 
-DEFAULT_CLIENT = Client(API_ADDR, API_KEY)
+_DEFAULT_CLIENT = None
+
+def default_client() -> Client:
+	"""Return a shared client. """
+	global _DEFAULT_CLIENT
+	if _DEFAULT_CLIENT is None:
+		api_addr = os.environ["API_ADDRESS"]
+		api_key = os.environ["API_KEY"]
+		_DEFAULT_CLIENT = Client(api_addr, api_key)
+	return _DEFAULT_CLIENT
 
 
 @dataclass

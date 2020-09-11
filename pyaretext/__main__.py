@@ -16,6 +16,7 @@ will start a new interpreter.
 """
 import code
 import sys
+from pyaretext.api.editor import quit
 
 
 BANNER_MSG = """

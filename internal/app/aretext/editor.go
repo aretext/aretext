@@ -1,6 +1,7 @@
 package aretext
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -163,18 +164,21 @@ func (e *Editor) runMainEventLoop() {
 	for {
 		select {
 		case <-e.quitChan:
+			log.Printf("Quit channel closed; exiting main event loop\n")
 			return
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
 		case output := <-e.replOutputChan:
 			e.handleReplOutput(output)
 		case task := <-e.rpcTaskChan:
-			task.ExecuteAndSendResponse(e.state)
+			e.handleRpcTask(task)
 		}
 	}
 }
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
+	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
+
 	if event, ok := event.(*tcell.EventKey); ok {
 		if event.Key() == tcell.KeyCtrlC {
 			e.Quit()
@@ -187,11 +191,18 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 }
 
 func (e *Editor) handleReplOutput(output string) {
+	log.Printf("Sending REPL output to buffer: '%s'\n", output)
 	mutator := exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewOutputReplMutator(output),
 		exec.NewScrollToCursorMutator(),
 	})
 	e.applyMutator(mutator)
+}
+
+func (e *Editor) handleRpcTask(task rpc.Task) {
+	log.Printf("Executing RPC task %s\n", task.String())
+	e.applyMutator(task.Mutator())
+	task.SendResponse(e.state)
 }
 
 func (e *Editor) inputConfig() input.Config {
@@ -205,10 +216,30 @@ func (e *Editor) inputConfig() input.Config {
 
 func (e *Editor) applyMutator(m exec.Mutator) {
 	if m == nil {
+		log.Printf("No mutator to apply\n")
 		return
 	}
 
+	log.Printf("Applying mutator '%s'\n", m.String())
 	m.Mutate(e.state)
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
+}
+
+func describeTermEvent(event tcell.Event) string {
+	switch event := event.(type) {
+	case *tcell.EventKey:
+		if event.Key() == tcell.KeyRune {
+			return fmt.Sprintf("EventKey rune %q with modifiers %v", event.Rune(), event.Modifiers())
+		} else {
+			return fmt.Sprintf("EventKey %v with modifiers %v", event.Key(), event.Modifiers())
+		}
+
+	case *tcell.EventResize:
+		width, height := event.Size()
+		return fmt.Sprintf("EventResize with width %d and height %d", width, height)
+
+	default:
+		return "OtherEvent"
+	}
 }

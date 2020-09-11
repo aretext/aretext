@@ -11,9 +11,14 @@ import (
 //   func New<Task>(msg <RequestMsg>, replyChan chan <ResponseMsg>) (Task, error)
 // The task MUST send a response to replyChan when ExecuteAndSendResponse is called.
 type Task interface {
-	// ExecuteAndSendResponse applies mutations to the editor state and sends a reply to the client.
+	fmt.Stringer
+
+	// Mutator returns a mutator to update the editor state.
+	Mutator() exec.Mutator
+
+	// SendResponse sends a reply to the client based on the updated editor state.
 	// This should be called at most once.
-	ExecuteAndSendResponse(*exec.EditorState)
+	SendResponse(*exec.EditorState)
 }
 
 // TaskPoller retrieves tasks available for execution.
@@ -43,9 +48,17 @@ func NewQuitTask(_ EmptyMsg, replyChan chan QuitResultMsg) (Task, error) {
 	return &quitTask{replyChan}, nil
 }
 
-func (t *quitTask) ExecuteAndSendResponse(state *exec.EditorState) {
-	defer close(t.replyChan)
+func (t *quitTask) Mutator() exec.Mutator {
 	// TODO: quit the editor
 	fmt.Printf("DEBUG: received quit RPC\n")
+	return nil
+}
+
+func (t *quitTask) SendResponse(state *exec.EditorState) {
+	defer close(t.replyChan)
 	t.replyChan <- QuitResultMsg{Accepted: true}
+}
+
+func (t *quitTask) String() string {
+	return "QuitTask"
 }

@@ -3,6 +3,7 @@ package repl
 import (
 	"net"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -48,9 +49,24 @@ func TestPythonReplOutput(t *testing.T) {
 		err := repl.SubmitInput("print('sum={}'.format(1+7))")
 		require.NoError(t, err)
 
-		output = <-repl.OutputChan()
-		require.NoError(t, err)
-		assert.Equal(t, "sum=8\n>>> ", output)
+		var sb strings.Builder
+		for {
+			select {
+			case s := <-repl.OutputChan():
+				_, err := sb.WriteString(s)
+				require.NoError(t, err)
+
+				if sb.String() == "sum=8\n>>> " {
+					t.Logf("Found expected output string: '%s'\n", sb.String())
+					return
+				}
+
+			case <-time.After(time.Second * 10):
+				assert.Failf(t, "Timed out waiting for full output, got '%s'\n", sb.String())
+				return
+			}
+
+		}
 	})
 }
 

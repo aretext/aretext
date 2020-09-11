@@ -99,30 +99,20 @@ func (e *Editor) Quit() {
 
 func (e *Editor) pollTermEvents() {
 	for {
-		select {
-		case <-e.quitChan:
-			break
-		default:
-			event := e.screen.PollEvent()
-			e.termEventChan <- event
-		}
+		event := e.screen.PollEvent()
+		e.termEventChan <- event
 	}
 }
 
 func (e *Editor) pollReplOutput() {
 	for {
-		select {
-		case <-e.quitChan:
-			break
-		default:
-			output, err := e.repl.PollOutput()
-			if err != nil {
-				log.Printf("Error polling REPL output: %v\n", err)
-				e.restartRepl()
-				output = "\n[Restarted]\n"
-			}
-			e.replOutputChan <- output
+		output, err := e.repl.PollOutput()
+		if err != nil {
+			log.Printf("Error polling REPL output: %v\n", err)
+			e.restartRepl()
+			output = "\n[Restarted]\n"
 		}
+		e.replOutputChan <- output
 	}
 }
 
@@ -144,7 +134,7 @@ func (e *Editor) runMainEventLoop() {
 	for {
 		select {
 		case <-e.quitChan:
-			break
+			return
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
 		case output := <-e.replOutputChan:

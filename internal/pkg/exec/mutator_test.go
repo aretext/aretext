@@ -279,34 +279,9 @@ func TestScrollLinesMutator(t *testing.T) {
 	}
 }
 
-func TestClearReplInputMutator(t *testing.T) {
-	tree, err := text.NewTreeFromString("")
-	require.NoError(t, err)
-	bufferState := &BufferState{tree: tree, view: viewState{height: 100, width: 100}}
-	state := NewEditorState(100, 100, bufferState)
-
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewOutputReplMutator("hello\n>>> "),
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewInsertRuneMutator('a'),
-		NewInsertRuneMutator('b'),
-		NewInsertRuneMutator('c'),
-	})
-	setupMutator.Mutate(state)
-
-	replBuffer := state.ReplBuffer()
-	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, replBuffer.Tree()))
-	assert.Equal(t, uint64(10), state.ReplInputStartPos())
-	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
-
-	NewClearReplInputMutator().Mutate(state)
-	assert.Equal(t, "hello\n>>> ", allTextFromTree(t, replBuffer.Tree()))
-	assert.Equal(t, uint64(10), state.ReplInputStartPos())
-	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
-}
-
 type stubRepl struct {
-	inputs []string
+	inputs      []string
+	interrupted bool
 }
 
 func newStubRepl() *stubRepl {
@@ -322,6 +297,7 @@ func (r *stubRepl) Terminate() error {
 }
 
 func (r *stubRepl) Interrupt() error {
+	r.interrupted = true
 	return nil
 }
 
@@ -353,4 +329,32 @@ func TestSubmitReplMutator(t *testing.T) {
 	assert.Equal(t, uint64(9), state.replInputStartPos)
 	assert.Equal(t, ">>> abcd\n", allTextFromTree(t, tree))
 	assert.Equal(t, []string{"abcd"}, repl.inputs)
+}
+
+func TestInterruptReplMutator(t *testing.T) {
+	tree, err := text.NewTreeFromString("")
+	require.NoError(t, err)
+	bufferState := &BufferState{tree: tree, view: viewState{height: 100, width: 100}}
+	state := NewEditorState(100, 100, bufferState)
+
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewOutputReplMutator("hello\n>>> "),
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewInsertRuneMutator('a'),
+		NewInsertRuneMutator('b'),
+		NewInsertRuneMutator('c'),
+	})
+	setupMutator.Mutate(state)
+
+	replBuffer := state.ReplBuffer()
+	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, uint64(10), state.ReplInputStartPos())
+	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
+
+	repl := newStubRepl()
+	NewInterruptReplMutator(repl).Mutate(state)
+	assert.Equal(t, "hello\n>>> ", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, uint64(10), state.ReplInputStartPos())
+	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
+	assert.True(t, repl.interrupted)
 }

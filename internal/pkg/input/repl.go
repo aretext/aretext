@@ -37,6 +37,10 @@ func (m *replInsertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (
 
 // processReplModeKeyEvent handles input event processing common to all REPL modes.
 func processReplModeKeyEvent(event *tcell.EventKey, config Config, delegateMode Mode) (exec.Mutator, ModeType) {
+	if event.Key() == tcell.KeyCtrlC {
+		return exec.NewInterruptReplMutator(config.Repl), ModeTypeReplInsert
+	}
+
 	if event.Key() == tcell.KeyCtrlD {
 		return exec.NewLayoutMutator(exec.LayoutDocumentOnly), ModeTypeNormal
 	}

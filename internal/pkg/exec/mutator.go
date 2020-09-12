@@ -355,36 +355,6 @@ func (orm *outputReplMutator) String() string {
 	return fmt.Sprintf("OutputRepl('%s')", orm.s)
 }
 
-type clearReplInputMutator struct{}
-
-func NewClearReplInputMutator() Mutator {
-	return &clearReplInputMutator{}
-}
-
-// Mutate clears the current REPL input.
-func (crm *clearReplInputMutator) Mutate(state *EditorState) {
-	// Delete all characters past REPL input start.
-	startPos := state.replInputStartPos
-	tree := state.replBuffer.tree
-	count := tree.NumChars() - startPos
-	for i := uint64(0); i < count; i++ {
-		tree.DeleteAtPosition(startPos)
-	}
-
-	// Move cursor to end of the REPL input.
-	cursorMutator := NewCompositeMutator([]Mutator{
-		NewCursorMutator(NewLastLineLocator()),
-		NewCursorMutator(NewLineBoundaryLocator(text.ReadDirectionForward, true)),
-	})
-	cursorMutator.Mutate(state)
-}
-
-func (crm *clearReplInputMutator) RestrictToReplInput() {}
-
-func (crm *clearReplInputMutator) String() string {
-	return "ClearReplInput()"
-}
-
 type submitReplMutator struct {
 	repl repl.Repl
 }
@@ -412,6 +382,38 @@ func (srm *submitReplMutator) RestrictToReplInput() {}
 
 func (srm *submitReplMutator) String() string {
 	return "SubmitRepl()"
+}
+
+type interruptReplMutator struct {
+	repl repl.Repl
+}
+
+func NewInterruptReplMutator(repl repl.Repl) Mutator {
+	return &interruptReplMutator{repl}
+}
+
+// Mutate interrupts the REPL and clears the current repl input.
+func (irm *interruptReplMutator) Mutate(state *EditorState) {
+	if err := irm.repl.Interrupt(); err != nil {
+		log.Printf("Error interrupting REPL: %v\n", err)
+	}
+	irm.clearReplInput(state)
+}
+
+func (irm *interruptReplMutator) clearReplInput(state *EditorState) {
+	m := NewCompositeMutator([]Mutator{
+		NewCursorMutator(NewLastLineLocator()),
+		NewCursorMutator(NewLineBoundaryLocator(text.ReadDirectionForward, true)),
+		NewDeleteMutator(NewLineNumLocator(0)),
+	})
+	m.RestrictToReplInput()
+	m.Mutate(state)
+}
+
+func (irm *interruptReplMutator) RestrictToReplInput() {}
+
+func (irm *interruptReplMutator) String() string {
+	return "InterruptRepl()"
 }
 
 type quitMutator struct{}

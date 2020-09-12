@@ -133,6 +133,12 @@ func (e *Editor) runMainEventLoop() {
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
+
+	if isCtrlC(event) {
+		e.interruptRepl()
+		return
+	}
+
 	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
 	e.applyMutator(mutator)
 }
@@ -144,6 +150,15 @@ func (e *Editor) handleReplOutput(output string) {
 		exec.NewScrollToCursorMutator(),
 	})
 	e.applyMutator(mutator)
+}
+
+func (e *Editor) interruptRepl() {
+	log.Printf("Interrupting REPL...\n")
+	if err := e.repl.Interrupt(); err != nil {
+		log.Printf("Error interrupting REPL: %v\n", err)
+	} else {
+		log.Printf("REPL interrupted successfully\n")
+	}
 }
 
 func (e *Editor) restartRepl() {
@@ -186,6 +201,11 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 	m.Mutate(e.state)
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
+}
+
+func isCtrlC(event tcell.Event) bool {
+	keyEvent, ok := event.(*tcell.EventKey)
+	return ok && keyEvent.Key() == tcell.KeyCtrlC
 }
 
 func describeTermEvent(event tcell.Event) string {

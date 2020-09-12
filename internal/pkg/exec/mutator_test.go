@@ -279,6 +279,32 @@ func TestScrollLinesMutator(t *testing.T) {
 	}
 }
 
+func TestClearReplInputMutator(t *testing.T) {
+	tree, err := text.NewTreeFromString("")
+	require.NoError(t, err)
+	bufferState := &BufferState{tree: tree, view: viewState{height: 100, width: 100}}
+	state := NewEditorState(100, 100, bufferState)
+
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewOutputReplMutator("hello\n>>> "),
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewInsertRuneMutator('a'),
+		NewInsertRuneMutator('b'),
+		NewInsertRuneMutator('c'),
+	})
+	setupMutator.Mutate(state)
+
+	replBuffer := state.ReplBuffer()
+	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, uint64(10), state.ReplInputStartPos())
+	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
+
+	NewClearReplInputMutator().Mutate(state)
+	assert.Equal(t, "hello\n>>> ", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, uint64(10), state.ReplInputStartPos())
+	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
+}
+
 type stubRepl struct {
 	inputs []string
 }

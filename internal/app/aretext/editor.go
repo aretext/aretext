@@ -154,6 +154,9 @@ func (e *Editor) handleReplOutput(output string) {
 
 func (e *Editor) interruptRepl() {
 	log.Printf("Interrupting REPL...\n")
+
+	e.applyMutator(exec.NewClearReplInputMutator())
+
 	if err := e.repl.Interrupt(); err != nil {
 		log.Printf("Error interrupting REPL: %v\n", err)
 	} else {

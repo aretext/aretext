@@ -352,7 +352,37 @@ func (orm *outputReplMutator) Mutate(state *EditorState) {
 func (orm *outputReplMutator) RestrictToReplInput() {}
 
 func (orm *outputReplMutator) String() string {
-	return fmt.Sprintf("OutputReplMutator('%s')", orm.s)
+	return fmt.Sprintf("OutputRepl('%s')", orm.s)
+}
+
+type clearReplInputMutator struct{}
+
+func NewClearReplInputMutator() Mutator {
+	return &clearReplInputMutator{}
+}
+
+// Mutate clears the current REPL input.
+func (crm *clearReplInputMutator) Mutate(state *EditorState) {
+	// Delete all characters past REPL input start.
+	startPos := state.replInputStartPos
+	tree := state.replBuffer.tree
+	count := tree.NumChars() - startPos
+	for i := uint64(0); i < count; i++ {
+		tree.DeleteAtPosition(startPos)
+	}
+
+	// Move cursor to end of the REPL input.
+	cursorMutator := NewCompositeMutator([]Mutator{
+		NewCursorMutator(NewLastLineLocator()),
+		NewCursorMutator(NewLineBoundaryLocator(text.ReadDirectionForward, true)),
+	})
+	cursorMutator.Mutate(state)
+}
+
+func (crm *clearReplInputMutator) RestrictToReplInput() {}
+
+func (crm *clearReplInputMutator) String() string {
+	return "ClearReplInput()"
 }
 
 type submitReplMutator struct {

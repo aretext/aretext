@@ -10,6 +10,7 @@ import (
 type EditorState struct {
 	screenWidth, screenHeight uint64
 	layout                    Layout
+	focusedBufferId           BufferId
 	documentBuffer            *BufferState
 	replBuffer                *BufferState
 	replInputStartPos         uint64
@@ -17,11 +18,11 @@ type EditorState struct {
 }
 
 func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
-	documentBuffer.focus = true
 	return &EditorState{
 		screenWidth:       screenWidth,
 		screenHeight:      screenHeight,
 		layout:            LayoutDocumentOnly,
+		focusedBufferId:   BufferIdDocument,
 		documentBuffer:    documentBuffer,
 		replBuffer:        NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
 		replInputStartPos: 0,
@@ -54,14 +55,7 @@ func (s *EditorState) Buffer(id BufferId) *BufferState {
 }
 
 func (s *EditorState) FocusedBufferId() BufferId {
-	if s.documentBuffer.focus {
-		return BufferIdDocument
-	} else if s.replBuffer.focus {
-		return BufferIdRepl
-	} else {
-		log.Fatalf("No buffer in focus")
-		return 0
-	}
+	return s.focusedBufferId
 }
 
 func (s *EditorState) ReplInputStartPos() uint64 {
@@ -86,7 +80,6 @@ type BufferState struct {
 	tree   *text.Tree
 	cursor cursorState
 	view   viewState
-	focus  bool
 }
 
 func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
@@ -100,7 +93,6 @@ func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, vi
 			width:      viewWidth,
 			height:     viewHeight,
 		},
-		focus: false,
 	}
 }
 

@@ -275,8 +275,7 @@ func (lm *layoutMutator) Mutate(state *EditorState) {
 }
 
 func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
-	state.documentBuffer.focus = true
-	state.replBuffer.focus = false
+	state.focusedBufferId = BufferIdDocument
 
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
@@ -290,13 +289,13 @@ func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
 }
 
 func (lm *layoutMutator) setLayoutDocumentAndRepl(state *EditorState) {
-	state.documentBuffer.focus = false
+	state.focusedBufferId = BufferIdRepl
+
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth
 	state.replBuffer.view.height = 0
 
-	state.replBuffer.focus = true
 	state.replBuffer.view.x = 0
 	state.replBuffer.view.y = 0
 	state.replBuffer.view.width = state.screenWidth

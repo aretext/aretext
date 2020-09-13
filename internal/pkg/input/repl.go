@@ -42,7 +42,12 @@ func processReplModeKeyEvent(event *tcell.EventKey, config Config, delegateMode 
 	}
 
 	if event.Key() == tcell.KeyCtrlD {
-		return exec.NewLayoutMutator(exec.LayoutDocumentOnly), ModeTypeNormal
+		mutator := exec.NewCompositeMutator([]exec.Mutator{
+			exec.NewLayoutMutator(exec.LayoutDocumentOnly),
+			exec.NewFocusBufferMutator(exec.BufferIdDocument),
+			exec.NewScrollToCursorMutator(),
+		})
+		return mutator, ModeTypeNormal
 	}
 
 	if event.Key() == tcell.KeyEnter {

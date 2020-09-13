@@ -37,7 +37,11 @@ func TestCursorMutatorRestrictToReplInput(t *testing.T) {
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
 
-	NewLayoutMutator(LayoutDocumentAndRepl).Mutate(state)
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewFocusBufferMutator(BufferIdRepl),
+	})
+	setupMutator.Mutate(state)
 	state.replBuffer.cursor = cursorState{position: 6}
 	state.SetReplInputStartPos(4)
 
@@ -108,7 +112,11 @@ func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
 
-	NewLayoutMutator(LayoutDocumentAndRepl).Mutate(state)
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewFocusBufferMutator(BufferIdRepl),
+	})
+	setupMutator.Mutate(state)
 	state.replBuffer.cursor = cursorState{position: 2}
 	state.SetReplInputStartPos(4)
 
@@ -187,7 +195,11 @@ func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
 
-	NewLayoutMutator(LayoutDocumentAndRepl).Mutate(state)
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewFocusBufferMutator(BufferIdRepl),
+	})
+	setupMutator.Mutate(state)
 	state.replBuffer.cursor = cursorState{position: 6}
 	state.SetReplInputStartPos(4)
 
@@ -340,6 +352,7 @@ func TestInterruptReplMutator(t *testing.T) {
 	setupMutator := NewCompositeMutator([]Mutator{
 		NewOutputReplMutator("hello\n>>> "),
 		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewFocusBufferMutator(BufferIdRepl),
 		NewInsertRuneMutator('a'),
 		NewInsertRuneMutator('b'),
 		NewInsertRuneMutator('c'),

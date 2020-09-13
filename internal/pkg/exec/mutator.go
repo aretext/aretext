@@ -254,6 +254,25 @@ func (rm *resizeMutator) String() string {
 	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
 }
 
+type focusBufferMutator struct {
+	bufferId BufferId
+}
+
+func NewFocusBufferMutator(bufferId BufferId) Mutator {
+	return &focusBufferMutator{bufferId}
+}
+
+// Mutate sets the focus on the specified buffer.
+func (fbm *focusBufferMutator) Mutate(state *EditorState) {
+	state.focusedBufferId = fbm.bufferId
+}
+
+func (fbm *focusBufferMutator) RestrictToReplInput() {}
+
+func (fbm *focusBufferMutator) String() string {
+	return fmt.Sprintf("FocusBuffer(%s)", fbm.bufferId)
+}
+
 type layoutMutator struct {
 	layout Layout
 }
@@ -262,6 +281,7 @@ func NewLayoutMutator(layout Layout) Mutator {
 	return &layoutMutator{layout}
 }
 
+// Mutate adjusts the sizes of each buffer to the specified layout.
 func (lm *layoutMutator) Mutate(state *EditorState) {
 	if lm.layout == LayoutDocumentOnly {
 		lm.setLayoutDocumentOnly(state)
@@ -275,8 +295,6 @@ func (lm *layoutMutator) Mutate(state *EditorState) {
 }
 
 func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
-	state.focusedBufferId = BufferIdDocument
-
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth
@@ -289,8 +307,6 @@ func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
 }
 
 func (lm *layoutMutator) setLayoutDocumentAndRepl(state *EditorState) {
-	state.focusedBufferId = BufferIdRepl
-
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth

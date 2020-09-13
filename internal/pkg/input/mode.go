@@ -239,6 +239,8 @@ func (m *normalMode) openRepl() exec.Mutator {
 	lineEndLoc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewLayoutMutator(exec.LayoutDocumentAndRepl),
+		exec.NewScrollToCursorMutator(),
+		exec.NewFocusBufferMutator(exec.BufferIdRepl),
 		exec.NewCursorMutator(lastLineLoc),
 		exec.NewCursorMutator(lineEndLoc),
 	})

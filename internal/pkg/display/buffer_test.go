@@ -355,6 +355,14 @@ func TestDrawBufferCursor(t *testing.T) {
 			expectedCursorCol:     0,
 			expectedCursorRow:     1,
 		},
+		{
+			name:                  "cursor position equal to max line width",
+			inputString:           "ab\ncd",
+			cursorPosition:        5,
+			expectedCursorVisible: true,
+			expectedCursorCol:     2,
+			expectedCursorRow:     1,
+		},
 	}
 
 	for _, tc := range testCases {

@@ -49,6 +49,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 }
 
 func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, cursorPos uint64) {
+	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
 	gc := segment.NewSegment()
@@ -86,7 +87,7 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 	}
 
 	if pos == cursorPos {
-		if gc != nil && (lastGcWasNewline || pos == uint64(maxLineWidth)) {
+		if gc != nil && (lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
 			screenRegion.ShowCursor(0, row+1)
 		} else {

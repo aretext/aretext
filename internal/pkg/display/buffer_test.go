@@ -363,6 +363,14 @@ func TestDrawBufferCursor(t *testing.T) {
 			expectedCursorCol:     2,
 			expectedCursorRow:     1,
 		},
+		{
+			name:                  "cursor position at end of line ending on newline",
+			inputString:           "abcde\nfg",
+			cursorPosition:        5,
+			expectedCursorVisible: true,
+			expectedCursorCol:     0,
+			expectedCursorRow:     1,
+		},
 	}
 
 	for _, tc := range testCases {

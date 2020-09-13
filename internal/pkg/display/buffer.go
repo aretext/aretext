@@ -77,6 +77,11 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 
 		drawGraphemeCluster(screenRegion, col, row, gcRunes, tcell.StyleDefault)
 
+		if pos-startPos == uint64(maxLineWidth) {
+			// This occurs when there are maxLineWidth characters followed by a line feed.
+			break
+		}
+
 		if pos == cursorPos {
 			screenRegion.ShowCursor(col, row)
 		}

@@ -77,17 +77,6 @@ func (s *EditorState) QuitFlag() bool {
 	return s.quitFlag
 }
 
-// Layout controls how buffers are displayed in the editor.
-type Layout int
-
-const (
-	// LayoutDocumentOnly means that only the document is displayed; the REPL is hidden.
-	LayoutDocumentOnly = Layout(iota)
-
-	// LayoutDocumentAndRepl means that both the document and REPL are displayed.
-	LayoutDocumentAndRepl
-)
-
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
 	tree   *text.Tree

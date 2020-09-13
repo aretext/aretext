@@ -320,15 +320,7 @@ func (lm *layoutMutator) setLayoutDocumentAndRepl(state *EditorState) {
 func (lm *layoutMutator) RestrictToReplInput() {}
 
 func (lm *layoutMutator) String() string {
-	var layout string
-	if lm.layout == LayoutDocumentOnly {
-		layout = "DocumentOnly"
-	} else if lm.layout == LayoutDocumentAndRepl {
-		layout = "DocumentAndRepl"
-	} else {
-		log.Fatalf("Unrecognized layout: %d", lm.layout)
-	}
-	return fmt.Sprintf("SetLayout(%s)", layout)
+	return fmt.Sprintf("SetLayout(%s)", lm.layout)
 }
 
 type outputReplMutator struct {

@@ -11,12 +11,12 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64) {
+func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, hasFocus bool) {
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
 	screenWidth, screenHeight := screen.Size()
 	bufferState := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
-	DrawBuffer(screen, bufferState)
+	DrawBuffer(screen, bufferState, hasFocus)
 	screen.Sync()
 }
 
@@ -160,7 +160,7 @@ func TestDrawBuffer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				drawBuffer(t, s, tc.inputString, 0)
+				drawBuffer(t, s, tc.inputString, 0, true)
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -211,7 +211,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				drawBuffer(t, s, tc.inputString, 0)
+				drawBuffer(t, s, tc.inputString, 0, true)
 
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
@@ -225,7 +225,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 func TestDrawBufferSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		drawBuffer(t, s, "ab界cd", 0)
+		drawBuffer(t, s, "ab界cd", 0, true)
 
 		assertCellContents(t, s, [][]rune{
 			{'a'},
@@ -377,7 +377,7 @@ func TestDrawBufferCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				drawBuffer(t, s, tc.inputString, tc.cursorPosition)
+				drawBuffer(t, s, tc.inputString, tc.cursorPosition, true)
 
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
@@ -388,4 +388,14 @@ func TestDrawBufferCursor(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestDrawBufferCursorNotInFocus(t *testing.T) {
+	withSimScreen(t, func(s tcell.SimulationScreen) {
+		s.SetSize(5, 5)
+		drawBuffer(t, s, "abcdef", 3, false)
+		_, _, style, _ := s.GetContent(3, 0)
+		expectedStyle := tcell.StyleDefault.Dim(true).Reverse(true)
+		assert.Equal(t, expectedStyle, style)
+	})
 }

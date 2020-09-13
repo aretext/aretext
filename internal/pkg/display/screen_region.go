@@ -69,6 +69,18 @@ func (r *ScreenRegion) SetContent(x int, y int, mainc rune, combc []rune, style 
 	r.screen.SetContent(x+r.x, y+r.y, mainc, combc, style)
 }
 
+// GetContent returns the content of a cell in the screen region.
+// The x and y coordinates are relative to the origin of the region.
+// If the coordinates are out of range, zero values will be returned.
+func (r *ScreenRegion) GetContent(x, y int) (mainc rune, combc []rune, style tcell.Style) {
+	if x < 0 || y < 0 || x >= r.width || y >= r.height {
+		return 0, nil, tcell.StyleDefault
+	}
+
+	mainc, combc, style, _ = r.screen.GetContent(x+r.x, y+r.y)
+	return mainc, combc, style
+}
+
 // HideCursor prevents the cursor from being displayed.
 func (r *ScreenRegion) HideCursor() {
 	r.screen.ShowCursor(-1, -1)

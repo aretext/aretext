@@ -41,22 +41,26 @@ func (s *EditorState) Layout() Layout {
 	return s.layout
 }
 
-func (s *EditorState) DocumentBuffer() *BufferState {
-	return s.documentBuffer
-}
-
-func (s *EditorState) ReplBuffer() *BufferState {
-	return s.replBuffer
-}
-
-func (s *EditorState) FocusedBuffer() *BufferState {
-	if s.documentBuffer.focus {
+func (s *EditorState) Buffer(id BufferId) *BufferState {
+	switch id {
+	case BufferIdDocument:
 		return s.documentBuffer
-	} else if s.replBuffer.focus {
+	case BufferIdRepl:
 		return s.replBuffer
+	default:
+		log.Fatalf("Unrecognized buffer ID %d\n", id)
+		return nil
+	}
+}
+
+func (s *EditorState) FocusedBufferId() BufferId {
+	if s.documentBuffer.focus {
+		return BufferIdDocument
+	} else if s.replBuffer.focus {
+		return BufferIdRepl
 	} else {
 		log.Fatalf("No buffer in focus")
-		return nil
+		return 0
 	}
 }
 
@@ -161,4 +165,49 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
+}
+
+// BufferId identifies a buffer.
+type BufferId int
+
+const (
+	// BufferIdDocument identifies the main document being edited.
+	BufferIdDocument = BufferId(iota)
+
+	// BufferIdRepl identifies the buffer for REPL input/output.
+	BufferIdRepl
+)
+
+func (b BufferId) String() string {
+	switch b {
+	case BufferIdDocument:
+		return "document"
+	case BufferIdRepl:
+		return "repl"
+	default:
+		log.Fatalf("Unrecognized buffer ID %d\n", b)
+		return ""
+	}
+}
+
+// Layout controls how buffers are displayed in the editor.
+type Layout int
+
+const (
+	// LayoutDocumentOnly means that only the document is displayed; the REPL is hidden.
+	LayoutDocumentOnly = Layout(iota)
+
+	// LayoutDocumentAndRepl means that both the document and REPL are displayed.
+	LayoutDocumentAndRepl
+)
+
+func (l Layout) String() string {
+	if l == LayoutDocumentOnly {
+		return "DocumentOnly"
+	} else if l == LayoutDocumentAndRepl {
+		return "DocumentAndRepl"
+	} else {
+		log.Fatalf("Unrecognized layout: %d\n", l)
+		return ""
+	}
 }

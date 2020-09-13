@@ -35,7 +35,7 @@ func TestDrawEditorLayoutDocumentAndRepl(t *testing.T) {
 		require.NoError(t, err)
 		state := exec.NewEditorState(5, 5, exec.NewBufferState(tree, 0, 0, 0, 5, 5))
 		exec.NewLayoutMutator(exec.LayoutDocumentAndRepl).Mutate(state)
-		state.ReplBuffer().Tree().InsertAtPosition(0, '>')
+		state.Buffer(exec.BufferIdRepl).Tree().InsertAtPosition(0, '>')
 		DrawEditor(s, state)
 		s.Sync()
 		assertCellContents(t, s, [][]rune{
@@ -78,7 +78,7 @@ func TestDrawEditorSingleLine(t *testing.T) {
 				require.NoError(t, err)
 				state := exec.NewEditorState(5, 1, exec.NewBufferState(tree, 0, 0, 0, 5, 1))
 				exec.NewLayoutMutator(tc.layout).Mutate(state)
-				state.ReplBuffer().Tree().InsertAtPosition(0, '>')
+				state.Buffer(exec.BufferIdRepl).Tree().InsertAtPosition(0, '>')
 				DrawEditor(s, state)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)

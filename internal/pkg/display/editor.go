@@ -12,11 +12,11 @@ func DrawEditor(screen tcell.Screen, editorState *exec.EditorState) {
 	screen.Clear()
 	switch layout := editorState.Layout(); layout {
 	case exec.LayoutDocumentOnly:
-		DrawBuffer(screen, editorState.DocumentBuffer())
+		DrawBuffer(screen, editorState.Buffer(exec.BufferIdDocument))
 	case exec.LayoutDocumentAndRepl:
-		DrawBuffer(screen, editorState.DocumentBuffer())
-		DrawBuffer(screen, editorState.ReplBuffer())
-		drawBorderAbove(screen, editorState.ReplBuffer())
+		DrawBuffer(screen, editorState.Buffer(exec.BufferIdDocument))
+		DrawBuffer(screen, editorState.Buffer(exec.BufferIdRepl))
+		drawBorderAbove(screen, editorState.Buffer(exec.BufferIdRepl))
 	default:
 		log.Fatalf("Unrecognized layout %d", layout)
 	}

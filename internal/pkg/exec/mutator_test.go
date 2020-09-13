@@ -346,7 +346,7 @@ func TestInterruptReplMutator(t *testing.T) {
 	})
 	setupMutator.Mutate(state)
 
-	replBuffer := state.ReplBuffer()
+	replBuffer := state.Buffer(BufferIdRepl)
 	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, replBuffer.Tree()))
 	assert.Equal(t, uint64(10), state.ReplInputStartPos())
 	assert.Equal(t, uint64(13), replBuffer.CursorPosition())

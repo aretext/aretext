@@ -64,7 +64,7 @@ func NewCursorMutator(loc CursorLocator) Mutator {
 }
 
 func (cpm *cursorMutator) Mutate(state *EditorState) {
-	bufferState := state.FocusedBuffer()
+	bufferState := state.Buffer(state.FocusedBufferId())
 	bufferState.cursor = cpm.loc.Locate(bufferState)
 
 	if cpm.restrictToReplInput && bufferState.cursor.position < state.replInputStartPos {
@@ -88,7 +88,7 @@ func NewScrollToCursorMutator() Mutator {
 
 // Mutate updates the view origin so that the cursor is visible.
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
-	bufferState := state.FocusedBuffer()
+	bufferState := state.Buffer(state.FocusedBufferId())
 	bufferState.view.textOrigin = ScrollToCursor(
 		bufferState.cursor.position,
 		bufferState.tree,
@@ -114,7 +114,7 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 
 // Mutate moves the view origin up/down by the specified number of lines.
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
-	bufferState := state.FocusedBuffer()
+	bufferState := state.Buffer(state.FocusedBufferId())
 	lineNum := bufferState.tree.LineNumForPosition(bufferState.view.textOrigin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
@@ -159,7 +159,7 @@ func NewInsertRuneMutator(r rune) Mutator {
 
 // Mutate inserts a rune at the current cursor location.
 func (irm *insertRuneMutator) Mutate(state *EditorState) {
-	bufferState := state.FocusedBuffer()
+	bufferState := state.Buffer(state.FocusedBufferId())
 	startPos := bufferState.cursor.position
 
 	if irm.restrictToReplInput && startPos < state.replInputStartPos {
@@ -196,7 +196,7 @@ func NewDeleteMutator(loc CursorLocator) Mutator {
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
 func (dm *deleteMutator) Mutate(state *EditorState) {
-	bufferState := state.FocusedBuffer()
+	bufferState := state.Buffer(state.FocusedBufferId())
 	startPos := bufferState.cursor.position
 	deleteToPos := dm.loc.Locate(bufferState).position
 

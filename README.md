@@ -22,8 +22,8 @@ Design principles:
 - [x] delete text
 - [x] handle tabs
 - [x] soft-wrap long lines
+- [x] automatic reload when file changes on disk
 - [ ] save changes
-- [ ] automatic reload when file changes on disk
 - [ ] vim newline command ('o')
 - [ ] vim replace/change commands
 - [ ] vim word navigation

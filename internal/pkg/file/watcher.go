@@ -11,6 +11,9 @@ import (
 
 // Watcher checks whether a file has changed.
 type Watcher interface {
+	// Path returns the path to the file being watched.
+	Path() string
+
 	// ChangedChan returns a channel that closes when the file's contents change.
 	ChangedChan() chan struct{}
 
@@ -27,6 +30,10 @@ func NewEmptyWatcher() Watcher {
 	return &emptyWatcher{
 		changedChan: make(chan struct{}, 0),
 	}
+}
+
+func (w *emptyWatcher) Path() string {
+	return ""
 }
 
 func (w *emptyWatcher) ChangedChan() chan struct{} {
@@ -60,6 +67,10 @@ func newFileWatcher(pollInterval time.Duration, path string, lastModified time.T
 	}
 	go w.checkFileLoop(pollInterval)
 	return w
+}
+
+func (w *fileWatcher) Path() string {
+	return w.path
 }
 
 // Stop stops the watcher from checking for changes.

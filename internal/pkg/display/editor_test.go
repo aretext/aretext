@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -15,7 +16,8 @@ func TestDrawEditorLayoutDocumentOnly(t *testing.T) {
 		s.SetSize(5, 5)
 		tree, err := text.NewTreeFromString("abcd")
 		require.NoError(t, err)
-		state := exec.NewEditorState(5, 5, exec.NewBufferState(tree, 0, 0, 0, 5, 5))
+		state := exec.NewEditorState(5, 5)
+		exec.NewLoadDocumentMutator(tree, file.NewEmptyWatcher()).Mutate(state)
 		DrawEditor(s, state)
 		s.Sync()
 		assertCellContents(t, s, [][]rune{
@@ -33,8 +35,11 @@ func TestDrawEditorLayoutDocumentAndRepl(t *testing.T) {
 		s.SetSize(5, 5)
 		tree, err := text.NewTreeFromString("abcd")
 		require.NoError(t, err)
-		state := exec.NewEditorState(5, 5, exec.NewBufferState(tree, 0, 0, 0, 5, 5))
-		exec.NewLayoutMutator(exec.LayoutDocumentAndRepl).Mutate(state)
+		state := exec.NewEditorState(5, 5)
+		exec.NewCompositeMutator([]exec.Mutator{
+			exec.NewLoadDocumentMutator(tree, file.NewEmptyWatcher()),
+			exec.NewLayoutMutator(exec.LayoutDocumentAndRepl),
+		}).Mutate(state)
 		state.Buffer(exec.BufferIdRepl).Tree().InsertAtPosition(0, '>')
 		DrawEditor(s, state)
 		s.Sync()
@@ -76,8 +81,11 @@ func TestDrawEditorSingleLine(t *testing.T) {
 				s.SetSize(5, 1)
 				tree, err := text.NewTreeFromString("abcd")
 				require.NoError(t, err)
-				state := exec.NewEditorState(5, 1, exec.NewBufferState(tree, 0, 0, 0, 5, 1))
-				exec.NewLayoutMutator(tc.layout).Mutate(state)
+				state := exec.NewEditorState(5, 1)
+				exec.NewCompositeMutator([]exec.Mutator{
+					exec.NewLoadDocumentMutator(tree, file.NewEmptyWatcher()),
+					exec.NewLayoutMutator(tc.layout),
+				}).Mutate(state)
 				state.Buffer(exec.BufferIdRepl).Tree().InsertAtPosition(0, '>')
 				DrawEditor(s, state)
 				s.Sync()

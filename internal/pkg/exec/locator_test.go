@@ -267,6 +267,60 @@ func TestPrevCharInLine(t *testing.T) {
 	}
 }
 
+func TestOntoDocumentLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty string, cursor at origin",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "empty string, cursor past end",
+			inputString:    "",
+			initialCursor:  cursorState{position: 10},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "past POSIX end-of-file indicator",
+			inputString:    "abcd\n",
+			initialCursor:  cursorState{position: 20},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "past end of file, no POSIX end-of-file",
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 20},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "discard logical offset",
+			inputString:    "abcd\nxyz",
+			initialCursor:  cursorState{position: 3, logicalOffset: 5},
+			expectedCursor: cursorState{position: 3},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				tree:   tree,
+				cursor: tc.initialCursor,
+			}
+			loc := NewOntoDocumentLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
 func TestOntoLineLocator(t *testing.T) {
 	testCases := []struct {
 		name           string

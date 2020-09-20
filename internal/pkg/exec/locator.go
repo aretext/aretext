@@ -121,11 +121,37 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *BufferState) uint64
 	return startPos + prevPrevOffset
 }
 
+// ontoDocumentLocator finds a valid position within the document closest to the cursor.
+type ontoDocumentLocator struct{}
+
+func NewOntoDocumentLocator() CursorLocator {
+	return &ontoDocumentLocator{}
+}
+
+// Locate finds the valid position within the document closest to the current cursor position.
+// It handles POSIX end-of-file (line feed at end of document).
+func (loc *ontoDocumentLocator) Locate(state *BufferState) cursorState {
+	lastValidPos := state.tree.NumChars()
+	if endsWithLineFeed(state.tree) {
+		lastValidPos--
+	}
+
+	newPos := state.cursor.position
+	if newPos > lastValidPos {
+		newPos = lastValidPos
+	}
+
+	return cursorState{position: newPos}
+}
+
+func (loc *ontoDocumentLocator) String() string {
+	return "OntoDocumentLocator()"
+}
+
 // ontoLineLocator finds the closest grapheme cluster on a line (not newline or past end of text).
 // This is useful for "resetting" the cursor onto a line
 // (for example, after deleting the last character on the line or exiting insert mode).
-type ontoLineLocator struct {
-}
+type ontoLineLocator struct{}
 
 func NewOntoLineLocator() CursorLocator {
 	return &ontoLineLocator{}
@@ -135,6 +161,10 @@ func NewOntoLineLocator() CursorLocator {
 func (loc *ontoLineLocator) Locate(state *BufferState) cursorState {
 	// If past the end of the text, return the start of the last grapheme cluster.
 	numChars := state.tree.NumChars()
+	if endsWithLineFeed(state.tree) {
+		numChars--
+	}
+
 	if state.cursor.position >= numChars {
 		newPos := loc.findPrevGraphemeCluster(state.tree, numChars, 1)
 		return cursorState{position: newPos}

@@ -3,6 +3,7 @@ package exec
 import (
 	"log"
 
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -14,18 +15,20 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	replBuffer                *BufferState
 	replInputStartPos         uint64
+	fileWatcher               file.Watcher
 	quitFlag                  bool
 }
 
-func NewEditorState(screenWidth, screenHeight uint64, documentBuffer *BufferState) *EditorState {
+func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 	return &EditorState{
 		screenWidth:       screenWidth,
 		screenHeight:      screenHeight,
 		layout:            LayoutDocumentOnly,
 		focusedBufferId:   BufferIdDocument,
-		documentBuffer:    documentBuffer,
+		documentBuffer:    NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, screenHeight),
 		replBuffer:        NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
 		replInputStartPos: 0,
+		fileWatcher:       file.NewEmptyWatcher(),
 	}
 }
 
@@ -69,6 +72,10 @@ func (s *EditorState) SetReplInputStartPos(pos uint64) {
 	}
 
 	s.replInputStartPos = pos
+}
+
+func (s *EditorState) FileWatcher() file.Watcher {
+	return s.fileWatcher
 }
 
 func (s *EditorState) QuitFlag() bool {

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 func TestTaskBroker(t *testing.T) {
@@ -22,7 +21,7 @@ func TestTaskBroker(t *testing.T) {
 
 	go func() {
 		task := <-broker.TaskChan()
-		emptyState := exec.NewEditorState(0, 0, exec.NewBufferState(text.NewTree(), 0, 0, 0, 0, 0))
+		emptyState := exec.NewEditorState(0, 0)
 		task.ExecuteAndSendResponse(emptyState)
 	}()
 

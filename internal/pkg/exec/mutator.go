@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/repl"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
@@ -51,6 +52,39 @@ func (cm *CompositeMutator) String() string {
 		args = append(args, mut.String())
 	}
 	return fmt.Sprintf("Composite(%s)", strings.Join(args, ","))
+}
+
+type loadDocumentMutator struct {
+	tree        *text.Tree
+	fileWatcher file.Watcher
+}
+
+func NewLoadDocumentMutator(tree *text.Tree, fileWatcher file.Watcher) Mutator {
+	return &loadDocumentMutator{tree, fileWatcher}
+}
+
+// Mutate loads the document into the editor.
+func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
+	state.documentBuffer.tree = ldm.tree
+
+	state.fileWatcher.Stop()
+	state.fileWatcher = ldm.fileWatcher
+
+	// Make sure that the cursor is a valid position in the new document
+	// and that the cursor is visible.  If not, adjust the cursor and scroll.
+	originalFocus := state.focusedBufferId
+	NewCompositeMutator([]Mutator{
+		NewFocusBufferMutator(BufferIdDocument),
+		NewCursorMutator(NewOntoDocumentLocator()),
+		NewScrollToCursorMutator(),
+		NewFocusBufferMutator(originalFocus),
+	}).Mutate(state)
+}
+
+func (ldm *loadDocumentMutator) RestrictToReplInput() {}
+
+func (ldm *loadDocumentMutator) String() string {
+	return "LoadDocument()"
 }
 
 type cursorMutator struct {

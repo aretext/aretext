@@ -18,10 +18,6 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 func main() {
 	flag.Usage = printUsage
 	flag.Parse()
-	if len(flag.Args()) == 0 {
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
 	if *logpath != "" {
@@ -55,10 +51,16 @@ func main() {
 		defer screen.Fini()
 	}
 
-	path := flag.Arg(0)
-	editor, err := aretext.NewEditor(path, screen)
+	editor, err := aretext.NewEditor(screen)
 	if err != nil {
 		exitWithError(err)
+	}
+
+	path := flag.Arg(0)
+	if len(path) > 0 {
+		if err := editor.LoadInitialFile(path); err != nil {
+			exitWithError(err)
+		}
 	}
 
 	editor.RunEventLoop()
@@ -66,7 +68,7 @@ func main() {
 
 func printUsage() {
 	f := flag.CommandLine.Output()
-	fmt.Fprintf(f, "Usage: %s [OPTIONS] path\n", os.Args[0])
+	fmt.Fprintf(f, "Usage: %s [OPTIONS] [path]\n", os.Args[0])
 	flag.PrintDefaults()
 }
 

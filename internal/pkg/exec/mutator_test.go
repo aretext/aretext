@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -16,23 +17,87 @@ func allTextFromTree(t *testing.T, tree *text.Tree) string {
 	return string(retrievedBytes)
 }
 
+func TestLoadDocumentMutator(t *testing.T) {
+	state := NewEditorState(100, 100)
+
+	// Load a new document.
+	tree, err := text.NewTreeFromString("abcd")
+	require.NoError(t, err)
+	watcher := file.NewEmptyWatcher()
+	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+
+	// Expect that the text and watcher are installed.
+	assert.Equal(t, "abcd", allTextFromTree(t, state.documentBuffer.tree))
+	assert.Equal(t, watcher, state.FileWatcher())
+}
+
+func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
+	tree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
+	require.NoError(t, err)
+	state := NewEditorState(5, 2)
+	state.documentBuffer.tree = tree
+	state.documentBuffer.cursor.position = 22
+
+	// Scroll to cursor at end of document.
+	NewScrollToCursorMutator().Mutate(state)
+	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
+
+	// Load a new document with a shorter text.
+	tree, err = text.NewTreeFromString("ab")
+	require.NoError(t, err)
+	watcher := file.NewEmptyWatcher()
+	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+
+	// Expect that the cursor moved back to the end of the text,
+	// and the view scrolled to make the cursor visible.
+	assert.Equal(t, "ab", allTextFromTree(t, state.documentBuffer.tree))
+	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
+}
+
+func TestLoadDocumentMutatorWithReplOpen(t *testing.T) {
+	state := NewEditorState(100, 100)
+
+	// Insert text in both buffers, focus on REPL buffer.
+	setupMutator := NewCompositeMutator([]Mutator{
+		NewInsertRuneMutator('x'),
+		NewInsertRuneMutator('y'),
+		NewInsertRuneMutator('z'),
+		NewOutputReplMutator("hello\n>>> "),
+		NewLayoutMutator(LayoutDocumentAndRepl),
+		NewFocusBufferMutator(BufferIdRepl),
+		NewInsertRuneMutator('a'),
+		NewInsertRuneMutator('b'),
+		NewInsertRuneMutator('c'),
+	})
+	setupMutator.Mutate(state)
+
+	// Load a new document.
+	tree, err := text.NewTreeFromString("updated")
+	require.NoError(t, err)
+	watcher := file.NewEmptyWatcher()
+	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+
+	// Expect that only the document buffer changed.
+	assert.Equal(t, "updated", allTextFromTree(t, state.documentBuffer.tree))
+	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, state.replBuffer.tree))
+}
+
 func TestCursorMutator(t *testing.T) {
 	tree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	bufferState := &BufferState{
+	state := NewEditorState(100, 100)
+	state.documentBuffer = &BufferState{
 		tree:   tree,
 		cursor: cursorState{position: 2},
 	}
-	state := NewEditorState(100, 100, bufferState)
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
 	mutator.Mutate(state)
-	assert.Equal(t, uint64(3), bufferState.cursor.position)
+	assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
 }
 
 func TestCursorMutatorRestrictToReplInput(t *testing.T) {
-	documentBuffer := &BufferState{tree: text.NewTree()}
-	state := NewEditorState(100, 100, documentBuffer)
-
+	state := NewEditorState(100, 100)
 	tree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
@@ -91,23 +156,21 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			bufferState := &BufferState{
+			state := NewEditorState(100, 100)
+			state.documentBuffer = &BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
-			state := NewEditorState(100, 100, bufferState)
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
-			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, bufferState.tree))
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
 		})
 	}
 }
 
 func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
-	documentBuffer := &BufferState{tree: text.NewTree()}
-	state := NewEditorState(100, 100, documentBuffer)
-
+	state := NewEditorState(100, 100)
 	tree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
@@ -174,23 +237,21 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			bufferState := &BufferState{
+			state := NewEditorState(100, 100)
+			state.documentBuffer = &BufferState{
 				tree:   tree,
 				cursor: tc.initialCursor,
 			}
-			state := NewEditorState(100, 100, bufferState)
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
-			assert.Equal(t, tc.expectedCursor, bufferState.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, bufferState.tree))
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
 		})
 	}
 }
 
 func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
-	documentBuffer := &BufferState{tree: text.NewTree()}
-	state := NewEditorState(100, 100, documentBuffer)
-
+	state := NewEditorState(100, 100)
 	tree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
@@ -279,14 +340,14 @@ func TestScrollLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			bufferState := &BufferState{
+			state := NewEditorState(100, 100)
+			state.documentBuffer = &BufferState{
 				tree: tree,
 				view: tc.initialView,
 			}
-			state := NewEditorState(100, 100, bufferState)
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
-			assert.Equal(t, tc.expectedtextOrigin, bufferState.view.textOrigin)
+			assert.Equal(t, tc.expectedtextOrigin, state.documentBuffer.view.textOrigin)
 		})
 	}
 }
@@ -323,9 +384,7 @@ func (r *stubRepl) OutputChan() chan string {
 }
 
 func TestSubmitReplMutator(t *testing.T) {
-	documentBuffer := &BufferState{tree: text.NewTree()}
-	state := NewEditorState(100, 100, documentBuffer)
-
+	state := NewEditorState(100, 100)
 	tree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
 	state.replBuffer.tree = tree
@@ -346,8 +405,12 @@ func TestSubmitReplMutator(t *testing.T) {
 func TestInterruptReplMutator(t *testing.T) {
 	tree, err := text.NewTreeFromString("")
 	require.NoError(t, err)
-	bufferState := &BufferState{tree: tree, view: viewState{height: 100, width: 100}}
-	state := NewEditorState(100, 100, bufferState)
+
+	state := NewEditorState(100, 100)
+	state.documentBuffer = &BufferState{
+		tree: tree,
+		view: viewState{height: 100, width: 100},
+	}
 
 	setupMutator := NewCompositeMutator([]Mutator{
 		NewOutputReplMutator("hello\n>>> "),

@@ -3,21 +3,22 @@ package aretext
 import (
 	"fmt"
 	"log"
-	"os"
+	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/display"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/input"
 	"github.com/wedaly/aretext/internal/pkg/repl"
 	"github.com/wedaly/aretext/internal/pkg/repl/rpc"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
+
+const fileWatcherPollInterval = time.Second
 
 // Editor is a terminal-based text editing program.
 type Editor struct {
-	path             string
 	inputInterpreter *input.Interpreter
 	state            *exec.EditorState
 	screen           tcell.Screen
@@ -27,13 +28,10 @@ type Editor struct {
 	rpcServer        *rpc.Server
 }
 
-// NewEditor instantiates a new editor that uses the provided screen and file path.
-func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
+// NewEditor instantiates a new editor that uses the provided screen.
+func NewEditor(screen tcell.Screen) (*Editor, error) {
 	screenWidth, screenHeight := screen.Size()
-	state, err := initializeState(path, uint64(screenWidth), uint64(screenHeight))
-	if err != nil {
-		return nil, errors.Wrapf(err, "initializing tree")
-	}
+	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight))
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 
@@ -50,7 +48,6 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	}
 
 	editor := &Editor{
-		path,
 		inputInterpreter,
 		state,
 		screen,
@@ -62,25 +59,16 @@ func NewEditor(path string, screen tcell.Screen) (*Editor, error) {
 	return editor, nil
 }
 
-func initializeState(path string, viewWidth uint64, viewHeight uint64) (*exec.EditorState, error) {
-	file, err := os.Open(path)
-	if os.IsNotExist(err) {
-		emptyBufferState := exec.NewBufferState(text.NewTree(), 0, 0, 0, viewWidth, viewHeight)
-		state := exec.NewEditorState(viewWidth, viewHeight, emptyBufferState)
-		return state, nil
-	} else if err != nil {
-		return nil, errors.Wrapf(err, "opening file at %s", path)
-	}
-	defer file.Close()
-
-	tree, err := text.NewTreeFromReader(file)
+// LoadInitialFile loads the initial file into the editor.
+// This should be called before starting the event loop.
+func (e *Editor) LoadInitialFile(path string) error {
+	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "loading file at %s", path)
 	}
 
-	bufferState := exec.NewBufferState(tree, 0, 0, 0, viewWidth, viewHeight)
-	state := exec.NewEditorState(viewWidth, viewHeight, bufferState)
-	return state, nil
+	exec.NewLoadDocumentMutator(tree, watcher).Mutate(e.state)
+	return nil
 }
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
@@ -92,14 +80,7 @@ func (e *Editor) RunEventLoop() {
 	go e.pollTermEvents()
 
 	e.runMainEventLoop()
-
-	if err := e.repl.Terminate(); err != nil {
-		log.Printf("Error terminating REPL: %v", err)
-	}
-
-	if err := e.rpcServer.Terminate(); err != nil {
-		log.Printf("Error terminating RPC server: %v", err)
-	}
+	e.shutdown()
 }
 
 func (e *Editor) pollTermEvents() {
@@ -122,6 +103,8 @@ func (e *Editor) runMainEventLoop() {
 			}
 		case task := <-e.rpcTaskBroker.TaskChan():
 			e.handleRpcTask(task)
+		case <-e.state.FileWatcher().ChangedChan():
+			e.handleFileChanged()
 		}
 
 		if e.state.QuitFlag() {
@@ -165,6 +148,31 @@ func (e *Editor) handleRpcTask(task rpc.Task) {
 	log.Printf("Executing RPC task %s\n", task.String())
 	task.ExecuteAndSendResponse(e.state)
 	e.redraw()
+}
+
+func (e *Editor) handleFileChanged() {
+	path := e.state.FileWatcher().Path()
+	log.Printf("File change detected, reloading file from '%s'\n", path)
+	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
+	if err != nil {
+		log.Printf("Error reloading file '%s': %v\n", path, err)
+		return
+	}
+
+	e.applyMutator(exec.NewLoadDocumentMutator(tree, watcher))
+	log.Printf("Successfully reloaded file '%s' into editor\n", path)
+}
+
+func (e *Editor) shutdown() {
+	e.state.FileWatcher().Stop()
+
+	if err := e.repl.Terminate(); err != nil {
+		log.Printf("Error terminating REPL: %v", err)
+	}
+
+	if err := e.rpcServer.Terminate(); err != nil {
+		log.Printf("Error terminating RPC server: %v", err)
+	}
 }
 
 func (e *Editor) inputConfig() input.Config {

@@ -164,6 +164,7 @@ func (e *Editor) restartRepl() {
 func (e *Editor) handleRpcTask(task rpc.Task) {
 	log.Printf("Executing RPC task %s\n", task.String())
 	task.ExecuteAndSendResponse(e.state)
+	e.redraw()
 }
 
 func (e *Editor) inputConfig() input.Config {
@@ -183,6 +184,10 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 
 	log.Printf("Applying mutator '%s'\n", m.String())
 	m.Mutate(e.state)
+	e.redraw()
+}
+
+func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
 }

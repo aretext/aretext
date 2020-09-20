@@ -10,7 +10,7 @@ import (
 )
 
 // Load reads a file from disk and starts a watcher to detect changes.
-func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher, error) {
+func Load(path string, watcherPollInterval time.Duration) (*text.Tree, Watcher, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		// Return the error directly so callers can use os.IsNotExist(err) to check if the file exists.
@@ -28,7 +28,7 @@ func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher,
 		return nil, nil, errors.Wrapf(err, "readContentsAndChecksum()")
 	}
 
-	watcher := newWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
+	watcher := newFileWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
 	return tree, watcher, nil
 }

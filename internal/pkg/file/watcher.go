@@ -9,8 +9,34 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Watcher checks if a file's contents have changed.
-type Watcher struct {
+// Watcher checks whether a file has changed.
+type Watcher interface {
+	// ChangedChan returns a channel that closes when the file's contents change.
+	ChangedChan() chan struct{}
+
+	// Stop stops the watcher from checking the file.  This should be called at most once.
+	Stop()
+}
+
+// emptyWatcher is a watcher that never reports any changes.
+type emptyWatcher struct {
+	changedChan chan struct{}
+}
+
+func NewEmptyWatcher() Watcher {
+	return &emptyWatcher{
+		changedChan: make(chan struct{}, 0),
+	}
+}
+
+func (w *emptyWatcher) ChangedChan() chan struct{} {
+	return w.changedChan
+}
+
+func (w *emptyWatcher) Stop() {}
+
+// fileWatcher checks if a file's contents have changed.
+type fileWatcher struct {
 	path         string
 	lastModified time.Time
 	size         int64
@@ -19,12 +45,12 @@ type Watcher struct {
 	quitChan     chan struct{}
 }
 
-// newWatcher returns a watcher for a file.
+// newFileWatcher returns a watcher for a file.
 // lastModified is the time the file was last modified, as reported when the file was loaded.
 // size is the size in bytes of the file when it was loaded.
 // checksum is an MD5 hash of the file's contents when it was loaded.
-func newWatcher(pollInterval time.Duration, path string, lastModified time.Time, size int64, checksum string) *Watcher {
-	w := &Watcher{
+func newFileWatcher(pollInterval time.Duration, path string, lastModified time.Time, size int64, checksum string) Watcher {
+	w := &fileWatcher{
 		path:         path,
 		size:         size,
 		lastModified: lastModified,
@@ -38,7 +64,7 @@ func newWatcher(pollInterval time.Duration, path string, lastModified time.Time,
 
 // Stop stops the watcher from checking for changes.
 // This will panic if called more than once.
-func (w *Watcher) Stop() {
+func (w *fileWatcher) Stop() {
 	log.Printf("Stopping file watcher for %s...\n", w.path)
 	close(w.quitChan)
 }
@@ -46,11 +72,11 @@ func (w *Watcher) Stop() {
 // ChangedChan returns a channel that is closed when the file's contents change.
 // This can produce false negatives if an error occurs accessing the file (for example, if file permissions changed).
 // This method is thread-safe.
-func (w *Watcher) ChangedChan() chan struct{} {
+func (w *fileWatcher) ChangedChan() chan struct{} {
 	return w.changedChan
 }
 
-func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
+func (w *fileWatcher) checkFileLoop(pollInterval time.Duration) {
 	log.Printf("Started file watcher for %s\n", w.path)
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
@@ -69,7 +95,7 @@ func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 	}
 }
 
-func (w *Watcher) checkFileChanged() bool {
+func (w *fileWatcher) checkFileChanged() bool {
 	fileInfo, err := os.Stat(w.path)
 	if err != nil {
 		log.Printf("Could not retrieve file info: %v\n", err)
@@ -97,7 +123,7 @@ func (w *Watcher) checkFileChanged() bool {
 	return checksum != w.checksum
 }
 
-func (w *Watcher) calculateChecksum() (string, error) {
+func (w *fileWatcher) calculateChecksum() (string, error) {
 	f, err := os.Open(w.path)
 	if err != nil {
 		return "", errors.Wrapf(err, "os.Open()")

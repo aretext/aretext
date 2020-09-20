@@ -163,8 +163,7 @@ func (e *Editor) restartRepl() {
 
 func (e *Editor) handleRpcTask(task rpc.Task) {
 	log.Printf("Executing RPC task %s\n", task.String())
-	e.applyMutator(task.Mutator())
-	task.SendResponse(e.state)
+	task.ExecuteAndSendResponse(e.state)
 }
 
 func (e *Editor) inputConfig() input.Config {

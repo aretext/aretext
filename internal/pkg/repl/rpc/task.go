@@ -13,12 +13,9 @@ import (
 type Task interface {
 	fmt.Stringer
 
-	// Mutator returns a mutator to update the editor state.
-	Mutator() exec.Mutator
-
-	// SendResponse sends a reply to the client based on the updated editor state.
+	// ExecuteAndSendResponse executes the task and sends a response to the client.
 	// This should be called at most once.
-	SendResponse(*exec.EditorState)
+	ExecuteAndSendResponse(*exec.EditorState)
 }
 
 // TaskSource retrieves tasks available for execution.
@@ -48,11 +45,8 @@ func NewQuitTask(_ EmptyMsg, replyChan chan QuitResultMsg) (Task, error) {
 	return &quitTask{replyChan}, nil
 }
 
-func (t *quitTask) Mutator() exec.Mutator {
-	return exec.NewQuitMutator()
-}
-
-func (t *quitTask) SendResponse(state *exec.EditorState) {
+func (t *quitTask) ExecuteAndSendResponse(state *exec.EditorState) {
+	exec.NewQuitMutator().Mutate(state)
 	defer close(t.replyChan)
 	t.replyChan <- QuitResultMsg{Accepted: true}
 }

@@ -23,7 +23,7 @@ func TestTaskBroker(t *testing.T) {
 	go func() {
 		task := <-broker.TaskChan()
 		emptyState := exec.NewEditorState(0, 0, exec.NewBufferState(text.NewTree(), 0, 0, 0, 0, 0))
-		task.SendResponse(emptyState)
+		task.ExecuteAndSendResponse(emptyState)
 	}()
 
 	select {

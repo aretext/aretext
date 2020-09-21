@@ -111,6 +111,8 @@ func (e *Editor) runMainEventLoop() {
 			log.Printf("Quit flag set, exiting event loop...\n")
 			return
 		}
+
+		e.redraw()
 	}
 }
 
@@ -147,7 +149,6 @@ func (e *Editor) restartRepl() {
 func (e *Editor) handleRpcTask(task rpc.Task) {
 	log.Printf("Executing RPC task %s\n", task.String())
 	task.ExecuteAndSendResponse(e.state)
-	e.redraw()
 }
 
 func (e *Editor) handleFileChanged() {
@@ -192,7 +193,6 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 
 	log.Printf("Applying mutator '%s'\n", m.String())
 	m.Mutate(e.state)
-	e.redraw()
 }
 
 func (e *Editor) redraw() {

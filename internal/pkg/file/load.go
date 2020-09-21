@@ -10,6 +10,7 @@ import (
 )
 
 // Load reads a file from disk and starts a watcher to detect changes.
+// This will remove the POSIX end-of-file indicator (line feed at end of file).
 func Load(path string, watcherPollInterval time.Duration) (*text.Tree, Watcher, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -27,6 +28,10 @@ func Load(path string, watcherPollInterval time.Duration) (*text.Tree, Watcher, 
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "readContentsAndChecksum()")
 	}
+
+	// POSIX files end with a single line feed to indicate the end of the file.
+	// We remove it from the tree to simplify editor operations; we'll add it back when saving the file.
+	removePosixEof(tree)
 
 	watcher := newFileWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
@@ -50,4 +55,20 @@ func lastModifiedTimeAndSize(f *os.File) (time.Time, int64, error) {
 	}
 
 	return fileInfo.ModTime(), fileInfo.Size(), nil
+}
+
+func removePosixEof(tree *text.Tree) {
+	if endsWithLineFeed(tree) {
+		lastPos := tree.NumChars() - 1
+		tree.DeleteAtPosition(lastPos)
+	}
+}
+
+func endsWithLineFeed(tree *text.Tree) bool {
+	reader := tree.ReaderAtPosition(tree.NumChars(), text.ReadDirectionBackward)
+	var buf [1]byte
+	if n, err := reader.Read(buf[:]); err != nil || n == 0 {
+		return false
+	}
+	return buf[0] == '\n'
 }

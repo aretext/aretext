@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,13 +8,6 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
-
-func allTextFromTree(t *testing.T, tree *text.Tree) string {
-	reader := tree.ReaderAtPosition(0, text.ReadDirectionForward)
-	retrievedBytes, err := ioutil.ReadAll(reader)
-	require.NoError(t, err)
-	return string(retrievedBytes)
-}
 
 func TestLoadDocumentMutator(t *testing.T) {
 	state := NewEditorState(100, 100)
@@ -27,7 +19,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 	NewLoadDocumentMutator(tree, watcher).Mutate(state)
 
 	// Expect that the text and watcher are installed.
-	assert.Equal(t, "abcd", allTextFromTree(t, state.documentBuffer.tree))
+	assert.Equal(t, "abcd", state.documentBuffer.tree.String())
 	assert.Equal(t, watcher, state.FileWatcher())
 }
 
@@ -50,7 +42,7 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 
 	// Expect that the cursor moved back to the end of the text,
 	// and the view scrolled to make the cursor visible.
-	assert.Equal(t, "ab", allTextFromTree(t, state.documentBuffer.tree))
+	assert.Equal(t, "ab", state.documentBuffer.tree.String())
 	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
 }
@@ -79,8 +71,8 @@ func TestLoadDocumentMutatorWithReplOpen(t *testing.T) {
 	NewLoadDocumentMutator(tree, watcher).Mutate(state)
 
 	// Expect that only the document buffer changed.
-	assert.Equal(t, "updated", allTextFromTree(t, state.documentBuffer.tree))
-	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, state.replBuffer.tree))
+	assert.Equal(t, "updated", state.documentBuffer.tree.String())
+	assert.Equal(t, "hello\n>>> abc", state.replBuffer.tree.String())
 }
 
 func TestCursorMutator(t *testing.T) {
@@ -164,7 +156,7 @@ func TestInsertRuneMutator(t *testing.T) {
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
+			assert.Equal(t, tc.expectedText, tree.String())
 		})
 	}
 }
@@ -187,7 +179,7 @@ func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
 	mutator.RestrictToReplInput()
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(5), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> xabcd", allTextFromTree(t, tree))
+	assert.Equal(t, ">>> xabcd", tree.String())
 }
 
 func TestDeleteMutator(t *testing.T) {
@@ -245,7 +237,7 @@ func TestDeleteMutator(t *testing.T) {
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
+			assert.Equal(t, tc.expectedText, tree.String())
 		})
 	}
 }
@@ -269,7 +261,7 @@ func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
 	mutator.RestrictToReplInput()
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(4), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> cd", allTextFromTree(t, tree))
+	assert.Equal(t, ">>> cd", tree.String())
 }
 
 func TestScrollLinesMutator(t *testing.T) {
@@ -316,13 +308,6 @@ func TestScrollLinesMutator(t *testing.T) {
 		{
 			name:               "scroll down to last line",
 			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
-			initialView:        viewState{textOrigin: 0, height: 6, width: 100},
-			numLines:           10,
-			expectedtextOrigin: 12,
-		},
-		{
-			name:               "scroll down to last line, POSIX end-of-file",
-			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn\n",
 			initialView:        viewState{textOrigin: 0, height: 6, width: 100},
 			numLines:           10,
 			expectedtextOrigin: 12,
@@ -398,7 +383,7 @@ func TestSubmitReplMutator(t *testing.T) {
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(9), state.replBuffer.cursor.position)
 	assert.Equal(t, uint64(9), state.replInputStartPos)
-	assert.Equal(t, ">>> abcd\n", allTextFromTree(t, tree))
+	assert.Equal(t, ">>> abcd\n", tree.String())
 	assert.Equal(t, []string{"abcd"}, repl.inputs)
 }
 
@@ -423,13 +408,13 @@ func TestInterruptReplMutator(t *testing.T) {
 	setupMutator.Mutate(state)
 
 	replBuffer := state.Buffer(BufferIdRepl)
-	assert.Equal(t, "hello\n>>> abc", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, "hello\n>>> abc", replBuffer.Tree().String())
 	assert.Equal(t, uint64(10), state.ReplInputStartPos())
 	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
 
 	repl := newStubRepl()
 	NewInterruptReplMutator(repl).Mutate(state)
-	assert.Equal(t, "hello\n>>> ", allTextFromTree(t, replBuffer.Tree()))
+	assert.Equal(t, "hello\n>>> ", replBuffer.Tree().String())
 	assert.Equal(t, uint64(10), state.ReplInputStartPos())
 	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
 	assert.True(t, repl.interrupted)

@@ -36,7 +36,6 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eo
 }
 
 // closestValidLineNum finds the line number in the text that is closest to the target.
-// It correctly interprets a line feed at the end of the file as a POSIX EOF marker, not a newline.
 func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	numLines := tree.NumLines()
 	if numLines == 0 {
@@ -44,25 +43,10 @@ func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	}
 
 	lastRealLine := numLines - 1
-	if endsWithLineFeed(tree) {
-		// POSIX end-of-file marker is not considered the start of a new line.
-		lastRealLine--
-	}
-
 	if targetLineNum > lastRealLine {
 		return lastRealLine
 	}
 	return targetLineNum
-}
-
-// endsWithLineFeed returns whether the text ends with a line feed character.
-func endsWithLineFeed(tree *text.Tree) bool {
-	reader := tree.ReaderAtPosition(tree.NumChars(), text.ReadDirectionBackward)
-	var buf [1]byte
-	if n, err := reader.Read(buf[:]); err != nil || n == 0 {
-		return false
-	}
-	return buf[0] == '\n'
 }
 
 func directionString(direction text.ReadDirection) string {

@@ -14,7 +14,7 @@ import (
 
 const testWatcherPollInterval time.Duration = time.Millisecond * 50
 
-func createTestFile(t *testing.T) (string, func()) {
+func createTestFile(t *testing.T, s string) (string, func()) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
 
@@ -23,7 +23,7 @@ func createTestFile(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	_, err = io.WriteString(f, "abcd")
+	_, err = io.WriteString(f, s)
 	require.NoError(t, err)
 
 	cleanupFunc := func() {
@@ -34,12 +34,12 @@ func createTestFile(t *testing.T) (string, func()) {
 	return filePath, cleanupFunc
 }
 
-func appendToTestFile(t *testing.T, path string) {
+func appendToTestFile(t *testing.T, path string, s string) {
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
 	require.NoError(t, err)
 	defer f.Close()
 
-	_, err = io.WriteString(f, "xyz")
+	_, err = io.WriteString(f, s)
 	require.NoError(t, err)
 }
 
@@ -63,7 +63,7 @@ func waitForChangeOrTimeout(t *testing.T, watcher Watcher) {
 
 func TestWatcher(t *testing.T) {
 	// Create a test file in a temporary directory.
-	filePath, cleanup := createTestFile(t)
+	filePath, cleanup := createTestFile(t, "abcd")
 	defer cleanup()
 
 	// Load the file and start a watcher.
@@ -75,7 +75,7 @@ func TestWatcher(t *testing.T) {
 	expectNoChange(t, watcher)
 
 	// Modify the file.
-	appendToTestFile(t, filePath)
+	appendToTestFile(t, filePath, "xyz")
 
 	// Wait for changes to be detected (or time out and fail the test).
 	waitForChangeOrTimeout(t, watcher)

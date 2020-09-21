@@ -34,17 +34,9 @@ func lines(numLines int, charsPerLine int) string {
 	return strings.Join(lines, "\n")
 }
 
-func allTextFromTree(t *testing.T, tree *Tree) string {
-	reader := tree.ReaderAtPosition(0, ReadDirectionForward)
-	retrievedBytes, err := ioutil.ReadAll(reader)
-	require.NoError(t, err)
-	return string(retrievedBytes)
-}
-
 func TestEmptyTree(t *testing.T) {
 	tree := NewTree()
-	text := allTextFromTree(t, tree)
-	assert.Equal(t, "", text)
+	assert.Equal(t, "", tree.String())
 }
 
 func TestTreeBulkLoadAndReadAll(t *testing.T) {
@@ -71,7 +63,7 @@ func TestTreeBulkLoadAndReadAll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			text := allTextFromTree(t, tree)
+			text := tree.String()
 			assert.Equal(t, tc.text, text, "original str had len %d, output string had len %d", len(tc.text), len(text))
 		})
 	}
@@ -744,7 +736,7 @@ func TestInsertAtPosition(t *testing.T) {
 			require.NoError(t, err)
 			err = tree.InsertAtPosition(tc.insertPos, tc.insertChar)
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectedText, allTextFromTree(t, tree))
+			assert.Equal(t, tc.expectedText, tree.String())
 		})
 	}
 }
@@ -797,7 +789,7 @@ func TestInsertManySequential(t *testing.T) {
 				require.NoError(t, err)
 				i++
 			}
-			actualText := allTextFromTree(t, tree)
+			actualText := tree.String()
 			assert.Equal(t, tc.text, actualText, "input text len %v, output text len %v", len(tc.text), len(actualText))
 		})
 	}
@@ -869,7 +861,7 @@ func TestInsertInvalidUtf8(t *testing.T) {
 	tree := NewTree()
 	err := tree.InsertAtPosition(0, rune(-1))
 	assert.Error(t, err)
-	assert.Equal(t, "", allTextFromTree(t, tree))
+	assert.Equal(t, "", tree.String())
 }
 
 func TestDeleteAtPosition(t *testing.T) {
@@ -934,8 +926,7 @@ func TestDeleteAtPosition(t *testing.T) {
 			tree, err := NewTreeFromString(tc.inputText)
 			require.NoError(t, err)
 			tree.DeleteAtPosition(tc.deletePos)
-			text := allTextFromTree(t, tree)
-			assert.Equal(t, tc.expectedText, text)
+			assert.Equal(t, tc.expectedText, tree.String())
 		})
 	}
 }
@@ -970,8 +961,7 @@ func TestDeleteAllCharsInLongStringFromBeginning(t *testing.T) {
 			for i := 0; i < len(tc.text); i++ {
 				tree.DeleteAtPosition(0)
 			}
-			text := allTextFromTree(t, tree)
-			assert.Equal(t, "", text)
+			assert.Equal(t, "", tree.String())
 		})
 	}
 }
@@ -1006,8 +996,7 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 			for i := len(tc.text) - 1; i >= 0; i-- {
 				tree.DeleteAtPosition(0)
 			}
-			text := allTextFromTree(t, tree)
-			assert.Equal(t, "", text)
+			assert.Equal(t, "", tree.String())
 		})
 	}
 }
@@ -1032,11 +1021,11 @@ func TestNodeSplit(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, uint64(1339), tree.NumChars())
-	assert.Equal(t, 1339, len(allTextFromTree(t, tree)))
+	assert.Equal(t, 1339, len(tree.String()))
 	require.NoError(t, tree.InsertAtPosition(0, 'a'))
 	require.NoError(t, tree.InsertAtPosition(1, 'b'))
 	assert.Equal(t, uint64(1341), tree.NumChars())
-	assert.Equal(t, 1341, len(allTextFromTree(t, tree)))
+	assert.Equal(t, 1341, len(tree.String()))
 }
 
 func BenchmarkLoad(b *testing.B) {

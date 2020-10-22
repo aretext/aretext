@@ -75,6 +75,16 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '?'},
 		},
 		{
+			name:     "escape left bracket",
+			input:    `\[`,
+			expected: regexpChar{char: '['},
+		},
+		{
+			name:     "escape right bracket",
+			input:    `\]`,
+			expected: regexpChar{char: ']'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{
@@ -330,6 +340,57 @@ func TestParseRegexp(t *testing.T) {
 			},
 		},
 		{
+			name:  "character class with single character",
+			input: "[a]",
+			expected: regexpCharClass{
+				chars: []byte{'a'},
+			},
+		},
+		{
+			name:  "character class with multiple characters",
+			input: "[ab]",
+			expected: regexpCharClass{
+				chars: []byte{'a', 'b'},
+			},
+		},
+		{
+			name:  "negated character class with single character",
+			input: "[^a]",
+			expected: regexpCharClass{
+				negated: true,
+				chars:   []byte{'a'},
+			},
+		},
+		{
+			name:  "character class with escape carat",
+			input: `[\^]`,
+			expected: regexpCharClass{
+				chars: []byte{'^'},
+			},
+		},
+		{
+			name:  "character class with escape right bracket",
+			input: `[\]]`,
+			expected: regexpCharClass{
+				chars: []byte{']'},
+			},
+		},
+		{
+			name:  "character class with escape backslash",
+			input: `[\\]`,
+			expected: regexpCharClass{
+				chars: []byte{'\\'},
+			},
+		},
+		{
+			name:  "negated character class with multiple characters",
+			input: "[^ab]",
+			expected: regexpCharClass{
+				negated: true,
+				chars:   []byte{'a', 'b'},
+			},
+		},
+		{
 			name:  "complex expression",
 			input: "(a|b|cd)*abb",
 			expected: regexpConcat{
@@ -447,6 +508,21 @@ func TestParseRegexpErrors(t *testing.T) {
 			name:          "unrecognized escape sequence",
 			input:         `\M`,
 			expectedError: "Unrecognized escape sequence",
+		},
+		{
+			name:          "missing closing bracket in character class",
+			input:         `[abc`,
+			expectedError: "Expected closing bracket",
+		},
+		{
+			name:          "invalid escape sequence in character class",
+			input:         `[\`,
+			expectedError: "Invalid escape sequence in character class",
+		},
+		{
+			name:          "unrecognized escape sequence in character class",
+			input:         `[\M]`,
+			expectedError: "Unrecognized escape sequence in character class",
 		},
 	}
 

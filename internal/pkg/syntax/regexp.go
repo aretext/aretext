@@ -215,10 +215,19 @@ func parseCharacterClass(s string, pos int) (Regexp, int, error) {
 		if s[pos] == ']' {
 			pos++
 			return regexp, pos, nil
+		} else if s[pos] == '\\' {
+			if pos+1 >= len(s) {
+				return nil, 0, errors.New("Invalid escape sequence in character class")
+			} else if c := s[pos+1]; c == '[' || c == ']' || c == '^' || c == '\\' {
+				regexp.chars = append(regexp.chars, c)
+				pos += 2
+			} else {
+				return nil, 0, errors.New("Unrecognized escape sequence in character class")
+			}
+		} else {
+			regexp.chars = append(regexp.chars, s[pos])
+			pos++
 		}
-
-		regexp.chars = append(regexp.chars, s[pos])
-		pos++
 	}
 
 	return nil, 0, errors.New("Expected closing bracket")

@@ -85,6 +85,11 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: ']'},
 		},
 		{
+			name:     "escape dot",
+			input:    `\.`,
+			expected: regexpChar{char: '.'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{
@@ -388,6 +393,22 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpCharClass{
 				negated: true,
 				chars:   []byte{'a', 'b'},
+			},
+		},
+		{
+			name:     "dot character class",
+			input:    ".",
+			expected: regexpCharClass{negated: true},
+		},
+		{
+			name:  "dot character class in concat",
+			input: "a.b",
+			expected: regexpConcat{
+				left: regexpConcat{
+					left:  regexpChar{'a'},
+					right: regexpCharClass{negated: true},
+				},
+				right: regexpChar{'b'},
 			},
 		},
 		{

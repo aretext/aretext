@@ -173,6 +173,16 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			}
 			pos = newPos
 
+		case '.':
+			// Negation of no characters is equivalent to accepting every character.
+			nextRegexp := regexpCharClass{negated: true}
+			if _, ok := regexp.(regexpEmpty); ok {
+				regexp = nextRegexp
+			} else {
+				regexp = regexpConcat{left: regexp, right: nextRegexp}
+			}
+			pos++
+
 		default:
 			nextRegexp := regexpChar{char: s[pos]}
 			if _, ok := regexp.(regexpEmpty); ok {
@@ -191,7 +201,7 @@ func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
 		return nil, 0, errors.New("Invalid escape sequence")
 	}
 
-	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' || c == '[' || c == ']' {
+	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' || c == '[' || c == ']' || c == '.' {
 		return regexpChar{char: c}, pos + 2, nil
 	}
 

@@ -40,6 +40,31 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '"'},
 		},
 		{
+			name:     "escaped star",
+			input:    `\*`,
+			expected: regexpChar{char: '*'},
+		},
+		{
+			name:     "escaped left paren",
+			input:    `\(`,
+			expected: regexpChar{char: '('},
+		},
+		{
+			name:     "escaped right paren",
+			input:    `\)`,
+			expected: regexpChar{char: ')'},
+		},
+		{
+			name:     "escaped backslash",
+			input:    `\\`,
+			expected: regexpChar{char: '\\'},
+		},
+		{
+			name:     "escaped pipe",
+			input:    `\|`,
+			expected: regexpChar{char: '|'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{
@@ -265,6 +290,16 @@ func TestParseRegexpErrors(t *testing.T) {
 			name:          "union at start of string",
 			input:         "|abcd",
 			expectedError: "Expected characters before union",
+		},
+		{
+			name:          "invalid escape sequence",
+			input:         `abc\`,
+			expectedError: "Invalid escape sequence",
+		},
+		{
+			name:          "unrecognized escape sequence",
+			input:         `\M`,
+			expectedError: "Unrecognized escape sequence",
 		},
 	}
 

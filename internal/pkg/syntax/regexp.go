@@ -91,6 +91,20 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			}
 			pos++
 
+		case '\\':
+			nextRegexp, newPos, err := parseEscapeSequence(s, pos)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			if regexp == nil {
+				regexp = nextRegexp
+			} else {
+				regexp = regexpConcat{left: regexp, right: nextRegexp}
+			}
+
+			pos = newPos
+
 		default:
 			nextRegexp := regexpChar{char: s[pos]}
 			if regexp == nil {
@@ -102,4 +116,16 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 		}
 	}
 	return regexp, pos, nil
+}
+
+func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
+	if pos+1 >= len(s) {
+		return nil, 0, errors.New("Invalid escape sequence")
+	}
+
+	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' {
+		return regexpChar{char: c}, pos + 2, nil
+	}
+
+	return nil, 0, errors.New("Unrecognized escape sequence")
 }

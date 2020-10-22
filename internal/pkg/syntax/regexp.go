@@ -35,6 +35,12 @@ type regexpChar struct {
 	char byte
 }
 
+// regexpCharClass represents a character class.
+type regexpCharClass struct {
+	negated bool
+	chars   []byte
+}
+
 // ParseRegexp parses a regular expression string.
 func ParseRegexp(s string) (Regexp, error) {
 	regexp, _, err := parseRegexp(s, 0, false)
@@ -154,6 +160,19 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 
 			pos = newPos
 
+		case '[':
+			nextRegexp, newPos, err := parseCharacterClass(s, pos)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			if _, ok := regexp.(regexpEmpty); ok {
+				regexp = nextRegexp
+			} else {
+				regexp = regexpConcat{left: regexp, right: nextRegexp}
+			}
+			pos = newPos
+
 		default:
 			nextRegexp := regexpChar{char: s[pos]}
 			if _, ok := regexp.(regexpEmpty); ok {
@@ -172,9 +191,35 @@ func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
 		return nil, 0, errors.New("Invalid escape sequence")
 	}
 
-	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' {
+	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' || c == '[' || c == ']' {
 		return regexpChar{char: c}, pos + 2, nil
 	}
 
 	return nil, 0, errors.New("Unrecognized escape sequence")
+}
+
+func parseCharacterClass(s string, pos int) (Regexp, int, error) {
+	regexp := regexpCharClass{}
+
+	// Consume '['
+	pos++
+
+	// If '^', consume the carat and mark the char class as negated.
+	if pos < len(s) && s[pos] == '^' {
+		regexp.negated = true
+		pos++
+	}
+
+	// Consume all characters up to and including the closing ']'
+	for pos < len(s) {
+		if s[pos] == ']' {
+			pos++
+			return regexp, pos, nil
+		}
+
+		regexp.chars = append(regexp.chars, s[pos])
+		pos++
+	}
+
+	return nil, 0, errors.New("Expected closing bracket")
 }

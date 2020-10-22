@@ -5,6 +5,9 @@ import "errors"
 // Regexp represents a regular expression.
 type Regexp interface{}
 
+// regexpEmpty represents a language containing only the empty string.
+type regexpEmpty struct{}
+
 // regexpConcat represents the concatenation operation.
 type regexpConcat struct {
 	left  Regexp
@@ -43,7 +46,7 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 		return nil, 0, errors.New("Unexpected end of regular expression")
 	}
 
-	var regexp Regexp
+	regexp := Regexp(regexpEmpty{})
 	for pos < len(s) {
 		switch s[pos] {
 		case '(':
@@ -56,7 +59,7 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 				return nil, 0, errors.New("Expected closing paren")
 			}
 
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				regexp = regexpParenExpr{child: nextRegexp}
 			} else {
 				regexp = regexpConcat{
@@ -70,7 +73,7 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			pos = newPos + 1
 
 		case ')':
-			if regexp == nil || !inParen {
+			if !inParen {
 				return nil, 0, errors.New("Unexpected closing paren")
 			}
 			return regexp, pos, nil
@@ -80,18 +83,16 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			if err != nil {
 				return nil, 0, err
 			}
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				return nil, 0, errors.New("Expected characters before union")
 			}
 			regexp = regexpUnion{left: regexp, right: nextRegexp}
 			pos = newPos
 
 		case '*':
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				return nil, 0, errors.New("Expected characters before star")
-			}
-
-			if concat, ok := regexp.(regexpConcat); ok {
+			} else if concat, ok := regexp.(regexpConcat); ok {
 				regexp = regexpConcat{
 					left:  concat.left,
 					right: regexpStar{child: concat.right},
@@ -102,11 +103,9 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			pos++
 
 		case '+':
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				return nil, 0, errors.New("Expected characters before plus")
-			}
-
-			if concat, ok := regexp.(regexpConcat); ok {
+			} else if concat, ok := regexp.(regexpConcat); ok {
 				regexp = regexpConcat{
 					left: concat.left,
 					right: regexpConcat{
@@ -122,13 +121,32 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			}
 			pos++
 
+		case '?':
+			if _, ok := regexp.(regexpEmpty); ok {
+				return nil, 0, errors.New("Expected characters before question mark")
+			} else if concat, ok := regexp.(regexpConcat); ok {
+				regexp = regexpConcat{
+					left: concat.left,
+					right: regexpUnion{
+						left:  regexpEmpty{},
+						right: concat.right,
+					},
+				}
+			} else {
+				regexp = regexpUnion{
+					left:  regexpEmpty{},
+					right: regexp,
+				}
+			}
+			pos++
+
 		case '\\':
 			nextRegexp, newPos, err := parseEscapeSequence(s, pos)
 			if err != nil {
 				return nil, 0, err
 			}
 
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				regexp = nextRegexp
 			} else {
 				regexp = regexpConcat{left: regexp, right: nextRegexp}
@@ -138,7 +156,7 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 
 		default:
 			nextRegexp := regexpChar{char: s[pos]}
-			if regexp == nil {
+			if _, ok := regexp.(regexpEmpty); ok {
 				regexp = nextRegexp
 			} else {
 				regexp = regexpConcat{left: regexp, right: nextRegexp}
@@ -154,7 +172,7 @@ func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
 		return nil, 0, errors.New("Invalid escape sequence")
 	}
 
-	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' {
+	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' {
 		return regexpChar{char: c}, pos + 2, nil
 	}
 

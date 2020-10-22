@@ -70,6 +70,11 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '|'},
 		},
 		{
+			name:     "escape question mark",
+			input:    `\?`,
+			expected: regexpChar{char: '?'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{
@@ -233,6 +238,40 @@ func TestParseRegexp(t *testing.T) {
 			},
 		},
 		{
+			name:  "question mark after single char",
+			input: "a?",
+			expected: regexpUnion{
+				left:  regexpEmpty{},
+				right: regexpChar{char: 'a'},
+			},
+		},
+		{
+			name:  "question mark after concatenation",
+			input: "ab?",
+			expected: regexpConcat{
+				left: regexpChar{char: 'a'},
+				right: regexpUnion{
+					left:  regexpEmpty{},
+					right: regexpChar{char: 'b'},
+				},
+			},
+		},
+		{
+			name:  "question mark after paren",
+			input: "(a)?",
+			expected: regexpUnion{
+				left: regexpEmpty{},
+				right: regexpParenExpr{
+					child: regexpChar{char: 'a'},
+				},
+			},
+		},
+		{
+			name:     "empty paren expression",
+			input:    "()",
+			expected: regexpParenExpr{child: regexpEmpty{}},
+		},
+		{
 			name:  "single paren expression",
 			input: "(a)",
 			expected: regexpParenExpr{
@@ -360,11 +399,6 @@ func TestParseRegexpErrors(t *testing.T) {
 			expectedError: "Unexpected closing paren",
 		},
 		{
-			name:          "empty paren expression",
-			input:         "()",
-			expectedError: "Unexpected closing paren",
-		},
-		{
 			name:          "only star",
 			input:         "*",
 			expectedError: "Expected characters before star",
@@ -393,6 +427,16 @@ func TestParseRegexpErrors(t *testing.T) {
 			name:          "plus at start of string",
 			input:         "+abcd",
 			expectedError: "Expected characters before plus",
+		},
+		{
+			name:          "only question mark",
+			input:         "?",
+			expectedError: "Expected characters before question mark",
+		},
+		{
+			name:          "question mark at start of string",
+			input:         "?abcd",
+			expectedError: "Expected characters before question mark",
 		},
 		{
 			name:          "invalid escape sequence",

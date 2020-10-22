@@ -45,6 +45,11 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '*'},
 		},
 		{
+			name:     "escaped plus",
+			input:    `\+`,
+			expected: regexpChar{char: '+'},
+		},
+		{
 			name:     "escaped left paren",
 			input:    `\(`,
 			expected: regexpChar{char: '('},
@@ -167,36 +172,122 @@ func TestParseRegexp(t *testing.T) {
 			name:  "star after paren expression",
 			input: "(a)*",
 			expected: regexpStar{
-				child: regexpChar{char: 'a'},
+				child: regexpParenExpr{
+					child: regexpChar{char: 'a'},
+				},
 			},
 		},
 		{
-			name:     "single paren expression",
-			input:    "(a)",
-			expected: regexpChar{char: 'a'},
+			name:  "star after paren expression with concat",
+			input: "(ab)*",
+			expected: regexpStar{
+				child: regexpParenExpr{
+					child: regexpConcat{
+						left:  regexpChar{char: 'a'},
+						right: regexpChar{char: 'b'},
+					},
+				},
+			},
+		},
+		{
+			name:  "plus single char",
+			input: "a+",
+			expected: regexpConcat{
+				left: regexpChar{char: 'a'},
+				right: regexpStar{
+					child: regexpChar{char: 'a'},
+				},
+			},
+		},
+		{
+			name:  "plus after concatenation",
+			input: "ab+",
+			expected: regexpConcat{
+				left: regexpChar{char: 'a'},
+				right: regexpConcat{
+					left: regexpChar{char: 'b'},
+					right: regexpStar{
+						child: regexpChar{char: 'b'},
+					},
+				},
+			},
+		},
+		{
+			name:  "plus after paren expression",
+			input: "(ab)+",
+			expected: regexpConcat{
+				left: regexpParenExpr{
+					child: regexpConcat{
+						left:  regexpChar{char: 'a'},
+						right: regexpChar{char: 'b'},
+					},
+				},
+				right: regexpStar{
+					child: regexpParenExpr{
+						child: regexpConcat{
+							left:  regexpChar{char: 'a'},
+							right: regexpChar{char: 'b'},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "single paren expression",
+			input: "(a)",
+			expected: regexpParenExpr{
+				child: regexpChar{char: 'a'},
+			},
 		},
 		{
 			name:  "concatenated paren expressions",
 			input: "(a)(b)",
 			expected: regexpConcat{
-				left:  regexpChar{char: 'a'},
-				right: regexpChar{char: 'b'},
+				left: regexpParenExpr{
+					child: regexpChar{char: 'a'},
+				},
+				right: regexpParenExpr{
+					child: regexpChar{char: 'b'},
+				},
 			},
 		},
 		{
-			name:     "nested paren expression",
-			input:    "((a))",
-			expected: regexpChar{char: 'a'},
+			name:  "paren expr union",
+			input: "(a|b|c)",
+			expected: regexpParenExpr{
+				child: regexpUnion{
+					left: regexpChar{char: 'a'},
+					right: regexpUnion{
+						left:  regexpChar{char: 'b'},
+						right: regexpChar{char: 'c'},
+					},
+				},
+			},
+		},
+		{
+			name:  "nested paren expression",
+			input: "((a))",
+			expected: regexpParenExpr{
+				child: regexpParenExpr{
+					child: regexpChar{char: 'a'},
+				},
+			},
 		},
 		{
 			name:  "nested paren expression with concatenation",
 			input: "((a)b(c))",
-			expected: regexpConcat{
-				left: regexpConcat{
-					left:  regexpChar{char: 'a'},
-					right: regexpChar{char: 'b'},
+			expected: regexpParenExpr{
+				child: regexpConcat{
+					left: regexpConcat{
+						left: regexpParenExpr{
+							child: regexpChar{char: 'a'},
+						},
+						right: regexpChar{char: 'b'},
+					},
+					right: regexpParenExpr{
+						child: regexpChar{char: 'c'},
+					},
 				},
-				right: regexpChar{char: 'c'},
 			},
 		},
 		{
@@ -206,13 +297,15 @@ func TestParseRegexp(t *testing.T) {
 				left: regexpConcat{
 					left: regexpConcat{
 						left: regexpStar{
-							child: regexpUnion{
-								left: regexpChar{char: 'a'},
-								right: regexpUnion{
-									left: regexpChar{char: 'b'},
-									right: regexpConcat{
-										left:  regexpChar{char: 'c'},
-										right: regexpChar{char: 'd'},
+							child: regexpParenExpr{
+								child: regexpUnion{
+									left: regexpChar{char: 'a'},
+									right: regexpUnion{
+										left: regexpChar{char: 'b'},
+										right: regexpConcat{
+											left:  regexpChar{char: 'c'},
+											right: regexpChar{char: 'd'},
+										},
 									},
 								},
 							},
@@ -290,6 +383,16 @@ func TestParseRegexpErrors(t *testing.T) {
 			name:          "union at start of string",
 			input:         "|abcd",
 			expectedError: "Expected characters before union",
+		},
+		{
+			name:          "only plus",
+			input:         "+",
+			expectedError: "Expected characters before plus",
+		},
+		{
+			name:          "plus at start of string",
+			input:         "+abcd",
+			expectedError: "Expected characters before plus",
 		},
 		{
 			name:          "invalid escape sequence",

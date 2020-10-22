@@ -22,6 +22,11 @@ type regexpStar struct {
 	child Regexp
 }
 
+// regexpParenExpr represents an expression in parentheses.
+type regexpParenExpr struct {
+	child Regexp
+}
+
 // regexpChar represents a character match in the regular expression.
 type regexpChar struct {
 	char byte
@@ -52,9 +57,14 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			}
 
 			if regexp == nil {
-				regexp = nextRegexp
+				regexp = regexpParenExpr{child: nextRegexp}
 			} else {
-				regexp = regexpConcat{left: regexp, right: nextRegexp}
+				regexp = regexpConcat{
+					left: regexp,
+					right: regexpParenExpr{
+						child: nextRegexp,
+					},
+				}
 			}
 
 			pos = newPos + 1
@@ -91,6 +101,27 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			}
 			pos++
 
+		case '+':
+			if regexp == nil {
+				return nil, 0, errors.New("Expected characters before plus")
+			}
+
+			if concat, ok := regexp.(regexpConcat); ok {
+				regexp = regexpConcat{
+					left: concat.left,
+					right: regexpConcat{
+						left:  concat.right,
+						right: regexpStar{child: concat.right},
+					},
+				}
+			} else {
+				regexp = regexpConcat{
+					left:  regexp,
+					right: regexpStar{child: regexp},
+				}
+			}
+			pos++
+
 		case '\\':
 			nextRegexp, newPos, err := parseEscapeSequence(s, pos)
 			if err != nil {
@@ -123,7 +154,7 @@ func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
 		return nil, 0, errors.New("Invalid escape sequence")
 	}
 
-	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' {
+	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' {
 		return regexpChar{char: c}, pos + 2, nil
 	}
 

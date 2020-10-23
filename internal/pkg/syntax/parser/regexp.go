@@ -1,17 +1,27 @@
-package parsergen
+package parser
 
 import "errors"
 
 // Regexp represents a regular expression.
-type Regexp interface{}
+type Regexp interface {
+	CompileNfa() *Nfa
+}
 
 // regexpEmpty represents a language containing only the empty string.
 type regexpEmpty struct{}
+
+func (r regexpEmpty) CompileNfa() *Nfa {
+	return EmptyStringNfa()
+}
 
 // regexpConcat represents the concatenation operation.
 type regexpConcat struct {
 	left  Regexp
 	right Regexp
+}
+
+func (r regexpConcat) CompileNfa() *Nfa {
+	return r.left.CompileNfa().Concat(r.right.CompileNfa())
 }
 
 // regexpUnion represents the union operation.
@@ -20,9 +30,17 @@ type regexpUnion struct {
 	right Regexp
 }
 
+func (r regexpUnion) CompileNfa() *Nfa {
+	return r.left.CompileNfa().Union(r.right.CompileNfa())
+}
+
 // regexpStar represents the Kleene star operation.
 type regexpStar struct {
 	child Regexp
+}
+
+func (r regexpStar) CompileNfa() *Nfa {
+	return r.child.CompileNfa().Star()
 }
 
 // regexpParenExpr represents an expression in parentheses.
@@ -30,15 +48,30 @@ type regexpParenExpr struct {
 	child Regexp
 }
 
+func (r regexpParenExpr) CompileNfa() *Nfa {
+	return r.child.CompileNfa()
+}
+
 // regexpChar represents a character match in the regular expression.
 type regexpChar struct {
 	char byte
+}
+
+func (r regexpChar) CompileNfa() *Nfa {
+	return NfaForChars([]byte{r.char})
 }
 
 // regexpCharClass represents a character class.
 type regexpCharClass struct {
 	negated bool
 	chars   []byte
+}
+
+func (r regexpCharClass) CompileNfa() *Nfa {
+	if r.negated {
+		return NfaForNegatedChars(r.chars)
+	}
+	return NfaForChars(r.chars)
 }
 
 // ParseRegexp parses a regular expression string.

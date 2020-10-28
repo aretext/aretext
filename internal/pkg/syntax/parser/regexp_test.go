@@ -90,6 +90,16 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '.'},
 		},
 		{
+			name:     "escape carat",
+			input:    `\^`,
+			expected: regexpChar{char: '^'},
+		},
+		{
+			name:     "escape dollar sign",
+			input:    `\$`,
+			expected: regexpChar{char: '$'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{

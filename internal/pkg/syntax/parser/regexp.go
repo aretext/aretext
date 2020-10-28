@@ -229,12 +229,22 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 	return regexp, pos, nil
 }
 
+var escapeCharSet [256]bool
+
+func init() {
+	escapeChars := []byte{'*', '(', ')', '\\', '|', '+', '?', '[', ']', '.', '^', '$'}
+	for _, c := range escapeChars {
+		escapeCharSet[c] = true
+	}
+}
+
 func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
 	if pos+1 >= len(s) {
 		return nil, 0, errors.New("Invalid escape sequence")
 	}
 
-	if c := s[pos+1]; c == '*' || c == '(' || c == ')' || c == '\\' || c == '|' || c == '+' || c == '?' || c == '[' || c == ']' || c == '.' {
+	c := s[pos+1]
+	if escapeCharSet[c] {
 		return regexpChar{char: c}, pos + 2, nil
 	}
 

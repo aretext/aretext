@@ -1,6 +1,10 @@
 package parser
 
-import "io"
+import (
+	"io"
+
+	"github.com/wedaly/aretext/internal/pkg/text/utf8"
+)
 
 // Nfa is a non-deterministic finite automaton.
 type Nfa struct {
@@ -333,13 +337,13 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 
 // MatchLongest returns the longest match in an input string.
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
-func (dfa *Dfa) MatchLongest(r io.Reader) (accepted bool, end int, actions []int, err error) {
+func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64) (accepted bool, endPos uint64, actions []int, err error) {
 	var buf [1024]byte
-	var i int
+	pos := startPos
 	state := dfa.StartState
 
 	if acceptActions, ok := dfa.AcceptActions[state]; ok {
-		accepted, end, actions = true, 0, acceptActions
+		accepted, endPos, actions = true, pos, acceptActions
 	}
 
 	for {
@@ -349,12 +353,12 @@ func (dfa *Dfa) MatchLongest(r io.Reader) (accepted bool, end int, actions []int
 		}
 
 		for _, c := range buf[:n] {
-			i++
+			pos += uint64(utf8.StartByteIndicator[c])
 			state = dfa.Transitions[state*256+int(c)]
 			if state == DfaDeadState {
 				break
 			} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
-				accepted, end, actions = true, i, acceptActions
+				accepted, endPos, actions = true, pos, acceptActions
 			}
 		}
 
@@ -363,7 +367,7 @@ func (dfa *Dfa) MatchLongest(r io.Reader) (accepted bool, end int, actions []int
 		}
 	}
 
-	return accepted, end, actions, nil
+	return accepted, endPos, actions, nil
 }
 
 // Minimize produces an equivalent DFA with the minimum number of states.

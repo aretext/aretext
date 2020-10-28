@@ -1,4 +1,4 @@
-package text
+package utf8
 
 type state uint8
 

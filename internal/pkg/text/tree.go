@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"strings"
 	"unicode/utf8"
+
+	textUtf8 "github.com/wedaly/aretext/internal/pkg/text/utf8"
 )
 
 // text.Tree is a data structure for representing UTF-8 text.
@@ -47,7 +49,7 @@ func NewTreeFromString(s string) (*Tree, error) {
 }
 
 func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
-	v := NewValidator()
+	v := textUtf8.NewValidator()
 	leafGroups := make([]nodeGroup, 0, 1)
 	currentGroup := &leafNodeGroup{numNodes: 1}
 	currentNode := &currentGroup.nodes[0]
@@ -69,7 +71,7 @@ func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
 		}
 
 		for i := 0; i < n; i++ {
-			charWidth := utf8CharWidth[buf[i]] // zero for continuation bytes
+			charWidth := textUtf8.CharWidth[buf[i]] // zero for continuation bytes
 			if currentNode.numBytes+charWidth >= maxBytesPerLeaf {
 				if currentGroup.numNodes < maxNodesPerGroup {
 					currentNode = &currentGroup.nodes[currentGroup.numNodes]
@@ -531,7 +533,7 @@ type leafNode struct {
 func (l *leafNode) key() indexKey {
 	key := indexKey{}
 	for _, b := range l.textBytes[:l.numBytes] {
-		key.numChars += uint64(utf8StartByteIndicator[b])
+		key.numChars += uint64(textUtf8.StartByteIndicator[b])
 		if b == '\n' {
 			key.numNewlines++
 		}
@@ -585,7 +587,7 @@ func (l *leafNode) splitIdx() (splitIdx, numCharsBeforeSplit byte) {
 	mid := l.numBytes / 2
 	for i := byte(0); i < l.numBytes; i++ {
 		b := l.textBytes[i]
-		isStartByte := utf8StartByteIndicator[b] > 0
+		isStartByte := textUtf8.StartByteIndicator[b] > 0
 		if i > mid && isStartByte {
 			return i, numCharsBeforeSplit
 		} else if isStartByte {
@@ -599,7 +601,7 @@ func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool)
 	offset := l.byteOffsetForPosition(charPos)
 	if offset < uint64(l.numBytes) {
 		startByte := l.textBytes[offset]
-		charWidth := utf8CharWidth[startByte]
+		charWidth := textUtf8.CharWidth[startByte]
 		for i := offset; i < uint64(l.numBytes-charWidth); i++ {
 			l.textBytes[i] = l.textBytes[i+uint64(charWidth)]
 		}
@@ -613,7 +615,7 @@ func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool)
 func (l *leafNode) byteOffsetForPosition(charPos uint64) uint64 {
 	n := uint64(0)
 	for i, b := range l.textBytes[:l.numBytes] {
-		c := uint64(utf8StartByteIndicator[b])
+		c := uint64(textUtf8.StartByteIndicator[b])
 		if c > 0 && n == charPos {
 			return uint64(i)
 		}
@@ -631,7 +633,7 @@ func (l *leafNode) positionAfterNewline(newlineIdx uint64) uint64 {
 			}
 			newlineCount++
 		}
-		if utf8StartByteIndicator[b] > 0 {
+		if textUtf8.StartByteIndicator[b] > 0 {
 			pos++
 		}
 	}
@@ -647,7 +649,7 @@ func (l *leafNode) numNewlinesBeforePosition(charPos uint64) uint64 {
 		if b == '\n' {
 			newlineCount++
 		}
-		if utf8StartByteIndicator[b] > 0 {
+		if textUtf8.StartByteIndicator[b] > 0 {
 			pos++
 		}
 	}

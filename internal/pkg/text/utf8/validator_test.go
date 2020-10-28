@@ -1,4 +1,4 @@
-package text
+package utf8
 
 import (
 	"io/ioutil"

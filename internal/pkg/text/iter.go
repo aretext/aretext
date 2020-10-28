@@ -4,6 +4,8 @@ import (
 	"io"
 	"log"
 	"unicode/utf8"
+
+	textUtf8 "github.com/wedaly/aretext/internal/pkg/text/utf8"
 )
 
 // RuneIter iterates over UTF-8 codepoints (runes).
@@ -151,7 +153,7 @@ func (ri *decodingRuneIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesCo
 		for i := 0; i < len(nextRuneBytes) && i+bytesConsumed < len(buf); i++ {
 			b := buf[i+bytesConsumed]
 			nextRuneBytes[i] = b
-			charWidth = int(utf8CharWidth[b])
+			charWidth = int(textUtf8.CharWidth[b])
 			if charWidth > 0 {
 				// found a start byte
 				bytesConsumed += charWidth

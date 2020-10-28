@@ -13,8 +13,9 @@ func TestCompileAndMatchLongest(t *testing.T) {
 		name           string
 		nfa            *Nfa
 		inputString    string
+		startPos       uint64
 		expectAccepted bool
-		expectEnd      int
+		expectEndPos   uint64
 		expectActions  []int
 	}{
 		{
@@ -34,7 +35,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            EmptyStringNfa().SetAcceptAction(99),
 			inputString:    "",
 			expectAccepted: true,
-			expectEnd:      0,
+			expectEndPos:   0,
 			expectActions:  []int{99},
 		},
 		{
@@ -42,7 +43,16 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            EmptyStringNfa().SetAcceptAction(99),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      0,
+			expectEndPos:   0,
+			expectActions:  []int{99},
+		},
+		{
+			name:           "empty string nfa preserves start position",
+			nfa:            EmptyStringNfa().SetAcceptAction(99),
+			inputString:    "a",
+			startPos:       123,
+			expectAccepted: true,
+			expectEndPos:   123,
 			expectActions:  []int{99},
 		},
 		{
@@ -56,7 +66,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).SetAcceptAction(99),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -76,7 +86,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a', 'b'}).SetAcceptAction(99),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -84,7 +94,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a', 'b'}).SetAcceptAction(99),
 			inputString:    "b",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -98,7 +108,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForNegatedChars([]byte{'a'}).SetAcceptAction(99),
 			inputString:    "x",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -106,7 +116,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Star().SetAcceptAction(99),
 			inputString:    "",
 			expectAccepted: true,
-			expectEnd:      0,
+			expectEndPos:   0,
 			expectActions:  []int{99},
 		},
 		{
@@ -114,7 +124,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Star().SetAcceptAction(99),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -122,7 +132,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Star().SetAcceptAction(99),
 			inputString:    "aaaa",
 			expectAccepted: true,
-			expectEnd:      4,
+			expectEndPos:   4,
 			expectActions:  []int{99},
 		},
 		{
@@ -130,7 +140,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Star().SetAcceptAction(99),
 			inputString:    "aaabbb",
 			expectAccepted: true,
-			expectEnd:      3,
+			expectEndPos:   3,
 			expectActions:  []int{99},
 		},
 		{
@@ -138,7 +148,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Star().SetAcceptAction(99),
 			inputString:    "baa",
 			expectAccepted: true,
-			expectEnd:      0,
+			expectEndPos:   0,
 			expectActions:  []int{99},
 		},
 		{
@@ -152,7 +162,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Union(NfaForChars([]byte{'b'})).SetAcceptAction(99),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -160,7 +170,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Union(NfaForChars([]byte{'b'})).SetAcceptAction(99),
 			inputString:    "b",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{99},
 		},
 		{
@@ -174,7 +184,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).SetAcceptAction(22).Union(NfaForChars([]byte{'b'}).SetAcceptAction(33)),
 			inputString:    "a",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{22},
 		},
 		{
@@ -182,7 +192,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).SetAcceptAction(22).Union(NfaForChars([]byte{'b'}).SetAcceptAction(33)),
 			inputString:    "b",
 			expectAccepted: true,
-			expectEnd:      1,
+			expectEndPos:   1,
 			expectActions:  []int{33},
 		},
 		{
@@ -208,7 +218,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).SetAcceptAction(99),
 			inputString:    "ab",
 			expectAccepted: true,
-			expectEnd:      2,
+			expectEndPos:   2,
 			expectActions:  []int{99},
 		},
 		{
@@ -216,7 +226,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).SetAcceptAction(99),
 			inputString:    "abcd",
 			expectAccepted: true,
-			expectEnd:      2,
+			expectEndPos:   2,
 			expectActions:  []int{99},
 		},
 		{
@@ -224,8 +234,17 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			nfa:            NfaForChars([]byte{'a'}).SetAcceptAction(22).Concat(NfaForChars([]byte{'b'}).SetAcceptAction(44)),
 			inputString:    "ab",
 			expectAccepted: true,
-			expectEnd:      2,
+			expectEndPos:   2,
 			expectActions:  []int{22, 44},
+		},
+		{
+			name:           "match non-ascii unicode increments end pos by number of runes",
+			nfa:            NfaForChars([]byte{0xe4}).Concat(NfaForChars([]byte{0xb8})).Concat(NfaForChars([]byte{0x82})).SetAcceptAction(99),
+			inputString:    "\u4E02",
+			startPos:       3,
+			expectAccepted: true,
+			expectEndPos:   4,
+			expectActions:  []int{99},
 		},
 	}
 
@@ -233,10 +252,10 @@ func TestCompileAndMatchLongest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			dfa := tc.nfa.CompileDfa()
 			r := strings.NewReader(tc.inputString)
-			accepted, end, actions, err := dfa.MatchLongest(r)
+			accepted, endPos, actions, err := dfa.MatchLongest(r, tc.startPos)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectAccepted, accepted)
-			assert.Equal(t, tc.expectEnd, end)
+			assert.Equal(t, tc.expectEndPos, endPos)
 			assert.Equal(t, tc.expectActions, actions)
 		})
 	}
@@ -264,14 +283,14 @@ func TestMinimizeDfa(t *testing.T) {
 	// Expect that the two DFAs give the same results.
 	inputStrings := []string{"", "a", "b", "abb", "bbabb", "aaaabb", "aba"}
 	for _, s := range inputStrings {
-		accepted, end, actions, err := dfa.MatchLongest(strings.NewReader(s))
+		accepted, endPos, actions, err := dfa.MatchLongest(strings.NewReader(s), 0)
 		require.NoError(t, err)
 
-		newAccepted, newEnd, newActions, err := newDfa.MatchLongest(strings.NewReader(s))
+		newAccepted, newEndPos, newActions, err := newDfa.MatchLongest(strings.NewReader(s), 0)
 		require.NoError(t, err)
 
 		assert.Equal(t, accepted, newAccepted)
-		assert.Equal(t, end, newEnd)
+		assert.Equal(t, endPos, newEndPos)
 		assert.Equal(t, actions, newActions)
 	}
 }

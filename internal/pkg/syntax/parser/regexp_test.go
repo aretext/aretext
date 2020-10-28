@@ -536,11 +536,6 @@ func TestParseRegexpErrors(t *testing.T) {
 			expectedError: "Invalid escape sequence",
 		},
 		{
-			name:          "unrecognized escape sequence",
-			input:         `\M`,
-			expectedError: "Unrecognized escape sequence",
-		},
-		{
 			name:          "missing closing bracket in character class",
 			input:         `[abc`,
 			expectedError: "Expected closing bracket",

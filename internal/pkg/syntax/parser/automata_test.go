@@ -246,13 +246,46 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			expectEndPos:   4,
 			expectActions:  []int{99},
 		},
+		{
+			name:           "start of text accepts",
+			nfa:            NfaForStartOfText().Concat(NfaForChars([]byte{'a'})).SetAcceptAction(99),
+			inputString:    "a",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{99},
+		},
+		{
+			name:           "start of text rejects",
+			nfa:            NfaForStartOfText().Concat(NfaForChars([]byte{'a'})).SetAcceptAction(99),
+			inputString:    "a",
+			startPos:       1,
+			expectAccepted: false,
+		},
+		{
+			name:           "end of text accepts",
+			nfa:            NfaForChars([]byte{'a'}).Concat(NfaForEndOfText()).SetAcceptAction(99),
+			inputString:    "a",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{99},
+		},
+		{
+			name:           "end of text rejects",
+			nfa:            NfaForChars([]byte{'a'}).Concat(NfaForEndOfText()).SetAcceptAction(99),
+			inputString:    "ba",
+			startPos:       0,
+			expectAccepted: false,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			dfa := tc.nfa.CompileDfa()
 			r := strings.NewReader(tc.inputString)
-			accepted, endPos, actions, err := dfa.MatchLongest(r, tc.startPos)
+			textLen := tc.startPos + uint64(len(tc.inputString))
+			accepted, endPos, actions, err := dfa.MatchLongest(r, tc.startPos, textLen)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectAccepted, accepted)
 			assert.Equal(t, tc.expectEndPos, endPos)
@@ -283,10 +316,12 @@ func TestMinimizeDfa(t *testing.T) {
 	// Expect that the two DFAs give the same results.
 	inputStrings := []string{"", "a", "b", "abb", "bbabb", "aaaabb", "aba"}
 	for _, s := range inputStrings {
-		accepted, endPos, actions, err := dfa.MatchLongest(strings.NewReader(s), 0)
+		textLen := uint64(len(s))
+
+		accepted, endPos, actions, err := dfa.MatchLongest(strings.NewReader(s), 0, textLen)
 		require.NoError(t, err)
 
-		newAccepted, newEndPos, newActions, err := newDfa.MatchLongest(strings.NewReader(s), 0)
+		newAccepted, newEndPos, newActions, err := newDfa.MatchLongest(strings.NewReader(s), 0, textLen)
 		require.NoError(t, err)
 
 		assert.Equal(t, accepted, newAccepted)

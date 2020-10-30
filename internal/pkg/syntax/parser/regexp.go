@@ -74,6 +74,20 @@ func (r regexpCharClass) CompileNfa() *Nfa {
 	return NfaForChars(r.chars)
 }
 
+// regexpStartOfText represents the start-of-text pattern (^)
+type regexpStartOfText struct{}
+
+func (r regexpStartOfText) CompileNfa() *Nfa {
+	return NfaForStartOfText()
+}
+
+// regexpEndOfText represents the end-of-text pattern ($)
+type regexpEndOfText struct{}
+
+func (r regexpEndOfText) CompileNfa() *Nfa {
+	return NfaForEndOfText()
+}
+
 // ParseRegexp parses a regular expression string.
 func ParseRegexp(s string) (Regexp, error) {
 	regexp, _, err := parseRegexp(s, 0, false)
@@ -209,6 +223,24 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 		case '.':
 			// Negation of no characters is equivalent to accepting every character.
 			nextRegexp := regexpCharClass{negated: true}
+			if _, ok := regexp.(regexpEmpty); ok {
+				regexp = nextRegexp
+			} else {
+				regexp = regexpConcat{left: regexp, right: nextRegexp}
+			}
+			pos++
+
+		case '^':
+			nextRegexp := regexpStartOfText{}
+			if _, ok := regexp.(regexpEmpty); ok {
+				regexp = nextRegexp
+			} else {
+				regexp = regexpConcat{left: regexp, right: nextRegexp}
+			}
+			pos++
+
+		case '$':
+			nextRegexp := regexpEndOfText{}
 			if _, ok := regexp.(regexpEmpty); ok {
 				regexp = nextRegexp
 			} else {

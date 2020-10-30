@@ -422,6 +422,32 @@ func TestParseRegexp(t *testing.T) {
 			},
 		},
 		{
+			name:     "start of text",
+			input:    "^",
+			expected: regexpStartOfText{},
+		},
+		{
+			name:  "start of text in concat",
+			input: "^a",
+			expected: regexpConcat{
+				left:  regexpStartOfText{},
+				right: regexpChar{'a'},
+			},
+		},
+		{
+			name:     "end of text",
+			input:    "$",
+			expected: regexpEndOfText{},
+		},
+		{
+			name:  "end of text in concat",
+			input: "a$",
+			expected: regexpConcat{
+				left:  regexpChar{'a'},
+				right: regexpEndOfText{},
+			},
+		},
+		{
 			name:  "complex expression",
 			input: "(a|b|cd)*abb",
 			expected: regexpConcat{

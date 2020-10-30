@@ -15,10 +15,7 @@ type Nfa struct {
 
 // EmptyLanguageNfa returns an NFA that matches no strings (the empty language).
 func EmptyLanguageNfa() *Nfa {
-	startState := &nfaState{
-		accept:          false,
-		charTransitions: make(map[byte][]int, 256),
-	}
+	startState := newNfaState(false)
 	return &Nfa{states: []*nfaState{startState}}
 }
 
@@ -29,17 +26,29 @@ func EmptyStringNfa() *Nfa {
 	return nfa
 }
 
+// NfaForStartOfText returns an NFA that matches the start of the text.
+func NfaForStartOfText() *Nfa {
+	nfa := EmptyLanguageNfa()
+	nfa.states = append(nfa.states, newNfaState(true))
+	nfa.states[0].inputTransitions[startOfText] = []int{1}
+	return nfa
+}
+
+// NfaForEndOfText returns an NFA that matches the end of the text.
+func NfaForEndOfText() *Nfa {
+	nfa := EmptyLanguageNfa()
+	nfa.states = append(nfa.states, newNfaState(true))
+	nfa.states[0].inputTransitions[endOfText] = []int{1}
+	return nfa
+}
+
 // NfaForChars returns an NFA that matches any of the specified chars.
 func NfaForChars(chars []byte) *Nfa {
 	nfa := EmptyLanguageNfa()
-	nfa.states = append(nfa.states, &nfaState{
-		accept:          true,
-		charTransitions: make(map[byte][]int, 256),
-	})
-
+	nfa.states = append(nfa.states, newNfaState(true))
 	startState := nfa.states[0]
 	for _, c := range chars {
-		startState.charTransitions[c] = []int{1}
+		startState.inputTransitions[int(c)] = []int{1}
 	}
 
 	return nfa
@@ -52,11 +61,11 @@ func NfaForNegatedChars(negatedChars []byte) *Nfa {
 
 	// Negate all transitions from the start state to the accept state.
 	for c := 0; c < 256; c++ {
-		states := startState.charTransitions[byte(c)]
+		states := startState.inputTransitions[c]
 		if len(states) > 0 {
-			startState.charTransitions[byte(c)] = nil
+			startState.inputTransitions[c] = nil
 		} else {
-			startState.charTransitions[byte(c)] = []int{1}
+			startState.inputTransitions[c] = []int{1}
 		}
 	}
 
@@ -190,11 +199,11 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 		// Follow transitions from the current state to the next states.
 		// If those states don't exist yet in the DFA, create them and
 		// push them onto the stack.
-		for c := 0; c < 256; c++ {
+		for i := 0; i < maxTransitionsPerState; i++ {
 			var nextNfaStates []int
 			for _, nfaStateIdx := range dfaStateToNfaStates[dfaState] {
 				nfaState := nfa.states[nfaStateIdx]
-				for _, s := range nfaState.charTransitions[byte(c)] {
+				for _, s := range nfaState.inputTransitions[i] {
 					nextNfaStates = insertUniqueSorted(nextNfaStates, s)
 				}
 			}
@@ -208,11 +217,11 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 
 			if nextDfaState, ok := stateSetToDfaState[intSliceKey(nextNfaStates)]; ok {
 				// The new state already exists, so update it with the new transitions.
-				dfa.AddTransition(dfaState, byte(c), nextDfaState)
+				dfa.AddTransition(dfaState, i, nextDfaState)
 			} else {
 				// The new state does not yet exist, so create it and push it onto the stack.
 				nextDfaState = dfa.AddState()
-				dfa.AddTransition(dfaState, byte(c), nextDfaState)
+				dfa.AddTransition(dfaState, i, nextDfaState)
 				dfaStateToNfaStates[nextDfaState] = nextNfaStates
 				stateSetToDfaState[intSliceKey(nextNfaStates)] = nextDfaState
 				stack = append(stack, nextDfaState)
@@ -242,8 +251,9 @@ func (nfa *Nfa) emptyTransitionsClosure(startStates []int) []int {
 
 // nfaState represents a state in an NFA.
 type nfaState struct {
-	// Transition from the current state based on an input byte to other state(s).
-	charTransitions map[byte][]int
+	// Transition from the current state based on an input to other state(s).
+	// Inputs can be either input text bytes or start-of-text/end-of-text markers.
+	inputTransitions map[int][]int
 
 	// Empty transitions from the current state to other states.
 	// The index of the slice is the next state (after the transition).
@@ -259,18 +269,25 @@ type nfaState struct {
 	acceptActions []int
 }
 
+func newNfaState(accept bool) *nfaState {
+	return &nfaState{
+		accept:           accept,
+		inputTransitions: make(map[int][]int, maxTransitionsPerState),
+	}
+}
+
 // copyWithShiftedTransitions returns a copy with the state indices in transitions incremented by n.
 func (state *nfaState) copyWithShiftedTransitions(n int) *nfaState {
 	newState := &nfaState{
-		charTransitions:  make(map[byte][]int, 256),
+		inputTransitions: make(map[int][]int, maxTransitionsPerState),
 		emptyTransitions: make([]int, 0, len(state.emptyTransitions)),
 		accept:           state.accept,
 		acceptActions:    append([]int{}, state.acceptActions...),
 	}
 
-	for c, transitions := range state.charTransitions {
+	for c, transitions := range state.inputTransitions {
 		for _, nextState := range transitions {
-			newState.charTransitions[c] = insertUniqueSorted(newState.charTransitions[c], nextState+n)
+			newState.inputTransitions[c] = insertUniqueSorted(newState.inputTransitions[c], nextState+n)
 		}
 	}
 
@@ -284,6 +301,13 @@ func (state *nfaState) copyWithShiftedTransitions(n int) *nfaState {
 // DfaDeadState represents a state in which the DFA will never accept the string,
 // regardless of the remaining input characters.
 const DfaDeadState int = 0
+
+// maxTransitionsPerState is the maximum number of transitions from a DFA state.
+// 0-255 are transitions on an input char byte.
+// 256 is a transition on start-of-text, and 257 is a transition on end-of-text.
+const maxTransitionsPerState int = 258
+const startOfText int = 256
+const endOfText int = 257
 
 // Dfa is a deterministic finite automata.
 type Dfa struct {
@@ -307,10 +331,11 @@ type Dfa struct {
 // NewDfa constructs a DFA with only the dead state and the start state.
 // This recognizes the empty language (rejects all strings, even the empty string).
 func NewDfa() *Dfa {
+	numStates := 2 // The dead state and the start state.
 	return &Dfa{
-		NumStates:     2, // The dead state and the start state.
+		NumStates:     numStates,
 		StartState:    1,
-		Transitions:   make([]int, 512), // 256 chars * 2 states
+		Transitions:   make([]int, maxTransitionsPerState*numStates),
 		AcceptActions: make(map[int][]int, 1),
 	}
 }
@@ -319,14 +344,14 @@ func NewDfa() *Dfa {
 func (dfa *Dfa) AddState() int {
 	state := dfa.NumStates
 	dfa.NumStates++
-	transitions := make([]int, 256)
+	transitions := make([]int, maxTransitionsPerState)
 	dfa.Transitions = append(dfa.Transitions, transitions...)
 	return state
 }
 
 // AddTransition adds a transition from one state to another based on an input character.
-func (dfa *Dfa) AddTransition(fromState int, onChar byte, toState int) {
-	dfa.Transitions[fromState*256+int(onChar)] = toState
+func (dfa *Dfa) AddTransition(fromState int, onInput int, toState int) {
+	dfa.Transitions[fromState*maxTransitionsPerState+onInput] = toState
 }
 
 // AddAcceptAction adds an accept action to take when a state is reached.
@@ -337,13 +362,24 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 
 // MatchLongest returns the longest match in an input string.
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
-func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64) (accepted bool, endPos uint64, actions []int, err error) {
+func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, actions []int, err error) {
 	var buf [1024]byte
 	pos := startPos
 	state := dfa.StartState
 
 	if acceptActions, ok := dfa.AcceptActions[state]; ok {
 		accepted, endPos, actions = true, pos, acceptActions
+	}
+
+	if startPos == 0 {
+		prevState := state
+		state = dfa.Transitions[state*maxTransitionsPerState+startOfText]
+		if state == DfaDeadState {
+			// The DFA doesn't match start-of-text, so try to recover by restarting at the first character.
+			state = prevState
+		} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
+			accepted, endPos, actions = true, pos, acceptActions
+		}
 	}
 
 	for {
@@ -354,7 +390,7 @@ func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64) (accepted bool, endPo
 
 		for _, c := range buf[:n] {
 			pos += uint64(utf8.StartByteIndicator[c])
-			state = dfa.Transitions[state*256+int(c)]
+			state = dfa.Transitions[state*maxTransitionsPerState+int(c)]
 			if state == DfaDeadState {
 				break
 			} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
@@ -364,6 +400,13 @@ func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64) (accepted bool, endPo
 
 		if err == io.EOF || state == DfaDeadState {
 			break
+		}
+	}
+
+	if pos == textLen {
+		state = dfa.Transitions[state*maxTransitionsPerState+endOfText]
+		if acceptActions, ok := dfa.AcceptActions[state]; ok {
+			accepted, endPos, actions = true, pos, acceptActions
 		}
 	}
 
@@ -440,8 +483,8 @@ func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
 		// equivalent and should remain in the same group.
 		partitions := make(map[string][]int, len(states))
 		for _, s := range states {
-			var nextStateGroups [256]int
-			for c, nextState := range dfa.Transitions[s*256 : (s+1)*256] {
+			var nextStateGroups [maxTransitionsPerState]int
+			for c, nextState := range dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState] {
 				nextStateGroups[c] = stateToGroup[nextState]
 			}
 			key := intSliceKey(nextStateGroups[:])
@@ -460,7 +503,7 @@ func (dfa *Dfa) newDfaFromGroups(groups [][]int) *Dfa {
 	stateToGroup := dfa.indexStatesByGroup(groups)
 
 	newDfa := &Dfa{
-		Transitions:   make([]int, 0, len(groups)*256),
+		Transitions:   make([]int, 0, len(groups)*maxTransitionsPerState),
 		AcceptActions: make(map[int][]int, len(groups)),
 	}
 
@@ -476,10 +519,10 @@ func (dfa *Dfa) newDfaFromGroups(groups [][]int) *Dfa {
 		newState := groupToNewState[g]
 		s := states[0] // Arbitrarily choose the first state as representative.
 
-		for c, nextState := range dfa.Transitions[s*256 : (s+1)*256] {
+		for i, nextState := range dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState] {
 			nextGroup := stateToGroup[nextState]
 			newNextState := groupToNewState[nextGroup]
-			newDfa.AddTransition(newState, byte(c), newNextState)
+			newDfa.AddTransition(newState, i, newNextState)
 		}
 
 		for _, a := range dfa.AcceptActions[s] {

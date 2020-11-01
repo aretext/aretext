@@ -1,6 +1,9 @@
 package parser
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // Regexp represents a regular expression.
 type Regexp interface {
@@ -194,11 +197,12 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			pos++
 
 		case '\\':
-			nextRegexp, newPos, err := parseEscapeSequence(s, pos)
+			c, newPos, err := parseEscapeSequence(s, pos)
 			if err != nil {
 				return nil, 0, err
 			}
 
+			nextRegexp := regexpChar{char: c}
 			if _, ok := regexp.(regexpEmpty); ok {
 				regexp = nextRegexp
 			} else {
@@ -261,13 +265,26 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 	return regexp, pos, nil
 }
 
-func parseEscapeSequence(s string, pos int) (Regexp, int, error) {
+var escapeSequenceMap map[byte]byte
+
+func init() {
+	escapeSequenceMap = map[byte]byte{
+		'n': '\n',
+		't': '\t',
+		'r': '\r',
+		'f': '\f',
+	}
+}
+
+func parseEscapeSequence(s string, pos int) (byte, int, error) {
 	if pos+1 >= len(s) {
-		return nil, 0, errors.New("Invalid escape sequence")
+		return '\x00', 0, errors.New("Invalid escape sequence")
 	}
 
-	c := s[pos+1]
-	return regexpChar{char: c}, pos + 2, nil
+	if c, ok := escapeSequenceMap[s[pos+1]]; ok {
+		return c, pos + 2, nil
+	}
+	return s[pos+1], pos + 2, nil
 }
 
 func parseCharacterClass(s string, pos int) (Regexp, int, error) {
@@ -287,20 +304,48 @@ func parseCharacterClass(s string, pos int) (Regexp, int, error) {
 		if s[pos] == ']' {
 			pos++
 			return regexp, pos, nil
-		} else if s[pos] == '\\' {
-			if pos+1 >= len(s) {
-				return nil, 0, errors.New("Invalid escape sequence in character class")
-			} else if c := s[pos+1]; c == '[' || c == ']' || c == '^' || c == '\\' {
-				regexp.chars = append(regexp.chars, c)
-				pos += 2
-			} else {
-				return nil, 0, errors.New("Unrecognized escape sequence in character class")
-			}
-		} else {
-			regexp.chars = append(regexp.chars, s[pos])
-			pos++
 		}
+
+		startChar, newPos, err := parseCharacterClassItem(s, pos)
+		if err != nil {
+			return nil, 0, err
+		}
+		pos = newPos
+
+		// This is a single character, so add it to the regexp.
+		if pos >= len(s) || s[pos] != '-' {
+			regexp.chars = append(regexp.chars, startChar)
+			continue
+		}
+
+		// This is a character range (like [a-z]), so add every char in the range.
+		endChar, newPos, err := parseCharacterClassItem(s, pos+1)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		for c := startChar; c <= endChar; c++ {
+			regexp.chars = append(regexp.chars, c)
+		}
+		pos = newPos
 	}
 
 	return nil, 0, errors.New("Expected closing bracket")
+}
+
+func parseCharacterClassItem(s string, pos int) (byte, int, error) {
+	if pos >= len(s) {
+		return '\x00', 0, errors.New("Unexpected end of character class item")
+	}
+
+	if c := s[pos]; c == '-' || c == ']' {
+		errMsg := fmt.Sprintf("Unexpected '%c' in character class", c)
+		return '\x00', 0, errors.New(errMsg)
+	}
+
+	if s[pos] != '\\' {
+		return s[pos], pos + 1, nil
+	}
+
+	return parseEscapeSequence(s, pos)
 }

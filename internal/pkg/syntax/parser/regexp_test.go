@@ -100,6 +100,26 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpChar{char: '$'},
 		},
 		{
+			name:     "escape line feed",
+			input:    `\n`,
+			expected: regexpChar{char: '\n'},
+		},
+		{
+			name:     "escape tab",
+			input:    `\t`,
+			expected: regexpChar{char: '\t'},
+		},
+		{
+			name:     "escape form feed",
+			input:    `\f`,
+			expected: regexpChar{char: '\f'},
+		},
+		{
+			name:     "escape carriage return",
+			input:    `\r`,
+			expected: regexpChar{char: '\r'},
+		},
+		{
 			name:  "concatenate two characters",
 			input: "ab",
 			expected: regexpConcat{
@@ -406,6 +426,35 @@ func TestParseRegexp(t *testing.T) {
 			},
 		},
 		{
+			name:  "character class range",
+			input: "[a-c]",
+			expected: regexpCharClass{
+				chars: []byte{'a', 'b', 'c'},
+			},
+		},
+		{
+			name:  "multiple character class ranges",
+			input: "[a-cD-F]",
+			expected: regexpCharClass{
+				chars: []byte{'a', 'b', 'c', 'D', 'E', 'F'},
+			},
+		},
+		{
+			name:  "negated character class",
+			input: "[^a-c]",
+			expected: regexpCharClass{
+				negated: true,
+				chars:   []byte{'a', 'b', 'c'},
+			},
+		},
+		{
+			name:  "character class with ranges and individual chars",
+			input: "[Ab-d]",
+			expected: regexpCharClass{
+				chars: []byte{'A', 'b', 'c', 'd'},
+			},
+		},
+		{
 			name:     "dot character class",
 			input:    ".",
 			expected: regexpCharClass{negated: true},
@@ -569,12 +618,27 @@ func TestParseRegexpErrors(t *testing.T) {
 		{
 			name:          "invalid escape sequence in character class",
 			input:         `[\`,
-			expectedError: "Invalid escape sequence in character class",
+			expectedError: "Invalid escape sequence",
 		},
 		{
-			name:          "unrecognized escape sequence in character class",
-			input:         `[\M]`,
-			expectedError: "Unrecognized escape sequence in character class",
+			name:          "missing start of character class range",
+			input:         "[-B]",
+			expectedError: "Unexpected '-' in character class",
+		},
+		{
+			name:          "missing end of character class range",
+			input:         "[A-]",
+			expectedError: "Unexpected ']' in character class",
+		},
+		{
+			name:          "only hyphen in character class",
+			input:         "[-]",
+			expectedError: "Unexpected '-' in character class",
+		},
+		{
+			name:          "multiple hyphens in character class",
+			input:         "[---]",
+			expectedError: "Unexpected '-' in character class",
 		},
 	}
 

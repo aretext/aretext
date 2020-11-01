@@ -362,8 +362,10 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 
 // MatchLongest returns the longest match in an input string.
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
-func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, actions []int, err error) {
+// The reader position is reset to the end of the match, if there is one, or its original position if not.
+func (dfa *Dfa) MatchLongest(r io.ReadSeeker, startPos uint64, textLen uint64) (accepted bool, endPos uint64, actions []int, err error) {
 	var buf [1024]byte
+	var numBytesReadAtLastAccept, totalBytesRead int
 	pos := startPos
 	state := dfa.StartState
 
@@ -388,13 +390,16 @@ func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64, textLen uint64) (acce
 			return false, 0, nil, err
 		}
 
-		for _, c := range buf[:n] {
+		prevTotalBytesRead := totalBytesRead
+		totalBytesRead += n
+
+		for i, c := range buf[:n] {
 			pos += uint64(utf8.StartByteIndicator[c])
 			state = dfa.Transitions[state*maxTransitionsPerState+int(c)]
 			if state == DfaDeadState {
 				break
 			} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
-				accepted, endPos, actions = true, pos, acceptActions
+				accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, prevTotalBytesRead+i+1, acceptActions
 			}
 		}
 
@@ -406,8 +411,14 @@ func (dfa *Dfa) MatchLongest(r io.Reader, startPos uint64, textLen uint64) (acce
 	if pos == textLen {
 		state = dfa.Transitions[state*maxTransitionsPerState+endOfText]
 		if acceptActions, ok := dfa.AcceptActions[state]; ok {
-			accepted, endPos, actions = true, pos, acceptActions
+			accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, totalBytesRead, acceptActions
 		}
+	}
+
+	// Reset the reader position to the end of the last match.
+	// If there was no match, this resets the reader to its original position.
+	if _, err := r.Seek(int64(numBytesReadAtLastAccept-totalBytesRead), io.SeekCurrent); err != nil {
+		return false, 0, nil, err
 	}
 
 	return accepted, endPos, actions, nil

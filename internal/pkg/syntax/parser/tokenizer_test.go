@@ -37,7 +37,7 @@ func TestTokenizeAll(t *testing.T) {
 		{
 			name:           "empty string",
 			inputText:      "",
-			expectedTokens: nil,
+			expectedTokens: []Token{},
 		},
 		{
 			name:      "multiple tokens",
@@ -76,8 +76,9 @@ func TestTokenizeAll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textLen := uint64(len(tc.inputText))
 			r := strings.NewReader(tc.inputText)
-			tokens, err := tokenizer.TokenizeAll(r, textLen)
+			tokenTree, err := tokenizer.TokenizeAll(r, textLen)
 			require.NoError(t, err)
+			tokens := tokenTree.IterFromPosition(0).Collect()
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}

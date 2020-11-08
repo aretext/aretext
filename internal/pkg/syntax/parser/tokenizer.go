@@ -7,27 +7,6 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/utf8"
 )
 
-// TokenRole represents the role a token plays.
-// This is mainly used for syntax highlighting.
-type TokenRole int
-
-const (
-	TokenRoleNone = TokenRole(iota)
-	TokenRoleOperator
-	TokenRoleKeyword
-	TokenRoleIdentifier
-	TokenRoleNumber
-	TokenRoleString
-	TokenRoleComment
-)
-
-// Token represents a distinct element in a larger text.
-type Token struct {
-	StartPos uint64
-	EndPos   uint64
-	Role     TokenRole
-}
-
 // TokenizerRule represents a rule for parsing a particular token.
 type TokenizerRule struct {
 	Regexp    string
@@ -62,7 +41,7 @@ func GenerateTokenizer(rules []TokenizerRule) (*Tokenizer, error) {
 
 // TokenizeAll splits the entire input text into tokens.
 // The input text MUST be valid UTF-8.
-func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) ([]Token, error) {
+func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, error) {
 	var tokens []Token
 	pos := uint64(0)
 	for pos < textLen {
@@ -89,7 +68,9 @@ func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) ([]Token, error
 			}
 		}
 	}
-	return tokens, nil
+
+	// By construction, tokens are ordered ascending by start position and non-overlapping.
+	return NewTokenTree(tokens), nil
 }
 
 func (t *Tokenizer) actionsToRule(actions []int) TokenizerRule {

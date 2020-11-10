@@ -14,11 +14,39 @@ const (
 	TokenRoleComment
 )
 
-// Token represents a distinct element in a larger text.
+// Token represents a distinct element in a document.
 type Token struct {
 	StartPos uint64
 	EndPos   uint64
 	Role     TokenRole
+}
+
+// Edit represents a change to a document.
+type Edit struct {
+	Pos         uint64  // Position of the first character inserted/deleted.
+	NumInserted uint64
+	NumDeleted  uint64
+}
+
+func (edit Edit) applyToPosition(pos uint64) uint64 {
+	if pos >= edit.Pos {
+		if updatedPos := pos + edit.NumInserted; updatedPos >= pos {
+			pos = updatedPos
+		} else {
+			pos = uint64(0xFFFFFFFFFFFFFFFF) // overflow
+		}
+
+		if updatedPos := pos - edit.NumDeleted; updatedPos <= pos {
+			pos = updatedPos
+		} else {
+			pos = 0 // underflow
+		}
+
+		if pos < edit.Pos {
+			pos = edit.Pos
+		}
+	}
+	return pos
 }
 
 // TokenTree represents a collection of tokens.
@@ -79,9 +107,31 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	}
 }
 
+// ShiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
+func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
+	idx := t.nodeIdxForPos(edit.Pos)
+	if t.isValidNode(idx) && t.nodes[idx].intersects(edit.Pos) {
+		t.nodes[idx].applyEdit(edit)
+		idx = t.nextNodeIdx(idx)
+	}
+
+	applyNextEdit := true
+	for t.isValidNode(idx) {
+		if applyNextEdit {
+			t.nodes[idx].applyEdit(edit)
+			if right := rightChildIdx(idx); t.isValidNode(right) {
+				t.nodes[right].lazyEdits = append(t.nodes[right].lazyEdits, edit)
+			}
+		}
+		applyNextEdit = isLeftChildIdx(idx)
+		idx = parentIdx(idx)
+	}
+}
+
 func (t *TokenTree) nodeIdxForPos(pos uint64) int {
 	idx, closestIdxAfter := 0, -1
 	for t.isValidNode(idx) {
+		t.propagateLazyEdits(idx)
 		root := t.nodes[idx]
 		if root.intersects(pos) {
 			return idx
@@ -121,6 +171,7 @@ func (t *TokenTree) nextNodeIdx(idx int) int {
 
 func (t *TokenTree) leftmostChildInSubtree(idx int) int {
 	for {
+		t.propagateLazyEdits(idx)
 		if left := leftChildIdx(idx); t.isValidNode(left) {
 			// Current node has a valid left child, so repeat the search from the left child.
 			idx = left
@@ -131,11 +182,22 @@ func (t *TokenTree) leftmostChildInSubtree(idx int) int {
 	}
 }
 
+func (t *TokenTree) propagateLazyEdits(idx int) {
+	edits := t.nodes[idx].applyLazyEdits()
+	if left := leftChildIdx(idx); t.isValidNode(left) {
+		t.nodes[left].lazyEdits = append(t.nodes[left].lazyEdits, edits...)
+	}
+	if right := rightChildIdx(idx); t.isValidNode(right) {
+		t.nodes[right].lazyEdits = append(t.nodes[right].lazyEdits, edits...)
+	}
+}
+
 func (t *TokenTree) isValidNode(idx int) bool {
 	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized()
 }
 
 // TokenIter iterates over tokens.
+// Iterator operations are NOT thread-safe because they can mutate the tree (applying lazy edits).
 type TokenIter struct {
 	tree    *TokenTree
 	nodeIdx int
@@ -171,15 +233,17 @@ func parentIdx(idx int) int        { return (idx+1)/2 - 1 }
 func leftChildIdx(idx int) int     { return (idx+1)*2 - 1 }
 func rightChildIdx(idx int) int    { return (idx + 1) * 2 }
 func isRootIdx(idx int) bool       { return idx == 0 }
-func isRightChildIdx(idx int) bool { return (idx+1)%2 > 0 }
+func isLeftChildIdx(idx int) bool  { return idx > 0 && (idx+1)%2 == 0 }
+func isRightChildIdx(idx int) bool { return idx > 0 && (idx+1)%2 > 0 }
 
 const (
 	initializedFlag = 1 << iota
 )
 
 type treeNode struct {
-	flags int
-	token Token
+	flags     int
+	token     Token
+	lazyEdits []Edit
 }
 
 func newTreeNodeForToken(token Token) treeNode {
@@ -197,6 +261,27 @@ func (tn *treeNode) startPos() uint64 {
 	return tn.token.StartPos
 }
 
+func (tn *treeNode) endPos() uint64 {
+	return tn.token.EndPos
+}
+
 func (tn *treeNode) intersects(pos uint64) bool {
-	return pos >= tn.token.StartPos && pos < tn.token.EndPos
+	// For zero-length tokens, intersect for the position at the start of the token.
+	// For all other tokens, intersect if the position is in the range [startPos, endPos).
+	return (tn.token.StartPos == tn.token.EndPos && pos == tn.token.StartPos) || (pos >= tn.token.StartPos && pos < tn.token.EndPos)
+}
+
+func (tn *treeNode) applyLazyEdits() []Edit {
+	edits := tn.lazyEdits
+	tn.lazyEdits = nil
+	for _, edit := range edits {
+		tn.applyEdit(edit)
+	}
+	return edits
+}
+
+func (tn *treeNode) applyEdit(edit Edit) {
+	// It is possible for deletions to produce tokens with zero length (start pos == end pos).
+	tn.token.StartPos = edit.applyToPosition(tn.token.StartPos)
+	tn.token.EndPos = edit.applyToPosition(tn.token.EndPos)
 }

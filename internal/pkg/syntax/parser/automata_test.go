@@ -285,7 +285,7 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			dfa := tc.nfa.CompileDfa()
 			r := strings.NewReader(tc.inputString)
 			textLen := tc.startPos + uint64(len(tc.inputString))
-			accepted, endPos, actions, err := dfa.MatchLongest(r, tc.startPos, textLen)
+			accepted, endPos, _, actions, err := dfa.MatchLongest(r, tc.startPos, textLen)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectAccepted, accepted)
 			assert.Equal(t, tc.expectEndPos, endPos)
@@ -318,10 +318,10 @@ func TestMinimizeDfa(t *testing.T) {
 	for _, s := range inputStrings {
 		textLen := uint64(len(s))
 
-		accepted, endPos, actions, err := dfa.MatchLongest(strings.NewReader(s), 0, textLen)
+		accepted, endPos, _, actions, err := dfa.MatchLongest(strings.NewReader(s), 0, textLen)
 		require.NoError(t, err)
 
-		newAccepted, newEndPos, newActions, err := newDfa.MatchLongest(strings.NewReader(s), 0, textLen)
+		newAccepted, newEndPos, _, newActions, err := newDfa.MatchLongest(strings.NewReader(s), 0, textLen)
 		require.NoError(t, err)
 
 		assert.Equal(t, accepted, newAccepted)

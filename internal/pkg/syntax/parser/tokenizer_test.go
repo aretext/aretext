@@ -45,29 +45,29 @@ func TestTokenizeAll(t *testing.T) {
 			expectedTokens: []Token{
 				// Whitespace and punctuation are skipped because they don't match any rules.
 				// "def"
-				{StartPos: 0, EndPos: 3, Role: TokenRoleKeyword},
+				{StartPos: 0, EndPos: 3, LookaheadPos: 4, Role: TokenRoleKeyword},
 
 				// "foo"
-				{StartPos: 4, EndPos: 7, Role: TokenRoleIdentifier},
+				{StartPos: 4, EndPos: 7, LookaheadPos: 8, Role: TokenRoleIdentifier},
 
 				// "return"
-				{StartPos: 15, EndPos: 21, Role: TokenRoleKeyword},
+				{StartPos: 15, EndPos: 21, LookaheadPos: 22, Role: TokenRoleKeyword},
 
 				// "bar"
-				{StartPos: 22, EndPos: 25, Role: TokenRoleIdentifier},
+				{StartPos: 22, EndPos: 25, LookaheadPos: 26, Role: TokenRoleIdentifier},
 
 				// "+"
-				{StartPos: 26, EndPos: 27, Role: TokenRoleOperator},
+				{StartPos: 26, EndPos: 27, LookaheadPos: 28, Role: TokenRoleOperator},
 
 				// "10"
-				{StartPos: 28, EndPos: 30, Role: TokenRoleNumber},
+				{StartPos: 28, EndPos: 30, LookaheadPos: 30, Role: TokenRoleNumber},
 			},
 		},
 		{
 			name:      "identifier with keyword prefix",
 			inputText: "defIdentifier",
 			expectedTokens: []Token{
-				{StartPos: 0, EndPos: 13, Role: TokenRoleIdentifier},
+				{StartPos: 0, EndPos: 13, LookaheadPos: 13, Role: TokenRoleIdentifier},
 			},
 		},
 	}

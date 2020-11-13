@@ -45,7 +45,7 @@ func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, er
 	var tokens []Token
 	pos := uint64(0)
 	for pos < textLen {
-		accepted, endPos, actions, err := t.StateMachine.MatchLongest(r, pos, textLen)
+		accepted, endPos, lookaheadPos, actions, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
 			return nil, errors.Wrapf(err, "tokenizing input")
 		}
@@ -55,9 +55,10 @@ func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, er
 		if accepted && endPos > pos {
 			rule := t.actionsToRule(actions) // Choose matched rule with the lowest index.
 			tokens = append(tokens, Token{
-				StartPos: pos,
-				EndPos:   endPos,
-				Role:     rule.TokenRole,
+				StartPos:     pos,
+				EndPos:       endPos,
+				LookaheadPos: lookaheadPos,
+				Role:         rule.TokenRole,
 			})
 			pos = endPos
 		} else {

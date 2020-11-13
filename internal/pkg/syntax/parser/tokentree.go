@@ -16,9 +16,13 @@ const (
 
 // Token represents a distinct element in a document.
 type Token struct {
+	Role     TokenRole
 	StartPos uint64
 	EndPos   uint64
-	Role     TokenRole
+
+	// Last position the tokenizer read while constructing the token.
+	// This will always be greater than or equal to EndPos.
+	LookaheadPos uint64
 }
 
 // Edit represents a change to a document.

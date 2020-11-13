@@ -23,7 +23,7 @@ type Token struct {
 
 // Edit represents a change to a document.
 type Edit struct {
-	Pos         uint64  // Position of the first character inserted/deleted.
+	Pos         uint64 // Position of the first character inserted/deleted.
 	NumInserted uint64
 	NumDeleted  uint64
 }
@@ -53,7 +53,7 @@ func (edit Edit) applyToPosition(pos uint64) uint64 {
 // It supports efficient lookups by position and "shifting" token positions to account for insertions/deletions.
 type TokenTree struct {
 	// nodes represents a full binary search tree.
-	// For non-full trees, some of the nodes in the slice won't be part of the tree; these nodes have initializedFlag set to zero.
+	// For non-full trees, some of the nodes in the slice won't be part of the tree; these nodes have the initialized flag set to false.
 	nodes []treeNode
 }
 
@@ -193,7 +193,7 @@ func (t *TokenTree) propagateLazyEdits(idx int) {
 }
 
 func (t *TokenTree) isValidNode(idx int) bool {
-	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized()
+	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized
 }
 
 // TokenIter iterates over tokens.
@@ -236,25 +236,17 @@ func isRootIdx(idx int) bool       { return idx == 0 }
 func isLeftChildIdx(idx int) bool  { return idx > 0 && (idx+1)%2 == 0 }
 func isRightChildIdx(idx int) bool { return idx > 0 && (idx+1)%2 > 0 }
 
-const (
-	initializedFlag = 1 << iota
-)
-
 type treeNode struct {
-	flags     int
-	token     Token
-	lazyEdits []Edit
+	initialized bool
+	token       Token
+	lazyEdits   []Edit
 }
 
 func newTreeNodeForToken(token Token) treeNode {
 	return treeNode{
-		flags: initializedFlag,
-		token: token,
+		initialized: true,
+		token:       token,
 	}
-}
-
-func (tn *treeNode) initialized() bool {
-	return (tn.flags & initializedFlag) > 0
 }
 
 func (tn *treeNode) startPos() uint64 {

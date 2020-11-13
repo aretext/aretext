@@ -260,7 +260,8 @@ func (tn *treeNode) endPos() uint64 {
 func (tn *treeNode) intersects(pos uint64) bool {
 	// For zero-length tokens, intersect for the position at the start of the token.
 	// For all other tokens, intersect if the position is in the range [startPos, endPos).
-	return (tn.token.StartPos == tn.token.EndPos && pos == tn.token.StartPos) || (pos >= tn.token.StartPos && pos < tn.token.EndPos)
+	startPos, endPos := tn.startPos(), tn.endPos()
+	return (startPos == endPos && pos == startPos) || (pos >= startPos && pos < endPos)
 }
 
 func (tn *treeNode) applyLazyEdits() []Edit {

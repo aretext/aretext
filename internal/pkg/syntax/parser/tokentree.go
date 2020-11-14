@@ -207,24 +207,31 @@ type TokenIter struct {
 	nodeIdx int
 }
 
-// Next retrieves the next token, if it exists.
-func (iter *TokenIter) Next(tok *Token) bool {
+// Get retrieves the current token, if it exists.
+func (iter *TokenIter) Get(tok *Token) bool {
 	if !iter.tree.isValidNode(iter.nodeIdx) {
-		// There are no more tokens to return.
 		return false
 	}
 
 	*tok = iter.tree.nodes[iter.nodeIdx].token
-	iter.nodeIdx = iter.tree.nextNodeIdx(iter.nodeIdx)
 	return true
+}
+
+// Advance moves the iterator to the next token.
+// If there are no more tokens, this is a no-op.
+func (iter *TokenIter) Advance() {
+	if iter.tree.isValidNode(iter.nodeIdx) {
+		iter.nodeIdx = iter.tree.nextNodeIdx(iter.nodeIdx)
+	}
 }
 
 // Collect retrieves all tokens from the iterator and returns them as a slice.
 func (iter *TokenIter) Collect() []Token {
 	result := make([]Token, 0)
 	var tok Token
-	for iter.Next(&tok) {
+	for iter.Get(&tok) {
 		result = append(result, tok)
+		iter.Advance()
 	}
 	return result
 }

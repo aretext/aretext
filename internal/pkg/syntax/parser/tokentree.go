@@ -132,6 +132,10 @@ func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
 	}
 }
 
+func (t *TokenTree) isValidNode(idx int) bool {
+	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized
+}
+
 func (t *TokenTree) nodeIdxForPos(pos uint64) int {
 	idx, closestIdxAfter := 0, -1
 	for t.isValidNode(idx) {
@@ -196,8 +200,29 @@ func (t *TokenTree) propagateLazyEdits(idx int) {
 	}
 }
 
-func (t *TokenTree) isValidNode(idx int) bool {
-	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized
+func (t *TokenTree) deleteNodeAtIdx(idx int) int {
+	hasLeft := t.isValidNode(leftChildIdx(idx))
+	hasRight := t.isValidNode(rightChildIdx(idx))
+	nextIdx := t.nextNodeIdx(idx)
+
+	if hasLeft && hasRight {
+		t.nodes[idx] = t.nodes[nextIdx]
+		t.nodes[nextIdx] = treeNode{}
+		return idx
+	} else if hasLeft {
+		left := leftChildIdx(idx)
+		t.nodes[idx] = t.nodes[left]
+		t.deleteNodeAtIdx(left)
+		return nextIdx
+	} else if hasRight {
+		right := rightChildIdx(idx)
+		t.nodes[idx] = t.nodes[right]
+		t.deleteNodeAtIdx(right)
+		return idx
+	} else {
+		t.nodes[idx] = treeNode{}
+		return nextIdx
+	}
 }
 
 // TokenIter iterates over tokens.
@@ -222,6 +247,14 @@ func (iter *TokenIter) Get(tok *Token) bool {
 func (iter *TokenIter) Advance() {
 	if iter.tree.isValidNode(iter.nodeIdx) {
 		iter.nodeIdx = iter.tree.nextNodeIdx(iter.nodeIdx)
+	}
+}
+
+// Delete removes the token at the iterator's current position and advances to the next token.
+// If the iterator is already exhausted, this is a no-op.
+func (iter *TokenIter) Delete() {
+	if iter.tree.isValidNode(iter.nodeIdx) {
+		iter.nodeIdx = iter.tree.deleteNodeAtIdx(iter.nodeIdx)
 	}
 }
 

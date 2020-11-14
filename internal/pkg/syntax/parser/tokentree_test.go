@@ -377,3 +377,213 @@ func TestTokenTreeShiftPositionsAfterEdit(t *testing.T) {
 		})
 	}
 }
+
+func TestTokenTreeDeleteToken(t *testing.T) {
+	testCases := []struct {
+		name            string
+		buildTree       func() *TokenTree
+		position        uint64
+		expectHasNext   bool
+		expectNextToken Token
+		expectTokens    []Token
+	}{
+		{
+			name: "delete from empty tree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree(nil)
+			},
+			position:      0,
+			expectHasNext: false,
+			expectTokens:  []Token{},
+		},
+		{
+			name: "delete single token",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+				})
+			},
+			position:      0,
+			expectHasNext: false,
+			expectTokens:  []Token{},
+		},
+		{
+			name: "delete root with two children",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+				})
+			},
+			position:        1,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 2, EndPos: 3},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 2, EndPos: 3},
+			},
+		},
+		{
+			name: "delete subtree with no children",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+				})
+			},
+			position:        0,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 1, EndPos: 2},
+			expectTokens: []Token{
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+			},
+		},
+		{
+			name: "delete left child with children",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 7, EndPos: 8},
+					Token{StartPos: 8, EndPos: 9},
+				})
+			},
+			position:        1,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 2, EndPos: 3},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 3, EndPos: 4},
+				Token{StartPos: 5, EndPos: 6},
+				Token{StartPos: 7, EndPos: 8},
+				Token{StartPos: 8, EndPos: 9},
+			},
+		},
+		{
+			name: "delete right child with children",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 7, EndPos: 8},
+					Token{StartPos: 8, EndPos: 9},
+				})
+			},
+			position:        7,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 8, EndPos: 9},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 3, EndPos: 4},
+				Token{StartPos: 4, EndPos: 5},
+				Token{StartPos: 5, EndPos: 6},
+				Token{StartPos: 8, EndPos: 9},
+			},
+		},
+		{
+			name: "delete node with only left child",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 6, EndPos: 7},
+				})
+				tree.IterFromPosition(2).Delete()
+				return tree
+			},
+			position:        1,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 3, EndPos: 4},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 3, EndPos: 4},
+				Token{StartPos: 4, EndPos: 5},
+				Token{StartPos: 5, EndPos: 6},
+				Token{StartPos: 6, EndPos: 7},
+			},
+		},
+		{
+			name: "delete node with only right child",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 7, EndPos: 8},
+					Token{StartPos: 8, EndPos: 9},
+				})
+				tree.IterFromPosition(5).Delete()
+				return tree
+			},
+			position:        7,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 8, EndPos: 9},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 3, EndPos: 4},
+				Token{StartPos: 4, EndPos: 5},
+				Token{StartPos: 8, EndPos: 9},
+			},
+		},
+		{
+			name: "delete root of full tree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 6, EndPos: 7},
+				})
+			},
+			position:        3,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 4, EndPos: 5},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 4, EndPos: 5},
+				Token{StartPos: 5, EndPos: 6},
+				Token{StartPos: 6, EndPos: 7},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tc.buildTree()
+			iter := tree.IterFromPosition(tc.position)
+			iter.Delete()
+
+			var tok Token
+			assert.Equal(t, tc.expectHasNext, iter.Get(&tok))
+			assert.Equal(t, tc.expectNextToken, tok)
+			assert.Equal(t, tc.expectTokens, tree.IterFromPosition(0).Collect())
+		})
+	}
+}

@@ -378,6 +378,102 @@ func TestTokenTreeShiftPositionsAfterEdit(t *testing.T) {
 	}
 }
 
+func TestTokenTreeInsertToken(t *testing.T) {
+	testCases := []struct {
+		name           string
+		buildTree      func() *TokenTree
+		insertToken    Token
+		expectedTokens []Token
+	}{
+		{
+			name: "insert into empty tree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree(nil)
+			},
+			insertToken: Token{StartPos: 0, EndPos: 1},
+			expectedTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+			},
+		},
+		{
+			name: "insert before single node",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 1, EndPos: 2},
+				})
+			},
+			insertToken: Token{StartPos: 0, EndPos: 1},
+			expectedTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+			},
+		},
+		{
+			name: "insert after single node",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 1, EndPos: 2},
+				})
+			},
+			insertToken: Token{StartPos: 2, EndPos: 3},
+			expectedTokens: []Token{
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+			},
+		},
+		{
+			name: "insert overlapping start position",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 1, EndPos: 3},
+				})
+			},
+			insertToken: Token{StartPos: 1, EndPos: 2},
+			expectedTokens: []Token{
+				Token{StartPos: 1, EndPos: 3},
+				Token{StartPos: 1, EndPos: 2},
+			},
+		},
+		{
+			name: "insert with shifted positions",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 6, EndPos: 7},
+				})
+
+				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
+				return tree
+			},
+			insertToken: Token{StartPos: 3, EndPos: 5},
+			expectedTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 3, EndPos: 5},
+				Token{StartPos: 12, EndPos: 13},
+				Token{StartPos: 13, EndPos: 14},
+				Token{StartPos: 14, EndPos: 15},
+				Token{StartPos: 15, EndPos: 16},
+				Token{StartPos: 16, EndPos: 17},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tc.buildTree()
+			tree.InsertToken(tc.insertToken)
+			tokens := tree.IterFromPosition(0).Collect()
+			assert.Equal(t, tc.expectedTokens, tokens)
+		})
+	}
+}
+
 func TestTokenTreeDeleteToken(t *testing.T) {
 	testCases := []struct {
 		name            string
@@ -570,6 +666,34 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 				Token{StartPos: 4, EndPos: 5},
 				Token{StartPos: 5, EndPos: 6},
 				Token{StartPos: 6, EndPos: 7},
+			},
+		},
+		{
+			name: "delete with shifted tokens",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1},
+					Token{StartPos: 1, EndPos: 2},
+					Token{StartPos: 2, EndPos: 3},
+					Token{StartPos: 3, EndPos: 4},
+					Token{StartPos: 4, EndPos: 5},
+					Token{StartPos: 5, EndPos: 6},
+					Token{StartPos: 6, EndPos: 7},
+				})
+
+				tree.ShiftPositionsAfterEdit(Edit{Pos: 3, NumInserted: 10})
+				return tree
+			},
+			position:        15,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 16, EndPos: 17},
+			expectTokens: []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 13, EndPos: 14},
+				Token{StartPos: 14, EndPos: 15},
+				Token{StartPos: 16, EndPos: 17},
 			},
 		},
 	}

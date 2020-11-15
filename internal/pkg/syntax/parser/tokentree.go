@@ -111,6 +111,31 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	}
 }
 
+// Insert adds a new token to the tree.
+func (t *TokenTree) InsertToken(tok Token) {
+	if len(t.nodes) == 0 {
+		t.nodes = append(t.nodes, newTreeNodeForToken(tok))
+		return
+	}
+
+	idx := 0
+	for t.isValidNode(idx) {
+		t.propagateLazyEdits(idx)
+		node := t.nodes[idx]
+		if tok.StartPos < node.startPos() {
+			idx = leftChildIdx(idx)
+		} else {
+			idx = rightChildIdx(idx)
+		}
+	}
+
+	for idx >= len(t.nodes) {
+		t.nodes = append(t.nodes, treeNode{})
+	}
+
+	t.nodes[idx] = newTreeNodeForToken(tok)
+}
+
 // ShiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
 func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
 	idx := t.nodeIdxForPos(edit.Pos)

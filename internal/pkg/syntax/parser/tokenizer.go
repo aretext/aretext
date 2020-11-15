@@ -62,7 +62,25 @@ func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, er
 			})
 			pos = endPos
 		} else {
-			// If we couldn't find a match, advance to the next position and try again.
+			// If we couldn't find a match, insert or extend an empty token.
+			if len(tokens) > 0 && tokens[len(tokens)-1].Role == TokenRoleNone {
+				lastEmptyToken := &tokens[len(tokens)-1]
+				lastEmptyToken.EndPos++
+				lastEmptyToken.LookaheadPos++
+			} else {
+				tokens = append(tokens, Token{
+					Role:         TokenRoleNone,
+					StartPos:     pos,
+					EndPos:       pos + 1,
+					LookaheadPos: pos + 2,
+				})
+			}
+
+			if tokens[len(tokens)-1].LookaheadPos > textLen {
+				tokens[len(tokens)-1].LookaheadPos = textLen
+			}
+
+			// We couldn't find a match, so advance to the next position and try again.
 			pos++
 			if err := advanceReaderOneRune(r); err != nil {
 				return nil, errors.Wrapf(err, "advance reader")

@@ -346,4 +346,5 @@ func (tn *treeNode) applyEdit(edit Edit) {
 	// It is possible for deletions to produce tokens with zero length (start pos == end pos).
 	tn.token.StartPos = edit.applyToPosition(tn.token.StartPos)
 	tn.token.EndPos = edit.applyToPosition(tn.token.EndPos)
+	tn.token.LookaheadPos = edit.applyToPosition(tn.token.LookaheadPos)
 }

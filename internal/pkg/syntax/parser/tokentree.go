@@ -84,7 +84,16 @@ func NewTokenTree(tokens []Token) *TokenTree {
 		item, stack = stack[len(stack)-1], stack[:len(stack)-1]
 		nodeIdx, tokens := item.nodeIdx, item.tokens
 		tokenIdx := len(tokens) / 2
-		nodes[nodeIdx] = newTreeNodeForToken(tokens[tokenIdx])
+		node := newTreeNodeForToken(tokens[tokenIdx])
+		nodes[nodeIdx] = node
+
+		if !isRootIdx(nodeIdx) {
+			parent := &nodes[parentIdx(nodeIdx)]
+			if parent.maxLookaheadPos < node.maxLookaheadPos {
+				parent.maxLookaheadPos = node.maxLookaheadPos
+			}
+		}
+
 		if tokenIdx > 0 {
 			stack = append(stack, stackItem{
 				nodeIdx: leftChildIdx(nodeIdx),
@@ -111,6 +120,15 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	}
 }
 
+// IterFromFirstAffected returns a token iterator from the first token that could be affected by an edit.
+// A token could be affected by an edit if the edit occurred in the half-open interval from the token's start position and its lookahead position.
+func (t *TokenTree) IterFromFirstAffected(editPos uint64) *TokenIter {
+	return &TokenIter{
+		tree:    t,
+		nodeIdx: t.firstAffectedIdx(editPos),
+	}
+}
+
 // Insert adds a new token to the tree.
 func (t *TokenTree) InsertToken(tok Token) {
 	if len(t.nodes) == 0 {
@@ -134,6 +152,7 @@ func (t *TokenTree) InsertToken(tok Token) {
 	}
 
 	t.nodes[idx] = newTreeNodeForToken(tok)
+	t.recalculateMaxLookaheadFromIdxToRoot(idx)
 }
 
 // ShiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
@@ -141,9 +160,11 @@ func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
 	idx := t.nodeIdxForPos(edit.Pos)
 	if t.isValidNode(idx) && t.nodes[idx].intersects(edit.Pos) {
 		t.nodes[idx].applyEdit(edit)
+		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		idx = t.nextNodeIdx(idx)
 	}
 
+	leafIdx := idx
 	applyNextEdit := true
 	for t.isValidNode(idx) {
 		if applyNextEdit {
@@ -155,6 +176,7 @@ func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
 		applyNextEdit = isLeftChildIdx(idx)
 		idx = parentIdx(idx)
 	}
+	t.recalculateMaxLookaheadFromIdxToRoot(leafIdx)
 }
 
 func (t *TokenTree) isValidNode(idx int) bool {
@@ -202,6 +224,28 @@ func (t *TokenTree) nextNodeIdx(idx int) int {
 	return parentIdx(idx)
 }
 
+func (t *TokenTree) firstAffectedIdx(editPos uint64) int {
+	firstAffectedStart, firstAffectedIdx := uint64(0xFFFFFFFFFFFFFFFF), -1
+	idx := 0
+	for t.isValidNode(idx) {
+		t.propagateLazyEdits(idx)
+		node := t.nodes[idx]
+		startPos := node.startPos()
+		if startPos < firstAffectedStart && startPos <= editPos && editPos < node.lookaheadPos() {
+			firstAffectedStart = startPos
+			firstAffectedIdx = idx
+		}
+
+		if left := leftChildIdx(idx); t.isValidNode(left) && editPos < t.nodes[left].maxLookaheadPos {
+			idx = left
+		} else {
+			idx = rightChildIdx(idx)
+		}
+	}
+
+	return firstAffectedIdx
+}
+
 func (t *TokenTree) leftmostChildInSubtree(idx int) int {
 	for {
 		t.propagateLazyEdits(idx)
@@ -233,20 +277,61 @@ func (t *TokenTree) deleteNodeAtIdx(idx int) int {
 	if hasLeft && hasRight {
 		t.nodes[idx] = t.nodes[nextIdx]
 		t.nodes[nextIdx] = treeNode{}
+		t.recalculateMaxLookaheadFromIdxToRoot(idx)
+		t.recalculateMaxLookaheadFromIdxToRoot(nextIdx)
 		return idx
 	} else if hasLeft {
 		left := leftChildIdx(idx)
 		t.nodes[idx] = t.nodes[left]
 		t.deleteNodeAtIdx(left)
+		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		return nextIdx
 	} else if hasRight {
 		right := rightChildIdx(idx)
 		t.nodes[idx] = t.nodes[right]
 		t.deleteNodeAtIdx(right)
+		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		return idx
 	} else {
 		t.nodes[idx] = treeNode{}
+		t.recalculateMaxLookaheadFromIdxToRoot(parentIdx(idx))
 		return nextIdx
+	}
+}
+
+func (t *TokenTree) recalculateMaxLookaheadFromIdxToRoot(idx int) {
+	path := make([]int, 0, nodeDepth(idx)+1)
+	for idx >= 0 {
+		if t.isValidNode(idx) {
+			path = append(path, idx)
+		}
+		idx = parentIdx(idx)
+	}
+
+	// Propagate lazy edits from parent to child.
+	for i := len(path) - 1; i >= 0; i-- {
+		idx := path[i]
+		t.propagateLazyEdits(idx)
+	}
+
+	// Propagate maxLookahead from child to parent.
+	for _, idx := range path {
+		node := &t.nodes[idx]
+		maxLookaheadPos := node.lookaheadPos()
+
+		if left := leftChildIdx(idx); t.isValidNode(left) {
+			leftMaxLookahead := t.nodes[left].maxLookaheadPos
+			if leftMaxLookahead > maxLookaheadPos {
+				node.maxLookaheadPos = leftMaxLookahead
+			}
+		}
+
+		if right := rightChildIdx(idx); t.isValidNode(right) {
+			rightMaxLookahead := t.nodes[right].maxLookaheadPos
+			if rightMaxLookahead > maxLookaheadPos {
+				node.maxLookaheadPos = rightMaxLookahead
+			}
+		}
 	}
 }
 
@@ -305,16 +390,27 @@ func isRootIdx(idx int) bool       { return idx == 0 }
 func isLeftChildIdx(idx int) bool  { return idx > 0 && (idx+1)%2 == 0 }
 func isRightChildIdx(idx int) bool { return idx > 0 && (idx+1)%2 > 0 }
 
+func nodeDepth(idx int) int {
+	d := 0
+	for idx > 0 {
+		idx = idx >> 1
+		d++
+	}
+	return d
+}
+
 type treeNode struct {
-	initialized bool
-	token       Token
-	lazyEdits   []Edit
+	initialized     bool
+	token           Token
+	lazyEdits       []Edit
+	maxLookaheadPos uint64
 }
 
 func newTreeNodeForToken(token Token) treeNode {
 	return treeNode{
-		initialized: true,
-		token:       token,
+		initialized:     true,
+		token:           token,
+		maxLookaheadPos: token.LookaheadPos,
 	}
 }
 
@@ -324,6 +420,10 @@ func (tn *treeNode) startPos() uint64 {
 
 func (tn *treeNode) endPos() uint64 {
 	return tn.token.EndPos
+}
+
+func (tn *treeNode) lookaheadPos() uint64 {
+	return tn.token.LookaheadPos
 }
 
 func (tn *treeNode) intersects(pos uint64) bool {
@@ -338,6 +438,7 @@ func (tn *treeNode) applyLazyEdits() []Edit {
 	tn.lazyEdits = nil
 	for _, edit := range edits {
 		tn.applyEdit(edit)
+		tn.maxLookaheadPos = edit.applyToPosition(tn.maxLookaheadPos)
 	}
 	return edits
 }

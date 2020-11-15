@@ -157,6 +157,216 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 	}
 }
 
+func TestTokenTreeIterFromFirstAffected(t *testing.T) {
+	testCases := []struct {
+		name          string
+		buildTree     func() *TokenTree
+		editPos       uint64
+		expectedToken Token
+	}{
+		{
+			name: "empty tree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree(nil)
+			},
+			editPos:       0,
+			expectedToken: Token{},
+		},
+		{
+			name: "single token, not affected",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       2,
+			expectedToken: Token{},
+		},
+		{
+			name: "single token, edit at start pos",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       4,
+			expectedToken: Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+		},
+		{
+			name: "single token, edit after start pos, before lookahead pos",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       5,
+			expectedToken: Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+		},
+		{
+			name: "single token, edit before lookahead pos",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       6,
+			expectedToken: Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+		},
+		{
+			name: "single token, edit at lookahead pos",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       7,
+			expectedToken: Token{},
+		},
+		{
+			name: "two tokens with overlapping lookahead regions",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 7},
+					Token{StartPos: 1, EndPos: 6, LookaheadPos: 7},
+				})
+			},
+			editPos:       3,
+			expectedToken: Token{StartPos: 0, EndPos: 1, LookaheadPos: 7},
+		},
+		{
+			name: "full tree, edit at root",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+					Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+				})
+			},
+			editPos:       3,
+			expectedToken: Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+		},
+		{
+			name: "full tree, edit in left subtree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+					Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+				})
+			},
+			editPos:       1,
+			expectedToken: Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+		},
+		{
+			name: "full tree, edit in right subtree",
+			buildTree: func() *TokenTree {
+				return NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+					Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+				})
+			},
+			editPos:       5,
+			expectedToken: Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+		},
+		{
+			name: "full tree, insert new token",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+					Token{StartPos: 7, EndPos: 8, LookaheadPos: 9},
+					Token{StartPos: 8, EndPos: 9, LookaheadPos: 10},
+				})
+				tree.InsertToken(Token{StartPos: 2, EndPos: 3, LookaheadPos: 7})
+				return tree
+			},
+			editPos:       4,
+			expectedToken: Token{StartPos: 2, EndPos: 3, LookaheadPos: 7},
+		},
+		{
+			name: "full tree, delete token",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 8},
+					Token{StartPos: 2, EndPos: 3, LookaheadPos: 8},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+				})
+				tree.IterFromPosition(1).Delete()
+				return tree
+			},
+			editPos:       3,
+			expectedToken: Token{StartPos: 2, EndPos: 3, LookaheadPos: 8},
+		},
+		{
+			name: "full tree, shift tokens for insert",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+					Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+					Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+					Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
+					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
+				})
+				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
+				return tree
+			},
+			editPos:       13,
+			expectedToken: Token{StartPos: 13, EndPos: 14, LookaheadPos: 15},
+		},
+		{
+			name: "full tree, shift tokens for delete",
+			buildTree: func() *TokenTree {
+				tree := NewTokenTree([]Token{
+					Token{StartPos: 0, EndPos: 1, LookaheadPos: 2},
+					Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+					Token{StartPos: 12, EndPos: 13, LookaheadPos: 14},
+					Token{StartPos: 13, EndPos: 14, LookaheadPos: 15},
+					Token{StartPos: 14, EndPos: 15, LookaheadPos: 16},
+					Token{StartPos: 15, EndPos: 16, LookaheadPos: 17},
+					Token{StartPos: 16, EndPos: 17, LookaheadPos: 18},
+				})
+				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumDeleted: 10})
+				return tree
+			},
+			editPos:       4,
+			expectedToken: Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tc.buildTree()
+			iter := tree.IterFromFirstAffected(tc.editPos)
+
+			var tok Token
+			iter.Get(&tok)
+			assert.Equal(t, tc.expectedToken, tok)
+		})
+	}
+}
+
 func TestTokenTreeShiftPositionsAfterEdit(t *testing.T) {
 	testCases := []struct {
 		name           string

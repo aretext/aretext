@@ -1,58 +1,5 @@
 package parser
 
-// TokenRole represents the role a token plays.
-// This is mainly used for syntax highlighting.
-type TokenRole int
-
-const (
-	TokenRoleNone = TokenRole(iota)
-	TokenRoleOperator
-	TokenRoleKeyword
-	TokenRoleIdentifier
-	TokenRoleNumber
-	TokenRoleString
-	TokenRoleComment
-)
-
-// Token represents a distinct element in a document.
-type Token struct {
-	Role     TokenRole
-	StartPos uint64
-	EndPos   uint64
-
-	// Last position the tokenizer read while constructing the token.
-	// This will always be greater than or equal to EndPos.
-	LookaheadPos uint64
-}
-
-// Edit represents a change to a document.
-type Edit struct {
-	Pos         uint64 // Position of the first character inserted/deleted.
-	NumInserted uint64
-	NumDeleted  uint64
-}
-
-func (edit Edit) applyToPosition(pos uint64) uint64 {
-	if pos >= edit.Pos {
-		if updatedPos := pos + edit.NumInserted; updatedPos >= pos {
-			pos = updatedPos
-		} else {
-			pos = uint64(0xFFFFFFFFFFFFFFFF) // overflow
-		}
-
-		if updatedPos := pos - edit.NumDeleted; updatedPos <= pos {
-			pos = updatedPos
-		} else {
-			pos = 0 // underflow
-		}
-
-		if pos < edit.Pos {
-			pos = edit.Pos
-		}
-	}
-	return pos
-}
-
 // TokenTree represents a collection of tokens.
 // It supports efficient lookups by position and "shifting" token positions to account for insertions/deletions.
 type TokenTree struct {
@@ -120,17 +67,17 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	}
 }
 
-// IterFromFirstAffected returns a token iterator from the first token that could be affected by an edit.
+// iterFromFirstAffected returns a token iterator from the first token that could be affected by an edit.
 // A token could be affected by an edit if the edit occurred in the half-open interval from the token's start position and its lookahead position.
-func (t *TokenTree) IterFromFirstAffected(editPos uint64) *TokenIter {
+func (t *TokenTree) iterFromFirstAffected(editPos uint64) *TokenIter {
 	return &TokenIter{
 		tree:    t,
 		nodeIdx: t.firstAffectedIdx(editPos),
 	}
 }
 
-// Insert adds a new token to the tree.
-func (t *TokenTree) InsertToken(tok Token) {
+// insertToken adds a new token to the tree.
+func (t *TokenTree) insertToken(tok Token) {
 	if len(t.nodes) == 0 {
 		t.nodes = append(t.nodes, newTreeNodeForToken(tok))
 		return
@@ -155,8 +102,8 @@ func (t *TokenTree) InsertToken(tok Token) {
 	t.recalculateMaxLookaheadFromIdxToRoot(idx)
 }
 
-// ShiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
-func (t *TokenTree) ShiftPositionsAfterEdit(edit Edit) {
+// shiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
+func (t *TokenTree) shiftPositionsAfterEdit(edit Edit) {
 	idx := t.nodeIdxForPos(edit.Pos)
 	if t.isValidNode(idx) && t.nodes[idx].intersects(edit.Pos) {
 		t.nodes[idx].applyEdit(edit)
@@ -364,32 +311,6 @@ func (iter *TokenIter) Advance() {
 	}
 }
 
-// Delete removes the token at the iterator's current position and advances to the next token.
-// If the iterator is already exhausted, this is a no-op.
-func (iter *TokenIter) Delete() {
-	if iter.tree.isValidNode(iter.nodeIdx) {
-		iter.nodeIdx = iter.tree.deleteNodeAtIdx(iter.nodeIdx)
-	}
-}
-
-// DeleteToPos deletes tokens starting before the given position.
-func (iter *TokenIter) DeleteToPos(pos uint64) {
-	var tok Token
-	for iter.Get(&tok) {
-		if tok.StartPos >= pos {
-			return
-		}
-		iter.Delete()
-	}
-}
-
-// DeleteRemaining deletes all remaining tokens from the iterator.
-func (iter *TokenIter) DeleteRemaining() {
-	for iter.tree.isValidNode(iter.nodeIdx) {
-		iter.Delete()
-	}
-}
-
 // Collect retrieves all tokens from the iterator and returns them as a slice.
 func (iter *TokenIter) Collect() []Token {
 	result := make([]Token, 0)
@@ -399,6 +320,32 @@ func (iter *TokenIter) Collect() []Token {
 		iter.Advance()
 	}
 	return result
+}
+
+// delete removes the token at the iterator's current position and advances to the next token.
+// If the iterator is already exhausted, this is a no-op.
+func (iter *TokenIter) deleteCurrent() {
+	if iter.tree.isValidNode(iter.nodeIdx) {
+		iter.nodeIdx = iter.tree.deleteNodeAtIdx(iter.nodeIdx)
+	}
+}
+
+// deleteToPos deletes tokens starting before the given position.
+func (iter *TokenIter) deleteToPos(pos uint64) {
+	var tok Token
+	for iter.Get(&tok) {
+		if tok.StartPos >= pos {
+			return
+		}
+		iter.deleteCurrent()
+	}
+}
+
+// deleteRemaining deletes all remaining tokens from the iterator.
+func (iter *TokenIter) deleteRemaining() {
+	for iter.tree.isValidNode(iter.nodeIdx) {
+		iter.deleteCurrent()
+	}
 }
 
 // Helper methods to calculate indexes in the array representation of the token tree.

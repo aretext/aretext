@@ -67,7 +67,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	// We need to update the token positions to match the edited text.
 	// We do this operation first so that we can compare the positions of tokens in the tree with
 	// the positions of new tokens parsed from the edited text.
-	tree.ShiftPositionsAfterEdit(edit)
+	tree.shiftPositionsAfterEdit(edit)
 
 	// Find the start position of the first affected token in the tree.
 	// We will start retokenizing from this position.
@@ -76,7 +76,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	// or an empty token (TokenRoleNone) from error recovery.
 	var pos uint64
 	var tok Token
-	iter := tree.IterFromFirstAffected(edit.Pos)
+	iter := tree.iterFromFirstAffected(edit.Pos)
 	if iter.Get(&tok) {
 		pos = tok.StartPos
 	} else {
@@ -100,7 +100,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 
 		// Delete all tokens up to the new token, so that the next token we check
 		// is on or after the next token's start position.
-		iter.DeleteToPos(nextTok.StartPos)
+		iter.deleteToPos(nextTok.StartPos)
 
 		var oldTok Token
 		if nextTok.StartPos > edit.Pos && iter.Get(&oldTok) && nextTok == oldTok {
@@ -110,7 +110,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 		}
 
 		// Delete all tokens that overlap with the new token we're going to insert.
-		iter.DeleteToPos(nextPos)
+		iter.deleteToPos(nextPos)
 
 		// Defer insertions until later to avoid messing up the iterator.
 		insertedTokens = append(insertedTokens, nextTok)
@@ -118,14 +118,14 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	}
 
 	if pos == textLen {
-		iter.DeleteRemaining()
+		iter.deleteRemaining()
 	}
 
 	// Insert new tokens into the tree.
 	// These tokens won't overlap with any existing tokens in the tree because
 	// we would have deleted any overlapping tokens in the loop above.
 	for _, tok := range insertedTokens {
-		tree.InsertToken(tok)
+		tree.insertToken(tok)
 	}
 
 	return tree, nil

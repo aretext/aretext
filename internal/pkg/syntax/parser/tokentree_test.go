@@ -293,7 +293,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 					Token{StartPos: 7, EndPos: 8, LookaheadPos: 9},
 					Token{StartPos: 8, EndPos: 9, LookaheadPos: 10},
 				})
-				tree.InsertToken(Token{StartPos: 2, EndPos: 3, LookaheadPos: 7})
+				tree.insertToken(Token{StartPos: 2, EndPos: 3, LookaheadPos: 7})
 				return tree
 			},
 			editPos:       4,
@@ -311,7 +311,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
 					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
 				})
-				tree.IterFromPosition(1).Delete()
+				tree.IterFromPosition(1).deleteCurrent()
 				return tree
 			},
 			editPos:       3,
@@ -329,7 +329,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 					Token{StartPos: 5, EndPos: 6, LookaheadPos: 7},
 					Token{StartPos: 6, EndPos: 7, LookaheadPos: 8},
 				})
-				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
+				tree.shiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
 				return tree
 			},
 			editPos:       13,
@@ -347,7 +347,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 					Token{StartPos: 15, EndPos: 16, LookaheadPos: 17},
 					Token{StartPos: 16, EndPos: 17, LookaheadPos: 18},
 				})
-				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumDeleted: 10})
+				tree.shiftPositionsAfterEdit(Edit{Pos: 2, NumDeleted: 10})
 				return tree
 			},
 			editPos:       4,
@@ -358,7 +358,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := tc.buildTree()
-			iter := tree.IterFromFirstAffected(tc.editPos)
+			iter := tree.iterFromFirstAffected(tc.editPos)
 
 			var tok Token
 			iter.Get(&tok)
@@ -589,7 +589,7 @@ func TestTokenTreeShiftPositionsAfterEdit(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := NewTokenTree(tc.tokens)
-			tree.ShiftPositionsAfterEdit(tc.edit)
+			tree.shiftPositionsAfterEdit(tc.edit)
 			tokens := tree.IterFromPosition(0).Collect()
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
@@ -665,7 +665,7 @@ func TestTokenTreeInsertToken(t *testing.T) {
 					Token{StartPos: 6, EndPos: 7},
 				})
 
-				tree.ShiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
+				tree.shiftPositionsAfterEdit(Edit{Pos: 2, NumInserted: 10})
 				return tree
 			},
 			insertToken: Token{StartPos: 3, EndPos: 5},
@@ -685,7 +685,7 @@ func TestTokenTreeInsertToken(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := tc.buildTree()
-			tree.InsertToken(tc.insertToken)
+			tree.insertToken(tc.insertToken)
 			tokens := tree.IterFromPosition(0).Collect()
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
@@ -819,7 +819,7 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 					Token{StartPos: 5, EndPos: 6},
 					Token{StartPos: 6, EndPos: 7},
 				})
-				tree.IterFromPosition(2).Delete()
+				tree.IterFromPosition(2).deleteCurrent()
 				return tree
 			},
 			position:        1,
@@ -846,7 +846,7 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 					Token{StartPos: 7, EndPos: 8},
 					Token{StartPos: 8, EndPos: 9},
 				})
-				tree.IterFromPosition(5).Delete()
+				tree.IterFromPosition(5).deleteCurrent()
 				return tree
 			},
 			position:        7,
@@ -899,7 +899,7 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 					Token{StartPos: 6, EndPos: 7},
 				})
 
-				tree.ShiftPositionsAfterEdit(Edit{Pos: 3, NumInserted: 10})
+				tree.shiftPositionsAfterEdit(Edit{Pos: 3, NumInserted: 10})
 				return tree
 			},
 			position:        15,
@@ -920,7 +920,7 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := tc.buildTree()
 			iter := tree.IterFromPosition(tc.position)
-			iter.Delete()
+			iter.deleteCurrent()
 
 			var tok Token
 			assert.Equal(t, tc.expectHasNext, iter.Get(&tok))
@@ -976,7 +976,7 @@ func TestTokenTreeDeletePermutations(t *testing.T) {
 			tree := NewTokenTree(tokens)
 
 			for _, deleteIdx := range tc.deleteSequence {
-				tree.IterFromPosition(uint64(deleteIdx)).Delete()
+				tree.IterFromPosition(uint64(deleteIdx)).deleteCurrent()
 				updatedTokens := make([]Token, 0, len(tokens))
 				for _, tok := range tokens {
 					if tok.StartPos != uint64(deleteIdx) {

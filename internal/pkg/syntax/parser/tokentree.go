@@ -234,13 +234,11 @@ func (t *TokenTree) deleteNodeAtIdx(idx int) int {
 		replaceIdx := t.leftmostChildInSubtree(right)
 		t.nodes[idx] = t.nodes[replaceIdx]
 		t.deleteNodeAtIdx(replaceIdx)
-		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		return idx
 	} else if left := leftChildIdx(idx); t.isValidNode(left) {
 		replaceIdx := t.rightmostChildInSubtree(left)
 		t.nodes[idx] = t.nodes[replaceIdx]
 		t.deleteNodeAtIdx(replaceIdx)
-		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		return t.nextNodeIdx(idx)
 	} else {
 		nextIdx := t.nextNodeIdx(idx)

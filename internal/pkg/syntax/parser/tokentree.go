@@ -259,6 +259,19 @@ func (t *TokenTree) leftmostChildInSubtree(idx int) int {
 	}
 }
 
+func (t *TokenTree) rightmostChildInSubtree(idx int) int {
+	for {
+		t.propagateLazyEdits(idx)
+		if right := rightChildIdx(idx); t.isValidNode(right) {
+			// Current node has a valid right child, so repeat the search from the right child.
+			idx = right
+		} else {
+			// Current node does NOT have a right child, so it must be the rightmost child.
+			return idx
+		}
+	}
+}
+
 func (t *TokenTree) propagateLazyEdits(idx int) {
 	edits := t.nodes[idx].applyLazyEdits()
 	if left := leftChildIdx(idx); t.isValidNode(left) {
@@ -270,29 +283,20 @@ func (t *TokenTree) propagateLazyEdits(idx int) {
 }
 
 func (t *TokenTree) deleteNodeAtIdx(idx int) int {
-	hasLeft := t.isValidNode(leftChildIdx(idx))
-	hasRight := t.isValidNode(rightChildIdx(idx))
-	nextIdx := t.nextNodeIdx(idx)
-
-	if hasLeft && hasRight {
-		t.nodes[idx] = t.nodes[nextIdx]
-		t.nodes[nextIdx] = treeNode{}
-		t.recalculateMaxLookaheadFromIdxToRoot(idx)
-		t.recalculateMaxLookaheadFromIdxToRoot(nextIdx)
-		return idx
-	} else if hasLeft {
-		left := leftChildIdx(idx)
-		t.nodes[idx] = t.nodes[left]
-		t.deleteNodeAtIdx(left)
-		t.recalculateMaxLookaheadFromIdxToRoot(idx)
-		return nextIdx
-	} else if hasRight {
-		right := rightChildIdx(idx)
-		t.nodes[idx] = t.nodes[right]
-		t.deleteNodeAtIdx(right)
+	if right := rightChildIdx(idx); t.isValidNode(right) {
+		replaceIdx := t.leftmostChildInSubtree(right)
+		t.nodes[idx] = t.nodes[replaceIdx]
+		t.deleteNodeAtIdx(replaceIdx)
 		t.recalculateMaxLookaheadFromIdxToRoot(idx)
 		return idx
+	} else if left := leftChildIdx(idx); t.isValidNode(left) {
+		replaceIdx := t.rightmostChildInSubtree(left)
+		t.nodes[idx] = t.nodes[replaceIdx]
+		t.deleteNodeAtIdx(replaceIdx)
+		t.recalculateMaxLookaheadFromIdxToRoot(idx)
+		return t.nextNodeIdx(idx)
 	} else {
+		nextIdx := t.nextNodeIdx(idx)
 		t.nodes[idx] = treeNode{}
 		t.recalculateMaxLookaheadFromIdxToRoot(parentIdx(idx))
 		return nextIdx

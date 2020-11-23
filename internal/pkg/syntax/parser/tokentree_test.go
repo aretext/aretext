@@ -929,3 +929,64 @@ func TestTokenTreeDeleteToken(t *testing.T) {
 		})
 	}
 }
+
+func TestTokenTreeDeletePermutations(t *testing.T) {
+	testCases := []struct {
+		name           string
+		deleteSequence []int
+	}{
+		{
+			name:           "in order, ascending",
+			deleteSequence: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+		},
+		{
+			name:           "in order, descending",
+			deleteSequence: []int{14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+		},
+		{
+			name:           "random permutation 1",
+			deleteSequence: []int{9, 14, 5, 3, 11, 8, 4, 13, 10, 7, 1, 2, 12, 0, 6},
+		},
+		{
+			name:           "random permutation 2",
+			deleteSequence: []int{3, 6, 5, 1, 14, 13, 10, 11, 2, 0, 8, 7, 4, 9, 12},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tokens := []Token{
+				Token{StartPos: 0, EndPos: 1},
+				Token{StartPos: 1, EndPos: 2},
+				Token{StartPos: 2, EndPos: 3},
+				Token{StartPos: 3, EndPos: 4},
+				Token{StartPos: 4, EndPos: 5},
+				Token{StartPos: 5, EndPos: 6},
+				Token{StartPos: 6, EndPos: 7},
+				Token{StartPos: 7, EndPos: 8},
+				Token{StartPos: 8, EndPos: 9},
+				Token{StartPos: 9, EndPos: 10},
+				Token{StartPos: 10, EndPos: 11},
+				Token{StartPos: 11, EndPos: 12},
+				Token{StartPos: 12, EndPos: 13},
+				Token{StartPos: 13, EndPos: 14},
+				Token{StartPos: 14, EndPos: 15},
+			}
+
+			tree := NewTokenTree(tokens)
+
+			for _, deleteIdx := range tc.deleteSequence {
+				tree.IterFromPosition(uint64(deleteIdx)).Delete()
+				updatedTokens := make([]Token, 0, len(tokens))
+				for _, tok := range tokens {
+					if tok.StartPos != uint64(deleteIdx) {
+						updatedTokens = append(updatedTokens, tok)
+					}
+				}
+				actualTokens := tree.IterFromPosition(0).Collect()
+				assert.Equal(t, updatedTokens, actualTokens)
+				tokens = updatedTokens
+			}
+		})
+	}
+}

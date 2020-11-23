@@ -372,6 +372,24 @@ func (iter *TokenIter) Delete() {
 	}
 }
 
+// DeleteToPos deletes tokens starting before the given position.
+func (iter *TokenIter) DeleteToPos(pos uint64) {
+	var tok Token
+	for iter.Get(&tok) {
+		if tok.StartPos >= pos {
+			return
+		}
+		iter.Delete()
+	}
+}
+
+// DeleteRemaining deletes all remaining tokens from the iterator.
+func (iter *TokenIter) DeleteRemaining() {
+	for iter.tree.isValidNode(iter.nodeIdx) {
+		iter.Delete()
+	}
+}
+
 // Collect retrieves all tokens from the iterator and returns them as a slice.
 func (iter *TokenIter) Collect() []Token {
 	result := make([]Token, 0)

@@ -364,7 +364,7 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
 // The returned function rewindReader will seek the reader back to its original position.
-func (dfa *Dfa) MatchLongest(r io.ReadSeeker, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, rewindReader func() error, err error) {
+func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, rewindReader func() error, err error) {
 	var buf [1024]byte
 	var numBytesReadAtLastAccept, totalBytesRead int
 	pos := startPos
@@ -418,14 +418,13 @@ func (dfa *Dfa) MatchLongest(r io.ReadSeeker, startPos uint64, textLen uint64) (
 
 	// Reset the reader position to the end of the last match.
 	// If there was no match, this resets the reader to its original position.
-	if _, err := r.Seek(int64(numBytesReadAtLastAccept-totalBytesRead), io.SeekCurrent); err != nil {
+	if err := r.SeekBackward(uint64(totalBytesRead - numBytesReadAtLastAccept)); err != nil {
 		return false, 0, 0, nil, nil, err
 	}
 
 	// Return a function to "reset" the reader back to its original position.
 	rewindReader = func() error {
-		_, err := r.Seek(-1*int64(numBytesReadAtLastAccept), io.SeekCurrent)
-		return err
+		return r.SeekBackward(uint64(numBytesReadAtLastAccept))
 	}
 
 	return accepted, endPos, pos, actions, rewindReader, nil

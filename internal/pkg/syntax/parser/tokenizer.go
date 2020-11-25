@@ -41,7 +41,7 @@ func GenerateTokenizer(rules []TokenizerRule) (*Tokenizer, error) {
 
 // TokenizeAll splits the entire input text into tokens.
 // The input text MUST be valid UTF-8.
-func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, error) {
+func (t *Tokenizer) TokenizeAll(r InputReader, textLen uint64) (*TokenTree, error) {
 	var tokens []Token
 	pos := uint64(0)
 	for pos < textLen {
@@ -58,7 +58,7 @@ func (t *Tokenizer) TokenizeAll(r io.ReadSeeker, textLen uint64) (*TokenTree, er
 }
 
 // ReaderAtPosFunc returns a reader at the requested position.
-type ReaderAtPosFunc func(pos uint64) io.ReadSeeker
+type ReaderAtPosFunc func(pos uint64) InputReader
 
 // RetokenizeAfterEdit updates tokens based on an edit to the text.
 // The algorithm is based on Wagner (1998) Practical Algorithms for Incremental Software Development Environments, Chapter 5.
@@ -131,7 +131,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	return tree, nil
 }
 
-func (t *Tokenizer) nextToken(r io.ReadSeeker, textLen uint64, pos uint64) (uint64, Token, error) {
+func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64, Token, error) {
 	emptyToken := Token{
 		StartPos:     pos,
 		EndPos:       pos,
@@ -194,8 +194,8 @@ func (t *Tokenizer) actionsToRule(actions []int) TokenizerRule {
 	return t.Rules[ruleIdx]
 }
 
-func advanceReaderOneRune(r io.ReadSeeker) error {
-	var buf [1]byte
+func advanceReaderOneRune(r InputReader) error {
+	var buf [4]byte
 
 	if _, err := r.Read(buf[:1]); err != nil && err != io.EOF {
 		return errors.Wrapf(err, "read first byte")
@@ -203,8 +203,8 @@ func advanceReaderOneRune(r io.ReadSeeker) error {
 
 	w := int64(utf8.CharWidth[buf[0]])
 	if w > 1 {
-		if _, err := r.Seek(w-1, io.SeekCurrent); err != nil {
-			return errors.Wrapf(err, "seek forward")
+		if _, err := r.Read(buf[:w-1]); err != nil {
+			return errors.Wrapf(err, "read next bytes")
 		}
 	}
 

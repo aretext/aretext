@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"io"
 	"strings"
 	"testing"
 
@@ -70,7 +69,7 @@ func TestTokenizeAll(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textLen := uint64(len(tc.inputText))
-			r := strings.NewReader(tc.inputText)
+			r := &ReadSeekerInput{R: strings.NewReader(tc.inputText)}
 			tokenTree, err := tokenizer.TokenizeAll(r, textLen)
 			require.NoError(t, err)
 			tokens := tokenTree.IterFromPosition(0).Collect()
@@ -235,21 +234,20 @@ type editTextFunc func(s string) (string, Edit)
 
 func assertRetokenizeMatchesFullTokenize(t *testing.T, tokenizer *Tokenizer, initialText string, editTextFunc editTextFunc) {
 	textLen := uint64(len(initialText))
-	r := strings.NewReader(initialText)
+	r := &ReadSeekerInput{R: strings.NewReader(initialText)}
 	initialTree, err := tokenizer.TokenizeAll(r, textLen)
 	require.NoError(t, err)
 
 	updatedText, edit := editTextFunc(initialText)
 	updatedTextLen := uint64(len(updatedText))
-	r = strings.NewReader(updatedText)
+	r = &ReadSeekerInput{R: strings.NewReader(updatedText)}
 
 	expectedTree, err := tokenizer.TokenizeAll(r, updatedTextLen)
 	require.NoError(t, err)
 
-	retokenizedTree, err := tokenizer.RetokenizeAfterEdit(initialTree, edit, updatedTextLen, func(pos uint64) io.ReadSeeker {
-		_, err := r.Seek(int64(pos), io.SeekStart)
-		require.NoError(t, err)
-		return r
+	retokenizedTree, err := tokenizer.RetokenizeAfterEdit(initialTree, edit, updatedTextLen, func(pos uint64) InputReader {
+		s := updatedText[pos:len(updatedText)]
+		return &ReadSeekerInput{R: strings.NewReader(s)}
 	})
 	require.NoError(t, err)
 

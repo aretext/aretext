@@ -23,6 +23,7 @@ Design principles:
 - [x] handle tabs
 - [x] soft-wrap long lines
 - [x] automatic reload when file changes on disk
+- [ ] syntax highlighting
 - [ ] save changes
 - [ ] vim newline command ('o')
 - [ ] vim replace/change commands
@@ -42,12 +43,5 @@ Design principles:
 - [ ] vim repeat commands ('10x')
 - [ ] hotkeys
 - [ ] REPL autocomplete
-
-### 3.0: "syntax-tree power tools"
-
-- [ ] syntax highlighting
-- [ ] code folding
-- [ ] paren matching
-- [ ] select up syntax tree
 - [ ] autoindent
 - [ ] comment/uncomment

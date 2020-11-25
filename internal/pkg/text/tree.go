@@ -172,7 +172,7 @@ func (t *Tree) DeleteAtPosition(charPos uint64) {
 
 // ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtPosition(charPos uint64, direction ReadDirection) CloneableReader {
+func (t *Tree) ReaderAtPosition(charPos uint64, direction ReadDirection) *TreeReader {
 	return t.root.readerAtPosition(charPos, direction)
 }
 
@@ -211,7 +211,7 @@ type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
-	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader
+	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader
 	positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64
 	numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64
 }
@@ -288,7 +288,7 @@ func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDe
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader {
+func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader {
 	return g.nodes[nodeIdx].readerAtPosition(charPos, direction)
 }
 
@@ -388,7 +388,7 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 	return
 }
 
-func (n *innerNode) readerAtPosition(charPos uint64, direction ReadDirection) CloneableReader {
+func (n *innerNode) readerAtPosition(charPos uint64, direction ReadDirection) *TreeReader {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
 	return n.child.readerAtPosition(nodeIdx, adjustedCharPos, direction)
 }
@@ -503,7 +503,7 @@ func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDel
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) CloneableReader {
+func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
 	return newTreeReader(g, nodeIdx, textByteOffset, direction)
 }

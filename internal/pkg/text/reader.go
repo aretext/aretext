@@ -47,18 +47,18 @@ const (
 	ReadDirectionBackward
 )
 
-// treeReader reads UTF-8 bytes from a text.Tree.
+// TreeReader reads UTF-8 bytes from a text.Tree.
 // It implements io.Reader and CloneableReader.
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!
-type treeReader struct {
+type TreeReader struct {
 	group          *leafNodeGroup
 	nodeIdx        uint64
 	textByteOffset uint64
 	direction      ReadDirection
 }
 
-func newTreeReader(group *leafNodeGroup, nodeIdx uint64, textByteOffset uint64, direction ReadDirection) CloneableReader {
-	return &treeReader{
+func newTreeReader(group *leafNodeGroup, nodeIdx uint64, textByteOffset uint64, direction ReadDirection) *TreeReader {
+	return &TreeReader{
 		group:          group,
 		nodeIdx:        nodeIdx,
 		textByteOffset: textByteOffset,
@@ -67,14 +67,14 @@ func newTreeReader(group *leafNodeGroup, nodeIdx uint64, textByteOffset uint64, 
 }
 
 // Read implements io.Reader#Read
-func (r *treeReader) Read(b []byte) (int, error) {
+func (r *TreeReader) Read(b []byte) (int, error) {
 	if r.direction == ReadDirectionBackward {
 		return r.readBackward(b)
 	}
 	return r.readForward(b)
 }
 
-func (r *treeReader) readForward(b []byte) (int, error) {
+func (r *TreeReader) readForward(b []byte) (int, error) {
 	i := 0
 	for {
 		if i == len(b) {
@@ -103,7 +103,7 @@ func (r *treeReader) readForward(b []byte) (int, error) {
 	}
 }
 
-func (r *treeReader) readBackward(b []byte) (int, error) {
+func (r *TreeReader) readBackward(b []byte) (int, error) {
 	i := 0
 	for {
 		if i == len(b) {
@@ -142,8 +142,8 @@ func (r *treeReader) readBackward(b []byte) (int, error) {
 }
 
 // Clone implements CloneableReader#Clone
-func (r *treeReader) Clone() CloneableReader {
-	return &treeReader{
+func (r *TreeReader) Clone() CloneableReader {
+	return &TreeReader{
 		group:          r.group,
 		nodeIdx:        r.nodeIdx,
 		textByteOffset: r.textByteOffset,

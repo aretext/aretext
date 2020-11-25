@@ -81,7 +81,7 @@ func (r *TreeReader) readForward(b []byte) (int, error) {
 			return i, nil
 		}
 
-		if r.group == nil {
+		if r.group.next == nil && r.nodeIdx == r.group.numNodes {
 			return i, io.EOF
 		}
 
@@ -95,7 +95,7 @@ func (r *TreeReader) readForward(b []byte) (int, error) {
 			r.textByteOffset = 0
 		}
 
-		if r.nodeIdx == r.group.numNodes {
+		if r.nodeIdx == r.group.numNodes && r.group.next != nil {
 			r.group = r.group.next
 			r.nodeIdx = 0
 			r.textByteOffset = 0

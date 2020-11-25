@@ -1,6 +1,7 @@
 package text
 
 import (
+	"errors"
 	"io"
 )
 
@@ -149,4 +150,36 @@ func (r *TreeReader) Clone() CloneableReader {
 		textByteOffset: r.textByteOffset,
 		direction:      r.direction,
 	}
+}
+
+// SeekBackward implements parser.InputReader#SeekBackward
+func (r *TreeReader) SeekBackward(offset uint64) error {
+	if r.direction != ReadDirectionForward {
+		return errors.New("SeekBackward is implemented only for readers with direction ReadDirectionForward")
+	}
+
+	for offset > 0 && !(r.group.prev == nil && r.nodeIdx == 0 && r.textByteOffset == 0) {
+		if r.textByteOffset >= offset {
+			r.textByteOffset -= offset
+			break
+		} else if r.textByteOffset > 0 {
+			offset -= r.textByteOffset
+			r.textByteOffset = 0
+			continue
+		}
+
+		if r.nodeIdx > 0 {
+			r.nodeIdx--
+			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
+			continue
+		}
+
+		if r.group.prev != nil {
+			r.group = r.group.prev
+			r.nodeIdx = r.group.numNodes - 1
+			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
+		}
+	}
+
+	return nil
 }

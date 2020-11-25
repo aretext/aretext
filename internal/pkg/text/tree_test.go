@@ -468,6 +468,100 @@ func TestReadBackwards(t *testing.T) {
 	}
 }
 
+func TestReaderSeekBackward(t *testing.T) {
+	testCases := []struct {
+		name         string
+		inputString  string
+		readPosition uint64
+		seekOffset   uint64
+		expected     string
+	}{
+		{
+			name:         "empty, seek offset zero",
+			inputString:  "",
+			readPosition: 0,
+			seekOffset:   0,
+			expected:     "",
+		},
+		{
+			name:         "empty, seek offset one",
+			inputString:  "",
+			readPosition: 0,
+			seekOffset:   1,
+			expected:     "",
+		},
+		{
+			name:         "single character, seek to start of string",
+			inputString:  "a",
+			readPosition: 1,
+			seekOffset:   1,
+			expected:     "a",
+		},
+		{
+			name:         "single character, seek past start of string",
+			inputString:  "a",
+			readPosition: 1,
+			seekOffset:   10,
+			expected:     "a",
+		},
+		{
+			name:         "multiple characters, seek a few characters back",
+			inputString:  "abcd1234",
+			readPosition: 8,
+			seekOffset:   3,
+			expected:     "234",
+		},
+		{
+			name:         "very long string, short seek",
+			inputString:  repeat('a', 300000),
+			readPosition: 300000,
+			seekOffset:   100,
+			expected:     repeat('a', 100),
+		},
+		{
+			name:         "very long string, long seek",
+			inputString:  repeat('a', 300000),
+			readPosition: 300000,
+			seekOffset:   10000,
+			expected:     repeat('a', 10000),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+
+			reader := tree.ReaderAtPosition(tc.readPosition, ReadDirectionForward)
+			err = reader.SeekBackward(tc.seekOffset)
+			require.NoError(t, err)
+
+			retrieved, err := ioutil.ReadAll(reader)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, string(retrieved))
+		})
+	}
+}
+
+func TestReadToEndThenSeekBackward(t *testing.T) {
+	s := repeat('a', 1000)
+	tree, err := NewTreeFromString(s)
+	require.NoError(t, err)
+
+	reader := tree.ReaderAtPosition(0, ReadDirectionForward)
+	_, err = ioutil.ReadAll(reader)
+	require.NoError(t, err)
+
+	err = reader.SeekBackward(100)
+	require.NoError(t, err)
+
+	retrieved, err := ioutil.ReadAll(reader)
+	require.NoError(t, err)
+
+	expected := repeat('a', 100)
+	require.Equal(t, expected, string(retrieved))
+}
+
 func TestInsertAtPosition(t *testing.T) {
 	testCases := []struct {
 		name         string

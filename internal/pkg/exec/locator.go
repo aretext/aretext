@@ -65,7 +65,7 @@ func (loc *charInLineLocator) findPosition(state *BufferState) uint64 {
 
 func (loc *charInLineLocator) findPositionBeforeCursor(state *BufferState) uint64 {
 	startPos := state.cursor.position
-	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionBackward)
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionBackward)
 	seg := segment.NewSegment()
 	var offset uint64
 
@@ -94,7 +94,7 @@ func (loc *charInLineLocator) findPositionBeforeCursor(state *BufferState) uint6
 
 func (loc *charInLineLocator) findPositionAfterCursor(state *BufferState) uint64 {
 	startPos := state.cursor.position
-	segmentIter := gcIterForTree(state.tree, startPos, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var endOfLineOrFile bool
 	var prevPrevOffset, prevOffset uint64
@@ -130,7 +130,7 @@ func NewOntoDocumentLocator() CursorLocator {
 
 // Locate finds the valid position within the document closest to the current cursor position.
 func (loc *ontoDocumentLocator) Locate(state *BufferState) cursorState {
-	lastValidPos := state.tree.NumChars()
+	lastValidPos := state.textTree.NumChars()
 	newPos := state.cursor.position
 	if newPos > lastValidPos {
 		newPos = lastValidPos
@@ -155,16 +155,16 @@ func NewOntoLineLocator() CursorLocator {
 // Locate finds the closest grapheme cluster on a line (not newline or past end of text).
 func (loc *ontoLineLocator) Locate(state *BufferState) cursorState {
 	// If past the end of the text, return the start of the last grapheme cluster.
-	numChars := state.tree.NumChars()
+	numChars := state.textTree.NumChars()
 	if state.cursor.position >= numChars {
-		newPos := loc.findPrevGraphemeCluster(state.tree, numChars, 1)
+		newPos := loc.findPrevGraphemeCluster(state.textTree, numChars, 1)
 		return cursorState{position: newPos}
 	}
 
 	// If on a grapheme cluster with a newline (either "\n" or "\r\n"), return the start
 	// of the last grapheme cluster before the current grapheme cluster.
-	if hasNewline, afterNewlinePos := loc.findNewlineAtPos(state.tree, state.cursor.position); hasNewline {
-		newPos := loc.findPrevGraphemeCluster(state.tree, afterNewlinePos, 2)
+	if hasNewline, afterNewlinePos := loc.findNewlineAtPos(state.textTree, state.cursor.position); hasNewline {
+		newPos := loc.findPrevGraphemeCluster(state.textTree, afterNewlinePos, 2)
 		return cursorState{position: newPos}
 	}
 
@@ -234,7 +234,7 @@ func NewRelativeLineStartLocator(direction text.ReadDirection, count uint64) Cur
 }
 
 func (loc *relativeLineStartLocator) Locate(state *BufferState) cursorState {
-	newPos := loc.findStartOfLineAboveOrBelow(state.tree, state.cursor.position)
+	newPos := loc.findStartOfLineAboveOrBelow(state.textTree, state.cursor.position)
 	return cursorState{position: newPos}
 }
 
@@ -283,14 +283,14 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLo
 // If the target line has more characters than the starting line, then the cursor will move
 // as close as possible to the logical offset.
 func (loc *relativeLineLocator) Locate(state *BufferState) cursorState {
-	lineStartPos := loc.findLineStart(state.tree, state.cursor.position)
+	lineStartPos := loc.findLineStart(state.textTree, state.cursor.position)
 	targetLineStartPos := loc.findTargetLineStartPos(state)
 	if targetLineStartPos == lineStartPos {
 		return state.cursor
 	}
 
 	targetOffset := loc.findOffsetFromLineStart(state, lineStartPos)
-	newPos, actualOffset := loc.advanceToOffset(state.tree, targetLineStartPos, targetOffset)
+	newPos, actualOffset := loc.advanceToOffset(state.textTree, targetLineStartPos, targetOffset)
 	return cursorState{
 		position:      newPos,
 		logicalOffset: targetOffset - actualOffset,
@@ -325,7 +325,7 @@ func (loc *relativeLineLocator) targetLineNum(currentLineNum uint64) uint64 {
 }
 
 func (loc *relativeLineLocator) findOffsetFromLineStart(state *BufferState, lineStartPos uint64) uint64 {
-	segmentIter := gcIterForTree(state.tree, lineStartPos, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(state.textTree, lineStartPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	pos, offset := lineStartPos, uint64(0)
 
@@ -404,7 +404,7 @@ func (loc *lineBoundaryLocator) String() string {
 // Locate the start or end of the current line.
 // This assumes that the cursor is positioned on a line (not a newline character); if not, the result is undefined.
 func (loc *lineBoundaryLocator) Locate(state *BufferState) cursorState {
-	segmentIter := gcIterForTree(state.tree, state.cursor.position, loc.direction)
+	segmentIter := gcIterForTree(state.textTree, state.cursor.position, loc.direction)
 	seg := segment.NewSegment()
 	var prevOffset, offset uint64
 
@@ -449,7 +449,7 @@ func (loc *nonWhitespaceOrNewlineLocator) String() string {
 
 // Locate finds the nearest non-whitespace character or newline on or after the cursor.
 func (loc *nonWhitespaceOrNewlineLocator) Locate(state *BufferState) cursorState {
-	segmentIter := gcIterForTree(state.tree, state.cursor.position, text.ReadDirectionForward)
+	segmentIter := gcIterForTree(state.textTree, state.cursor.position, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var offset uint64
 
@@ -481,8 +481,8 @@ func NewLineNumLocator(lineNum uint64) CursorLocator {
 
 // Locate finds the start of the given line number.
 func (loc *lineNumLocator) Locate(state *BufferState) cursorState {
-	lineNum := closestValidLineNum(state.tree, loc.lineNum)
-	pos := state.tree.LineStartPosition(lineNum)
+	lineNum := closestValidLineNum(state.textTree, loc.lineNum)
+	pos := state.textTree.LineStartPosition(lineNum)
 	return cursorState{position: pos}
 }
 
@@ -499,7 +499,7 @@ func NewLastLineLocator() CursorLocator {
 
 // locate returns the cursor position at the start of the last line.
 func (loc *lastLineLocator) Locate(state *BufferState) cursorState {
-	tree := state.tree
+	tree := state.textTree
 	lineNum := closestValidLineNum(tree, tree.NumLines())
 	return cursorState{
 		position: tree.LineStartPosition(lineNum),

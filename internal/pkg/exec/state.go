@@ -66,7 +66,7 @@ func (s *EditorState) ReplInputStartPos() uint64 {
 }
 
 func (s *EditorState) SetReplInputStartPos(pos uint64) {
-	endPos := s.replBuffer.tree.NumChars()
+	endPos := s.replBuffer.textTree.NumChars()
 	if pos > endPos {
 		pos = endPos
 	}
@@ -84,15 +84,15 @@ func (s *EditorState) QuitFlag() bool {
 
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
-	tree   *text.Tree
-	cursor cursorState
-	view   viewState
+	textTree *text.Tree
+	cursor   cursorState
+	view     viewState
 }
 
-func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
+func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
 	return &BufferState{
-		tree:   tree,
-		cursor: cursorState{position: cursorPosition},
+		textTree: textTree,
+		cursor:   cursorState{position: cursorPosition},
 		view: viewState{
 			textOrigin: 0,
 			x:          viewX,
@@ -103,8 +103,8 @@ func NewBufferState(tree *text.Tree, cursorPosition, viewX, viewY, viewWidth, vi
 	}
 }
 
-func (s *BufferState) Tree() *text.Tree {
-	return s.tree
+func (s *BufferState) TextTree() *text.Tree {
+	return s.textTree
 }
 
 func (s *BufferState) CursorPosition() uint64 {

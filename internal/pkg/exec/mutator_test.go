@@ -13,21 +13,21 @@ func TestLoadDocumentMutator(t *testing.T) {
 	state := NewEditorState(100, 100)
 
 	// Load a new document.
-	tree, err := text.NewTreeFromString("abcd")
+	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
 	watcher := file.NewEmptyWatcher()
-	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
 
 	// Expect that the text and watcher are installed.
-	assert.Equal(t, "abcd", state.documentBuffer.tree.String())
+	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
 	assert.Equal(t, watcher, state.FileWatcher())
 }
 
 func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
-	tree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
+	textTree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
 	require.NoError(t, err)
 	state := NewEditorState(5, 2)
-	state.documentBuffer.tree = tree
+	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -35,14 +35,14 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
 
 	// Load a new document with a shorter text.
-	tree, err = text.NewTreeFromString("ab")
+	textTree, err = text.NewTreeFromString("ab")
 	require.NoError(t, err)
 	watcher := file.NewEmptyWatcher()
-	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
 
 	// Expect that the cursor moved back to the end of the text,
 	// and the view scrolled to make the cursor visible.
-	assert.Equal(t, "ab", state.documentBuffer.tree.String())
+	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
 }
@@ -65,23 +65,23 @@ func TestLoadDocumentMutatorWithReplOpen(t *testing.T) {
 	setupMutator.Mutate(state)
 
 	// Load a new document.
-	tree, err := text.NewTreeFromString("updated")
+	textTree, err := text.NewTreeFromString("updated")
 	require.NoError(t, err)
 	watcher := file.NewEmptyWatcher()
-	NewLoadDocumentMutator(tree, watcher).Mutate(state)
+	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
 
 	// Expect that only the document buffer changed.
-	assert.Equal(t, "updated", state.documentBuffer.tree.String())
-	assert.Equal(t, "hello\n>>> abc", state.replBuffer.tree.String())
+	assert.Equal(t, "updated", state.documentBuffer.textTree.String())
+	assert.Equal(t, "hello\n>>> abc", state.replBuffer.textTree.String())
 }
 
 func TestCursorMutator(t *testing.T) {
-	tree, err := text.NewTreeFromString("abcd")
+	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100)
 	state.documentBuffer = &BufferState{
-		tree:   tree,
-		cursor: cursorState{position: 2},
+		textTree: textTree,
+		cursor:   cursorState{position: 2},
 	}
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
 	mutator.Mutate(state)
@@ -90,9 +90,9 @@ func TestCursorMutator(t *testing.T) {
 
 func TestCursorMutatorRestrictToReplInput(t *testing.T) {
 	state := NewEditorState(100, 100)
-	tree, err := text.NewTreeFromString(">>> abcd")
+	textTree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
-	state.replBuffer.tree = tree
+	state.replBuffer.textTree = textTree
 
 	setupMutator := NewCompositeMutator([]Mutator{
 		NewLayoutMutator(LayoutDocumentAndRepl),
@@ -146,26 +146,26 @@ func TestInsertRuneMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tree, err := text.NewTreeFromString(tc.inputString)
+			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			state := NewEditorState(100, 100)
 			state.documentBuffer = &BufferState{
-				tree:   tree,
-				cursor: tc.initialCursor,
+				textTree: textTree,
+				cursor:   tc.initialCursor,
 			}
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, tree.String())
+			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
 }
 
 func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
 	state := NewEditorState(100, 100)
-	tree, err := text.NewTreeFromString(">>> abcd")
+	textTree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
-	state.replBuffer.tree = tree
+	state.replBuffer.textTree = textTree
 
 	setupMutator := NewCompositeMutator([]Mutator{
 		NewLayoutMutator(LayoutDocumentAndRepl),
@@ -179,7 +179,7 @@ func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
 	mutator.RestrictToReplInput()
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(5), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> xabcd", tree.String())
+	assert.Equal(t, ">>> xabcd", textTree.String())
 }
 
 func TestDeleteMutator(t *testing.T) {
@@ -227,26 +227,26 @@ func TestDeleteMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tree, err := text.NewTreeFromString(tc.inputString)
+			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			state := NewEditorState(100, 100)
 			state.documentBuffer = &BufferState{
-				tree:   tree,
-				cursor: tc.initialCursor,
+				textTree: textTree,
+				cursor:   tc.initialCursor,
 			}
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, tree.String())
+			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
 }
 
 func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
 	state := NewEditorState(100, 100)
-	tree, err := text.NewTreeFromString(">>> abcd")
+	textTree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
-	state.replBuffer.tree = tree
+	state.replBuffer.textTree = textTree
 
 	setupMutator := NewCompositeMutator([]Mutator{
 		NewLayoutMutator(LayoutDocumentAndRepl),
@@ -261,7 +261,7 @@ func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
 	mutator.RestrictToReplInput()
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(4), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> cd", tree.String())
+	assert.Equal(t, ">>> cd", textTree.String())
 }
 
 func TestScrollLinesMutator(t *testing.T) {
@@ -323,12 +323,12 @@ func TestScrollLinesMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tree, err := text.NewTreeFromString(tc.inputString)
+			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			state := NewEditorState(100, 100)
 			state.documentBuffer = &BufferState{
-				tree: tree,
-				view: tc.initialView,
+				textTree: textTree,
+				view:     tc.initialView,
 			}
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
@@ -370,9 +370,9 @@ func (r *stubRepl) OutputChan() chan string {
 
 func TestSubmitReplMutator(t *testing.T) {
 	state := NewEditorState(100, 100)
-	tree, err := text.NewTreeFromString(">>> abcd")
+	textTree, err := text.NewTreeFromString(">>> abcd")
 	require.NoError(t, err)
-	state.replBuffer.tree = tree
+	state.replBuffer.textTree = textTree
 
 	NewLayoutMutator(LayoutDocumentAndRepl).Mutate(state)
 	state.replBuffer.cursor = cursorState{position: 6}
@@ -383,18 +383,18 @@ func TestSubmitReplMutator(t *testing.T) {
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(9), state.replBuffer.cursor.position)
 	assert.Equal(t, uint64(9), state.replInputStartPos)
-	assert.Equal(t, ">>> abcd\n", tree.String())
+	assert.Equal(t, ">>> abcd\n", textTree.String())
 	assert.Equal(t, []string{"abcd"}, repl.inputs)
 }
 
 func TestInterruptReplMutator(t *testing.T) {
-	tree, err := text.NewTreeFromString("")
+	textTree, err := text.NewTreeFromString("")
 	require.NoError(t, err)
 
 	state := NewEditorState(100, 100)
 	state.documentBuffer = &BufferState{
-		tree: tree,
-		view: viewState{height: 100, width: 100},
+		textTree: textTree,
+		view:     viewState{height: 100, width: 100},
 	}
 
 	setupMutator := NewCompositeMutator([]Mutator{
@@ -408,13 +408,13 @@ func TestInterruptReplMutator(t *testing.T) {
 	setupMutator.Mutate(state)
 
 	replBuffer := state.Buffer(BufferIdRepl)
-	assert.Equal(t, "hello\n>>> abc", replBuffer.Tree().String())
+	assert.Equal(t, "hello\n>>> abc", replBuffer.TextTree().String())
 	assert.Equal(t, uint64(10), state.ReplInputStartPos())
 	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
 
 	repl := newStubRepl()
 	NewInterruptReplMutator(repl).Mutate(state)
-	assert.Equal(t, "hello\n>>> ", replBuffer.Tree().String())
+	assert.Equal(t, "hello\n>>> ", replBuffer.TextTree().String())
 	assert.Equal(t, uint64(10), state.ReplInputStartPos())
 	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
 	assert.True(t, repl.interrupted)

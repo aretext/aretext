@@ -14,11 +14,11 @@ import (
 func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus bool) {
 	x, y, width, height := viewDimensions(bufferState)
 	screenRegion := NewScreenRegion(screen, x, y, width, height)
-	tree := bufferState.Tree()
+	textTree := bufferState.TextTree()
 	cursorPos := bufferState.CursorPosition()
 	viewTextOrigin := bufferState.ViewTextOrigin()
 	pos := viewTextOrigin
-	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)

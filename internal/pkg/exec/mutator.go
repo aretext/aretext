@@ -55,17 +55,17 @@ func (cm *CompositeMutator) String() string {
 }
 
 type loadDocumentMutator struct {
-	tree        *text.Tree
+	textTree    *text.Tree
 	fileWatcher file.Watcher
 }
 
-func NewLoadDocumentMutator(tree *text.Tree, fileWatcher file.Watcher) Mutator {
-	return &loadDocumentMutator{tree, fileWatcher}
+func NewLoadDocumentMutator(textTree *text.Tree, fileWatcher file.Watcher) Mutator {
+	return &loadDocumentMutator{textTree, fileWatcher}
 }
 
 // Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
-	state.documentBuffer.tree = ldm.tree
+	state.documentBuffer.textTree = ldm.textTree
 
 	state.fileWatcher.Stop()
 	state.fileWatcher = ldm.fileWatcher
@@ -125,7 +125,7 @@ func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 	bufferState := state.Buffer(state.FocusedBufferId())
 	bufferState.view.textOrigin = ScrollToCursor(
 		bufferState.cursor.position,
-		bufferState.tree,
+		bufferState.textTree,
 		bufferState.view.textOrigin,
 		bufferState.view.width,
 		bufferState.view.height)
@@ -149,7 +149,7 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 // Mutate moves the view origin up/down by the specified number of lines.
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 	bufferState := state.Buffer(state.FocusedBufferId())
-	lineNum := bufferState.tree.LineNumForPosition(bufferState.view.textOrigin)
+	lineNum := bufferState.textTree.LineNumForPosition(bufferState.view.textOrigin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
 	} else if lineNum >= sm.numLines {
@@ -158,13 +158,13 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 		lineNum = 0
 	}
 
-	lineNum = closestValidLineNum(bufferState.tree, lineNum)
+	lineNum = closestValidLineNum(bufferState.textTree, lineNum)
 
 	// When scrolling to the end of the file, we want most of the last lines to remain visible.
 	// To achieve this, set the view origin (viewHeight - scrollMargin) lines above
 	// the last line.  This will leave a few blank lines past the end of the document
 	// (the scroll margin) for consistency with ScrollToCursor.
-	lastLineNum := closestValidLineNum(bufferState.tree, bufferState.tree.NumLines())
+	lastLineNum := closestValidLineNum(bufferState.textTree, bufferState.textTree.NumLines())
 	if lastLineNum-lineNum < bufferState.view.height {
 		if lastLineNum+scrollMargin+1 > bufferState.view.height {
 			lineNum = lastLineNum + scrollMargin + 1 - bufferState.view.height
@@ -173,7 +173,7 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 		}
 	}
 
-	bufferState.view.textOrigin = bufferState.tree.LineStartPosition(lineNum)
+	bufferState.view.textOrigin = bufferState.textTree.LineStartPosition(lineNum)
 }
 
 func (sm *scrollLinesMutator) RestrictToReplInput() {}
@@ -200,7 +200,7 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 		startPos = state.replInputStartPos
 	}
 
-	if err := bufferState.tree.InsertAtPosition(startPos, irm.r); err != nil {
+	if err := bufferState.textTree.InsertAtPosition(startPos, irm.r); err != nil {
 		// Invalid UTF-8 character; ignore it.
 		return
 	}
@@ -244,10 +244,10 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 	}
 
 	if startPos < deleteToPos {
-		dm.deleteCharacters(bufferState.tree, startPos, deleteToPos-startPos)
+		dm.deleteCharacters(bufferState.textTree, startPos, deleteToPos-startPos)
 		bufferState.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		dm.deleteCharacters(bufferState.tree, deleteToPos, startPos-deleteToPos)
+		dm.deleteCharacters(bufferState.textTree, deleteToPos, startPos-deleteToPos)
 		bufferState.cursor = cursorState{position: deleteToPos}
 	}
 }
@@ -382,9 +382,9 @@ func NewOutputReplMutator(s string) Mutator {
 
 // Mutate outputs a string to the REPL.
 func (orm *outputReplMutator) Mutate(state *EditorState) {
-	tree := state.replBuffer.tree
+	textTree := state.replBuffer.textTree
 	for _, r := range orm.s {
-		tree.InsertAtPosition(state.replInputStartPos, r)
+		textTree.InsertAtPosition(state.replInputStartPos, r)
 		state.replInputStartPos++
 		state.replBuffer.cursor.position++
 	}
@@ -406,16 +406,16 @@ func NewSubmitReplMutator(repl repl.Repl) Mutator {
 
 // Mutate executes the current repl input and updates the cursor.
 func (srm *submitReplMutator) Mutate(state *EditorState) {
-	tree := state.replBuffer.tree
-	reader := tree.ReaderAtPosition(state.replInputStartPos, text.ReadDirectionForward)
+	textTree := state.replBuffer.textTree
+	reader := textTree.ReaderAtPosition(state.replInputStartPos, text.ReadDirectionForward)
 	inputBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 
-	tree.InsertAtPosition(tree.NumChars(), '\n')
+	textTree.InsertAtPosition(textTree.NumChars(), '\n')
 	srm.repl.SubmitInput(string(inputBytes))
-	state.replInputStartPos = tree.NumChars()
+	state.replInputStartPos = textTree.NumChars()
 	state.replBuffer.cursor = cursorState{position: state.replInputStartPos}
 }
 

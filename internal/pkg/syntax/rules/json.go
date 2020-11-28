@@ -20,5 +20,11 @@ func init() {
 			Regexp:    `"([^\"\n]|\\")*"`,
 			TokenRole: parser.TokenRoleString,
 		},
+
+		// This prevents the number and keyword rules from matching substrings of a symbol.
+		{
+			Regexp:    `[a-zA-Z0-9]+`,
+			TokenRole: parser.TokenRoleNone,
+		},
 	}
 }

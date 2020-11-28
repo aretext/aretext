@@ -85,6 +85,16 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:           "number prefix",
+			inputString:    "123abc",
+			expectedTokens: []TokenWithText{},
+		},
+		{
+			name:           "number suffix",
+			inputString:    "abc123",
+			expectedTokens: []TokenWithText{},
+		},
+		{
 			name:        "key with string value",
 			inputString: `{"key": "abcd"}`,
 			expectedTokens: []TokenWithText{
@@ -134,6 +144,11 @@ func TestJsonTokenizer(t *testing.T) {
 				{Text: `"nullable"`, Role: parser.TokenRoleString},
 				{Text: `null`, Role: parser.TokenRoleKeyword},
 			},
+		},
+		{
+			name:           "keyword prefix",
+			inputString:    "nullable",
+			expectedTokens: []TokenWithText{},
 		},
 		{
 			name: "object with multiple keys",

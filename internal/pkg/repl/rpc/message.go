@@ -6,29 +6,26 @@ package rpc
 type EmptyMsg struct {
 }
 
-// A message describing where to write the memory profile
-type ProfileMemoryRequestMsg struct {
+// Parameters for setting the syntax of the current document
+type SetSyntaxMsg struct {
+
+	// Language of the syntax
+	Language string `json:"language"`
+}
+
+// Parameters for profiling memory
+type ProfileMemoryMsg struct {
 
 	// Path of the file where the memory profile will be written
 	Path string `json:"path"`
 }
 
 // A message describing the result of a memory profile
-type ProfileMemoryResponseMsg struct {
+type OpResultMsg struct {
 
-	// Whether the memory profile was written successfully
-	Succeeded bool `json:"succeeded"`
+	// Whether the operation completed successfully
+	Success bool `json:"success"`
 
-	// The reason why the memory profile failed
-	Error string `json:"error"`
-}
-
-// A message describing the result of a quit request.
-type QuitResultMsg struct {
-
-	// Whether the quit request was accepted.
-	Accepted bool `json:"accepted"`
-
-	// The reason the quit request was rejected.
-	RejectReason string `json:"reject_reason"`
+	// A description of the operation's result
+	Description string `json:"description"`
 }

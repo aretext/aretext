@@ -6,6 +6,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 	"github.com/wedaly/aretext/internal/pkg/text"
 	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
@@ -23,6 +24,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus boo
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
+	tokenIter := bufferState.TokenTree().IterFromPosition(pos)
 
 	showCursor := showFakeCursorFunc(screenRegion)
 	if hasFocus {
@@ -37,7 +39,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus boo
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, cursorPos, showCursor)
+		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, tokenIter, cursorPos, showCursor)
 		pos += wrappedLine.NumRunes()
 	}
 
@@ -53,7 +55,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, cursorPos uint64, showCursor func(x, y int)) {
+func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, showCursor func(x, y int)) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -80,7 +82,8 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 			return
 		}
 
-		drawGraphemeCluster(screenRegion, col, row, gcRunes, tcell.StyleDefault)
+		style := styleAtPosition(pos, tokenIter)
+		drawGraphemeCluster(screenRegion, col, row, gcRunes, style)
 
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.
@@ -145,7 +148,42 @@ func drawLineTooLong(screenRegion *ScreenRegion, row int, maxLineWidth int) {
 func showFakeCursorFunc(screenRegion *ScreenRegion) func(x, y int) {
 	return func(x, y int) {
 		mainc, combc, style := screenRegion.GetContent(x, y)
-		newStyle := style.Reverse(true).Dim(true)
+		newStyle := style.Foreground(tcell.ColorDefault).Reverse(true).Dim(true)
 		screenRegion.SetContent(x, y, mainc, combc, newStyle)
+	}
+}
+
+func styleAtPosition(pos uint64, tokenIter *parser.TokenIter) tcell.Style {
+	var token parser.Token
+	for tokenIter.Get(&token) {
+		if token.StartPos <= pos && token.EndPos > pos {
+			return styleForTokenRole(token.Role)
+		}
+
+		if token.StartPos > pos {
+			break
+		}
+
+		tokenIter.Advance()
+	}
+
+	return tcell.StyleDefault
+}
+
+func styleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
+	s := tcell.StyleDefault
+	switch tokenRole {
+	case parser.TokenRoleOperator:
+		return s.Foreground(tcell.ColorFuchsia)
+	case parser.TokenRoleKeyword:
+		return s.Foreground(tcell.ColorOrange)
+	case parser.TokenRoleNumber:
+		return s.Foreground(tcell.ColorGreen)
+	case parser.TokenRoleString:
+		return s.Foreground(tcell.ColorRed)
+	case parser.TokenRoleComment:
+		return s.Foreground(tcell.ColorBlue)
+	default:
+		return s
 	}
 }

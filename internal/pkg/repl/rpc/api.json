@@ -1,18 +1,25 @@
 {
   "endpoints": [
     {
+      "name": "set_syntax",
+      "description": "Set syntax of the current document",
+      "task_constructor": "NewSetSyntaxTask",
+      "request_msg": "SetSyntaxMsg",
+      "response_msg": "OpResultMsg"
+    },
+    {
       "name": "profile_memory",
       "description": "Write a memory profile to the specified file",
       "task_constructor": "NewProfileMemoryTask",
-      "request_msg": "ProfileMemoryRequestMsg",
-      "response_msg": "ProfileMemoryResponseMsg"
+      "request_msg": "ProfileMemoryMsg",
+      "response_msg": "OpResultMsg"
     },
     {
       "name": "quit",
       "description": "Quit the aretext editor.",
       "task_constructor": "NewQuitTask",
       "request_msg": "EmptyMsg",
-      "response_msg": "QuitResultMsg"
+      "response_msg": "OpResultMsg"
     }
   ],
   "messages": [
@@ -22,8 +29,19 @@
       "fields": []
     },
     {
-      "name": "ProfileMemoryRequestMsg",
-      "description": "A message describing where to write the memory profile",
+      "name": "SetSyntaxMsg",
+      "description": "Parameters for setting the syntax of the current document",
+      "fields": [
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Language of the syntax"
+        }
+      ]
+    },
+    {
+      "name": "ProfileMemoryMsg",
+      "description": "Parameters for profiling memory",
       "fields": [
         {
           "name": "path",
@@ -33,36 +51,19 @@
       ]
     },
     {
-        "name": "ProfileMemoryResponseMsg",
-        "description": "A message describing the result of a memory profile",
-        "fields": [
-          {
-            "name": "succeeded",
-            "type": "bool",
-            "description": "Whether the memory profile was written successfully"
-          },
-          {
-            "name": "error",
-            "type": "string",
-            "description": "The reason why the memory profile failed",
-            "default": ""
-          }
-        ]
-    },
-    {
-      "name": "QuitResultMsg",
-      "description": "A message describing the result of a quit request.",
+      "name": "OpResultMsg",
+      "description": "A message describing the result of a memory profile",
       "fields": [
         {
-          "name": "accepted",
+          "name": "success",
           "type": "bool",
-          "description": "Whether the quit request was accepted.",
-          "default": true
+          "description": "Whether the operation completed successfully",
+          "default": false
         },
         {
-          "name": "reject_reason",
+          "name": "description",
           "type": "string",
-          "description": "The reason the quit request was rejected.",
+          "description": "A description of the operation's result",
           "default": ""
         }
       ]

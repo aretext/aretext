@@ -27,19 +27,45 @@ func NewTaskBroker() *TaskBroker {
 // All requests sent to the broker MUST conform to this API version.
 // This implements AsyncExecutor#ApiVersion().
 func (e *TaskBroker) ApiVersion() string {
-	return "a3bc91dabfdd797646fc08950c2ae50b"
+	return "c1b64035ee710af0c85d3cfee7b56d80"
 }
 
 // ExecuteAsync implements AsyncExecutor#ExecuteAsync().
 func (e *TaskBroker) ExecuteAsync(endpoint string, data []byte) (chan []byte, error) {
 	switch endpoint {
-	case "profile_memory":
-		var msg ProfileMemoryRequestMsg
+	case "set_syntax":
+		var msg SetSyntaxMsg
 		if err := json.Unmarshal(data, &msg); err != nil {
 			return nil, errors.Wrapf(err, "json.Unmarshal()")
 		}
 
-		replyMsgChan := make(chan ProfileMemoryResponseMsg, 0)
+		replyMsgChan := make(chan OpResultMsg, 0)
+		task, err := NewSetSyntaxTask(msg, replyMsgChan)
+		if err != nil {
+			return nil, errors.Wrapf(err, "NewSetSyntaxTask()")
+		}
+
+		replyChan := make(chan []byte, 0)
+		go func() {
+			defer close(replyChan)
+			replyMsg := <-replyMsgChan
+			replyData, err := json.Marshal(replyMsg)
+			if err != nil {
+				log.Printf("Could not serialize reply msg: %v\n", err)
+				return
+			}
+			replyChan <- replyData
+		}()
+
+		e.taskChan <- task
+		return replyChan, nil
+	case "profile_memory":
+		var msg ProfileMemoryMsg
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return nil, errors.Wrapf(err, "json.Unmarshal()")
+		}
+
+		replyMsgChan := make(chan OpResultMsg, 0)
 		task, err := NewProfileMemoryTask(msg, replyMsgChan)
 		if err != nil {
 			return nil, errors.Wrapf(err, "NewProfileMemoryTask()")
@@ -65,7 +91,7 @@ func (e *TaskBroker) ExecuteAsync(endpoint string, data []byte) (chan []byte, er
 			return nil, errors.Wrapf(err, "json.Unmarshal()")
 		}
 
-		replyMsgChan := make(chan QuitResultMsg, 0)
+		replyMsgChan := make(chan OpResultMsg, 0)
 		task, err := NewQuitTask(msg, replyMsgChan)
 		if err != nil {
 			return nil, errors.Wrapf(err, "NewQuitTask()")

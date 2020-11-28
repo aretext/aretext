@@ -39,6 +39,7 @@ def main():
             "__name__": "__console__",
             "__doc__": None,
             "quit": pyaretext.api.editor.quit,
+            "set_syntax": pyaretext.api.editor.set_syntax,
         },
     )
 

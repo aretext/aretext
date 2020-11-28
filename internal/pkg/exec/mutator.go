@@ -8,6 +8,8 @@ import (
 
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/repl"
+	"github.com/wedaly/aretext/internal/pkg/syntax"
+	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -74,6 +76,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 	// and that the cursor is visible.  If not, adjust the cursor and scroll.
 	originalFocus := state.focusedBufferId
 	NewCompositeMutator([]Mutator{
+		NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
 		NewFocusBufferMutator(BufferIdDocument),
 		NewCursorMutator(NewOntoDocumentLocator()),
 		NewScrollToCursorMutator(),
@@ -205,6 +208,11 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 		return
 	}
 
+	edit := parser.Edit{Pos: startPos, NumInserted: 1}
+	if err := bufferState.retokenizeAfterEdit(edit); err != nil {
+		log.Printf("Error retokenizing document: %v\n", err)
+	}
+
 	bufferState.cursor.position = startPos + 1
 }
 
@@ -244,18 +252,23 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 	}
 
 	if startPos < deleteToPos {
-		dm.deleteCharacters(bufferState.textTree, startPos, deleteToPos-startPos)
-		bufferState.cursor = cursorState{position: startPos}
+		dm.deleteCharacters(bufferState, startPos, deleteToPos-startPos)
 	} else if startPos > deleteToPos {
-		dm.deleteCharacters(bufferState.textTree, deleteToPos, startPos-deleteToPos)
-		bufferState.cursor = cursorState{position: deleteToPos}
+		dm.deleteCharacters(bufferState, deleteToPos, startPos-deleteToPos)
 	}
 }
 
-func (dm *deleteMutator) deleteCharacters(tree *text.Tree, pos uint64, count uint64) {
+func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, count uint64) {
 	for i := uint64(0); i < count; i++ {
-		tree.DeleteAtPosition(pos)
+		bufferState.textTree.DeleteAtPosition(pos)
 	}
+
+	edit := parser.Edit{Pos: pos, NumDeleted: count}
+	if err := bufferState.retokenizeAfterEdit(edit); err != nil {
+		log.Printf("Error retokenizing document: %v\n", err)
+	}
+
+	bufferState.cursor = cursorState{position: pos}
 }
 
 func (dm *deleteMutator) RestrictToReplInput() {
@@ -264,6 +277,27 @@ func (dm *deleteMutator) RestrictToReplInput() {
 
 func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
+}
+
+type setSyntaxMutator struct {
+	language syntax.Language
+}
+
+func NewSetSyntaxMutator(language syntax.Language) Mutator {
+	return &setSyntaxMutator{language}
+}
+
+func (ssm *setSyntaxMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	if err := buffer.SetSyntax(ssm.language); err != nil {
+		log.Printf("Error setting syntax: %v\n", err)
+	}
+}
+
+func (ssm *setSyntaxMutator) RestrictToReplInput() {}
+
+func (ssm *setSyntaxMutator) String() string {
+	return fmt.Sprintf("SetSyntax(%s)", ssm.language)
 }
 
 type resizeMutator struct {

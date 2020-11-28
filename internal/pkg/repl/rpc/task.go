@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/syntax"
 )
 
 // Task performs work scheduled by a remote procedure call.
@@ -39,14 +40,49 @@ type AsyncExecutor interface {
 	ExecuteAsync(endpoint string, data []byte) (chan []byte, error)
 }
 
-type profileMemoryTask struct {
-	path      string
-	replyChan chan ProfileMemoryResponseMsg
+// setSyntaxTask sets the syntax of the current document.
+type setSyntaxTask struct {
+	params    SetSyntaxMsg
+	replyChan chan OpResultMsg
 }
 
-func NewProfileMemoryTask(req ProfileMemoryRequestMsg, replyChan chan ProfileMemoryResponseMsg) (Task, error) {
+func NewSetSyntaxTask(params SetSyntaxMsg, replyChan chan OpResultMsg) (Task, error) {
+	task := setSyntaxTask{params: params, replyChan: replyChan}
+	return &task, nil
+}
+
+func (t *setSyntaxTask) ExecuteAndSendResponse(state *exec.EditorState) {
+	defer close(t.replyChan)
+
+	language, err := syntax.LanguageFromString(t.params.Language)
+	if err != nil {
+		t.replyChan <- OpResultMsg{
+			Success:     false,
+			Description: err.Error(),
+		}
+		return
+	}
+
+	exec.NewSetSyntaxMutator(language).Mutate(state)
+	t.replyChan <- OpResultMsg{
+		Success:     true,
+		Description: fmt.Sprintf("Set syntax to %s", language),
+	}
+}
+
+func (t *setSyntaxTask) String() string {
+	return fmt.Sprintf("SetSyntaxTask(%s)", t.params.Language)
+}
+
+// profileMemoryTask writes a heap profile to a file.
+type profileMemoryTask struct {
+	params    ProfileMemoryMsg
+	replyChan chan OpResultMsg
+}
+
+func NewProfileMemoryTask(params ProfileMemoryMsg, replyChan chan OpResultMsg) (Task, error) {
 	task := &profileMemoryTask{
-		path:      req.Path,
+		params:    params,
 		replyChan: replyChan,
 	}
 	return task, nil
@@ -55,17 +91,20 @@ func NewProfileMemoryTask(req ProfileMemoryRequestMsg, replyChan chan ProfileMem
 func (t *profileMemoryTask) ExecuteAndSendResponse(_ *exec.EditorState) {
 	defer close(t.replyChan)
 	if err := t.profileMemory(); err != nil {
-		t.replyChan <- ProfileMemoryResponseMsg{
-			Succeeded: false,
-			Error:     err.Error(),
+		t.replyChan <- OpResultMsg{
+			Success:     false,
+			Description: err.Error(),
 		}
 		return
 	}
-	t.replyChan <- ProfileMemoryResponseMsg{Succeeded: true}
+	t.replyChan <- OpResultMsg{
+		Success:     true,
+		Description: fmt.Sprintf("Memory profile written to %s", t.params.Path),
+	}
 }
 
 func (t *profileMemoryTask) profileMemory() error {
-	f, err := os.Create(t.path)
+	f, err := os.Create(t.params.Path)
 	if err != nil {
 		return errors.Wrapf(err, "os.Create()")
 	}
@@ -80,22 +119,22 @@ func (t *profileMemoryTask) profileMemory() error {
 }
 
 func (t *profileMemoryTask) String() string {
-	return fmt.Sprintf("ProfileMemoryTask(%s)", t.path)
+	return fmt.Sprintf("ProfileMemoryTask(%s)", t.params.Path)
 }
 
 // quitTask terminates the editor.
 type quitTask struct {
-	replyChan chan QuitResultMsg
+	replyChan chan OpResultMsg
 }
 
-func NewQuitTask(_ EmptyMsg, replyChan chan QuitResultMsg) (Task, error) {
+func NewQuitTask(_ EmptyMsg, replyChan chan OpResultMsg) (Task, error) {
 	return &quitTask{replyChan}, nil
 }
 
 func (t *quitTask) ExecuteAndSendResponse(state *exec.EditorState) {
 	exec.NewQuitMutator().Mutate(state)
 	defer close(t.replyChan)
-	t.replyChan <- QuitResultMsg{Accepted: true}
+	t.replyChan <- OpResultMsg{Success: true}
 }
 
 func (t *quitTask) String() string {

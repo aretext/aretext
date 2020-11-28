@@ -19,13 +19,26 @@ func withSimScreen(t *testing.T, f func(tcell.SimulationScreen)) {
 
 func assertCellContents(t *testing.T, s tcell.SimulationScreen, expectedChars [][]rune) {
 	cells, width, height := s.GetContents()
-	assert.Equal(t, height, len(expectedChars))
-	assert.Equal(t, width, len(expectedChars[0]))
+	require.Equal(t, height, len(expectedChars))
+	require.Equal(t, width, len(expectedChars[0]))
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
 			actualChar := cells[x+y*width].Runes[0]
 			expectedChar := expectedChars[y][x]
 			assert.Equal(t, expectedChar, actualChar, "Wrong character at (%d, %d), expected '%c' but got '%c'", x, y, expectedChar, actualChar)
+		}
+	}
+}
+
+func assertCellStyles(t *testing.T, s tcell.SimulationScreen, expectedStyles [][]tcell.Style) {
+	cells, width, height := s.GetContents()
+	require.Equal(t, height, len(expectedStyles))
+	require.Equal(t, width, len(expectedStyles[0]))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			actualStyle := cells[x+y*width].Style
+			expectedStyle := expectedStyles[y][x]
+			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
 		}
 	}
 }

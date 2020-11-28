@@ -9,7 +9,7 @@ from typing import Dict
 from urllib.parse import urlparse
 
 
-API_VERSION = "a3bc91dabfdd797646fc08950c2ae50b"
+API_VERSION = "c1b64035ee710af0c85d3cfee7b56d80"
 
 
 class Client:
@@ -24,15 +24,20 @@ class Client:
     def disconnect(self):
         self._socket.close()
 
-    def profile_memory(self, msg: ProfileMemoryRequestMsg) -> ProfileMemoryResponseMsg:
+    def set_syntax(self, msg: SetSyntaxMsg) -> OpResultMsg:
+        """Set syntax of the current document"""
+        self._send("set_syntax", asdict(msg))
+        return OpResultMsg(**self._receive())
+
+    def profile_memory(self, msg: ProfileMemoryMsg) -> OpResultMsg:
         """Write a memory profile to the specified file"""
         self._send("profile_memory", asdict(msg))
-        return ProfileMemoryResponseMsg(**self._receive())
+        return OpResultMsg(**self._receive())
 
-    def quit(self, msg: EmptyMsg) -> QuitResultMsg:
+    def quit(self, msg: EmptyMsg) -> OpResultMsg:
         """Quit the aretext editor."""
         self._send("quit", asdict(msg))
-        return QuitResultMsg(**self._receive())
+        return OpResultMsg(**self._receive())
 
     def _send(self, endpoint: str, msg: Dict):
         header = {
@@ -98,9 +103,22 @@ class EmptyMsg:
 
 
 @dataclass
-class ProfileMemoryRequestMsg:
+class SetSyntaxMsg:
     """
-    A message describing where to write the memory profile
+    Parameters for setting the syntax of the current document
+
+    Fields:
+
+            language (string): Language of the syntax
+    """
+
+    language: str
+
+
+@dataclass
+class ProfileMemoryMsg:
+    """
+    Parameters for profiling memory
 
     Fields:
 
@@ -111,32 +129,16 @@ class ProfileMemoryRequestMsg:
 
 
 @dataclass
-class ProfileMemoryResponseMsg:
+class OpResultMsg:
     """
     A message describing the result of a memory profile
 
     Fields:
 
-            succeeded (bool): Whether the memory profile was written successfully
-            error (string): The reason why the memory profile failed
+            success (bool): Whether the operation completed successfully
+            description (string): A description of the operation's result
     """
 
-    succeeded: bool
+    success: bool = False
 
-    error: str = ""
-
-
-@dataclass
-class QuitResultMsg:
-    """
-    A message describing the result of a quit request.
-
-    Fields:
-
-            accepted (bool): Whether the quit request was accepted.
-            reject_reason (string): The reason the quit request was rejected.
-    """
-
-    accepted: bool = True
-
-    reject_reason: str = ""
+    description: str = ""

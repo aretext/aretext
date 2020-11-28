@@ -59,6 +59,10 @@ func NewTokenTree(tokens []Token) *TokenTree {
 // If a token overlaps the position, the iterator starts at that token.
 // Otherwise, the iterator starts from the next token after the position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
+	if t == nil {
+		return nil
+	}
+
 	return &TokenIter{
 		tree:    t,
 		nodeIdx: t.nodeIdxForPos(pos),
@@ -284,6 +288,10 @@ type TokenIter struct {
 
 // Get retrieves the current token, if it exists.
 func (iter *TokenIter) Get(tok *Token) bool {
+	if iter == nil {
+		return false
+	}
+
 	if !iter.tree.isValidNode(iter.nodeIdx) {
 		return false
 	}
@@ -295,6 +303,10 @@ func (iter *TokenIter) Get(tok *Token) bool {
 // Advance moves the iterator to the next token.
 // If there are no more tokens, this is a no-op.
 func (iter *TokenIter) Advance() {
+	if iter == nil {
+		return
+	}
+
 	if iter.tree.isValidNode(iter.nodeIdx) {
 		iter.nodeIdx = iter.tree.nextNodeIdx(iter.nodeIdx)
 	}

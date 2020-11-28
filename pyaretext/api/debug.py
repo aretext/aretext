@@ -1,15 +1,9 @@
 """ API for debugging the aretext editor. """
 
-from pyaretext.api.rpcclient import (
-    default_client,
-    ProfileMemoryRequestMsg,
-    ProfileMemoryResponseMsg,
-)
+from pyaretext.api.rpcclient import default_client, ProfileMemoryMsg, OpResultMsg
 
 
-def profile_memory(path: str):
+def profile_memory(path: str) -> OpResultMsg:
     """Write a memory profile to the specified path. """
-    req = ProfileMemoryRequestMsg(path=path)
-    resp = default_client().profile_memory(req)
-    if not resp.succeeded:
-        print("Error writing memory profile: {}".format(resp.error))
+    req = ProfileMemoryMsg(path=path)
+    return default_client().profile_memory(req)

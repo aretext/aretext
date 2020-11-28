@@ -3,7 +3,10 @@ package exec
 import (
 	"log"
 
+	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/file"
+	"github.com/wedaly/aretext/internal/pkg/syntax"
+	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -84,9 +87,12 @@ func (s *EditorState) QuitFlag() bool {
 
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
-	textTree *text.Tree
-	cursor   cursorState
-	view     viewState
+	textTree       *text.Tree
+	cursor         cursorState
+	view           viewState
+	syntaxLanguage syntax.Language
+	tokenTree      *parser.TokenTree
+	tokenizer      *parser.Tokenizer
 }
 
 func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
@@ -100,11 +106,18 @@ func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth
 			width:      viewWidth,
 			height:     viewHeight,
 		},
+		syntaxLanguage: syntax.UndefinedLanguage,
+		tokenTree:      nil,
+		tokenizer:      nil,
 	}
 }
 
 func (s *BufferState) TextTree() *text.Tree {
 	return s.textTree
+}
+
+func (s *BufferState) TokenTree() *parser.TokenTree {
+	return s.tokenTree
 }
 
 func (s *BufferState) CursorPosition() uint64 {
@@ -126,6 +139,44 @@ func (s *BufferState) ViewSize() (uint64, uint64) {
 func (s *BufferState) SetViewSize(width, height uint64) {
 	s.view.width = width
 	s.view.height = height
+}
+
+func (s *BufferState) SetSyntax(language syntax.Language) error {
+	s.syntaxLanguage = language
+	s.tokenizer = syntax.TokenizerForLanguage(language)
+
+	if s.tokenizer == nil {
+		s.tokenTree = nil
+		return nil
+	}
+
+	r := s.textTree.ReaderAtPosition(0, text.ReadDirectionForward)
+	textLen := s.textTree.NumChars()
+	tokenTree, err := s.tokenizer.TokenizeAll(r, textLen)
+	if err != nil {
+		return err
+	}
+
+	s.tokenTree = tokenTree
+	return nil
+}
+
+func (s *BufferState) retokenizeAfterEdit(edit parser.Edit) error {
+	if s.tokenizer == nil {
+		return nil
+	}
+
+	textLen := s.textTree.NumChars()
+	readerAtPos := func(pos uint64) parser.InputReader {
+		return s.textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	}
+	updatedTokenTree, err := s.tokenizer.RetokenizeAfterEdit(s.tokenTree, edit, textLen, readerAtPos)
+	if err != nil {
+		return errors.Wrapf(err, "RetokenizeAfterEdit()")
+	}
+
+	s.tokenTree = updatedTokenTree
+	return nil
 }
 
 // cursorState is the current state of the cursor.

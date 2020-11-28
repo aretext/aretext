@@ -27,10 +27,10 @@ func TestTaskBroker(t *testing.T) {
 
 	select {
 	case replyData := <-replyChan:
-		var replyMsg QuitResultMsg
+		var replyMsg OpResultMsg
 		err = json.Unmarshal(replyData, &replyMsg)
 		require.NoError(t, err)
-		assert.Equal(t, QuitResultMsg{Accepted: true}, replyMsg)
+		assert.Equal(t, OpResultMsg{Success: true}, replyMsg)
 
 	case <-time.After(time.Second * 10):
 		assert.Fail(t, "Timed out waiting for reply")

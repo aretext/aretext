@@ -100,6 +100,18 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:           "string with line break",
+			inputString:    "\"abc\nxyz\"",
+			expectedTokens: []TokenWithText{},
+		},
+		{
+			name:        "string with escaped line break",
+			inputString: `"abc\nxyz"`,
+			expectedTokens: []TokenWithText{
+				{Text: `"abc\nxyz"`, Role: parser.TokenRoleString},
+			},
+		},
+		{
 			name:        "true value",
 			inputString: `{"bool": true}`,
 			expectedTokens: []TokenWithText{

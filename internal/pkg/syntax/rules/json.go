@@ -17,7 +17,7 @@ func init() {
 			TokenRole: parser.TokenRoleNumber,
 		},
 		{
-			Regexp:    `"([^\"]|\\")*"`,
+			Regexp:    `"([^\"\n]|\\")*"`,
 			TokenRole: parser.TokenRoleString,
 		},
 	}

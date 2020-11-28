@@ -1,6 +1,13 @@
 {
   "endpoints": [
     {
+      "name": "profile_memory",
+      "description": "Write a memory profile to the specified file",
+      "task_constructor": "NewProfileMemoryTask",
+      "request_msg": "ProfileMemoryRequestMsg",
+      "response_msg": "ProfileMemoryResponseMsg"
+    },
+    {
       "name": "quit",
       "description": "Quit the aretext editor.",
       "task_constructor": "NewQuitTask",
@@ -13,6 +20,34 @@
       "name": "EmptyMsg",
       "description": "A message with no fields.",
       "fields": []
+    },
+    {
+      "name": "ProfileMemoryRequestMsg",
+      "description": "A message describing where to write the memory profile",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "description": "Path of the file where the memory profile will be written"
+        }
+      ]
+    },
+    {
+        "name": "ProfileMemoryResponseMsg",
+        "description": "A message describing the result of a memory profile",
+        "fields": [
+          {
+            "name": "succeeded",
+            "type": "bool",
+            "description": "Whether the memory profile was written successfully"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "description": "The reason why the memory profile failed",
+            "default": ""
+          }
+        ]
     },
     {
       "name": "QuitResultMsg",

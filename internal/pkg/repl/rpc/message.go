@@ -6,6 +6,23 @@ package rpc
 type EmptyMsg struct {
 }
 
+// A message describing where to write the memory profile
+type ProfileMemoryRequestMsg struct {
+
+	// Path of the file where the memory profile will be written
+	Path string `json:"path"`
+}
+
+// A message describing the result of a memory profile
+type ProfileMemoryResponseMsg struct {
+
+	// Whether the memory profile was written successfully
+	Succeeded bool `json:"succeeded"`
+
+	// The reason why the memory profile failed
+	Error string `json:"error"`
+}
+
 // A message describing the result of a quit request.
 type QuitResultMsg struct {
 

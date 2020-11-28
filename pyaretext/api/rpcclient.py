@@ -9,7 +9,7 @@ from typing import Dict
 from urllib.parse import urlparse
 
 
-API_VERSION = "17a79c7761a9a7094bbc7f84764f5040"
+API_VERSION = "a3bc91dabfdd797646fc08950c2ae50b"
 
 
 class Client:
@@ -23,6 +23,11 @@ class Client:
 
     def disconnect(self):
         self._socket.close()
+
+    def profile_memory(self, msg: ProfileMemoryRequestMsg) -> ProfileMemoryResponseMsg:
+        """Write a memory profile to the specified file"""
+        self._send("profile_memory", asdict(msg))
+        return ProfileMemoryResponseMsg(**self._receive())
 
     def quit(self, msg: EmptyMsg) -> QuitResultMsg:
         """Quit the aretext editor."""
@@ -90,6 +95,35 @@ class EmptyMsg:
     """
 
     pass
+
+
+@dataclass
+class ProfileMemoryRequestMsg:
+    """
+    A message describing where to write the memory profile
+
+    Fields:
+
+            path (string): Path of the file where the memory profile will be written
+    """
+
+    path: str
+
+
+@dataclass
+class ProfileMemoryResponseMsg:
+    """
+    A message describing the result of a memory profile
+
+    Fields:
+
+            succeeded (bool): Whether the memory profile was written successfully
+            error (string): The reason why the memory profile failed
+    """
+
+    succeeded: bool
+
+    error: str = ""
 
 
 @dataclass

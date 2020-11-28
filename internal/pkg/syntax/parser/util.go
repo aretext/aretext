@@ -48,3 +48,14 @@ func intSliceKey(s []int) string {
 	}
 	return sb.String()
 }
+
+func forEachPartitionInKeyOrder(partitions map[string][]int, f func(states []int)) {
+	partitionKeys := make([]string, 0, len(partitions))
+	for key, _ := range partitions {
+		partitionKeys = append(partitionKeys, key)
+	}
+	sort.Strings(partitionKeys)
+	for _, key := range partitionKeys {
+		f(partitions[key])
+	}
+}

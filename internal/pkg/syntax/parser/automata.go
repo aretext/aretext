@@ -465,9 +465,9 @@ func (dfa *Dfa) initialGroups() [][]int {
 		partitions[key] = append(partitions[key], s)
 	}
 
-	for _, states := range partitions {
+	forEachPartitionInKeyOrder(partitions, func(states []int) {
 		groups = append(groups, states)
-	}
+	})
 
 	return groups
 }
@@ -508,9 +508,9 @@ func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
 			partitions[key] = append(partitions[key], s)
 		}
 
-		for _, states := range partitions {
+		forEachPartitionInKeyOrder(partitions, func(states []int) {
 			newGroups = append(newGroups, states)
-		}
+		})
 	}
 
 	return newGroups

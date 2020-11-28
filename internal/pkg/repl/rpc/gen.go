@@ -249,7 +249,7 @@ class Client:
 		"""{{ $endpoint.Description }}"""
 		self._send("{{ $endpoint.Name }}", asdict(msg))
 		return {{ $endpoint.ResponseMsg }}(**self._receive())
-	{{- end }}
+	{{ end }}
 
 	def _send(self, endpoint: str, msg: Dict):
 		header = {

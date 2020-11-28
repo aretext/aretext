@@ -87,6 +87,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 				log.Printf("Error sending response to client: %v\n", err)
 				return
 			}
+			continue
 		}
 
 		responseData := <-responseChan

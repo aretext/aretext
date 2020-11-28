@@ -4,8 +4,7 @@ package parser
 // It supports efficient lookups by position and "shifting" token positions to account for insertions/deletions.
 type TokenTree struct {
 	// nodes represents a full binary search tree.
-	// For non-full trees, some of the nodes in the slice won't be part of the tree; these nodes have the initialized flag set to false.
-	nodes []treeNode
+	nodes map[int]*treeNode
 }
 
 // NewTokenTree constructs a token tree from a set of tokens.
@@ -16,12 +15,11 @@ func NewTokenTree(tokens []Token) *TokenTree {
 		tokens  []Token
 	}
 
-	if len(tokens) == 0 {
-		return &TokenTree{}
-	}
+	nodes := make(map[int]*treeNode, len(tokens))
 
-	// Allocate more space than we need to avoid reallocations when new tokens are inserted.
-	nodes := make([]treeNode, 2*len(tokens))
+	if len(tokens) == 0 {
+		return &TokenTree{nodes}
+	}
 
 	// Construct a balanced binary search tree by recursively building subtrees.
 	item := stackItem{0, tokens[:]}
@@ -35,7 +33,7 @@ func NewTokenTree(tokens []Token) *TokenTree {
 		nodes[nodeIdx] = node
 
 		if !isRootIdx(nodeIdx) {
-			parent := &nodes[parentIdx(nodeIdx)]
+			parent := nodes[parentIdx(nodeIdx)]
 			if parent.maxLookaheadPos < node.maxLookaheadPos {
 				parent.maxLookaheadPos = node.maxLookaheadPos
 			}
@@ -79,7 +77,7 @@ func (t *TokenTree) iterFromFirstAffected(editPos uint64) *TokenIter {
 // insertToken adds a new token to the tree.
 func (t *TokenTree) insertToken(tok Token) {
 	if len(t.nodes) == 0 {
-		t.nodes = append(t.nodes, newTreeNodeForToken(tok))
+		t.nodes[0] = newTreeNodeForToken(tok)
 		return
 	}
 
@@ -92,10 +90,6 @@ func (t *TokenTree) insertToken(tok Token) {
 		} else {
 			idx = rightChildIdx(idx)
 		}
-	}
-
-	for idx >= len(t.nodes) {
-		t.nodes = append(t.nodes, treeNode{})
 	}
 
 	t.nodes[idx] = newTreeNodeForToken(tok)
@@ -127,7 +121,7 @@ func (t *TokenTree) shiftPositionsAfterEdit(edit Edit) {
 }
 
 func (t *TokenTree) isValidNode(idx int) bool {
-	return idx >= 0 && idx < len(t.nodes) && t.nodes[idx].initialized
+	return t.nodes[idx] != nil
 }
 
 func (t *TokenTree) nodeIdxForPos(pos uint64) int {
@@ -242,7 +236,7 @@ func (t *TokenTree) deleteNodeAtIdx(idx int) int {
 		return t.nextNodeIdx(idx)
 	} else {
 		nextIdx := t.nextNodeIdx(idx)
-		t.nodes[idx] = treeNode{}
+		delete(t.nodes, idx)
 		t.recalculateMaxLookaheadFromIdxToRoot(parentIdx(idx))
 		return nextIdx
 	}
@@ -265,7 +259,7 @@ func (t *TokenTree) recalculateMaxLookaheadFromIdxToRoot(idx int) {
 
 	// Propagate maxLookahead from child to parent.
 	for _, idx := range path {
-		node := &t.nodes[idx]
+		node := t.nodes[idx]
 		maxLookaheadPos := node.lookaheadPos()
 
 		if left := leftChildIdx(idx); t.isValidNode(left) {
@@ -369,15 +363,13 @@ func nodeDepth(idx int) int {
 }
 
 type treeNode struct {
-	initialized     bool
 	token           Token
 	lazyEdits       []Edit
 	maxLookaheadPos uint64
 }
 
-func newTreeNodeForToken(token Token) treeNode {
-	return treeNode{
-		initialized:     true,
+func newTreeNodeForToken(token Token) *treeNode {
+	return &treeNode{
 		token:           token,
 		maxLookaheadPos: token.LookaheadPos,
 	}

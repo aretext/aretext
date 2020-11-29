@@ -333,7 +333,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 				return tree
 			},
 			editPos:       13,
-			expectedToken: Token{StartPos: 13, EndPos: 14, LookaheadPos: 15},
+			expectedToken: Token{StartPos: 12, EndPos: 13, LookaheadPos: 14},
 		},
 		{
 			name: "full tree, shift tokens for delete",

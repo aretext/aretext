@@ -260,12 +260,12 @@ func (t *TokenTree) recalculateMaxLookaheadFromIdxToRoot(idx int) {
 	// Propagate maxLookahead from child to parent.
 	for _, idx := range path {
 		node := t.nodes[idx]
-		maxLookaheadPos := node.lookaheadPos()
+		node.maxLookaheadPos = node.lookaheadPos()
 
 		if left := leftChildIdx(idx); t.isValidNode(left) {
 			t.propagateLazyEdits(left)
 			leftMaxLookahead := t.nodes[left].maxLookaheadPos
-			if leftMaxLookahead > maxLookaheadPos {
+			if leftMaxLookahead > node.maxLookaheadPos {
 				node.maxLookaheadPos = leftMaxLookahead
 			}
 		}
@@ -273,7 +273,7 @@ func (t *TokenTree) recalculateMaxLookaheadFromIdxToRoot(idx int) {
 		if right := rightChildIdx(idx); t.isValidNode(right) {
 			t.propagateLazyEdits(right)
 			rightMaxLookahead := t.nodes[right].maxLookaheadPos
-			if rightMaxLookahead > maxLookaheadPos {
+			if rightMaxLookahead > node.maxLookaheadPos {
 				node.maxLookaheadPos = rightMaxLookahead
 			}
 		}

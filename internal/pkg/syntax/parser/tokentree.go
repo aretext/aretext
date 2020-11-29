@@ -121,7 +121,7 @@ func (t *TokenTree) shiftPositionsAfterEdit(edit Edit) {
 }
 
 func (t *TokenTree) isValidNode(idx int) bool {
-	return t.nodes[idx] != nil
+	return idx >= 0 && t.nodes[idx] != nil
 }
 
 func (t *TokenTree) nodeIdxForPos(pos uint64) int {

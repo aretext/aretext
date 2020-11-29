@@ -76,11 +76,6 @@ func (t *TokenTree) iterFromFirstAffected(editPos uint64) *TokenIter {
 
 // insertToken adds a new token to the tree.
 func (t *TokenTree) insertToken(tok Token) {
-	if len(t.nodes) == 0 {
-		t.nodes[0] = newTreeNodeForToken(tok)
-		return
-	}
-
 	idx := 0
 	for t.isValidNode(idx) {
 		t.propagateLazyEdits(idx)

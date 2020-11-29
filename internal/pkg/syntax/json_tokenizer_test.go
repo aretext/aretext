@@ -95,6 +95,11 @@ func TestJsonTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{},
 		},
 		{
+			name:           "number suffix with underscore",
+			inputString:    "abc_123",
+			expectedTokens: []TokenWithText{},
+		},
+		{
 			name:        "key with string value",
 			inputString: `{"key": "abcd"}`,
 			expectedTokens: []TokenWithText{

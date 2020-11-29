@@ -23,7 +23,7 @@ func init() {
 
 		// This prevents the number and keyword rules from matching substrings of a symbol.
 		{
-			Regexp:    `[a-zA-Z0-9]+`,
+			Regexp:    `[a-zA-Z0-9_]+`,
 			TokenRole: parser.TokenRoleNone,
 		},
 	}

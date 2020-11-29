@@ -220,7 +220,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 				})
 			},
 			editPos:       7,
-			expectedToken: Token{},
+			expectedToken: Token{StartPos: 4, EndPos: 6, LookaheadPos: 7},
 		},
 		{
 			name: "two tokens with overlapping lookahead regions",
@@ -247,7 +247,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 				})
 			},
 			editPos:       3,
-			expectedToken: Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+			expectedToken: Token{StartPos: 1, EndPos: 2, LookaheadPos: 3},
 		},
 		{
 			name: "full tree, edit in left subtree",
@@ -279,7 +279,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 				})
 			},
 			editPos:       5,
-			expectedToken: Token{StartPos: 4, EndPos: 5, LookaheadPos: 6},
+			expectedToken: Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
 		},
 		{
 			name: "full tree, insert new token",
@@ -351,7 +351,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 				return tree
 			},
 			editPos:       4,
-			expectedToken: Token{StartPos: 3, EndPos: 4, LookaheadPos: 5},
+			expectedToken: Token{StartPos: 2, EndPos: 3, LookaheadPos: 4},
 		},
 	}
 

@@ -173,12 +173,10 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 		}
 
 		// Cover the skipped position with an empty token.
-		emptyToken.EndPos++
-		emptyToken.LookaheadPos++
-	}
-
-	if emptyToken.LookaheadPos > textLen {
-		emptyToken.LookaheadPos = textLen
+		emptyToken.EndPos = pos
+		if lookaheadPos > emptyToken.LookaheadPos {
+			emptyToken.LookaheadPos = lookaheadPos
+		}
 	}
 
 	return pos, emptyToken, nil

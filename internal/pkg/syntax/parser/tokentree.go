@@ -172,12 +172,12 @@ func (t *TokenTree) firstAffectedIdx(editPos uint64) int {
 		t.propagateLazyEdits(idx)
 		node := t.nodes[idx]
 		startPos := node.startPos()
-		if startPos < firstAffectedStart && startPos <= editPos && editPos < node.lookaheadPos() {
+		if startPos < firstAffectedStart && startPos <= editPos && editPos <= node.lookaheadPos() {
 			firstAffectedStart = startPos
 			firstAffectedIdx = idx
 		}
 
-		if left := leftChildIdx(idx); t.isValidNode(left) && editPos < t.nodes[left].maxLookaheadPos {
+		if left := leftChildIdx(idx); t.isValidNode(left) && editPos <= t.nodes[left].maxLookaheadPos {
 			idx = left
 		} else {
 			idx = rightChildIdx(idx)

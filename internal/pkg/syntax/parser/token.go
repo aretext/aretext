@@ -24,3 +24,17 @@ type Token struct {
 	// This will always be greater than or equal to EndPos.
 	LookaheadPos uint64
 }
+
+func (t *Token) length() uint64 {
+	if t.StartPos > t.EndPos {
+		panic("Token has negative length")
+	}
+	return t.EndPos - t.StartPos
+}
+
+func (t *Token) lookaheadLength() uint64 {
+	if t.StartPos > t.LookaheadPos || t.EndPos > t.LookaheadPos {
+		panic("Token lookahead less than token length")
+	}
+	return t.LookaheadPos - t.StartPos
+}

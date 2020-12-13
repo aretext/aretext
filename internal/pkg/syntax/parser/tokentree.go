@@ -3,312 +3,533 @@ package parser
 // TokenTree represents a collection of tokens.
 // It supports efficient lookups by position and "shifting" token positions to account for insertions/deletions.
 type TokenTree struct {
-	// nodes represents a full binary search tree.
-	nodes map[int]*treeNode
+	root *innerNode
 }
 
 // NewTokenTree constructs a token tree from a set of tokens.
-// The tokens must be sorted ascending by start position and non-overlapping.
+// The tokens must be sorted ascending by start position and cover the entire text.
+// Each token's length must be greater than zero.
 func NewTokenTree(tokens []Token) *TokenTree {
-	type stackItem struct {
-		nodeIdx int
-		tokens  []Token
-	}
-
-	nodes := make(map[int]*treeNode, len(tokens))
-
-	if len(tokens) == 0 {
-		return &TokenTree{nodes}
-	}
-
-	// Construct a balanced binary search tree by recursively building subtrees.
-	item := stackItem{0, tokens[:]}
-	stack := make([]stackItem, 0, len(tokens))
-	stack = append(stack, item)
-	for len(stack) > 0 {
-		item, stack = stack[len(stack)-1], stack[:len(stack)-1]
-		nodeIdx, tokens := item.nodeIdx, item.tokens
-		tokenIdx := len(tokens) / 2
-		node := newTreeNodeForToken(tokens[tokenIdx])
-		nodes[nodeIdx] = node
-
-		if !isRootIdx(nodeIdx) {
-			parent := nodes[parentIdx(nodeIdx)]
-			if parent.maxLookaheadPos < node.maxLookaheadPos {
-				parent.maxLookaheadPos = node.maxLookaheadPos
-			}
-		}
-
-		if tokenIdx > 0 {
-			stack = append(stack, stackItem{
-				nodeIdx: leftChildIdx(nodeIdx),
-				tokens:  tokens[0:tokenIdx],
-			})
-		}
-		if tokenIdx+1 < len(item.tokens) {
-			stack = append(stack, stackItem{
-				nodeIdx: rightChildIdx(nodeIdx),
-				tokens:  tokens[tokenIdx+1 : len(tokens)],
-			})
-		}
-	}
-	return &TokenTree{nodes}
+	leaves := leavesFromTokens(tokens)
+	root := buildTreeFromLeaves(leaves)
+	return &TokenTree{root}
 }
 
-// IterFromPosition returns a token iterator from the specified position.
-// If a token overlaps the position, the iterator starts at that token.
-// Otherwise, the iterator starts from the next token after the position.
-func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
-	if t == nil {
+func leavesFromTokens(tokens []Token) []node {
+	if len(tokens) == 0 {
 		return nil
 	}
 
-	return &TokenIter{
-		tree:    t,
-		nodeIdx: t.nodeIdxForPos(pos),
+	var startPos uint64
+	leaves := make([]node, 0, len(tokens))
+	currentLeaf := &leafNode{}
+	for _, tok := range tokens {
+		if tok.StartPos != startPos {
+			panic("Tokens must be contiguous")
+		}
+		startPos = tok.EndPos
+
+		tokLength := tok.length()
+		if tokLength == 0 {
+			panic("Tokens must have non-zero length")
+		}
+
+		i := currentLeaf.numEntries
+		currentLeaf.entries[i] = entry{
+			length:          tokLength,
+			lookaheadLength: tok.lookaheadLength(),
+		}
+		currentLeaf.tokenRoles[i] = tok.Role
+		currentLeaf.numEntries++
+
+		if currentLeaf.numEntries == maxEntriesPerLeafNode {
+			nextLeaf := &leafNode{}
+			currentLeaf.next = nextLeaf
+			nextLeaf.prev = currentLeaf
+			leaves = append(leaves, currentLeaf)
+			currentLeaf = nextLeaf
+		}
 	}
+
+	if currentLeaf.numEntries > 0 {
+		leaves = append(leaves, currentLeaf)
+	}
+
+	return leaves
+}
+
+func buildTreeFromLeaves(leaves []node) *innerNode {
+	if len(leaves) == 0 {
+		return nil
+	}
+
+	children := leaves
+	parents := make([]*innerNode, 0, len(children)/maxEntriesPerInnerNode+1)
+	for {
+		current := &innerNode{}
+
+		for _, child := range children {
+			i := current.numEntries
+			current.entries[i] = child.entry()
+			current.children[i] = child
+			current.numEntries++
+
+			if current.numEntries == maxEntriesPerInnerNode {
+				next := &innerNode{}
+				parents = append(parents, current)
+				current = next
+			}
+		}
+
+		if current.numEntries > 0 {
+			parents = append(parents, current)
+		}
+
+		if len(parents) == 1 {
+			return parents[0]
+		}
+
+		children = children[:0]
+		for _, parent := range parents {
+			children = append(children, parent)
+		}
+		parents = parents[:0]
+	}
+}
+
+// IterFromPosition returns a token iterator from the token intersecting a position.
+func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
+	if t == nil || t.root == nil {
+		return nil
+	}
+	return t.root.iter(0, pos, func(e entry) uint64 {
+		return e.length
+	})
 }
 
 // iterFromFirstAffected returns a token iterator from the first token that could be affected by an edit.
 // A token could be affected by an edit if the edit occurred in the half-open interval from the token's start position and its lookahead position.
 func (t *TokenTree) iterFromFirstAffected(editPos uint64) *TokenIter {
-	return &TokenIter{
-		tree:    t,
-		nodeIdx: t.firstAffectedIdx(editPos),
+	if t == nil || t.root == nil {
+		return nil
+	}
+	return t.root.iter(0, editPos, func(e entry) uint64 {
+		return e.lookaheadLength + 1
+	})
+}
+
+// textLen returns the total number of characters represented by tokens in the tree.
+func (t *TokenTree) textLen() uint64 {
+	t.ensureRootInitialized()
+	return t.root.entry().length
+}
+
+// insertToken inserts a new token into the tree, shifting the positions of subsequent tokens.
+func (t *TokenTree) insertToken(token Token) {
+	t.ensureRootInitialized()
+	splitNode := t.root.insert(token.StartPos, token)
+	if splitNode != nil {
+		newRoot := &innerNode{numEntries: 2}
+		newRoot.entries[0] = t.root.entry()
+		newRoot.children[0] = t.root
+		newRoot.entries[1] = splitNode.entry()
+		newRoot.children[1] = splitNode
+		t.root = newRoot
 	}
 }
 
-// insertToken adds a new token to the tree.
-func (t *TokenTree) insertToken(tok Token) {
-	idx := 0
-	for t.isValidNode(idx) {
-		t.propagateLazyEdits(idx)
-		node := t.nodes[idx]
-		if tok.StartPos < node.startPos() {
-			idx = leftChildIdx(idx)
-		} else {
-			idx = rightChildIdx(idx)
+// extendTokenIntersectingPos increases the length of the token intersecting the specified position, shifting the positions of subsequent tokens.
+func (t *TokenTree) extendTokenIntersectingPos(pos uint64, extendLen uint64) {
+	t.ensureRootInitialized()
+	t.root.extendTokenIntersectingPos(pos, extendLen)
+}
+
+// deleteRange removes character positions intersecting the range by truncating and removing tokens.
+func (t *TokenTree) deleteRange(startPos uint64, numDeleted uint64) {
+	if t.root == nil {
+		return
+	}
+	t.root.deleteRange(startPos, numDeleted)
+}
+
+func (t *TokenTree) ensureRootInitialized() {
+	if t.root == nil || t.root.numEntries == 0 {
+		child := &leafNode{}
+		t.root = &innerNode{numEntries: 1}
+		t.root.entries[0] = child.entry()
+		t.root.children[0] = child
+	}
+}
+
+const maxEntriesPerInnerNode = 42
+const maxEntriesPerLeafNode = 50
+
+type node interface {
+	// entry returns an entry for the subtree rooted at this node.
+	entry() entry
+
+	// iter returns an iterator at the specified position.
+	iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter
+
+	// extendTokenIntersectingPos increases the length of the token at the specified position.
+	extendTokenIntersectingPos(relativePos uint64, extendLen uint64)
+
+	// insert inserts a new token into the tree at the specified position.
+	insert(relativePos uint64, token Token) node
+
+	// deleteRange deletes character positions intersecting the range by truncating and removing tokens.
+	deleteRange(relativePos uint64, remainingLen uint64) uint64
+
+	// leftAndRightLeaves returns the leftmost and rightmost leaves in the subtree rooted at the node.
+	leftAndRightLeaves() (*leafNode, *leafNode)
+}
+
+type entry struct {
+	length          uint64
+	lookaheadLength uint64
+}
+
+func sumEntries(entries []entry) entry {
+	e := entry{}
+	for _, other := range entries {
+		e.length += other.length
+		e.lookaheadLength += other.lookaheadLength
+	}
+	return e
+}
+
+type innerNode struct {
+	numEntries int
+	entries    [maxEntriesPerInnerNode]entry
+	children   [maxEntriesPerLeafNode]node
+}
+
+func (in *innerNode) entry() entry {
+	return sumEntries(in.entries[0:in.numEntries])
+}
+
+func (in *innerNode) iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter {
+	for i := 0; i < in.numEntries; i++ {
+		entry := in.entries[i]
+		if entryLenFunc(entry) > relativePos {
+			return in.children[i].iter(startPos, relativePos, entryLenFunc)
 		}
+		startPos += entry.length
+		relativePos = subtractNoUnderflowUint64(relativePos, entry.length)
 	}
-
-	t.nodes[idx] = newTreeNodeForToken(tok)
-	t.recalculateMaxLookaheadFromIdxToRoot(idx)
+	return nil
 }
 
-// shiftPositionsAfterEdit adjusts the positions of tokens after an insertion/deletion.
-func (t *TokenTree) shiftPositionsAfterEdit(edit Edit) {
-	idx := t.nodeIdxForPos(edit.Pos)
-	if t.isValidNode(idx) && t.nodes[idx].intersects(edit.Pos) {
-		t.nodes[idx].applyEdit(edit)
-		t.recalculateMaxLookaheadFromIdxToRoot(idx)
-		idx = t.nextNodeIdx(idx)
-	}
-
-	leafIdx := idx
-	applyNextEdit := true
-	for t.isValidNode(idx) {
-		if applyNextEdit {
-			t.nodes[idx].applyEdit(edit)
-			if right := rightChildIdx(idx); t.isValidNode(right) {
-				t.nodes[right].lazyEdits = append(t.nodes[right].lazyEdits, edit)
-			}
+func (in *innerNode) extendTokenIntersectingPos(relativePos uint64, extendLen uint64) {
+	for i := 0; i < in.numEntries; i++ {
+		entryLen := in.entries[i].length
+		if i == in.numEntries-1 || entryLen > relativePos {
+			child := in.children[i]
+			child.extendTokenIntersectingPos(relativePos, extendLen)
+			in.entries[i] = child.entry()
+			return
 		}
-		applyNextEdit = isLeftChildIdx(idx)
-		idx = parentIdx(idx)
+		relativePos -= entryLen
 	}
-	t.recalculateMaxLookaheadFromIdxToRoot(leafIdx)
 }
 
-func (t *TokenTree) isValidNode(idx int) bool {
-	return idx >= 0 && t.nodes[idx] != nil
-}
-
-func (t *TokenTree) nodeIdxForPos(pos uint64) int {
-	idx, closestIdxAfter := 0, -1
-	for t.isValidNode(idx) {
-		t.propagateLazyEdits(idx)
-		root := t.nodes[idx]
-		if root.intersects(pos) {
-			return idx
-		} else if pos < root.startPos() {
-			closestIdxAfter = idx
-			idx = leftChildIdx(idx)
-		} else {
-			idx = rightChildIdx(idx)
+func (in *innerNode) insert(relativePos uint64, token Token) node {
+	for i := 0; i < in.numEntries-1; i++ {
+		entryLen := in.entries[i].length
+		if entryLen > relativePos {
+			return in.insertAtIdx(i, relativePos, token)
 		}
+		relativePos -= entryLen
 	}
-	return closestIdxAfter
+	return in.insertAtIdx(in.numEntries-1, relativePos, token)
 }
 
-func (t *TokenTree) nextNodeIdx(idx int) int {
-	// If the current node has a right subtree, the next node is the leftmost node in that subtree.
-	if right := rightChildIdx(idx); t.isValidNode(right) {
-		return t.leftmostChildInSubtree(right)
+func (in *innerNode) insertAtIdx(idx int, relativePos uint64, token Token) node {
+	child := in.children[idx]
+	splitChild := child.insert(relativePos, token)
+	in.entries[idx] = child.entry()
+	if splitChild == nil {
+		return nil
 	}
 
-	// Traverse up the tree until we find a left child.
-	// (If we're in a right child, then we know we've already output all the
-	// nodes in the right subtree, which means we've also output the parent,
-	// so we need to continue traversing up.)
-	for isRightChildIdx(idx) {
-		idx = parentIdx(idx)
+	splitIdx := idx + 1
+	if in.numEntries < maxEntriesPerInnerNode {
+		in.insertChildAtIdx(splitIdx, splitChild)
+		return nil
 	}
 
-	// If we're at the root index, we can't go up any further.
-	if isRootIdx(idx) {
-		return -1
-	}
-
-	// We've iterated through all the nodes in the left subtree of the parent,
-	// so the parent node comes next.
-	return parentIdx(idx)
-}
-
-func (t *TokenTree) firstAffectedIdx(editPos uint64) int {
-	firstAffectedStart, firstAffectedIdx := uint64(0xFFFFFFFFFFFFFFFF), -1
-	idx := 0
-	for t.isValidNode(idx) {
-		t.propagateLazyEdits(idx)
-		node := t.nodes[idx]
-		startPos := node.startPos()
-		if startPos < firstAffectedStart && startPos <= editPos && editPos <= node.lookaheadPos() {
-			firstAffectedStart = startPos
-			firstAffectedIdx = idx
-		}
-
-		if left := leftChildIdx(idx); t.isValidNode(left) && editPos <= t.nodes[left].maxLookaheadPos {
-			idx = left
-		} else {
-			idx = rightChildIdx(idx)
-		}
-	}
-
-	return firstAffectedIdx
-}
-
-func (t *TokenTree) leftmostChildInSubtree(idx int) int {
-	for {
-		t.propagateLazyEdits(idx)
-		if left := leftChildIdx(idx); t.isValidNode(left) {
-			// Current node has a valid left child, so repeat the search from the left child.
-			idx = left
-		} else {
-			// Current node does NOT have a left child, so it must be the leftmost child.
-			return idx
-		}
-	}
-}
-
-func (t *TokenTree) rightmostChildInSubtree(idx int) int {
-	for {
-		t.propagateLazyEdits(idx)
-		if right := rightChildIdx(idx); t.isValidNode(right) {
-			// Current node has a valid right child, so repeat the search from the right child.
-			idx = right
-		} else {
-			// Current node does NOT have a right child, so it must be the rightmost child.
-			return idx
-		}
-	}
-}
-
-func (t *TokenTree) propagateLazyEdits(idx int) {
-	edits := t.nodes[idx].applyLazyEdits()
-	if left := leftChildIdx(idx); t.isValidNode(left) {
-		t.nodes[left].lazyEdits = append(t.nodes[left].lazyEdits, edits...)
-	}
-	if right := rightChildIdx(idx); t.isValidNode(right) {
-		t.nodes[right].lazyEdits = append(t.nodes[right].lazyEdits, edits...)
-	}
-}
-
-func (t *TokenTree) deleteNodeAtIdx(idx int) int {
-	if right := rightChildIdx(idx); t.isValidNode(right) {
-		replaceIdx := t.leftmostChildInSubtree(right)
-		t.nodes[idx] = t.nodes[replaceIdx]
-		t.deleteNodeAtIdx(replaceIdx)
-		return idx
-	} else if left := leftChildIdx(idx); t.isValidNode(left) {
-		replaceIdx := t.rightmostChildInSubtree(left)
-		t.nodes[idx] = t.nodes[replaceIdx]
-		t.deleteNodeAtIdx(replaceIdx)
-		return t.nextNodeIdx(idx)
+	splitNode := in.split()
+	if splitIdx < in.numEntries {
+		in.insertChildAtIdx(splitIdx, splitChild)
 	} else {
-		nextIdx := t.nextNodeIdx(idx)
-		delete(t.nodes, idx)
-		t.recalculateMaxLookaheadFromIdxToRoot(parentIdx(idx))
-		return nextIdx
+		splitNode.insertChildAtIdx(splitIdx-in.numEntries, splitChild)
+	}
+	return splitNode
+}
+
+func (in *innerNode) insertChildAtIdx(idx int, child node) {
+	for i := in.numEntries; i > idx; i-- {
+		in.entries[i] = in.entries[i-1]
+		in.children[i] = in.children[i-1]
+	}
+
+	in.entries[idx] = child.entry()
+	in.children[idx] = child
+	in.numEntries++
+}
+
+func (in *innerNode) split() *innerNode {
+	// TODO: optimize for sequential inserts
+	splitIdx := in.numEntries / 2
+	splitNode := &innerNode{numEntries: in.numEntries - splitIdx}
+	for i := 0; i < splitNode.numEntries; i++ {
+		splitNode.entries[i] = in.entries[splitIdx+i]
+		splitNode.children[i] = in.children[splitIdx+i]
+	}
+	in.numEntries = splitIdx
+	return splitNode
+}
+
+func (in *innerNode) deleteRange(relativePos uint64, remainingLen uint64) uint64 {
+	initialRemainingLen := remainingLen
+	childrenToDelete := make([]int, 0, in.numEntries)
+	for i := 0; i < in.numEntries && remainingLen > 0; i++ {
+		entryLen := in.entries[i].length
+		numToDelete := minUint64(subtractNoUnderflowUint64(entryLen, relativePos), remainingLen)
+		if numToDelete == 0 {
+			// This occurs when the start position of the deleted range starts after the subtree rooted at this child.
+			// Skip this token and keep looking.
+			relativePos = subtractNoUnderflowUint64(relativePos, entryLen)
+			continue
+		}
+		if numToDelete == entryLen {
+			// If the subtree rooted at this child is entirely within the deleted range, mark the child for removal.
+			childrenToDelete = append(childrenToDelete, i)
+			relativePos = subtractNoUnderflowUint64(relativePos, entryLen)
+			remainingLen -= entryLen
+			continue
+		}
+
+		// The subtree rooted at this child partially intersects the deleted range, so recursively delete from the subtree.
+		numDeleted := in.children[i].deleteRange(relativePos, remainingLen)
+		in.entries[i].length -= numDeleted
+		in.entries[i].lookaheadLength -= numDeleted
+		remainingLen = subtractNoUnderflowUint64(remainingLen, numDeleted)
+		relativePos = subtractNoUnderflowUint64(relativePos, entryLen)
+	}
+
+	// Remove children we marked earlier.
+	// We need to both remove the child from the inner node and unlink the child's leaves from the linked list of leaves.
+	for i := len(childrenToDelete) - 1; i >= 0; i-- {
+		deleteIdx := childrenToDelete[i]
+		in.unlinkLeaves(deleteIdx)
+		for j := deleteIdx; j < in.numEntries-1; j++ {
+			in.entries[j] = in.entries[j+1]
+			in.children[j] = in.children[j+1]
+		}
+		in.numEntries--
+	}
+
+	return initialRemainingLen - remainingLen
+}
+
+func (in *innerNode) unlinkLeaves(childIdx int) {
+	leftLeaf, rightLeaf := in.children[childIdx].leftAndRightLeaves()
+
+	if leftLeaf.prev != nil {
+		leftLeaf.prev.next = rightLeaf.next
+	}
+
+	if rightLeaf.next != nil {
+		rightLeaf.next.prev = leftLeaf.prev
 	}
 }
 
-func (t *TokenTree) recalculateMaxLookaheadFromIdxToRoot(idx int) {
-	path := make([]int, 0, nodeDepth(idx)+1)
-	for idx >= 0 {
-		if t.isValidNode(idx) {
-			path = append(path, idx)
-		}
-		idx = parentIdx(idx)
-	}
+func (in *innerNode) leftAndRightLeaves() (*leafNode, *leafNode) {
+	leftChild := in.children[0]
+	leftLeaf, _ := leftChild.leftAndRightLeaves()
 
-	// Propagate lazy edits from parent to child.
-	for i := len(path) - 1; i >= 0; i-- {
-		idx := path[i]
-		t.propagateLazyEdits(idx)
-	}
+	rightChild := in.children[in.numEntries-1]
+	_, rightLeaf := rightChild.leftAndRightLeaves()
 
-	// Propagate maxLookahead from child to parent.
-	for _, idx := range path {
-		node := t.nodes[idx]
-		node.maxLookaheadPos = node.lookaheadPos()
+	return leftLeaf, rightLeaf
+}
 
-		if left := leftChildIdx(idx); t.isValidNode(left) {
-			t.propagateLazyEdits(left)
-			leftMaxLookahead := t.nodes[left].maxLookaheadPos
-			if leftMaxLookahead > node.maxLookaheadPos {
-				node.maxLookaheadPos = leftMaxLookahead
+type leafNode struct {
+	numEntries int
+	entries    [maxEntriesPerLeafNode]entry
+	tokenRoles [maxEntriesPerLeafNode]TokenRole
+	prev       *leafNode
+	next       *leafNode
+}
+
+func (ln *leafNode) entry() entry {
+	return sumEntries(ln.entries[0:ln.numEntries])
+}
+
+func (ln *leafNode) iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter {
+	for i := 0; i < ln.numEntries; i++ {
+		entry := ln.entries[i]
+		if entryLenFunc(entry) > relativePos {
+			return &TokenIter{
+				leaf:        ln,
+				entryOffset: i,
+				startPos:    startPos,
 			}
 		}
-
-		if right := rightChildIdx(idx); t.isValidNode(right) {
-			t.propagateLazyEdits(right)
-			rightMaxLookahead := t.nodes[right].maxLookaheadPos
-			if rightMaxLookahead > node.maxLookaheadPos {
-				node.maxLookaheadPos = rightMaxLookahead
-			}
-		}
+		startPos += entry.length
+		relativePos = subtractNoUnderflowUint64(relativePos, entry.length)
 	}
+	return nil
+}
+
+func (ln *leafNode) extendTokenIntersectingPos(relativePos uint64, extendLen uint64) {
+	for i := 0; i < ln.numEntries; i++ {
+		entry := &ln.entries[i]
+		if entry.length > relativePos {
+			entry.length += extendLen
+			entry.lookaheadLength += extendLen
+			return
+		}
+		relativePos = subtractNoUnderflowUint64(relativePos, entry.length)
+	}
+	panic("Could not find token to extend at position")
+}
+
+func (ln *leafNode) insert(relativePos uint64, token Token) node {
+	for i := 0; i < ln.numEntries; i++ {
+		entryLen := ln.entries[i].length
+		if entryLen > relativePos {
+			return ln.insertAtIdx(i, token)
+		}
+		relativePos = subtractNoUnderflowUint64(relativePos, entryLen)
+	}
+	return ln.insertAtIdx(ln.numEntries, token)
+}
+
+func (ln *leafNode) insertAtIdx(idx int, token Token) node {
+	if ln.numEntries < maxEntriesPerLeafNode {
+		ln.insertAtIdxNoSplit(idx, token)
+		return nil
+	}
+
+	splitNode := ln.split()
+	if idx < ln.numEntries {
+		ln.insertAtIdxNoSplit(idx, token)
+	} else {
+		splitNode.insertAtIdxNoSplit(idx-ln.numEntries, token)
+	}
+	return splitNode
+}
+
+func (ln *leafNode) insertAtIdxNoSplit(idx int, token Token) {
+	for i := ln.numEntries; i > idx; i-- {
+		ln.entries[i] = ln.entries[i-1]
+		ln.tokenRoles[i] = ln.tokenRoles[i-1]
+	}
+
+	ln.entries[idx] = entry{
+		length:          token.length(),
+		lookaheadLength: token.lookaheadLength(),
+	}
+	ln.tokenRoles[idx] = token.Role
+	ln.numEntries++
+}
+
+func (ln *leafNode) split() *leafNode {
+	// TODO: optimize for sequential inserts
+	splitIdx := ln.numEntries / 2
+	splitNode := &leafNode{numEntries: ln.numEntries - splitIdx}
+	for i := 0; i < splitNode.numEntries; i++ {
+		splitNode.entries[i] = ln.entries[splitIdx+i]
+		splitNode.tokenRoles[i] = ln.tokenRoles[splitIdx+i]
+	}
+	splitNode.next = ln.next
+	splitNode.prev = ln
+	ln.next = splitNode
+	ln.numEntries = splitIdx
+	return splitNode
+}
+
+func (ln *leafNode) deleteRange(relativePos uint64, remainingLen uint64) uint64 {
+	initialRemainingLen := remainingLen
+	tokensToDelete := make([]int, 0, ln.numEntries)
+	for i := 0; i < ln.numEntries && remainingLen > 0; i++ {
+		entryLen := ln.entries[i].length
+		numToDelete := minUint64(subtractNoUnderflowUint64(entryLen, relativePos), remainingLen)
+		relativePos = subtractNoUnderflowUint64(relativePos, entryLen)
+		if numToDelete == 0 {
+			// The start of the deletion range occurs after this token, so skip it and keep looking.
+			continue
+		}
+		if numToDelete == entryLen {
+			// The token is entirely within the deletion range, so mark it for removal.
+			tokensToDelete = append(tokensToDelete, i)
+			remainingLen = subtractNoUnderflowUint64(remainingLen, entryLen)
+			continue
+		}
+
+		// The token partially overlaps the deletion range, so truncate it.
+		ln.entries[i].length -= numToDelete
+		ln.entries[i].lookaheadLength -= numToDelete
+		remainingLen -= numToDelete
+	}
+
+	// Remove the tokens we marked earlier.
+	for i := len(tokensToDelete) - 1; i >= 0; i-- {
+		deleteIdx := tokensToDelete[i]
+		for j := deleteIdx; j < ln.numEntries-1; j++ {
+			ln.entries[j] = ln.entries[j+1]
+			ln.tokenRoles[j] = ln.tokenRoles[j+1]
+		}
+		ln.numEntries--
+	}
+
+	return initialRemainingLen - remainingLen
+}
+
+func (ln *leafNode) leftAndRightLeaves() (*leafNode, *leafNode) {
+	return ln, ln
 }
 
 // TokenIter iterates over tokens.
 // Iterator operations are NOT thread-safe because they can mutate the tree (applying lazy edits).
 type TokenIter struct {
-	tree    *TokenTree
-	nodeIdx int
+	leaf        *leafNode
+	entryOffset int
+	startPos    uint64
 }
 
 // Get retrieves the current token, if it exists.
 func (iter *TokenIter) Get(tok *Token) bool {
-	if iter == nil {
+	if iter == nil || iter.leaf == nil {
 		return false
 	}
 
-	if !iter.tree.isValidNode(iter.nodeIdx) {
-		return false
+	entry := iter.leaf.entries[iter.entryOffset]
+	role := iter.leaf.tokenRoles[iter.entryOffset]
+	*tok = Token{
+		StartPos:     iter.startPos,
+		EndPos:       iter.startPos + entry.length,
+		LookaheadPos: iter.startPos + entry.lookaheadLength,
+		Role:         role,
 	}
-
-	*tok = iter.tree.nodes[iter.nodeIdx].token
 	return true
 }
 
 // Advance moves the iterator to the next token.
 // If there are no more tokens, this is a no-op.
 func (iter *TokenIter) Advance() {
-	if iter == nil {
+	if iter == nil || iter.leaf == nil {
 		return
 	}
 
-	if iter.tree.isValidNode(iter.nodeIdx) {
-		iter.nodeIdx = iter.tree.nextNodeIdx(iter.nodeIdx)
+	entry := iter.leaf.entries[iter.entryOffset]
+	iter.startPos += entry.length
+	iter.entryOffset++
+	for iter.leaf != nil && iter.entryOffset >= iter.leaf.numEntries {
+		iter.leaf = iter.leaf.next
+		iter.entryOffset = 0
 	}
 }
 
@@ -321,99 +542,4 @@ func (iter *TokenIter) Collect() []Token {
 		iter.Advance()
 	}
 	return result
-}
-
-// delete removes the token at the iterator's current position and advances to the next token.
-// If the iterator is already exhausted, this is a no-op.
-func (iter *TokenIter) deleteCurrent() {
-	if iter.tree.isValidNode(iter.nodeIdx) {
-		iter.nodeIdx = iter.tree.deleteNodeAtIdx(iter.nodeIdx)
-	}
-}
-
-// deleteToPos deletes tokens starting before the given position.
-func (iter *TokenIter) deleteToPos(pos uint64) {
-	var tok Token
-	for iter.Get(&tok) {
-		if tok.StartPos >= pos {
-			return
-		}
-		iter.deleteCurrent()
-	}
-}
-
-// deleteRemaining deletes all remaining tokens from the iterator.
-func (iter *TokenIter) deleteRemaining() {
-	for iter.tree.isValidNode(iter.nodeIdx) {
-		iter.deleteCurrent()
-	}
-}
-
-// Helper methods to calculate indexes in the array representation of the token tree.
-// Nodes are stored in pre-order traversal order.
-// If indices were 1-indexed, the left child would be idx*2 and the right child would be idx*2+1.
-// Since indices are 0-indexed, we need to increment/decrement by one before/after each calculation.
-func parentIdx(idx int) int        { return (idx+1)/2 - 1 }
-func leftChildIdx(idx int) int     { return (idx+1)*2 - 1 }
-func rightChildIdx(idx int) int    { return (idx + 1) * 2 }
-func isRootIdx(idx int) bool       { return idx == 0 }
-func isLeftChildIdx(idx int) bool  { return idx > 0 && (idx+1)%2 == 0 }
-func isRightChildIdx(idx int) bool { return idx > 0 && (idx+1)%2 > 0 }
-
-func nodeDepth(idx int) int {
-	d := 0
-	for idx > 0 {
-		idx = idx >> 1
-		d++
-	}
-	return d
-}
-
-type treeNode struct {
-	token           Token
-	lazyEdits       []Edit
-	maxLookaheadPos uint64
-}
-
-func newTreeNodeForToken(token Token) *treeNode {
-	return &treeNode{
-		token:           token,
-		maxLookaheadPos: token.LookaheadPos,
-	}
-}
-
-func (tn *treeNode) startPos() uint64 {
-	return tn.token.StartPos
-}
-
-func (tn *treeNode) endPos() uint64 {
-	return tn.token.EndPos
-}
-
-func (tn *treeNode) lookaheadPos() uint64 {
-	return tn.token.LookaheadPos
-}
-
-func (tn *treeNode) intersects(pos uint64) bool {
-	// For zero-length tokens, intersect for the position at the start of the token.
-	// For all other tokens, intersect if the position is in the range [startPos, endPos).
-	startPos, endPos := tn.startPos(), tn.endPos()
-	return (startPos == endPos && pos == startPos) || (pos >= startPos && pos < endPos)
-}
-
-func (tn *treeNode) applyLazyEdits() []Edit {
-	edits := tn.lazyEdits
-	tn.lazyEdits = nil
-	for _, edit := range edits {
-		tn.applyEdit(edit)
-		tn.maxLookaheadPos = edit.applyToPosition(tn.maxLookaheadPos)
-	}
-	return edits
-}
-
-func (tn *treeNode) applyEdit(edit Edit) {
-	// It is possible for deletions to produce tokens with zero length (start pos == end pos).
-	tn.token.StartPos = edit.applyToPosition(tn.token.StartPos)
-	tn.token.EndPos = edit.applyToPosition(tn.token.EndPos)
-	tn.token.LookaheadPos = edit.applyToPosition(tn.token.LookaheadPos)
 }

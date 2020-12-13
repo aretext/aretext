@@ -7,6 +7,13 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text/utf8"
 )
 
+// Edit represents a change to a document.
+type Edit struct {
+	Pos         uint64 // Position of the first character inserted/deleted.
+	NumInserted uint64
+	NumDeleted  uint64
+}
+
 // TokenizerRule represents a rule for parsing a particular token.
 type TokenizerRule struct {
 	Regexp    string
@@ -62,12 +69,13 @@ type ReaderAtPosFunc func(pos uint64) InputReader
 
 // RetokenizeAfterEdit updates tokens based on an edit to the text.
 // The algorithm is based on Wagner (1998) Practical Algorithms for Incremental Software Development Environments, Chapter 5.
+// This method assumes that the token tree is up-to-date with the text before the most recent edit; if not, it may panic.
 func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint64, readerAtPos ReaderAtPosFunc) (*TokenTree, error) {
 	// The edit (insert/delete) changes the start/end/lookahead positions of tokens after the edit.
 	// We need to update the token positions to match the edited text.
 	// We do this operation first so that we can compare the positions of tokens in the tree with
 	// the positions of new tokens parsed from the edited text.
-	tree.shiftPositionsAfterEdit(edit)
+	t.shiftPositionsAfterEdit(tree, edit)
 
 	// Find the start position of the first affected token in the tree.
 	// We will start retokenizing from this position.
@@ -91,44 +99,68 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	// We continue until we encounter a token after the edit that matches the next generated token.
 	// At this point, we know all subsequent tokens in the tree match what the tokenizer would output,
 	// so we can stop retokenizing.
-	var insertedTokens []Token
+	startPos := pos
+	var newTokens []Token
 	for pos < textLen {
 		nextPos, nextTok, err := t.nextToken(r, textLen, pos)
 		if err != nil {
 			return nil, errors.Wrapf(err, "next token")
 		}
 
-		// Delete all tokens up to the new token, so that the next token we check
-		// is on or after the next token's start position.
-		iter.deleteToPos(nextTok.StartPos)
+		// Advance to the next existing token on or after the next new token's start position.
+		advanceIterToPos(iter, nextTok.StartPos)
 
 		var oldTok Token
-		if nextTok.StartPos > edit.Pos && iter.Get(&oldTok) && nextTok == oldTok {
-			// The new token exactly matches an existing token after the edit position,
+		if nextTok.StartPos > edit.Pos+edit.NumInserted && iter.Get(&oldTok) && nextTok == oldTok {
+			// The new token exactly matches an existing token after the edit,
 			// so all subsequent tokens would match as well.  This means we're done!
 			break
 		}
 
-		// Delete all tokens that overlap with the new token we're going to insert.
-		iter.deleteToPos(nextPos)
+		// Advance past all tokens that overlap with the new token.
+		advanceIterToPos(iter, nextPos)
 
-		// Defer insertions until later to avoid messing up the iterator.
-		insertedTokens = append(insertedTokens, nextTok)
+		newTokens = append(newTokens, nextTok)
 		pos = nextPos
 	}
 
-	if pos == textLen {
-		iter.deleteRemaining()
-	}
-
-	// Insert new tokens into the tree.
-	// These tokens won't overlap with any existing tokens in the tree because
-	// we would have deleted any overlapping tokens in the loop above.
-	for _, tok := range insertedTokens {
+	// Rewrite existing tokens in the tree with the new tokens.
+	tree.deleteRange(startPos, pos-startPos)
+	for _, tok := range newTokens {
 		tree.insertToken(tok)
 	}
 
 	return tree, nil
+}
+
+func (t *Tokenizer) shiftPositionsAfterEdit(tree *TokenTree, edit Edit) {
+	treeTextLen := tree.textLen()
+	if edit.Pos > treeTextLen {
+		panic("Edit cannot occur past end of text in token tree")
+	}
+
+	if edit.NumInserted > 0 {
+		if edit.Pos == treeTextLen {
+			// If the edit occurred at the end of the text, insert a placeholder token.
+			tree.insertToken(Token{
+				StartPos:     treeTextLen,
+				EndPos:       treeTextLen + edit.NumInserted,
+				LookaheadPos: treeTextLen + edit.NumInserted,
+				Role:         TokenRoleNone,
+			})
+		} else {
+			// If the edit occurred within the text, there must be some token in the tree that overlaps the edit.
+			// Extend the length of that token so subsequent token positions match the updated text.
+			tree.extendTokenIntersectingPos(edit.Pos, edit.NumInserted)
+		}
+	}
+
+	if edit.NumDeleted > 0 {
+		if treeTextLen-edit.Pos < edit.NumDeleted {
+			panic("Not enough characters to delete")
+		}
+		tree.deleteRange(edit.Pos, edit.NumDeleted)
+	}
 }
 
 func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64, Token, error) {
@@ -207,4 +239,14 @@ func advanceReaderOneRune(r InputReader) error {
 	}
 
 	return nil
+}
+
+func advanceIterToPos(iter *TokenIter, pos uint64) {
+	var tok Token
+	for iter.Get(&tok) {
+		if tok.StartPos >= pos {
+			return
+		}
+		iter.Advance()
+	}
 }

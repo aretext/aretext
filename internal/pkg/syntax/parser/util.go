@@ -59,3 +59,19 @@ func forEachPartitionInKeyOrder(partitions map[string][]int, f func(states []int
 		f(partitions[key])
 	}
 }
+
+func minUint64(x uint64, y uint64) uint64 {
+	if x < y {
+		return x
+	} else {
+		return y
+	}
+}
+
+func subtractNoUnderflowUint64(x uint64, y uint64) uint64 {
+	if x >= y {
+		return x - y
+	} else {
+		return 0
+	}
+}

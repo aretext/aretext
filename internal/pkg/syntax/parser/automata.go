@@ -365,7 +365,7 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
 // The returned function rewindReader will seek the reader back to its original position.
 func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, rewindReader func() error, err error) {
-	var buf [1024]byte
+	var buf [16]byte
 	var numBytesReadAtLastAccept, totalBytesRead int
 	pos := startPos
 	state := dfa.StartState

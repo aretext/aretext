@@ -367,9 +367,8 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 // MatchLongest returns the longest match in an input string.
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
-// The returned function rewindReader will seek the reader back to its original position.
-func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, rewindReader func() error, err error) {
-	var numBytesReadAtLastAccept, totalBytesRead int
+func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, numBytesReadAtLastAccept int, err error) {
+	var totalBytesRead int
 	pos := startPos
 	state := dfa.StartState
 
@@ -391,7 +390,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	for {
 		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
-			return false, 0, 0, nil, nil, err
+			return false, 0, 0, nil, 0, err
 		}
 
 		prevTotalBytesRead := totalBytesRead
@@ -422,15 +421,10 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	// Reset the reader position to the end of the last match.
 	// If there was no match, this resets the reader to its original position.
 	if err := r.SeekBackward(uint64(totalBytesRead - numBytesReadAtLastAccept)); err != nil {
-		return false, 0, 0, nil, nil, err
+		return false, 0, 0, nil, 0, err
 	}
 
-	// Return a function to "reset" the reader back to its original position.
-	rewindReader = func() error {
-		return r.SeekBackward(uint64(numBytesReadAtLastAccept))
-	}
-
-	return accepted, endPos, pos, actions, rewindReader, nil
+	return accepted, endPos, pos, actions, numBytesReadAtLastAccept, nil
 }
 
 // Minimize produces an equivalent DFA with the minimum number of states.

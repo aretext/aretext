@@ -172,7 +172,7 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 	}
 
 	for pos < textLen {
-		accepted, endPos, lookaheadPos, actions, rewindReader, err := t.StateMachine.MatchLongest(r, pos, textLen)
+		accepted, endPos, lookaheadPos, actions,  numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
 			return 0, Token{}, errors.Wrapf(err, "tokenizing input")
 		}
@@ -182,7 +182,7 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 		if accepted && endPos > pos {
 			// We already skipped some characters, so we need to output an empty token.
 			if emptyToken.StartPos < emptyToken.EndPos {
-				if err := rewindReader(); err != nil {
+				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
 					return 0, Token{}, errors.Wrapf(err, "rewind reader")
 				}
 				return pos, emptyToken, nil

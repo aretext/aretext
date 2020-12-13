@@ -258,7 +258,15 @@ func (in *innerNode) insertAtIdx(idx int, relativePos uint64, token Token) node 
 		return nil
 	}
 
-	splitNode := in.split()
+	var splitNode *innerNode
+	if splitIdx == in.numEntries {
+		// Fast path with less fragmentation for sequential inserts (common case).
+		splitNode = &innerNode{}
+	} else {
+		// Slow path for non-sequential inserts.
+		splitNode = in.splitEvenly()
+	}
+
 	if splitIdx < in.numEntries {
 		in.insertChildAtIdx(splitIdx, splitChild)
 	} else {
@@ -278,8 +286,7 @@ func (in *innerNode) insertChildAtIdx(idx int, child node) {
 	in.numEntries++
 }
 
-func (in *innerNode) split() *innerNode {
-	// TODO: optimize for sequential inserts
+func (in *innerNode) splitEvenly() *innerNode {
 	splitIdx := in.numEntries / 2
 	splitNode := &innerNode{numEntries: in.numEntries - splitIdx}
 	for i := 0; i < splitNode.numEntries; i++ {
@@ -413,7 +420,15 @@ func (ln *leafNode) insertAtIdx(idx int, token Token) node {
 		return nil
 	}
 
-	splitNode := ln.split()
+	var splitNode *leafNode
+	if idx == ln.numEntries {
+		// Fast path with less fragmentation for sequential inserts (common case).
+		splitNode = ln.splitAppendEmptyNode()
+	} else {
+		// Slow path for non-sequential inserts.
+		splitNode = ln.splitEvenly()
+	}
+
 	if idx < ln.numEntries {
 		ln.insertAtIdxNoSplit(idx, token)
 	} else {
@@ -436,8 +451,14 @@ func (ln *leafNode) insertAtIdxNoSplit(idx int, token Token) {
 	ln.numEntries++
 }
 
-func (ln *leafNode) split() *leafNode {
-	// TODO: optimize for sequential inserts
+func (ln *leafNode) splitAppendEmptyNode() *leafNode {
+	splitNode := &leafNode{}
+	ln.next = splitNode
+	splitNode.prev = ln
+	return splitNode
+}
+
+func (ln *leafNode) splitEvenly() *leafNode {
 	splitIdx := ln.numEntries / 2
 	splitNode := &leafNode{numEntries: ln.numEntries - splitIdx}
 	for i := 0; i < splitNode.numEntries; i++ {

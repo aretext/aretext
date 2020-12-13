@@ -475,6 +475,16 @@ func TestTokenTreeExtendTokenIntersectingPos(t *testing.T) {
 	}
 }
 
+func BenchmarkSequentialInsert(b *testing.B) {
+	tokens := generateTokens(10000)
+	for i := 0; i < b.N; i++ {
+		tree := NewTokenTree(nil)
+		for _, token := range tokens {
+			tree.insertToken(token)
+		}
+	}
+}
+
 func generateTokens(n int) []Token {
 	tokens := make([]Token, 0, n)
 	for i := 0; i < n; i++ {

@@ -325,7 +325,7 @@ type Dfa struct {
 
 	// Actions to perform on an accept state.
 	// The actions are defined by the user of the DFA.
-	AcceptActions map[int][]int
+	AcceptActions [][]int
 
 	// buf is an internal buffer, re-used to amortize the allocation cost.
 	buf [16]byte
@@ -339,7 +339,7 @@ func NewDfa() *Dfa {
 		NumStates:     numStates,
 		StartState:    1,
 		Transitions:   make([]int, maxTransitionsPerState*numStates),
-		AcceptActions: make(map[int][]int, 1),
+		AcceptActions: make([][]int, numStates),
 	}
 }
 
@@ -349,6 +349,7 @@ func (dfa *Dfa) AddState() int {
 	dfa.NumStates++
 	transitions := make([]int, maxTransitionsPerState)
 	dfa.Transitions = append(dfa.Transitions, transitions...)
+	dfa.AcceptActions = append(dfa.AcceptActions, nil)
 	return state
 }
 
@@ -372,7 +373,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	pos := startPos
 	state := dfa.StartState
 
-	if acceptActions, ok := dfa.AcceptActions[state]; ok {
+	if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 		accepted, endPos, actions = true, pos, acceptActions
 	}
 
@@ -382,7 +383,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		if state == DfaDeadState {
 			// The DFA doesn't match start-of-text, so try to recover by restarting at the first character.
 			state = prevState
-		} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
+		} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 			accepted, endPos, actions = true, pos, acceptActions
 		}
 	}
@@ -401,7 +402,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 			state = dfa.Transitions[state*maxTransitionsPerState+int(c)]
 			if state == DfaDeadState {
 				break
-			} else if acceptActions, ok := dfa.AcceptActions[state]; ok {
+			} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 				accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, prevTotalBytesRead+i+1, acceptActions
 			}
 		}
@@ -413,7 +414,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 
 	if pos == textLen {
 		state = dfa.Transitions[state*maxTransitionsPerState+endOfText]
-		if acceptActions, ok := dfa.AcceptActions[state]; ok {
+		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 			accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, totalBytesRead, acceptActions
 		}
 	}
@@ -523,7 +524,7 @@ func (dfa *Dfa) newDfaFromGroups(groups [][]int) *Dfa {
 
 	newDfa := &Dfa{
 		Transitions:   make([]int, 0, len(groups)*maxTransitionsPerState),
-		AcceptActions: make(map[int][]int, len(groups)),
+		AcceptActions: make([][]int, len(groups)),
 	}
 
 	// Add states, one for each group.

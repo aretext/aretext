@@ -100,6 +100,11 @@ func TestJsonTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{},
 		},
 		{
+			name:           "number prefix starting with hyphen",
+			inputString:    "-123abcd",
+			expectedTokens: []TokenWithText{},
+		},
+		{
 			name:        "key with string value",
 			inputString: `{"key": "abcd"}`,
 			expectedTokens: []TokenWithText{

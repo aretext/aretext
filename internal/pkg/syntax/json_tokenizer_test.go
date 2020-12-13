@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -197,5 +198,16 @@ func TestJsonTokenizer(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
+	}
+}
+
+func BenchmarkJsonTokenizer(b *testing.B) {
+	data, err := ioutil.ReadFile("testdata/test.json")
+	require.NoError(b, err)
+	text := string(data)
+
+	for i := 0; i < b.N; i++ {
+		_, err := ParseTokensWithText(JsonLanguage, text)
+		require.NoError(b, err)
 	}
 }

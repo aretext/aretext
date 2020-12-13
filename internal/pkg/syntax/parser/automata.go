@@ -326,6 +326,9 @@ type Dfa struct {
 	// Actions to perform on an accept state.
 	// The actions are defined by the user of the DFA.
 	AcceptActions map[int][]int
+
+	// buf is an internal buffer, re-used to amortize the allocation cost.
+	buf [16]byte
 }
 
 // NewDfa constructs a DFA with only the dead state and the start state.
@@ -365,7 +368,6 @@ func (dfa *Dfa) AddAcceptAction(state int, action int) {
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
 // The returned function rewindReader will seek the reader back to its original position.
 func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, rewindReader func() error, err error) {
-	var buf [16]byte
 	var numBytesReadAtLastAccept, totalBytesRead int
 	pos := startPos
 	state := dfa.StartState
@@ -386,7 +388,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	}
 
 	for {
-		n, err := r.Read(buf[:])
+		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
 			return false, 0, 0, nil, nil, err
 		}
@@ -394,7 +396,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		prevTotalBytesRead := totalBytesRead
 		totalBytesRead += n
 
-		for i, c := range buf[:n] {
+		for i, c := range dfa.buf[:n] {
 			pos += uint64(utf8.StartByteIndicator[c])
 			state = dfa.Transitions[state*maxTransitionsPerState+int(c)]
 			if state == DfaDeadState {

@@ -25,6 +25,7 @@ type TokenizerRule struct {
 type Tokenizer struct {
 	StateMachine *Dfa
 	Rules        []TokenizerRule
+	buf          [4]byte
 }
 
 // GenerateTokenizer compiles a tokenizer from a set of rules.
@@ -197,7 +198,7 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 
 		// We couldn't find a match, so advance to the next position and try again.
 		pos++
-		if err := advanceReaderOneRune(r); err != nil {
+		if err := t.advanceReaderOneRune(r); err != nil {
 			return 0, Token{}, errors.Wrapf(err, "advance reader")
 		}
 
@@ -230,16 +231,14 @@ func (t *Tokenizer) actionsToRule(actions []int) TokenizerRule {
 	return t.Rules[ruleIdx]
 }
 
-func advanceReaderOneRune(r InputReader) error {
-	var buf [4]byte
-
-	if _, err := r.Read(buf[:1]); err != nil && err != io.EOF {
+func (t *Tokenizer) advanceReaderOneRune(r InputReader) error {
+	if _, err := r.Read(t.buf[:1]); err != nil && err != io.EOF {
 		return errors.Wrapf(err, "read first byte")
 	}
 
-	w := int64(utf8.CharWidth[buf[0]])
+	w := int64(utf8.CharWidth[t.buf[0]])
 	if w > 1 {
-		if _, err := r.Read(buf[:w-1]); err != nil {
+		if _, err := r.Read(t.buf[:w-1]); err != nil {
 			return errors.Wrapf(err, "read next bytes")
 		}
 	}

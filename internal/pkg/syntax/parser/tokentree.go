@@ -190,12 +190,12 @@ type entry struct {
 }
 
 func sumEntries(entries []entry) entry {
-	e := entry{}
-	for _, other := range entries {
-		e.length += other.length
-		e.lookaheadLength += other.lookaheadLength
+	result := entry{}
+	for _, e := range entries {
+		result.length += e.length
+		result.lookaheadLength = maxUint64(result.lookaheadLength, result.length+e.lookaheadLength)
 	}
-	return e
+	return result
 }
 
 type innerNode struct {

@@ -68,6 +68,14 @@ func minUint64(x uint64, y uint64) uint64 {
 	}
 }
 
+func maxUint64(x uint64, y uint64) uint64 {
+	if x > y {
+		return x
+	} else {
+		return y
+	}
+}
+
 func subtractNoUnderflowUint64(x uint64, y uint64) uint64 {
 	if x >= y {
 		return x - y

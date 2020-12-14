@@ -2,6 +2,7 @@ package parser
 
 import (
 	"io"
+	"log"
 
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/text/utf8"
@@ -125,11 +126,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	}
 
 	// Rewrite existing tokens in the tree with the new tokens.
-	tree.deleteRange(startPos, pos-startPos)
-	for _, tok := range newTokens {
-		tree.insertToken(tok)
-	}
-
+	t.rewriteTokens(tree, startPos, pos, newTokens)
 	return tree, nil
 }
 
@@ -172,7 +169,7 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 	}
 
 	for pos < textLen {
-		accepted, endPos, lookaheadPos, actions,  numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
+		accepted, endPos, lookaheadPos, actions, numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
 			return 0, Token{}, errors.Wrapf(err, "tokenizing input")
 		}
@@ -212,6 +209,15 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 	}
 
 	return pos, emptyToken, nil
+}
+
+func (t *Tokenizer) rewriteTokens(tree *TokenTree, startPos uint64, endPos uint64, newTokens []Token) {
+	rangeLen := endPos - startPos
+	log.Printf("Rewriting tokens from %d to %d (length = %d)\n", startPos, endPos, rangeLen)
+	tree.deleteRange(startPos, rangeLen)
+	for _, tok := range newTokens {
+		tree.insertToken(tok)
+	}
 }
 
 func (t *Tokenizer) actionsToRule(actions []int) TokenizerRule {

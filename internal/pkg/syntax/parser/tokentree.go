@@ -190,10 +190,12 @@ type entry struct {
 }
 
 func sumEntries(entries []entry) entry {
+	var relativePos uint64
 	result := entry{}
 	for _, e := range entries {
 		result.length += e.length
-		result.lookaheadLength = maxUint64(result.lookaheadLength, result.length+e.lookaheadLength)
+		result.lookaheadLength = maxUint64(result.lookaheadLength, relativePos+e.lookaheadLength)
+		relativePos += e.length
 	}
 	return result
 }

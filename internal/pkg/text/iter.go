@@ -63,6 +63,7 @@ type decodingRuneIter struct {
 	overflow           [3]byte
 	overflowLen        int
 	eof                bool
+	buf                [64]byte
 }
 
 // NewCloneableForwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes.
@@ -105,11 +106,10 @@ func (ri *decodingRuneIter) NextRune() (rune, error) {
 }
 
 func (ri *decodingRuneIter) loadRunesFromReader() error {
-	var buf [64]byte
 	for len(ri.pendingRunes) == 0 && !ri.eof {
-		n := copy(buf[:], ri.overflow[:ri.overflowLen])
+		n := copy(ri.buf[:], ri.overflow[:ri.overflowLen])
 
-		numRead, err := ri.in.Read(buf[ri.overflowLen:])
+		numRead, err := ri.in.Read(ri.buf[ri.overflowLen:])
 		if err == io.EOF {
 			ri.eof = true
 		} else if err != nil {
@@ -120,12 +120,12 @@ func (ri *decodingRuneIter) loadRunesFromReader() error {
 
 		var bytesConsumed int
 		if ri.inputReversed {
-			bytesConsumed = ri.loadRunesFromBufferReverseOrder(buf[:n])
+			bytesConsumed = ri.loadRunesFromBufferReverseOrder(ri.buf[:n])
 		} else {
-			bytesConsumed = ri.loadRunesFromBuffer(buf[:n])
+			bytesConsumed = ri.loadRunesFromBuffer(ri.buf[:n])
 		}
 
-		ri.overflowLen = copy(ri.overflow[:], buf[bytesConsumed:n])
+		ri.overflowLen = copy(ri.overflow[:], ri.buf[bytesConsumed:n])
 	}
 
 	return nil

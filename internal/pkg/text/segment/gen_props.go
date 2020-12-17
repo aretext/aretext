@@ -47,7 +47,7 @@ func main() {
 
 	fmt.Printf("Generating %s from %s\n", outputPath, dataPaths.String())
 
-	ranges := make([]parsedRange, 0)
+	ranges := make([]propRange, 0)
 	for _, path := range dataPaths {
 		var err error
 		ranges, err = parseDataFile(path, propFilter, ranges)
@@ -56,14 +56,15 @@ func main() {
 		}
 	}
 
-	runeMap, err := buildRuneMap(ranges)
-	if err != nil {
-		log.Fatalf("error building rune map: %v", err)
-	}
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i].Start < ranges[j].Start
+	})
 
-	propNames := uniquePropNames(runeMap)
+	checkNonOverlapping(ranges)
+	ranges = fillGaps(ranges)
+	propNames := uniquePropNames(ranges)
 
-	if err := writeOutputFile(prefix, outputPath, propNames, runeMap); err != nil {
+	if err := writeOutputFile(prefix, outputPath, propNames, ranges); err != nil {
 		log.Fatalf("error generating output file %s: %v", outputPath, err)
 	}
 }
@@ -79,10 +80,10 @@ func (f *stringArrayFlags) Set(s string) error {
 	return nil
 }
 
-type parsedRange struct {
-	start    uint64
-	end      uint64
-	propName string
+type propRange struct {
+	Start    uint64
+	End      uint64
+	PropName string
 }
 
 type propFilter struct {
@@ -102,7 +103,7 @@ func (f *propFilter) CheckAllowed(prop string) bool {
 	return ok
 }
 
-func parseDataFile(dataPath string, propFilter *propFilter, ranges []parsedRange) ([]parsedRange, error) {
+func parseDataFile(dataPath string, propFilter *propFilter, ranges []propRange) ([]propRange, error) {
 	file, err := os.Open(dataPath)
 	if err != nil {
 		return nil, err
@@ -131,20 +132,20 @@ func parseDataFile(dataPath string, propFilter *propFilter, ranges []parsedRange
 
 var LINE_RE = regexp.MustCompile(`^([A-Z0-9]+)(..[A-Z0-9]+)?\s*;\s*([A-z]+)`)
 
-func parseLine(line string, propFilter *propFilter) (bool, parsedRange, error) {
+func parseLine(line string, propFilter *propFilter) (bool, propRange, error) {
 	match := LINE_RE.FindStringSubmatch(line)
 	if match == nil {
-		return false, parsedRange{}, nil
+		return false, propRange{}, nil
 	}
 
 	propName := match[3]
 	if !propFilter.CheckAllowed(propName) {
-		return false, parsedRange{}, nil
+		return false, propRange{}, nil
 	}
 
 	startCodepoint, err := strconv.ParseUint(match[1], 16, 32)
 	if err != nil {
-		return false, parsedRange{}, err
+		return false, propRange{}, err
 	}
 
 	var endCodepoint uint64
@@ -155,38 +156,66 @@ func parseLine(line string, propFilter *propFilter) (bool, parsedRange, error) {
 		endHex := endMatch[2:] // remove ".." prefix
 		endCodepoint, err = strconv.ParseUint(endHex, 16, 32)
 		if err != nil {
-			return false, parsedRange{}, err
+			return false, propRange{}, err
 		}
 	}
 
-	rng := parsedRange{
-		start:    startCodepoint,
-		end:      endCodepoint,
-		propName: propName,
+	rng := propRange{
+		Start:    startCodepoint,
+		End:      endCodepoint,
+		PropName: propName,
 	}
 
 	return true, rng, nil
 }
 
-func buildRuneMap(parsedRanges []parsedRange) (map[rune]string, error) {
-	result := make(map[rune]string, 0)
-
-	for _, rng := range parsedRanges {
-		for c := rng.start; c <= rng.end; c++ {
-			if _, ok := result[rune(c)]; ok {
-				return nil, fmt.Errorf("Duplicate rune detected: %d", c)
-			}
-			result[rune(c)] = rng.propName
+func checkNonOverlapping(ranges []propRange) {
+	// Assume that ranges are sorted.
+	for i := 1; i < len(ranges); i++ {
+		if ranges[i-1].End >= ranges[i].Start {
+			log.Fatalf("Overlapping range detected between %v and %v\n", ranges[i-1], ranges[i])
 		}
 	}
-
-	return result, nil
 }
 
-func uniquePropNames(runeMap map[rune]string) []string {
+func fillGaps(ranges []propRange) []propRange {
+	// Assume that ranges are sorted by start and non-pverlapping.
+	var lastRng propRange
+	result := make([]propRange, 0, len(ranges))
+	for i := 0; i < len(ranges); i++ {
+		rng := ranges[i]
+		if i == 0 {
+			if rng.Start > 0 {
+				result = append(result, propRange{
+					Start:    0,
+					End:      rng.Start - 1,
+					PropName: "Other",
+				})
+			}
+
+			result = append(result, rng)
+			lastRng = rng
+			continue
+		}
+
+		if lastRng.End+1 < rng.Start {
+			result = append(result, propRange{
+				Start:    lastRng.End + 1,
+				End:      rng.Start - 1,
+				PropName: "Other",
+			})
+		}
+
+		result = append(result, rng)
+		lastRng = rng
+	}
+	return result
+}
+
+func uniquePropNames(ranges []propRange) []string {
 	set := make(map[string]struct{}, 0)
-	for _, propName := range runeMap {
-		set[propName] = struct{}{}
+	for _, rng := range ranges {
+		set[rng.PropName] = struct{}{}
 	}
 
 	result := make([]string, 0, len(set))
@@ -198,7 +227,7 @@ func uniquePropNames(runeMap map[rune]string) []string {
 	return result
 }
 
-func writeOutputFile(prefix string, path string, propNames []string, runeMap map[rune]string) error {
+func writeOutputFile(prefix string, path string, propNames []string, ranges []propRange) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -215,24 +244,20 @@ func writeOutputFile(prefix string, path string, propNames []string, runeMap map
 	type {{ $input.Prefix }}Prop byte
 
 	const (
-		{{ $input.Prefix }}PropOther = {{ $input.Prefix }}Prop(iota)
 		{{ range $propName := $input.PropNames -}}
-		{{ $input.Prefix }}Prop{{ $propName }}
+		{{ $input.Prefix }}Prop{{ $propName }} = {{ $input.Prefix }}Prop(iota)
 		{{ end  }}
 	)
 
-	var {{ $input.Prefix }}PropRuneMap = map[rune]{{ $input.Prefix }}Prop{
-		{{ range $rune, $propName := $input.RuneMap -}}
-		{{ $rune }}: {{ $input.Prefix }}Prop{{ $propName }},
-		{{ end }}
-	}
-
 	func {{ $input.Prefix }}PropForRune(r rune) {{ $input.Prefix }}Prop {
-		prop, ok := {{ $input.Prefix }}PropRuneMap[r]
-		if ok {
-			return prop
-		} else {
-			return {{ $input.Prefix }}PropOther
+		switch {
+		{{ range $rng := $input.PropRanges }}
+		case r <= {{ $rng.End }}:
+		return {{ $input.Prefix }}Prop{{ $rng.PropName }}
+		{{ end }}
+
+		default:
+		return {{ $input.Prefix }}PropOther
 		}
 	}
 	`)
@@ -241,8 +266,8 @@ func writeOutputFile(prefix string, path string, propNames []string, runeMap map
 	}
 
 	return tmpl.Execute(file, map[string]interface{}{
-		"Prefix":    prefix,
-		"PropNames": propNames,
-		"RuneMap":   runeMap,
+		"Prefix":     prefix,
+		"PropNames":  propNames,
+		"PropRanges": ranges,
 	})
 }

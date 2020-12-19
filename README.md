@@ -23,25 +23,22 @@ Design principles:
 - [x] handle tabs
 - [x] soft-wrap long lines
 - [x] automatic reload when file changes on disk
-- [ ] syntax highlighting
+- [x] syntax highlighting
 - [ ] save changes
+- [ ] close and open new document in REPL
+- [ ] undo/redo
+- [ ] hotkeys
+- [ ] line numbers
+- [ ] copy/paste using system clipboard integration
+- [ ] run external program as subprocess on current document/directory
 - [ ] vim newline command ('o')
 - [ ] vim replace/change commands
 - [ ] vim word navigation
 - [ ] vim section navigation
-- [ ] run external program as subprocess on current document/directory
-
-### 2.0: "parity with most-used vim features"
-
 - [ ] visual mode / selection
 - [ ] forward search through file
 - [ ] backward search through file
-- [ ] copy/paste using system clipboard integration
-- [ ] undo/redo
-- [ ] line numbers
-- [ ] repeat last action ('.')
-- [ ] vim repeat commands ('10x')
-- [ ] hotkeys
 - [ ] REPL autocomplete
 - [ ] autoindent
-- [ ] comment/uncomment
+- [ ] repeat last action ('.')
+- [ ] vim repeat commands ('10x')

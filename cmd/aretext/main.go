@@ -40,36 +40,43 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	screen, err := tcell.NewScreen()
+	err := runEditor()
 	if err != nil {
 		exitWithError(err)
 	}
-
-	if err := screen.Init(); err != nil {
-		exitWithError(err)
-	} else {
-		defer screen.Fini()
-	}
-
-	editor, err := aretext.NewEditor(screen)
-	if err != nil {
-		exitWithError(err)
-	}
-
-	path := flag.Arg(0)
-	if len(path) > 0 {
-		if err := editor.LoadInitialFile(path); err != nil {
-			exitWithError(err)
-		}
-	}
-
-	editor.RunEventLoop()
 }
 
 func printUsage() {
 	f := flag.CommandLine.Output()
 	fmt.Fprintf(f, "Usage: %s [OPTIONS] [path]\n", os.Args[0])
 	flag.PrintDefaults()
+}
+
+func runEditor() error {
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		return err
+	}
+
+	if err := screen.Init(); err != nil {
+		return err
+	}
+	defer screen.Fini()
+
+	editor, err := aretext.NewEditor(screen)
+	if err != nil {
+		return err
+	}
+
+	path := flag.Arg(0)
+	if len(path) > 0 {
+		if err := editor.LoadInitialFile(path); err != nil {
+			return err
+		}
+	}
+
+	editor.RunEventLoop()
+	return nil
 }
 
 func exitWithError(err error) {

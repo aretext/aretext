@@ -3,7 +3,6 @@ all: generate fmt build vet test
 fmt:
 	goimports -w ./internal/..
 	goimports -w ./cmd/..
-	pipenv run black .
 
 generate:
 	go generate ./...

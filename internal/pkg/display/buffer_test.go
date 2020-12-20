@@ -12,14 +12,14 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, hasFocus bool, language syntax.Language) {
+func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language) {
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
 	screenWidth, screenHeight := screen.Size()
 	bufferState := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
 	err = bufferState.SetSyntax(language)
 	require.NoError(t, err)
-	DrawBuffer(screen, bufferState, hasFocus)
+	DrawBuffer(screen, bufferState)
 	screen.Sync()
 }
 
@@ -163,7 +163,7 @@ func TestDrawBuffer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				drawBuffer(t, s, tc.inputString, 0, true, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, 0, syntax.UndefinedLanguage)
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -214,7 +214,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				drawBuffer(t, s, tc.inputString, 0, true, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, 0, syntax.UndefinedLanguage)
 
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
@@ -228,7 +228,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 func TestDrawBufferSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		drawBuffer(t, s, "ab界cd", 0, true, syntax.UndefinedLanguage)
+		drawBuffer(t, s, "ab界cd", 0, syntax.UndefinedLanguage)
 
 		assertCellContents(t, s, [][]rune{
 			{'a'},
@@ -380,7 +380,7 @@ func TestDrawBufferCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				drawBuffer(t, s, tc.inputString, tc.cursorPosition, true, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.UndefinedLanguage)
 
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
@@ -393,24 +393,14 @@ func TestDrawBufferCursor(t *testing.T) {
 	}
 }
 
-func TestDrawBufferCursorNotInFocus(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(5, 5)
-		drawBuffer(t, s, "abcdef", 3, false, syntax.UndefinedLanguage)
-		_, _, style, _ := s.GetContent(3, 0)
-		expectedStyle := tcell.StyleDefault.Dim(true).Reverse(true)
-		assert.Equal(t, expectedStyle, style)
-	})
-}
-
 func TestSyntaxHighlighting(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
-		drawBuffer(t, s, `{"key": 123}`, 0, false, syntax.JsonLanguage)
+		drawBuffer(t, s, `{"key": 123}`, 0, syntax.JsonLanguage)
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
-				// `"{"` highlighted because of the cursor position.
-				tcell.StyleDefault.Dim(true).Reverse(true),
+				// `"{"` has no highlighting
+				tcell.StyleDefault,
 
 				// `"key"` highlighted as a string.
 				tcell.StyleDefault.Foreground(tcell.ColorRed),

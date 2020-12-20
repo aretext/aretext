@@ -11,8 +11,6 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/input"
-	"github.com/wedaly/aretext/internal/pkg/repl"
-	"github.com/wedaly/aretext/internal/pkg/repl/rpc"
 )
 
 const fileWatcherPollInterval = time.Second
@@ -23,9 +21,6 @@ type Editor struct {
 	state            *exec.EditorState
 	screen           tcell.Screen
 	termEventChan    chan tcell.Event
-	repl             repl.Repl
-	rpcTaskBroker    *rpc.TaskBroker
-	rpcServer        *rpc.Server
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
@@ -34,27 +29,11 @@ func NewEditor(screen tcell.Screen) (*Editor, error) {
 	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight))
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
-
-	rpcTaskBroker := rpc.NewTaskBroker()
-	rpcServer, err := rpc.NewServer(rpcTaskBroker)
-	if err != nil {
-		return nil, errors.Wrapf(err, "creating RPC server")
-	}
-
-	apiConfig := repl.NewApiConfig(rpcServer.Addr(), rpcServer.ApiKey())
-	repl := repl.NewPythonRepl(apiConfig)
-	if err := repl.Start(); err != nil {
-		return nil, errors.Wrapf(err, "starting REPL")
-	}
-
 	editor := &Editor{
 		inputInterpreter,
 		state,
 		screen,
 		termEventChan,
-		repl,
-		rpcTaskBroker,
-		rpcServer,
 	}
 	return editor, nil
 }
@@ -76,7 +55,6 @@ func (e *Editor) RunEventLoop() {
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Sync()
 
-	go e.rpcServer.ListenAndServe()
 	go e.pollTermEvents()
 
 	e.runMainEventLoop()
@@ -95,14 +73,7 @@ func (e *Editor) runMainEventLoop() {
 		select {
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
-		case output, ok := <-e.repl.OutputChan():
-			if ok {
-				e.handleReplOutput(output)
-			} else {
-				e.restartRepl()
-			}
-		case task := <-e.rpcTaskBroker.TaskChan():
-			e.handleRpcTask(task)
+
 		case <-e.state.FileWatcher().ChangedChan():
 			e.handleFileChanged()
 		}
@@ -122,35 +93,6 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 	e.applyMutator(mutator)
 }
 
-func (e *Editor) handleReplOutput(output string) {
-	log.Printf("Sending REPL output to buffer: '%s'\n", output)
-	mutator := exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewOutputReplMutator(output),
-		exec.NewScrollToCursorMutator(),
-	})
-	e.applyMutator(mutator)
-}
-
-func (e *Editor) restartRepl() {
-	log.Printf("Terminating REPL...\n")
-	if err := e.repl.Terminate(); err != nil {
-		log.Printf("Error terminating REPL: %v\n", err)
-	}
-	log.Printf("REPL terminated\n")
-	log.Printf("Starting new REPL...\n")
-	apiConfig := repl.NewApiConfig(e.rpcServer.Addr(), e.rpcServer.ApiKey())
-	e.repl = repl.NewPythonRepl(apiConfig)
-	if err := e.repl.Start(); err != nil {
-		log.Fatalf("Error starting REPL: %v\n", err)
-	}
-	log.Printf("New REPL started\n")
-}
-
-func (e *Editor) handleRpcTask(task rpc.Task) {
-	log.Printf("Executing RPC task %s\n", task.String())
-	task.ExecuteAndSendResponse(e.state)
-}
-
 func (e *Editor) handleFileChanged() {
 	path := e.state.FileWatcher().Path()
 	log.Printf("File change detected, reloading file from '%s'\n", path)
@@ -166,21 +108,12 @@ func (e *Editor) handleFileChanged() {
 
 func (e *Editor) shutdown() {
 	e.state.FileWatcher().Stop()
-
-	if err := e.repl.Terminate(); err != nil {
-		log.Printf("Error terminating REPL: %v", err)
-	}
-
-	if err := e.rpcServer.Terminate(); err != nil {
-		log.Printf("Error terminating RPC server: %v", err)
-	}
 }
 
 func (e *Editor) inputConfig() input.Config {
 	_, screenHeight := e.screen.Size()
 	scrollLines := uint64(screenHeight) / 2
 	return input.Config{
-		Repl:        e.repl,
 		ScrollLines: scrollLines,
 	}
 }

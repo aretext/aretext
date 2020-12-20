@@ -47,34 +47,6 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
 }
 
-func TestLoadDocumentMutatorWithReplOpen(t *testing.T) {
-	state := NewEditorState(100, 100)
-
-	// Insert text in both buffers, focus on REPL buffer.
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewInsertRuneMutator('x'),
-		NewInsertRuneMutator('y'),
-		NewInsertRuneMutator('z'),
-		NewOutputReplMutator("hello\n>>> "),
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewFocusBufferMutator(BufferIdRepl),
-		NewInsertRuneMutator('a'),
-		NewInsertRuneMutator('b'),
-		NewInsertRuneMutator('c'),
-	})
-	setupMutator.Mutate(state)
-
-	// Load a new document.
-	textTree, err := text.NewTreeFromString("updated")
-	require.NoError(t, err)
-	watcher := file.NewEmptyWatcher()
-	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
-
-	// Expect that only the document buffer changed.
-	assert.Equal(t, "updated", state.documentBuffer.textTree.String())
-	assert.Equal(t, "hello\n>>> abc", state.replBuffer.textTree.String())
-}
-
 func TestCursorMutator(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
@@ -86,27 +58,6 @@ func TestCursorMutator(t *testing.T) {
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
-}
-
-func TestCursorMutatorRestrictToReplInput(t *testing.T) {
-	state := NewEditorState(100, 100)
-	textTree, err := text.NewTreeFromString(">>> abcd")
-	require.NoError(t, err)
-	state.replBuffer.textTree = textTree
-
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewFocusBufferMutator(BufferIdRepl),
-	})
-	setupMutator.Mutate(state)
-	state.replBuffer.cursor = cursorState{position: 6}
-	state.SetReplInputStartPos(4)
-
-	startOfLineLoc := NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	mutator := NewCursorMutator(startOfLineLoc)
-	mutator.RestrictToReplInput()
-	mutator.Mutate(state)
-	assert.Equal(t, uint64(4), state.replBuffer.cursor.position)
 }
 
 func TestInsertRuneMutator(t *testing.T) {
@@ -159,27 +110,6 @@ func TestInsertRuneMutator(t *testing.T) {
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
-}
-
-func TestInsertRuneMutatorRestrictToReplInput(t *testing.T) {
-	state := NewEditorState(100, 100)
-	textTree, err := text.NewTreeFromString(">>> abcd")
-	require.NoError(t, err)
-	state.replBuffer.textTree = textTree
-
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewFocusBufferMutator(BufferIdRepl),
-	})
-	setupMutator.Mutate(state)
-	state.replBuffer.cursor = cursorState{position: 2}
-	state.SetReplInputStartPos(4)
-
-	mutator := NewInsertRuneMutator('x')
-	mutator.RestrictToReplInput()
-	mutator.Mutate(state)
-	assert.Equal(t, uint64(5), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> xabcd", textTree.String())
 }
 
 func TestDeleteMutator(t *testing.T) {
@@ -240,28 +170,6 @@ func TestDeleteMutator(t *testing.T) {
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
-}
-
-func TestDeleteMutatorRestrictToReplInput(t *testing.T) {
-	state := NewEditorState(100, 100)
-	textTree, err := text.NewTreeFromString(">>> abcd")
-	require.NoError(t, err)
-	state.replBuffer.textTree = textTree
-
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewFocusBufferMutator(BufferIdRepl),
-	})
-	setupMutator.Mutate(state)
-	state.replBuffer.cursor = cursorState{position: 6}
-	state.SetReplInputStartPos(4)
-
-	startOfLineLoc := NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	mutator := NewDeleteMutator(startOfLineLoc)
-	mutator.RestrictToReplInput()
-	mutator.Mutate(state)
-	assert.Equal(t, uint64(4), state.replBuffer.cursor.position)
-	assert.Equal(t, ">>> cd", textTree.String())
 }
 
 func TestScrollLinesMutator(t *testing.T) {
@@ -335,87 +243,4 @@ func TestScrollLinesMutator(t *testing.T) {
 			assert.Equal(t, tc.expectedtextOrigin, state.documentBuffer.view.textOrigin)
 		})
 	}
-}
-
-type stubRepl struct {
-	inputs      []string
-	interrupted bool
-}
-
-func newStubRepl() *stubRepl {
-	return &stubRepl{inputs: make([]string, 0, 1)}
-}
-
-func (r *stubRepl) Start() error {
-	return nil
-}
-
-func (r *stubRepl) Terminate() error {
-	return nil
-}
-
-func (r *stubRepl) Interrupt() error {
-	r.interrupted = true
-	return nil
-}
-
-func (r *stubRepl) SubmitInput(s string) error {
-	r.inputs = append(r.inputs, s)
-	return nil
-}
-
-func (r *stubRepl) OutputChan() chan string {
-	return nil
-}
-
-func TestSubmitReplMutator(t *testing.T) {
-	state := NewEditorState(100, 100)
-	textTree, err := text.NewTreeFromString(">>> abcd")
-	require.NoError(t, err)
-	state.replBuffer.textTree = textTree
-
-	NewLayoutMutator(LayoutDocumentAndRepl).Mutate(state)
-	state.replBuffer.cursor = cursorState{position: 6}
-	state.SetReplInputStartPos(4)
-
-	repl := newStubRepl()
-	mutator := NewSubmitReplMutator(repl)
-	mutator.Mutate(state)
-	assert.Equal(t, uint64(9), state.replBuffer.cursor.position)
-	assert.Equal(t, uint64(9), state.replInputStartPos)
-	assert.Equal(t, ">>> abcd\n", textTree.String())
-	assert.Equal(t, []string{"abcd"}, repl.inputs)
-}
-
-func TestInterruptReplMutator(t *testing.T) {
-	textTree, err := text.NewTreeFromString("")
-	require.NoError(t, err)
-
-	state := NewEditorState(100, 100)
-	state.documentBuffer = &BufferState{
-		textTree: textTree,
-		view:     viewState{height: 100, width: 100},
-	}
-
-	setupMutator := NewCompositeMutator([]Mutator{
-		NewOutputReplMutator("hello\n>>> "),
-		NewLayoutMutator(LayoutDocumentAndRepl),
-		NewFocusBufferMutator(BufferIdRepl),
-		NewInsertRuneMutator('a'),
-		NewInsertRuneMutator('b'),
-		NewInsertRuneMutator('c'),
-	})
-	setupMutator.Mutate(state)
-
-	replBuffer := state.Buffer(BufferIdRepl)
-	assert.Equal(t, "hello\n>>> abc", replBuffer.TextTree().String())
-	assert.Equal(t, uint64(10), state.ReplInputStartPos())
-	assert.Equal(t, uint64(13), replBuffer.CursorPosition())
-
-	repl := newStubRepl()
-	NewInterruptReplMutator(repl).Mutate(state)
-	assert.Equal(t, "hello\n>>> ", replBuffer.TextTree().String())
-	assert.Equal(t, uint64(10), state.ReplInputStartPos())
-	assert.Equal(t, uint64(10), replBuffer.CursorPosition())
-	assert.True(t, repl.interrupted)
 }

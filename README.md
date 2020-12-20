@@ -24,13 +24,12 @@ Design principles:
 - [x] soft-wrap long lines
 - [x] automatic reload when file changes on disk
 - [x] syntax highlighting
+- [ ] command menu with fuzzy search
 - [ ] save changes
-- [ ] close and open new document in REPL
+- [ ] close and open new document
 - [ ] undo/redo
-- [ ] hotkeys
 - [ ] line numbers
 - [ ] copy/paste using system clipboard integration
-- [ ] run external program as subprocess on current document/directory
 - [ ] vim newline command ('o')
 - [ ] vim replace/change commands
 - [ ] vim word navigation
@@ -38,7 +37,6 @@ Design principles:
 - [ ] visual mode / selection
 - [ ] forward search through file
 - [ ] backward search through file
-- [ ] REPL autocomplete
 - [ ] autoindent
 - [ ] repeat last action ('.')
 - [ ] vim repeat commands ('10x')

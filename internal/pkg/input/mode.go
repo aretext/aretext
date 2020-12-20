@@ -16,8 +16,6 @@ type ModeType int
 const (
 	ModeTypeNormal = ModeType(iota)
 	ModeTypeInsert
-	ModeTypeReplNormal
-	ModeTypeReplInsert
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.
@@ -107,8 +105,6 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 		return m.cursorRight(true), ModeTypeInsert
 	case "A":
 		return m.cursorLineEnd(true), ModeTypeInsert
-	case ":":
-		return m.openRepl(), ModeTypeReplInsert
 	default:
 		return nil, ModeTypeNormal
 	}
@@ -231,18 +227,6 @@ func (m *normalMode) deleteNextChar() exec.Mutator {
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewDeleteMutator(loc),
 		exec.NewCursorMutator(exec.NewOntoLineLocator()),
-	})
-}
-
-func (m *normalMode) openRepl() exec.Mutator {
-	lastLineLoc := exec.NewLastLineLocator()
-	lineEndLoc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewLayoutMutator(exec.LayoutDocumentAndRepl),
-		exec.NewScrollToCursorMutator(),
-		exec.NewFocusBufferMutator(exec.BufferIdRepl),
-		exec.NewCursorMutator(lastLineLoc),
-		exec.NewCursorMutator(lineEndLoc),
 	})
 }
 

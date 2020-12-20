@@ -12,7 +12,7 @@ import (
 )
 
 // DrawBuffer draws text buffer in the screen.
-func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus bool) {
+func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	x, y, width, height := viewDimensions(bufferState)
 	screenRegion := NewScreenRegion(screen, x, y, width, height)
 	textTree := bufferState.TextTree()
@@ -26,11 +26,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus boo
 	wrappedLine := segment.NewSegment()
 	tokenIter := bufferState.TokenTree().IterFromPosition(pos)
 
-	showCursor := showFakeCursorFunc(screenRegion)
-	if hasFocus {
-		screenRegion.HideCursor()
-		showCursor = screenRegion.ShowCursor
-	}
+	screenRegion.HideCursor()
 
 	for row := 0; row < height; row++ {
 		err := wrappedLineIter.NextSegment(wrappedLine)
@@ -39,13 +35,13 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState, hasFocus boo
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, tokenIter, cursorPos, showCursor)
+		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, tokenIter, cursorPos)
 		pos += wrappedLine.NumRunes()
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
-		showCursor(0, 0)
+		screenRegion.ShowCursor(0, 0)
 	}
 }
 
@@ -55,7 +51,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, showCursor func(x, y int)) {
+func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -91,7 +87,7 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 		}
 
 		if pos == cursorPos {
-			showCursor(col, row)
+			screenRegion.ShowCursor(col, row)
 		}
 
 		pos += gc.NumRunes()
@@ -102,10 +98,10 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 	if pos == cursorPos {
 		if gc != nil && (lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
-			showCursor(0, row+1)
+			screenRegion.ShowCursor(0, row+1)
 		} else {
 			// Otherwise, show the cursor at the end of the current line.
-			showCursor(col, row)
+			screenRegion.ShowCursor(col, row)
 		}
 	}
 }
@@ -142,14 +138,6 @@ func drawGraphemeCluster(screenRegion *ScreenRegion, col, row int, gc []rune, st
 func drawLineTooLong(screenRegion *ScreenRegion, row int, maxLineWidth int) {
 	for col := 0; col < maxLineWidth; col++ {
 		screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
-	}
-}
-
-func showFakeCursorFunc(screenRegion *ScreenRegion) func(x, y int) {
-	return func(x, y int) {
-		mainc, combc, style := screenRegion.GetContent(x, y)
-		newStyle := style.Foreground(tcell.ColorDefault).Reverse(true).Dim(true)
-		screenRegion.SetContent(x, y, mainc, combc, newStyle)
 	}
 }
 

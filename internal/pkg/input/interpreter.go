@@ -16,10 +16,8 @@ func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		currentMode: ModeTypeNormal,
 		modes: map[ModeType]Mode{
-			ModeTypeNormal:     newNormalMode(),
-			ModeTypeInsert:     newInsertMode(),
-			ModeTypeReplNormal: newReplNormalMode(),
-			ModeTypeReplInsert: newReplInsertMode(),
+			ModeTypeNormal: newNormalMode(),
+			ModeTypeInsert: newInsertMode(),
 		},
 	}
 }

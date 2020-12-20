@@ -2,12 +2,10 @@ package exec
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 
 	"github.com/wedaly/aretext/internal/pkg/file"
-	"github.com/wedaly/aretext/internal/pkg/repl"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
 	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 	"github.com/wedaly/aretext/internal/pkg/text"
@@ -20,10 +18,6 @@ type Mutator interface {
 	// Mutate modifies the editor state.
 	// All changes to editor state should be performed by mutators.
 	Mutate(state *EditorState)
-
-	// RestrictToReplInput prevents the mutator from navigating to or modifying text before the REPL input start position in the REPL buffer.
-	// This is called by input modes that allow the user to edit the current REPL command but not prior commands or output from the REPL.
-	RestrictToReplInput()
 }
 
 // CompositeMutator executes a series of mutations.
@@ -39,12 +33,6 @@ func NewCompositeMutator(subMutators []Mutator) Mutator {
 func (cm *CompositeMutator) Mutate(state *EditorState) {
 	for _, mut := range cm.subMutators {
 		mut.Mutate(state)
-	}
-}
-
-func (cm *CompositeMutator) RestrictToReplInput() {
-	for _, mut := range cm.subMutators {
-		mut.RestrictToReplInput()
 	}
 }
 
@@ -74,43 +62,29 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 
 	// Make sure that the cursor is a valid position in the new document
 	// and that the cursor is visible.  If not, adjust the cursor and scroll.
-	originalFocus := state.focusedBufferId
 	NewCompositeMutator([]Mutator{
 		NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
-		NewFocusBufferMutator(BufferIdDocument),
 		NewCursorMutator(NewOntoDocumentLocator()),
 		NewScrollToCursorMutator(),
-		NewFocusBufferMutator(originalFocus),
 	}).Mutate(state)
 }
-
-func (ldm *loadDocumentMutator) RestrictToReplInput() {}
 
 func (ldm *loadDocumentMutator) String() string {
 	return "LoadDocument()"
 }
 
 type cursorMutator struct {
-	loc                 CursorLocator
-	restrictToReplInput bool
+	loc CursorLocator
 }
 
 // NewCursorMutator returns a mutator that updates the cursor location.
 func NewCursorMutator(loc CursorLocator) Mutator {
-	return &cursorMutator{loc, false}
+	return &cursorMutator{loc}
 }
 
 func (cpm *cursorMutator) Mutate(state *EditorState) {
-	bufferState := state.Buffer(state.FocusedBufferId())
+	bufferState := state.documentBuffer
 	bufferState.cursor = cpm.loc.Locate(bufferState)
-
-	if cpm.restrictToReplInput && bufferState.cursor.position < state.replInputStartPos {
-		bufferState.cursor = cursorState{position: state.replInputStartPos}
-	}
-}
-
-func (cpm *cursorMutator) RestrictToReplInput() {
-	cpm.restrictToReplInput = true
 }
 
 func (cpm *cursorMutator) String() string {
@@ -125,7 +99,7 @@ func NewScrollToCursorMutator() Mutator {
 
 // Mutate updates the view origin so that the cursor is visible.
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
-	bufferState := state.Buffer(state.FocusedBufferId())
+	bufferState := state.documentBuffer
 	bufferState.view.textOrigin = ScrollToCursor(
 		bufferState.cursor.position,
 		bufferState.textTree,
@@ -133,8 +107,6 @@ func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 		bufferState.view.width,
 		bufferState.view.height)
 }
-
-func (sm *scrollToCursorMutator) RestrictToReplInput() {}
 
 func (sm *scrollToCursorMutator) String() string {
 	return "ScrollToCursor()"
@@ -151,7 +123,7 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 
 // Mutate moves the view origin up/down by the specified number of lines.
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
-	bufferState := state.Buffer(state.FocusedBufferId())
+	bufferState := state.documentBuffer
 	lineNum := bufferState.textTree.LineNumForPosition(bufferState.view.textOrigin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
@@ -179,29 +151,22 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 	bufferState.view.textOrigin = bufferState.textTree.LineStartPosition(lineNum)
 }
 
-func (sm *scrollLinesMutator) RestrictToReplInput() {}
-
 func (sm *scrollLinesMutator) String() string {
 	return fmt.Sprintf("ScrollLines(%s, %d)", directionString(sm.direction), sm.numLines)
 }
 
 type insertRuneMutator struct {
-	r                   rune
-	restrictToReplInput bool
+	r rune
 }
 
 func NewInsertRuneMutator(r rune) Mutator {
-	return &insertRuneMutator{r, false}
+	return &insertRuneMutator{r}
 }
 
 // Mutate inserts a rune at the current cursor location.
 func (irm *insertRuneMutator) Mutate(state *EditorState) {
-	bufferState := state.Buffer(state.FocusedBufferId())
+	bufferState := state.documentBuffer
 	startPos := bufferState.cursor.position
-
-	if irm.restrictToReplInput && startPos < state.replInputStartPos {
-		startPos = state.replInputStartPos
-	}
 
 	if err := bufferState.textTree.InsertAtPosition(startPos, irm.r); err != nil {
 		// Invalid UTF-8 character; ignore it.
@@ -216,21 +181,16 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 	bufferState.cursor.position = startPos + 1
 }
 
-func (irm *insertRuneMutator) RestrictToReplInput() {
-	irm.restrictToReplInput = true
-}
-
 func (irm *insertRuneMutator) String() string {
 	return fmt.Sprintf("InsertRune(%q)", irm.r)
 }
 
 type deleteMutator struct {
-	loc                 CursorLocator
-	restrictToReplInput bool
+	loc CursorLocator
 }
 
 func NewDeleteMutator(loc CursorLocator) Mutator {
-	return &deleteMutator{loc, false}
+	return &deleteMutator{loc}
 }
 
 // Mutate deletes characters from the cursor position up to (but not including) the position returned by the locator.
@@ -238,18 +198,9 @@ func NewDeleteMutator(loc CursorLocator) Mutator {
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
 func (dm *deleteMutator) Mutate(state *EditorState) {
-	bufferState := state.Buffer(state.FocusedBufferId())
+	bufferState := state.documentBuffer
 	startPos := bufferState.cursor.position
 	deleteToPos := dm.loc.Locate(bufferState).position
-
-	if dm.restrictToReplInput {
-		if startPos < state.replInputStartPos {
-			startPos = state.replInputStartPos
-		}
-		if deleteToPos < state.replInputStartPos {
-			deleteToPos = state.replInputStartPos
-		}
-	}
 
 	if startPos < deleteToPos {
 		dm.deleteCharacters(bufferState, startPos, deleteToPos-startPos)
@@ -271,10 +222,6 @@ func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, 
 	bufferState.cursor = cursorState{position: pos}
 }
 
-func (dm *deleteMutator) RestrictToReplInput() {
-	dm.restrictToReplInput = true
-}
-
 func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
 }
@@ -294,8 +241,6 @@ func (ssm *setSyntaxMutator) Mutate(state *EditorState) {
 	}
 }
 
-func (ssm *setSyntaxMutator) RestrictToReplInput() {}
-
 func (ssm *setSyntaxMutator) String() string {
 	return fmt.Sprintf("SetSyntax(%s)", ssm.language)
 }
@@ -310,185 +255,16 @@ func NewResizeMutator(width, height uint64) Mutator {
 
 // Mutate resizes the view to the specified width and height.
 func (rm *resizeMutator) Mutate(state *EditorState) {
-	state.SetScreenSize(rm.width, rm.height)
-
-	// The layout mutator will update the dimensions of each buffer according to the current layout.
-	NewLayoutMutator(state.layout).Mutate(state)
-}
-
-func (rm *resizeMutator) RestrictToReplInput() {}
-
-func (rm *resizeMutator) String() string {
-	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
-}
-
-type focusBufferMutator struct {
-	bufferId BufferId
-}
-
-func NewFocusBufferMutator(bufferId BufferId) Mutator {
-	return &focusBufferMutator{bufferId}
-}
-
-// Mutate sets the focus on the specified buffer.
-func (fbm *focusBufferMutator) Mutate(state *EditorState) {
-	state.focusedBufferId = fbm.bufferId
-}
-
-func (fbm *focusBufferMutator) RestrictToReplInput() {}
-
-func (fbm *focusBufferMutator) String() string {
-	return fmt.Sprintf("FocusBuffer(%s)", fbm.bufferId)
-}
-
-type layoutMutator struct {
-	layout Layout
-}
-
-func NewLayoutMutator(layout Layout) Mutator {
-	return &layoutMutator{layout}
-}
-
-// Mutate adjusts the sizes of each buffer to the specified layout.
-func (lm *layoutMutator) Mutate(state *EditorState) {
-	if lm.layout == LayoutDocumentOnly {
-		lm.setLayoutDocumentOnly(state)
-	} else if lm.layout == LayoutDocumentAndRepl {
-		lm.setLayoutDocumentAndRepl(state)
-	} else {
-		log.Fatalf("Unrecognized layout: %d", lm.layout)
-	}
-
-	state.layout = lm.layout
-}
-
-func (lm *layoutMutator) setLayoutDocumentOnly(state *EditorState) {
+	state.screenWidth = rm.width
+	state.screenHeight = rm.height
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth
 	state.documentBuffer.view.height = state.screenHeight
-
-	state.replBuffer.view.x = 0
-	state.replBuffer.view.y = 0
-	state.replBuffer.view.width = 0
-	state.replBuffer.view.height = 0
 }
 
-func (lm *layoutMutator) setLayoutDocumentAndRepl(state *EditorState) {
-	state.documentBuffer.view.x = 0
-	state.documentBuffer.view.y = 0
-	state.documentBuffer.view.width = state.screenWidth
-	state.replBuffer.view.height = 0
-
-	state.replBuffer.view.x = 0
-	state.replBuffer.view.y = 0
-	state.replBuffer.view.width = state.screenWidth
-	state.replBuffer.view.height = 0
-
-	if state.screenHeight > 2 {
-		// Shrink the document to leave space for the REPL.
-		state.documentBuffer.view.height = state.screenHeight / 2
-
-		// Make the REPL visible, leaving one line at the top for a border.
-		state.replBuffer.view.y = state.documentBuffer.view.height + 1
-		state.replBuffer.view.width = state.screenWidth
-		state.replBuffer.view.height = state.screenHeight/2 - 1
-	} else if state.screenHeight > 0 {
-		// Display only the REPL
-		state.documentBuffer.view.height = 0
-		state.replBuffer.view.height = state.screenHeight
-	}
-}
-
-func (lm *layoutMutator) RestrictToReplInput() {}
-
-func (lm *layoutMutator) String() string {
-	return fmt.Sprintf("SetLayout(%s)", lm.layout)
-}
-
-type outputReplMutator struct {
-	s string
-}
-
-func NewOutputReplMutator(s string) Mutator {
-	return &outputReplMutator{s}
-}
-
-// Mutate outputs a string to the REPL.
-func (orm *outputReplMutator) Mutate(state *EditorState) {
-	textTree := state.replBuffer.textTree
-	for _, r := range orm.s {
-		textTree.InsertAtPosition(state.replInputStartPos, r)
-		state.replInputStartPos++
-		state.replBuffer.cursor.position++
-	}
-}
-
-func (orm *outputReplMutator) RestrictToReplInput() {}
-
-func (orm *outputReplMutator) String() string {
-	return fmt.Sprintf("OutputRepl('%s')", orm.s)
-}
-
-type submitReplMutator struct {
-	repl repl.Repl
-}
-
-func NewSubmitReplMutator(repl repl.Repl) Mutator {
-	return &submitReplMutator{repl}
-}
-
-// Mutate executes the current repl input and updates the cursor.
-func (srm *submitReplMutator) Mutate(state *EditorState) {
-	textTree := state.replBuffer.textTree
-	reader := textTree.ReaderAtPosition(state.replInputStartPos, text.ReadDirectionForward)
-	inputBytes, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
-
-	textTree.InsertAtPosition(textTree.NumChars(), '\n')
-	srm.repl.SubmitInput(string(inputBytes))
-	state.replInputStartPos = textTree.NumChars()
-	state.replBuffer.cursor = cursorState{position: state.replInputStartPos}
-}
-
-func (srm *submitReplMutator) RestrictToReplInput() {}
-
-func (srm *submitReplMutator) String() string {
-	return "SubmitRepl()"
-}
-
-type interruptReplMutator struct {
-	repl repl.Repl
-}
-
-func NewInterruptReplMutator(repl repl.Repl) Mutator {
-	return &interruptReplMutator{repl}
-}
-
-// Mutate interrupts the REPL and clears the current repl input.
-func (irm *interruptReplMutator) Mutate(state *EditorState) {
-	if err := irm.repl.Interrupt(); err != nil {
-		log.Printf("Error interrupting REPL: %v\n", err)
-	}
-	irm.clearReplInput(state)
-}
-
-func (irm *interruptReplMutator) clearReplInput(state *EditorState) {
-	m := NewCompositeMutator([]Mutator{
-		NewCursorMutator(NewLastLineLocator()),
-		NewCursorMutator(NewLineBoundaryLocator(text.ReadDirectionForward, true)),
-		NewDeleteMutator(NewLineNumLocator(0)),
-	})
-	m.RestrictToReplInput()
-	m.Mutate(state)
-}
-
-func (irm *interruptReplMutator) RestrictToReplInput() {}
-
-func (irm *interruptReplMutator) String() string {
-	return "InterruptRepl()"
+func (rm *resizeMutator) String() string {
+	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
 }
 
 type quitMutator struct{}
@@ -500,8 +276,6 @@ func NewQuitMutator() Mutator {
 func (qm *quitMutator) Mutate(state *EditorState) {
 	state.quitFlag = true
 }
-
-func (qm *quitMutator) RestrictToReplInput() {}
 
 func (qm *quitMutator) String() string {
 	return "Quit()"

@@ -1,8 +1,6 @@
 package exec
 
 import (
-	"log"
-
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
@@ -13,25 +11,17 @@ import (
 // EditorState represents the current state of the editor.
 type EditorState struct {
 	screenWidth, screenHeight uint64
-	layout                    Layout
-	focusedBufferId           BufferId
 	documentBuffer            *BufferState
-	replBuffer                *BufferState
-	replInputStartPos         uint64
 	fileWatcher               file.Watcher
 	quitFlag                  bool
 }
 
 func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 	return &EditorState{
-		screenWidth:       screenWidth,
-		screenHeight:      screenHeight,
-		layout:            LayoutDocumentOnly,
-		focusedBufferId:   BufferIdDocument,
-		documentBuffer:    NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, screenHeight),
-		replBuffer:        NewBufferState(text.NewTree(), 0, 0, 0, 0, 0),
-		replInputStartPos: 0,
-		fileWatcher:       file.NewEmptyWatcher(),
+		screenWidth:    screenWidth,
+		screenHeight:   screenHeight,
+		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, screenHeight),
+		fileWatcher:    file.NewEmptyWatcher(),
 	}
 }
 
@@ -44,37 +34,8 @@ func (s *EditorState) SetScreenSize(width, height uint64) {
 	s.screenHeight = height
 }
 
-func (s *EditorState) Layout() Layout {
-	return s.layout
-}
-
-func (s *EditorState) Buffer(id BufferId) *BufferState {
-	switch id {
-	case BufferIdDocument:
-		return s.documentBuffer
-	case BufferIdRepl:
-		return s.replBuffer
-	default:
-		log.Fatalf("Unrecognized buffer ID %d\n", id)
-		return nil
-	}
-}
-
-func (s *EditorState) FocusedBufferId() BufferId {
-	return s.focusedBufferId
-}
-
-func (s *EditorState) ReplInputStartPos() uint64 {
-	return s.replInputStartPos
-}
-
-func (s *EditorState) SetReplInputStartPos(pos uint64) {
-	endPos := s.replBuffer.textTree.NumChars()
-	if pos > endPos {
-		pos = endPos
-	}
-
-	s.replInputStartPos = pos
+func (s *EditorState) DocumentBuffer() *BufferState {
+	return s.documentBuffer
 }
 
 func (s *EditorState) FileWatcher() file.Watcher {
@@ -215,49 +176,4 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
-}
-
-// BufferId identifies a buffer.
-type BufferId int
-
-const (
-	// BufferIdDocument identifies the main document being edited.
-	BufferIdDocument = BufferId(iota)
-
-	// BufferIdRepl identifies the buffer for REPL input/output.
-	BufferIdRepl
-)
-
-func (b BufferId) String() string {
-	switch b {
-	case BufferIdDocument:
-		return "document"
-	case BufferIdRepl:
-		return "repl"
-	default:
-		log.Fatalf("Unrecognized buffer ID %d\n", b)
-		return ""
-	}
-}
-
-// Layout controls how buffers are displayed in the editor.
-type Layout int
-
-const (
-	// LayoutDocumentOnly means that only the document is displayed; the REPL is hidden.
-	LayoutDocumentOnly = Layout(iota)
-
-	// LayoutDocumentAndRepl means that both the document and REPL are displayed.
-	LayoutDocumentAndRepl
-)
-
-func (l Layout) String() string {
-	if l == LayoutDocumentOnly {
-		return "DocumentOnly"
-	} else if l == LayoutDocumentAndRepl {
-		return "DocumentAndRepl"
-	} else {
-		log.Fatalf("Unrecognized layout: %d\n", l)
-		return ""
-	}
 }

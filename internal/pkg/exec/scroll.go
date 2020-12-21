@@ -110,6 +110,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 	wrappedLine := segment.NewSegment()
 	pos := viewOrigin
 	lineRanges := make([]posRange, 0, viewHeight)
+	var prevHadNewline bool
 
 	for row := uint64(0); row < viewHeight; row++ {
 		err := wrappedLineIter.NextSegment(wrappedLine)
@@ -125,6 +126,14 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 		})
 
 		pos += wrappedLine.NumRunes()
+		prevHadNewline = wrappedLine.HasNewline()
+	}
+
+	// If the last visible line ends with a newline, then a cursor positioned at the end of the line
+	// would be displayed on the next line, which is not visible.  For this reason, we exclude
+	// the newline character from the visible range.
+	if prevHadNewline && uint64(len(lineRanges)) == viewHeight {
+		lineRanges[len(lineRanges)-1].endPos--
 	}
 
 	return lineRanges
@@ -163,10 +172,18 @@ func softWrapLineUntil(lineStartPos uint64, tree *text.Tree, wrapConfig segment.
 	wrappedLine := segment.NewSegment()
 	pos := lineStartPos
 	result := make([]posRange, 0, 1)
+	prevHadNewline := true // Assume we're at the start of a hard-wrapped line.
 
 	for {
 		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {
+			if prevHadNewline {
+				// If the text ends with a newline, then there is one empty line at the end.
+				result = append(result, posRange{
+					startPos: pos,
+					endPos:   pos,
+				})
+			}
 			break
 		} else if err != nil {
 			log.Fatalf("%s", err)
@@ -179,11 +196,13 @@ func softWrapLineUntil(lineStartPos uint64, tree *text.Tree, wrapConfig segment.
 
 		result = append(result, lineRange)
 
-		if wrappedLine.HasNewline() || stopFunc(lineRange) {
+		hasNewline := wrappedLine.HasNewline()
+		if hasNewline || stopFunc(lineRange) {
 			break
 		}
 
 		pos = lineRange.endPos
+		prevHadNewline = hasNewline
 	}
 
 	return result

@@ -60,8 +60,8 @@ func (seg *Segment) Runes() []rune {
 
 // HasNewline checks whether a segment contains a line feed rune.
 func (seg *Segment) HasNewline() bool {
-	for _, r := range seg.runes {
-		if r == '\n' {
+	for i := len(seg.runes) - 1; i >= 0; i-- {
+		if seg.runes[i] == '\n' {
 			return true
 		}
 	}

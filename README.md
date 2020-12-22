@@ -3,9 +3,8 @@ Minimalist terminal-based text editor, mostly vim-compatible.
 
 Design principles:
 
-1. The user knows what they're doing, so give them total control.  This is a stick-shift car, not an automatic.
+1. Choose speed over flexibility.
 2. Compose seamlessly with the rest of the \*nix ecosystem (tmux, grep, code formatters, compilers, git, zsh, etc).
-3. Run efficiently.
 
 
 ## Roadmap

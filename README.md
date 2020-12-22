@@ -1,5 +1,5 @@
 # aretext
-Terminal-based text editor par excellence.
+Minimalist terminal-based text editor, mostly vim-compatible.
 
 Design principles:
 

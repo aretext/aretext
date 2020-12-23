@@ -26,6 +26,7 @@ Design principles:
 - [ ] command menu with fuzzy search
 - [ ] save changes
 - [ ] close and open new document
+- [ ] grep -> fuzzy-searchable menu
 - [ ] undo/redo
 - [ ] line numbers
 - [ ] copy/paste using system clipboard integration
@@ -36,6 +37,11 @@ Design principles:
 - [ ] visual mode / selection
 - [ ] forward search through file
 - [ ] backward search through file
+
+
+### Beyond 1.0
+
 - [ ] autoindent
 - [ ] repeat last action ('.')
 - [ ] vim repeat commands ('10x')
+- [ ] jump to definition (without an index)

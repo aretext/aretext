@@ -67,7 +67,7 @@ func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth
 			width:      viewWidth,
 			height:     viewHeight,
 		},
-		syntaxLanguage: syntax.UndefinedLanguage,
+		syntaxLanguage: syntax.LanguageUndefined,
 		tokenTree:      nil,
 		tokenizer:      nil,
 	}

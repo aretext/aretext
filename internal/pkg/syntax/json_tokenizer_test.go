@@ -194,7 +194,7 @@ func TestJsonTokenizer(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tokens, err := ParseTokensWithText(JsonLanguage, tc.inputString)
+			tokens, err := ParseTokensWithText(LanguageJson, tc.inputString)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
@@ -207,7 +207,7 @@ func BenchmarkJsonTokenizer(b *testing.B) {
 	text := string(data)
 
 	for i := 0; i < b.N; i++ {
-		_, err := ParseTokensWithText(JsonLanguage, text)
+		_, err := ParseTokensWithText(LanguageJson, text)
 		require.NoError(b, err)
 	}
 }

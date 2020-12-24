@@ -14,15 +14,15 @@ import (
 type Language int
 
 const (
-	UndefinedLanguage = Language(iota)
-	JsonLanguage
+	LanguageUndefined = Language(iota)
+	LanguageJson
 )
 
 func (language Language) String() string {
 	switch language {
-	case UndefinedLanguage:
+	case LanguageUndefined:
 		return "undefined"
-	case JsonLanguage:
+	case LanguageJson:
 		return "json"
 	default:
 		return ""
@@ -32,23 +32,23 @@ func (language Language) String() string {
 func LanguageFromString(s string) (Language, error) {
 	switch s {
 	case "undefined":
-		return UndefinedLanguage, nil
+		return LanguageUndefined, nil
 	case "json":
-		return JsonLanguage, nil
+		return LanguageJson, nil
 	default:
 		availableLanguages := strings.Join([]string{
-			JsonLanguage.String(),
+			LanguageJson.String(),
 		}, ", ")
 		err := errors.New(fmt.Sprintf("Unrecognized language, please choose one of [%s]", availableLanguages))
-		return UndefinedLanguage, err
+		return LanguageUndefined, err
 	}
 }
 
 // TokenizerForLanguage returns a tokenizer for the specified language.
-// If no tokenizer is available (e.g. for UndefinedLanguage), this returns nil.
+// If no tokenizer is available (e.g. for LanguageUndefined), this returns nil.
 func TokenizerForLanguage(language Language) *parser.Tokenizer {
 	switch language {
-	case JsonLanguage:
+	case LanguageJson:
 		return JsonTokenizer
 	default:
 		return nil

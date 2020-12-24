@@ -163,7 +163,7 @@ func TestDrawBuffer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				drawBuffer(t, s, tc.inputString, 0, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined)
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -214,7 +214,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				drawBuffer(t, s, tc.inputString, 0, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined)
 
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
@@ -228,7 +228,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 func TestDrawBufferSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		drawBuffer(t, s, "ab界cd", 0, syntax.UndefinedLanguage)
+		drawBuffer(t, s, "ab界cd", 0, syntax.LanguageUndefined)
 
 		assertCellContents(t, s, [][]rune{
 			{'a'},
@@ -380,7 +380,7 @@ func TestDrawBufferCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.UndefinedLanguage)
+				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.LanguageUndefined)
 
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
@@ -396,7 +396,7 @@ func TestDrawBufferCursor(t *testing.T) {
 func TestSyntaxHighlighting(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
-		drawBuffer(t, s, `{"key": 123}`, 0, syntax.JsonLanguage)
+		drawBuffer(t, s, `{"key": 123}`, 0, syntax.LanguageJson)
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
 				// `"{"` has no highlighting

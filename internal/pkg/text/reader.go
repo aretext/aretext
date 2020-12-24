@@ -48,6 +48,17 @@ const (
 	ReadDirectionBackward
 )
 
+func (d ReadDirection) String() string {
+	switch d {
+	case ReadDirectionForward:
+		return "forward"
+	case ReadDirectionBackward:
+		return "backward"
+	default:
+		panic("invalid direction")
+	}
+}
+
 // TreeReader reads UTF-8 bytes from a text.Tree.
 // It implements io.Reader and CloneableReader.
 // text.Tree is NOT thread-safe, so reading from a tree while modifying it is undefined behavior!

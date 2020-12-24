@@ -48,15 +48,3 @@ func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	}
 	return targetLineNum
 }
-
-func directionString(direction text.ReadDirection) string {
-	switch direction {
-	case text.ReadDirectionForward:
-		return "forward"
-	case text.ReadDirectionBackward:
-		return "backward"
-	default:
-		log.Fatalf("Unrecognized direction: %d", direction)
-		return ""
-	}
-}

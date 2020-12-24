@@ -152,7 +152,7 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 }
 
 func (sm *scrollLinesMutator) String() string {
-	return fmt.Sprintf("ScrollLines(%s, %d)", directionString(sm.direction), sm.numLines)
+	return fmt.Sprintf("ScrollLines(%s, %d)", sm.direction, sm.numLines)
 }
 
 type insertRuneMutator struct {

@@ -34,7 +34,7 @@ func NewCharInLineLocator(direction text.ReadDirection, count uint64, includeEnd
 }
 
 func (loc *charInLineLocator) String() string {
-	return fmt.Sprintf("CharInLineLocator(%s, %d, %t)", directionString(loc.direction), loc.count, loc.includeEndOfLineOrFile)
+	return fmt.Sprintf("CharInLineLocator(%s, %d, %t)", loc.direction, loc.count, loc.includeEndOfLineOrFile)
 }
 
 // Locate finds a character to the right of the cursor on the current line.
@@ -257,7 +257,7 @@ func (loc *relativeLineStartLocator) targetLineNum(currentLineNum uint64) uint64
 }
 
 func (loc *relativeLineStartLocator) String() string {
-	return fmt.Sprintf("RelativeLineStartLocator(%s, %d)", directionString(loc.direction), loc.count)
+	return fmt.Sprintf("RelativeLineStartLocator(%s, %d)", loc.direction, loc.count)
 }
 
 // relativeLineLocator finds a position at the same offset above or below the current line.
@@ -381,7 +381,7 @@ func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos ui
 }
 
 func (loc *relativeLineLocator) String() string {
-	return fmt.Sprintf("RelativeLineLocator(%s, %d)", directionString(loc.direction), loc.count)
+	return fmt.Sprintf("RelativeLineLocator(%s, %d)", loc.direction, loc.count)
 }
 
 // lineBoundaryLocator locates the start or end of the current line.
@@ -398,7 +398,7 @@ func NewLineBoundaryLocator(direction text.ReadDirection, includeEndOfLineOrFile
 }
 
 func (loc *lineBoundaryLocator) String() string {
-	return fmt.Sprintf("LineBoundaryLocator(%s, %t)", directionString(loc.direction), loc.includeEndOfLineOrFile)
+	return fmt.Sprintf("LineBoundaryLocator(%s, %t)", loc.direction, loc.includeEndOfLineOrFile)
 }
 
 // Locate the start or end of the current line.

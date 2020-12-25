@@ -177,3 +177,13 @@ type viewState struct {
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
 }
+
+// MenuItem represents an item in the editor's menu.
+type MenuItem struct {
+	// Name is the displayed name of the item.
+	// This is also used when searching for menu items.
+	Name string
+
+	// Action is the action to perform when the user selects the menu item.
+	Action Mutator
+}

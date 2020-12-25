@@ -7,6 +7,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/text v0.3.0
 )
 
 replace github.com/gdamore/tcell => github.com/wedaly/tcell v1.1.2-0.20200814032409-69f20cafeda4

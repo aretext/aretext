@@ -14,7 +14,7 @@ import (
 // DrawBuffer draws text buffer in the screen.
 func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	x, y, width, height := viewDimensions(bufferState)
-	screenRegion := NewScreenRegion(screen, x, y, width, height)
+	sr := NewScreenRegion(screen, x, y, width, height)
 	textTree := bufferState.TextTree()
 	cursorPos := bufferState.CursorPosition()
 	viewTextOrigin := bufferState.ViewTextOrigin()
@@ -26,7 +26,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	wrappedLine := segment.NewSegment()
 	tokenIter := bufferState.TokenTree().IterFromPosition(pos)
 
-	screenRegion.HideCursor()
+	sr.HideCursor()
 
 	for row := 0; row < height; row++ {
 		err := wrappedLineIter.NextSegment(wrappedLine)
@@ -35,13 +35,13 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(screenRegion, pos, row, width, wrappedLine, tokenIter, cursorPos)
+		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos)
 		pos += wrappedLine.NumRunes()
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
-		screenRegion.ShowCursor(0, 0)
+		sr.ShowCursor(0, 0)
 	}
 }
 
@@ -51,7 +51,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64) {
+func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -74,12 +74,12 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 
 		if totalWidth > uint64(maxLineWidth) {
 			// If there isn't enough space to show the line, fill it with a placeholder.
-			drawLineTooLong(screenRegion, row, maxLineWidth)
+			drawLineTooLong(sr, row, maxLineWidth)
 			return
 		}
 
 		style := styleAtPosition(pos, tokenIter)
-		drawGraphemeCluster(screenRegion, col, row, gcRunes, style)
+		drawGraphemeCluster(sr, col, row, gcRunes, style)
 
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.
@@ -87,7 +87,7 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 		}
 
 		if pos == cursorPos {
-			screenRegion.ShowCursor(col, row)
+			sr.ShowCursor(col, row)
 		}
 
 		pos += gc.NumRunes()
@@ -98,20 +98,20 @@ func drawLineAndSetCursor(screenRegion *ScreenRegion, pos uint64, row int, maxLi
 	if pos == cursorPos {
 		if gc != nil && (lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
-			screenRegion.ShowCursor(0, row+1)
+			sr.ShowCursor(0, row+1)
 		} else {
 			// Otherwise, show the cursor at the end of the current line.
-			screenRegion.ShowCursor(col, row)
+			sr.ShowCursor(col, row)
 		}
 	}
 }
 
-func drawGraphemeCluster(screenRegion *ScreenRegion, col, row int, gc []rune, style tcell.Style) {
+func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, style tcell.Style) {
 	// Emoji and regional indicator sequences are usually rendered using the
 	// width of the first rune.  This won't support every terminal, but it's probably
 	// the best we can do without knowing how the terminal will render the glyphs.
 	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
-		screenRegion.SetContent(col, row, gc[0], gc[1:], style)
+		sr.SetContent(col, row, gc[0], gc[1:], style)
 		return
 	}
 
@@ -129,15 +129,15 @@ func drawGraphemeCluster(screenRegion *ScreenRegion, col, row int, gc []rune, st
 			}
 			j++
 		}
-		screenRegion.SetContent(col, row, gc[i], gc[i+1:j], style)
+		sr.SetContent(col, row, gc[i], gc[i+1:j], style)
 		col += int(exec.RuneWidth(gc[i]))
 		i = j
 	}
 }
 
-func drawLineTooLong(screenRegion *ScreenRegion, row int, maxLineWidth int) {
+func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
 	for col := 0; col < maxLineWidth; col++ {
-		screenRegion.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
+		sr.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
 	}
 }
 

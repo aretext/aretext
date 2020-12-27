@@ -97,16 +97,11 @@ func (s *MenuSearch) normalize(x string) string {
 	return strings.ToLower(norm.NFC.String(x))
 }
 
-// Penalize mismatches more than we reward matches.
-// Intuitively, if a user queries words that don't match a candidate,
-// it's unlikely that they want to find that candidate.
-const matchedQueryWordValuePerChar = 1
-const unmatchedQueryWordPenaltyPerChar = 2
-
 // calculateScore returns a similarity score for a candidate and a query.
 // This uses a simple heuristic based on the count of query "words"
 // that match a (possibly non-contiguous) sequence of candidate "words".
-// Every match increases the score, and query words without a match decrease the score.
+// Every match increases the score, and query words without a match
+// always produce a negative score.
 // This isn't a perfect similarity measure, but it is fast to evaluate
 // and works fairly well for commands and file paths.
 func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string) int {
@@ -118,16 +113,15 @@ func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string
 		cw, qw := candidateWords[i], queryWords[j]
 		if strings.HasPrefix(cw, qw) {
 			// Reward query words that match a word in the candidate.
-			score += len(qw) * matchedQueryWordValuePerChar
+			score += len(qw)
 			j++
 		}
 		i++
 	}
 
-	// Penalize query words without a match in the candidate.
-	for j < len(queryWords) {
-		score -= len(queryWords[j]) * unmatchedQueryWordPenaltyPerChar
-		j++
+	// If there are query words that didn't match the candidate, classify as a mismatch.
+	if j < len(queryWords) {
+		return -1
 	}
 
 	return score

@@ -60,11 +60,6 @@ func (s *MenuSearch) AddItems(items []MenuItem) {
 	s.sortItemsByScore()
 }
 
-// NumItems returns the total number of searchable menu items.
-func (s *MenuSearch) NumItems() int {
-	return len(s.scoredItems)
-}
-
 // Results returns the menu items matching the current query.
 // Items are sorted descending by similarity to the query,
 // with ties broken by lexicographic ordering.

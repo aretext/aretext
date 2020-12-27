@@ -8,6 +8,6 @@ import (
 // DrawEditor draws the editor in the screen.
 func DrawEditor(screen tcell.Screen, editorState *exec.EditorState) {
 	screen.Clear()
-	buffer := editorState.DocumentBuffer()
-	DrawBuffer(screen, buffer)
+	DrawBuffer(screen, editorState.DocumentBuffer())
+	DrawMenu(screen, editorState.Menu())
 }

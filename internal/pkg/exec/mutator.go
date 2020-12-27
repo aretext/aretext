@@ -267,6 +267,144 @@ func (rm *resizeMutator) String() string {
 	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
 }
 
+type showMenuMutator struct {
+	prompt string
+	items  []MenuItem
+}
+
+func NewShowMenuMutator(prompt string, items []MenuItem) Mutator {
+	return &showMenuMutator{prompt, items}
+}
+
+// Mutate displays the menu with the specified prompt and items.
+func (smm *showMenuMutator) Mutate(state *EditorState) {
+	search := &MenuSearch{}
+	search.AddItems(smm.items)
+	state.menu = &MenuState{
+		visible:           true,
+		prompt:            smm.prompt,
+		search:            search,
+		selectedResultIdx: 0,
+	}
+}
+
+func (smm *showMenuMutator) String() string {
+	return fmt.Sprintf("ShowMenu(%s)", smm.prompt)
+}
+
+type hideMenuMutator struct{}
+
+func NewHideMenuMutator() Mutator {
+	return &hideMenuMutator{}
+}
+
+// Mutate hides the menu.
+func (hmm *hideMenuMutator) Mutate(state *EditorState) {
+	state.menu = &MenuState{}
+}
+
+func (hmm *hideMenuMutator) String() string {
+	return "HideMenu()"
+}
+
+type executeSelectedMenuItemMutator struct{}
+
+func NewExecuteSelectedMenuItemMutator() Mutator {
+	return &executeSelectedMenuItemMutator{}
+}
+
+// Mutate executes the action of the selected menu item and closes the menu.
+func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
+	search := state.menu.search
+	results := search.Results()
+	if len(results) == 0 {
+		// If there are no results, then there is no action to perform.
+		NewHideMenuMutator().Mutate(state)
+		return
+	}
+
+	idx := state.menu.selectedResultIdx
+	selectedItem := results[idx]
+	log.Printf("Executing menu item %s at result index %d\n", selectedItem, idx)
+	NewCompositeMutator([]Mutator{
+		selectedItem.Action,
+		NewHideMenuMutator(),
+	}).Mutate(state)
+}
+
+func (esm *executeSelectedMenuItemMutator) String() string {
+	return "ExecuteSelectedMenuItem()"
+}
+
+type moveMenuSelectionMutator struct {
+	// Number of items to move up/down.
+	// Negative deltas move the selection up; positive deltas move the selection down.
+	delta int
+}
+
+func NewMoveMenuSelectionMutator(delta int) Mutator {
+	return &moveMenuSelectionMutator{delta}
+}
+
+// Mutate moves the menu selection up or down with wraparound.
+func (mms *moveMenuSelectionMutator) Mutate(state *EditorState) {
+	numResults := len(state.menu.search.Results())
+	if numResults == 0 {
+		return
+	}
+
+	newIdx := (state.menu.selectedResultIdx + mms.delta) % numResults
+	if newIdx < 0 {
+		newIdx = numResults + newIdx
+	}
+
+	state.menu.selectedResultIdx = newIdx
+}
+
+func (mms *moveMenuSelectionMutator) String() string {
+	return fmt.Sprintf("MoveMenuSelection(%d)", mms.delta)
+}
+
+type appendMenuSearchMutator struct {
+	r rune
+}
+
+func NewAppendMenuSearchMutator(r rune) Mutator {
+	return &appendMenuSearchMutator{r}
+}
+
+func (ams *appendMenuSearchMutator) Mutate(state *EditorState) {
+	menu := state.menu
+	newQuery := menu.search.Query() + string(ams.r)
+	menu.search.SetQuery(newQuery)
+	menu.selectedResultIdx = 0
+}
+
+func (ams *appendMenuSearchMutator) String() string {
+	return fmt.Sprintf("AppendMenuSearch(%q)", ams.r)
+}
+
+type deleteMenuSearchMutator struct{}
+
+func NewDeleteMenuSearchMutator() Mutator {
+	return &deleteMenuSearchMutator{}
+}
+
+func (dms *deleteMenuSearchMutator) Mutate(state *EditorState) {
+	menu := state.menu
+	query := menu.search.Query()
+	if len(query) > 0 {
+		queryRunes := []rune(query)
+		newQueryRunes := queryRunes[0 : len(queryRunes)-1]
+		menu.search.SetQuery(string(newQueryRunes))
+		menu.selectedResultIdx = 0
+	}
+}
+
+func (dms *deleteMenuSearchMutator) String() string {
+	return "DeleteMenuSearch()"
+}
+
 type quitMutator struct{}
 
 func NewQuitMutator() Mutator {

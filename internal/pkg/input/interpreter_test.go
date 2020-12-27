@@ -290,6 +290,87 @@ func TestInterpreter(t *testing.T) {
 			},
 			expectedCommands: []string{"", "Composite(InsertRune('\\t'),ScrollToCursor())"},
 		},
+		{
+			name: "open and close menu",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEscape, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"HideMenu()",
+			},
+		},
+		{
+			name: "enter menu search text",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"AppendMenuSearch('a')",
+				"AppendMenuSearch('b')",
+			},
+		},
+		{
+			name: "delete menu search text",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyBackspace, ' ', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyBackspace2, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"DeleteMenuSearch()",
+				"DeleteMenuSearch()",
+			},
+		},
+		{
+			name: "move menu selection up using arrow key",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"MoveMenuSelection(-1)",
+			},
+		},
+		{
+			name: "move menu selection down using arrow key",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"MoveMenuSelection(1)",
+			},
+		},
+		{
+			name: "move menu selection down using tab",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyTab, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"MoveMenuSelection(1)",
+			},
+		},
+		{
+			name: "execute selected menu item",
+			inputEvents: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone),
+			},
+			expectedCommands: []string{
+				"Composite(ShowMenu(command),ScrollToCursor())",
+				"ExecuteSelectedMenuItem()",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -18,6 +18,7 @@ func NewInterpreter() *Interpreter {
 		modes: map[ModeType]Mode{
 			ModeTypeNormal: newNormalMode(),
 			ModeTypeInsert: newInsertMode(),
+			ModeTypeMenu:   newMenuMode(),
 		},
 	}
 }

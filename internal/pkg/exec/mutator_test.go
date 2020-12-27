@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wedaly/aretext/internal/pkg/file"
+	"github.com/wedaly/aretext/internal/pkg/syntax"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
@@ -241,6 +242,208 @@ func TestScrollLinesMutator(t *testing.T) {
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedtextOrigin, state.documentBuffer.view.textOrigin)
+		})
+	}
+}
+
+func TestShowMenuMutator(t *testing.T) {
+	state := NewEditorState(100, 100)
+	prompt := "test prompt"
+	items := []MenuItem{
+		{Name: "test item 1"},
+		{Name: "test item 2"},
+	}
+	mutator := NewShowMenuMutator(prompt, items)
+	mutator.Mutate(state)
+	assert.True(t, state.Menu().Visible())
+	assert.Equal(t, prompt, state.Menu().Prompt())
+	assert.Equal(t, "", state.Menu().SearchQuery())
+
+	results, selectedIdx := state.Menu().SearchResults()
+	assert.Equal(t, 0, selectedIdx)
+	assert.Equal(t, 0, len(results))
+}
+
+func TestHideMenuMutator(t *testing.T) {
+	state := NewEditorState(100, 100)
+	mutator := NewCompositeMutator([]Mutator{
+		NewShowMenuMutator("test prompt", []MenuItem{{Name: "test item"}}),
+		NewHideMenuMutator(),
+	})
+	mutator.Mutate(state)
+	assert.False(t, state.Menu().Visible())
+}
+
+func TestSelectAndExecuteMenuItem(t *testing.T) {
+	state := NewEditorState(100, 100)
+	items := []MenuItem{
+		{
+			Name:   "set syntax json",
+			Action: NewSetSyntaxMutator(syntax.LanguageJson),
+		},
+		{
+			Name:   "quit",
+			Action: NewQuitMutator(),
+		},
+	}
+	mutator := NewCompositeMutator([]Mutator{
+		NewShowMenuMutator("test prompt", items),
+		NewAppendMenuSearchMutator('q'), // search for "q", should match "quit"
+		NewExecuteSelectedMenuItemMutator(),
+	})
+	mutator.Mutate(state)
+	assert.False(t, state.Menu().Visible())
+	assert.Equal(t, "", state.Menu().SearchQuery())
+	assert.True(t, state.QuitFlag())
+}
+
+func TestMoveMenuSelectionMutator(t *testing.T) {
+	testCases := []struct {
+		name              string
+		items             []MenuItem
+		searchRune        rune
+		moveDeltas        []int
+		expectSelectedIdx int
+	}{
+		{
+			name:              "empty results, move up",
+			items:             []MenuItem{},
+			searchRune:        't',
+			moveDeltas:        []int{-1},
+			expectSelectedIdx: 0,
+		},
+		{
+			name:              "empty results, move down",
+			items:             []MenuItem{},
+			searchRune:        't',
+			moveDeltas:        []int{1},
+			expectSelectedIdx: 0,
+		},
+		{
+			name: "single result, move up",
+			items: []MenuItem{
+				{Name: "test"},
+			},
+			searchRune:        't',
+			moveDeltas:        []int{1},
+			expectSelectedIdx: 0,
+		},
+		{
+			name: "single result, move down",
+			items: []MenuItem{
+				{Name: "test"},
+			},
+			searchRune:        't',
+			moveDeltas:        []int{1},
+			expectSelectedIdx: 0,
+		},
+		{
+			name: "multiple results, move down and up",
+			items: []MenuItem{
+				{Name: "test1"},
+				{Name: "test2"},
+				{Name: "test3"},
+			},
+			searchRune:        't',
+			moveDeltas:        []int{2, -1},
+			expectSelectedIdx: 1,
+		},
+		{
+			name: "multiple results, move up and wraparound",
+			items: []MenuItem{
+				{Name: "test1"},
+				{Name: "test2"},
+				{Name: "test3"},
+				{Name: "test4"},
+			},
+			searchRune:        't',
+			moveDeltas:        []int{-1},
+			expectSelectedIdx: 3,
+		},
+		{
+			name: "multiple results, move down and wraparound",
+			items: []MenuItem{
+				{Name: "test1"},
+				{Name: "test2"},
+				{Name: "test3"},
+				{Name: "test4"},
+			},
+			searchRune:        't',
+			moveDeltas:        []int{3, 1},
+			expectSelectedIdx: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			state := NewEditorState(100, 100)
+			mutators := []Mutator{
+				NewShowMenuMutator("test", tc.items),
+				NewAppendMenuSearchMutator(tc.searchRune),
+			}
+			for _, delta := range tc.moveDeltas {
+				mutators = append(mutators, NewMoveMenuSelectionMutator(delta))
+			}
+			NewCompositeMutator(mutators).Mutate(state)
+			_, selectedIdx := state.Menu().SearchResults()
+			assert.Equal(t, tc.expectSelectedIdx, selectedIdx)
+		})
+	}
+}
+
+func TestAppendMenuSearchMutator(t *testing.T) {
+	state := NewEditorState(100, 100)
+	mutator := NewCompositeMutator([]Mutator{
+		NewShowMenuMutator("test", []MenuItem{}),
+		NewAppendMenuSearchMutator('a'),
+		NewAppendMenuSearchMutator('b'),
+		NewAppendMenuSearchMutator('c'),
+	})
+	mutator.Mutate(state)
+	assert.Equal(t, "abc", state.Menu().SearchQuery())
+}
+
+func TestDeleteMenuSearchMutator(t *testing.T) {
+	testCases := []struct {
+		name        string
+		searchQuery string
+		numDeleted  int
+		expectQuery string
+	}{
+		{
+			name:        "delete from empty query",
+			searchQuery: "",
+			numDeleted:  1,
+			expectQuery: "",
+		},
+		{
+			name:        "delete ascii from end of query",
+			searchQuery: "abc",
+			numDeleted:  2,
+			expectQuery: "a",
+		},
+		{
+			name:        "delete non-ascii unicode from end of query",
+			searchQuery: "£፴",
+			numDeleted:  1,
+			expectQuery: "£",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			state := NewEditorState(100, 100)
+			mutators := []Mutator{
+				NewShowMenuMutator("test", []MenuItem{}),
+			}
+			for _, r := range tc.searchQuery {
+				mutators = append(mutators, NewAppendMenuSearchMutator(r))
+			}
+			for i := 0; i < tc.numDeleted; i++ {
+				mutators = append(mutators, NewDeleteMenuSearchMutator())
+			}
+			NewCompositeMutator(mutators).Mutate(state)
+			assert.Equal(t, tc.expectQuery, state.Menu().SearchQuery())
 		})
 	}
 }

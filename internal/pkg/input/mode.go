@@ -16,6 +16,7 @@ type ModeType int
 const (
 	ModeTypeNormal = ModeType(iota)
 	ModeTypeInsert
+	ModeTypeMenu
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.
@@ -77,6 +78,8 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 	count, cmd := m.parseSequence(m.buffer)
 
 	switch cmd {
+	case ":":
+		return m.showCommandMenu(), ModeTypeMenu
 	case "h":
 		return m.cursorLeft(), ModeTypeNormal
 	case "l":
@@ -110,7 +113,7 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|:)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -129,6 +132,10 @@ func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	}
 
 	return 0, cmdStr
+}
+
+func (m *normalMode) showCommandMenu() exec.Mutator {
+	return exec.NewShowMenuMutator("command", commandMenuItems())
 }
 
 func (m *normalMode) cursorLeft() exec.Mutator {
@@ -281,4 +288,56 @@ func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
 		mutator,
 		exec.NewScrollToCursorMutator(),
 	})
+}
+
+// menuMode allows the user to search for and select items in a menu.
+type menuMode struct{}
+
+func newMenuMode() Mode {
+	return &menuMode{}
+}
+
+func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
+	switch event.Key() {
+	case tcell.KeyEscape:
+		return m.closeMenu(), ModeTypeNormal
+	case tcell.KeyEnter:
+		return m.executeSelectedMenuItem(), ModeTypeNormal
+	case tcell.KeyUp:
+		return m.menuSelectionUp(), ModeTypeMenu
+	case tcell.KeyDown:
+		return m.menuSelectionDown(), ModeTypeMenu
+	case tcell.KeyTab:
+		return m.menuSelectionDown(), ModeTypeMenu
+	case tcell.KeyRune:
+		return m.appendMenuSearch(event.Rune()), ModeTypeMenu
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		return m.deleteMenuSearch(), ModeTypeMenu
+	default:
+		return nil, ModeTypeMenu
+	}
+}
+
+func (m *menuMode) closeMenu() exec.Mutator {
+	return exec.NewHideMenuMutator()
+}
+
+func (m *menuMode) executeSelectedMenuItem() exec.Mutator {
+	return exec.NewExecuteSelectedMenuItemMutator()
+}
+
+func (m *menuMode) menuSelectionUp() exec.Mutator {
+	return exec.NewMoveMenuSelectionMutator(-1)
+}
+
+func (m *menuMode) menuSelectionDown() exec.Mutator {
+	return exec.NewMoveMenuSelectionMutator(1)
+}
+
+func (m *menuMode) appendMenuSearch(r rune) exec.Mutator {
+	return exec.NewAppendMenuSearchMutator(r)
+}
+
+func (m *menuMode) deleteMenuSearch() exec.Mutator {
+	return exec.NewDeleteMenuSearchMutator()
 }

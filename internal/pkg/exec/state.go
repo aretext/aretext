@@ -12,6 +12,7 @@ import (
 type EditorState struct {
 	screenWidth, screenHeight uint64
 	documentBuffer            *BufferState
+	menu                      *MenuState
 	fileWatcher               file.Watcher
 	quitFlag                  bool
 }
@@ -21,6 +22,7 @@ func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 		screenWidth:    screenWidth,
 		screenHeight:   screenHeight,
 		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, screenHeight),
+		menu:           &MenuState{},
 		fileWatcher:    file.NewEmptyWatcher(),
 	}
 }
@@ -36,6 +38,10 @@ func (s *EditorState) SetScreenSize(width, height uint64) {
 
 func (s *EditorState) DocumentBuffer() *BufferState {
 	return s.documentBuffer
+}
+
+func (s *EditorState) Menu() *MenuState {
+	return s.menu
 }
 
 func (s *EditorState) FileWatcher() file.Watcher {
@@ -176,6 +182,45 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
+}
+
+// MenuState represents the menu for searching and selecting items.
+type MenuState struct {
+	// visible indicates whether the menu is currently displayed.
+	visible bool
+
+	// prompt is a user-facing description of the menu contents.
+	prompt string
+
+	// search controls which items are visible based on the user's current search query.
+	search *MenuSearch
+
+	// selectedResultIdx is the index of the currently selected search result.
+	// If there are no results, this is set to zero.
+	// If there are results, this must be less than the number of results.
+	selectedResultIdx int
+}
+
+func (m *MenuState) Visible() bool {
+	return m.visible
+}
+
+func (m *MenuState) Prompt() string {
+	return m.prompt
+}
+
+func (m *MenuState) SearchQuery() string {
+	if m.search == nil {
+		return ""
+	}
+	return m.search.Query()
+}
+
+func (m *MenuState) SearchResults() (results []MenuItem, selectedResultIdx int) {
+	if m.search == nil {
+		return nil, 0
+	}
+	return m.search.Results(), m.selectedResultIdx
 }
 
 // MenuItem represents an item in the editor's menu.

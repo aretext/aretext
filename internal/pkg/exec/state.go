@@ -14,6 +14,7 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	menu                      *MenuState
 	fileWatcher               file.Watcher
+	statusMsg                 StatusMsg
 	quitFlag                  bool
 }
 
@@ -28,6 +29,7 @@ func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 		screenHeight:   screenHeight,
 		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
 		menu:           &MenuState{},
+		statusMsg:      StatusMsg{},
 		fileWatcher:    file.NewEmptyWatcher(),
 	}
 }
@@ -47,6 +49,10 @@ func (s *EditorState) DocumentBuffer() *BufferState {
 
 func (s *EditorState) Menu() *MenuState {
 	return s.menu
+}
+
+func (s *EditorState) StatusMsg() StatusMsg {
+	return s.statusMsg
 }
 
 func (s *EditorState) FileWatcher() file.Watcher {
@@ -187,6 +193,31 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
+}
+
+// StatusMsgStyle controls how a status message will be displayed.
+type StatusMsgStyle int
+
+const (
+	StatusMsgStyleSuccess = StatusMsgStyle(iota)
+	StatusMsgStyleError
+)
+
+func (s StatusMsgStyle) String() string {
+	switch s {
+	case StatusMsgStyleSuccess:
+		return "success"
+	case StatusMsgStyleError:
+		return "error"
+	default:
+		panic("invalid style")
+	}
+}
+
+// StatusMsg is a message displayed in the status bar.
+type StatusMsg struct {
+	Style StatusMsgStyle
+	Text  string
 }
 
 // MenuState represents the menu for searching and selecting items.

@@ -79,7 +79,7 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 
 	switch cmd {
 	case ":":
-		return m.showCommandMenu(), ModeTypeMenu
+		return thenClearStatusMsg(m.showCommandMenu()), ModeTypeMenu
 	case "h":
 		return m.cursorLeft(), ModeTypeNormal
 	case "l":
@@ -101,13 +101,13 @@ func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
 	case "G":
 		return m.cursorStartOfLastLine(), ModeTypeNormal
 	case "i":
-		return nil, ModeTypeInsert
+		return thenClearStatusMsg(nil), ModeTypeInsert
 	case "I":
-		return m.cursorLineStartNonWhitespace(), ModeTypeInsert
+		return thenClearStatusMsg(m.cursorLineStartNonWhitespace()), ModeTypeInsert
 	case "a":
-		return m.cursorRight(true), ModeTypeInsert
+		return thenClearStatusMsg(m.cursorRight(true)), ModeTypeInsert
 	case "A":
-		return m.cursorLineEnd(true), ModeTypeInsert
+		return thenClearStatusMsg(m.cursorLineEnd(true)), ModeTypeInsert
 	default:
 		return nil, ModeTypeNormal
 	}
@@ -235,6 +235,15 @@ func (m *normalMode) deleteNextChar() exec.Mutator {
 		exec.NewDeleteMutator(loc),
 		exec.NewCursorMutator(exec.NewOntoLineLocator()),
 	})
+}
+
+// thenClearStatusMsg appends a mutator to clear the status message.
+func thenClearStatusMsg(mutator exec.Mutator) exec.Mutator {
+	clearStatusMutator := exec.NewSetStatusMsgMutator(exec.StatusMsg{})
+	if mutator == nil {
+		return clearStatusMutator
+	}
+	return exec.NewCompositeMutator([]exec.Mutator{mutator, clearStatusMutator})
 }
 
 // insertMode is used for inserting characters into text.

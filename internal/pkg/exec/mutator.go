@@ -409,6 +409,23 @@ func (dms *deleteMenuSearchMutator) String() string {
 	return "DeleteMenuSearch()"
 }
 
+type setStatusMsgMutator struct {
+	statusMsg StatusMsg
+}
+
+func NewSetStatusMsgMutator(statusMsg StatusMsg) Mutator {
+	return &setStatusMsgMutator{statusMsg}
+}
+
+// Mutate sets the message displayed in the status bar.
+func (smm *setStatusMsgMutator) Mutate(state *EditorState) {
+	state.statusMsg = smm.statusMsg
+}
+
+func (smm *setStatusMsgMutator) String() string {
+	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
+}
+
 type quitMutator struct{}
 
 func NewQuitMutator() Mutator {

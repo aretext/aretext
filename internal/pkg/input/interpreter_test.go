@@ -176,7 +176,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"",
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
 				"Composite(InsertRune('a'),ScrollToCursor())",
 				"Composite(InsertRune('b'),ScrollToCursor())",
 				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
@@ -192,7 +192,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModCtrl),
 			},
 			expectedCommands: []string{
-				"",
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
 				"Composite(InsertRune('a'),ScrollToCursor())",
 				"Composite(InsertRune('b'),ScrollToCursor())",
 				"Composite(Composite(MutateCursor(OntoLineLocator()),ScrollToCursor()),Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor()))",
@@ -208,7 +208,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())),ScrollToCursor())",
+				"Composite(Composite(Composite(MutateCursor(LineBoundaryLocator(backward, false)),MutateCursor(NonWhitespaceOrNewlineLocator())),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"Composite(InsertRune('a'),ScrollToCursor())",
 				"Composite(InsertRune('b'),ScrollToCursor())",
 				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
@@ -225,7 +225,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(MutateCursor(CharInLineLocator(forward, 1, true)),ScrollToCursor())",
+				"Composite(Composite(MutateCursor(CharInLineLocator(forward, 1, true)),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"Composite(InsertRune('1'),ScrollToCursor())",
 				"Composite(InsertRune('2'),ScrollToCursor())",
 				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
@@ -242,7 +242,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(MutateCursor(LineBoundaryLocator(forward, true)),ScrollToCursor())",
+				"Composite(Composite(MutateCursor(LineBoundaryLocator(forward, true)),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"Composite(InsertRune('1'),ScrollToCursor())",
 				"Composite(InsertRune('2'),ScrollToCursor())",
 				"Composite(MutateCursor(OntoLineLocator()),ScrollToCursor())",
@@ -264,7 +264,10 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())"},
+			expectedCommands: []string{
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
+				"Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())",
+			},
 		},
 		{
 			name: "delete character using backspace2 key in insert mode",
@@ -272,7 +275,10 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyBackspace2, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())"},
+			expectedCommands: []string{
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
+				"Composite(Delete(CharInLineLocator(backward, 1, true)),ScrollToCursor())",
+			},
 		},
 		{
 			name: "insert newline",
@@ -280,7 +286,10 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Composite(InsertRune('\\n'),ScrollToCursor())"},
+			expectedCommands: []string{
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
+				"Composite(InsertRune('\\n'),ScrollToCursor())",
+			},
 		},
 		{
 			name: "insert tab",
@@ -288,7 +297,10 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyTab, '\x00', tcell.ModNone),
 			},
-			expectedCommands: []string{"", "Composite(InsertRune('\\t'),ScrollToCursor())"},
+			expectedCommands: []string{
+				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
+				"Composite(InsertRune('\\t'),ScrollToCursor())",
+			},
 		},
 		{
 			name: "open and close menu",
@@ -297,7 +309,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyEscape, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"HideMenu()",
 			},
 		},
@@ -309,7 +321,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"AppendMenuSearch('a')",
 				"AppendMenuSearch('b')",
 			},
@@ -322,7 +334,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyBackspace2, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"DeleteMenuSearch()",
 				"DeleteMenuSearch()",
 			},
@@ -334,7 +346,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"MoveMenuSelection(-1)",
 			},
 		},
@@ -345,7 +357,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"MoveMenuSelection(1)",
 			},
 		},
@@ -356,7 +368,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyTab, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"MoveMenuSelection(1)",
 			},
 		},
@@ -367,7 +379,7 @@ func TestInterpreter(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone),
 			},
 			expectedCommands: []string{
-				"Composite(ShowMenu(command),ScrollToCursor())",
+				"Composite(Composite(ShowMenu(command),SetStatusMsg(success, \"\")),ScrollToCursor())",
 				"ExecuteSelectedMenuItem()",
 			},
 		},

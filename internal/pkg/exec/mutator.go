@@ -260,7 +260,11 @@ func (rm *resizeMutator) Mutate(state *EditorState) {
 	state.documentBuffer.view.x = 0
 	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth
-	state.documentBuffer.view.height = state.screenHeight
+	state.documentBuffer.view.height = 0
+	if rm.height > 0 {
+		// Leave one line for the status bar at the bottom.
+		state.documentBuffer.view.height = rm.height - 1
+	}
 }
 
 func (rm *resizeMutator) String() string {

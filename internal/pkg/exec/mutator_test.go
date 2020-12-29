@@ -27,7 +27,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
 	require.NoError(t, err)
-	state := NewEditorState(5, 2)
+	state := NewEditorState(5, 3)
 	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 22
 

@@ -18,10 +18,15 @@ type EditorState struct {
 }
 
 func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
+	var documentBufferHeight uint64
+	if screenHeight > 0 {
+		// Leave one line for the status bar at the bottom.
+		documentBufferHeight = screenHeight - 1
+	}
 	return &EditorState{
 		screenWidth:    screenWidth,
 		screenHeight:   screenHeight,
-		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, screenHeight),
+		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
 		menu:           &MenuState{},
 		fileWatcher:    file.NewEmptyWatcher(),
 	}

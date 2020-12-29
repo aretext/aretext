@@ -2,7 +2,6 @@ package file
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -13,16 +12,18 @@ import (
 
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.
 // This adds the POSIX end-of-file indicator (line feed at the end of the file).
-// We try to perform the write atomically by writing to a temp file, syncing to disk, then
-// renaming to the target file path.  This should work under most, but not necessarily all, circumstances.
+// This directly overwrites the target file and then syncs the file to disk.
 func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (Watcher, error) {
-	// Create a temporary file to write the text.
-	// This ensures that we don't corrupt the original file if an error occurs during the write.
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "aretext-")
+	// Open the target file, truncating it if it already exists.
+	// There's a risk that the file might get corrupted if an error occurs while
+	// we're writing the new contents, but it's very difficult to prevent this.
+	// In particular, tricks like writing a temporary file and renaming it to the target path
+	// don't work; see https://danluu.com/deconstruct-files/
+	f, err := os.Create(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "ioutil.TempFile")
+		return nil, errors.Wrapf(err, "os.Create")
 	}
-	defer tmpFile.Close()
+	defer f.Close()
 
 	// Compose a reader that calculates the checksum and appends the POSIX EOF indicator.
 	checksummer := NewChecksummer()
@@ -30,34 +31,24 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (Watc
 	posixEofReader := strings.NewReader("\n")
 	r := io.TeeReader(io.MultiReader(textReader, posixEofReader), checksummer)
 
-	// Write to the temporary file and calculate the checksum.
-	_, err = io.Copy(tmpFile, r)
+	// Write to the file and calculate the checksum.
+	_, err = io.Copy(f, r)
 	if err != nil {
 		return nil, errors.Wrapf(err, "io.Copy")
 	}
 
-	// Flush the temporary file to disk to (in most cases) ensure that it's persisted.
-	err = tmpFile.Sync()
+	// Sync the file to disk so the watcher calculates the checksum correctly later.
+	err = f.Sync()
 	if err != nil {
 		return nil, errors.Wrapf(err, "File.Sync")
 	}
 
-	// Move the temporary file to the target path.
-	err = os.Rename(tmpFile.Name(), path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "os.Rename")
-	}
-
-	// Retrieve the last modified time and size for the file.
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "os.Stat")
-	}
-
 	// Start a new watcher for subsequent changes to the file.
 	checksum := checksummer.Checksum()
-	lastModifiedTime := fileInfo.ModTime()
-	size := fileInfo.Size()
+	lastModifiedTime, size, err := lastModifiedTimeAndSize(f)
+	if err != nil {
+		return nil, err
+	}
 	watcher := newFileWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
 	return watcher, nil

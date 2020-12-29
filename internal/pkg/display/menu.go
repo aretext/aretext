@@ -1,13 +1,8 @@
 package display
 
 import (
-	"io"
-	"log"
-
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/text"
-	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
 // DrawMenu draws the menu at the top of the screen.
@@ -98,30 +93,4 @@ func drawMenuItem(sr *ScreenRegion, item exec.MenuItem, selected bool) {
 		style = style.Underline(true)
 	}
 	drawStringNoWrap(sr, item.Name, col, 0, style)
-}
-
-func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.Style) int {
-	maxLineWidth, _ := sr.Size()
-	runeIter := text.NewRuneIterForSlice([]rune(s))
-	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	gc := segment.NewSegment()
-	for {
-		err := gcIter.NextSegment(gc)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatalf("%s", err)
-		}
-
-		gcRunes := gc.Runes()
-		gcWidth := exec.GraphemeClusterWidth(gcRunes, uint64(col))
-		if uint64(col)+gcWidth > uint64(maxLineWidth) {
-			break
-		}
-
-		drawGraphemeCluster(sr, col, row, gc.Runes(), style)
-		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
-	}
-
-	return col
 }

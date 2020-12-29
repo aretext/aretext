@@ -52,7 +52,7 @@ func (e *Editor) LoadInitialFile(path string) error {
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	display.DrawEditor(e.screen, e.state)
+	display.DrawEditor(e.screen, e.state, e.inputInterpreter.Mode())
 	e.screen.Sync()
 
 	go e.pollTermEvents()
@@ -129,7 +129,7 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 }
 
 func (e *Editor) redraw() {
-	display.DrawEditor(e.screen, e.state)
+	display.DrawEditor(e.screen, e.state, e.inputInterpreter.Mode())
 	e.screen.Show()
 }
 

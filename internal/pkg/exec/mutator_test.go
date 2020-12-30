@@ -31,6 +31,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 	path, cleanup := createTestFile(t, "")
 	defer cleanup()
 	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	defer watcher.Stop()
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, textTree, watcher)
 
@@ -50,6 +51,7 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	defer watcher.Stop()
 	require.NoError(t, err)
 	state := NewEditorState(5, 3, textTree, watcher)
 	state.documentBuffer.cursor.position = 22
@@ -62,6 +64,7 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	path2, cleanup2 := createTestFile(t, "ab")
 	defer cleanup2()
 	NewLoadDocumentMutator(path2, false).Mutate(state)
+	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor moved back to the end of the text,
 	// and the view scrolled to make the cursor visible.
@@ -79,6 +82,7 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 
 	// Reload the document, expect success msg.
 	NewLoadDocumentMutator(path, true).Mutate(state)
+	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Loaded changes")
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
 
@@ -87,6 +91,7 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 
 	// Load a non-existent path, expect error msg.
 	NewLoadDocumentMutator(path, true).Mutate(state)
+	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Could not open")
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 }
@@ -104,6 +109,7 @@ func TestSaveDocumentMutator(t *testing.T) {
 		NewInsertRuneMutator('x'),
 		NewSaveDocumentMutator(),
 	}).Mutate(state)
+	defer state.fileWatcher.Stop()
 
 	// Expect a success message.
 	assert.Contains(t, state.statusMsg.Text, "Saved")

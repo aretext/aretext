@@ -118,6 +118,7 @@ func (sdm *saveDocumentMutator) Mutate(state *EditorState) {
 
 	state.fileWatcher.Stop()
 	state.fileWatcher = newWatcher
+	state.hasUnsavedChanges = false
 	sdm.reportSuccess(state, path)
 }
 
@@ -247,6 +248,7 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 	}
 
 	bufferState.cursor.position = startPos + 1
+	state.hasUnsavedChanges = true
 }
 
 func (irm *insertRuneMutator) String() string {
@@ -275,6 +277,7 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 	} else if startPos > deleteToPos {
 		dm.deleteCharacters(bufferState, deleteToPos, startPos-deleteToPos)
 	}
+	state.hasUnsavedChanges = true
 }
 
 func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, count uint64) {
@@ -494,13 +497,23 @@ func (smm *setStatusMsgMutator) String() string {
 	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
 }
 
-type quitMutator struct{}
+type quitMutator struct {
+	force bool
+}
 
-func NewQuitMutator() Mutator {
-	return &quitMutator{}
+func NewQuitMutator(force bool) Mutator {
+	return &quitMutator{force}
 }
 
 func (qm *quitMutator) Mutate(state *EditorState) {
+	if state.hasUnsavedChanges && !qm.force {
+		NewSetStatusMsgMutator(StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  "Document has unsaved changes.  Use \"force quit\" to discard the changes and exit.",
+		}).Mutate(state)
+		return
+	}
+
 	state.fileWatcher.Stop()
 	state.quitFlag = true
 }

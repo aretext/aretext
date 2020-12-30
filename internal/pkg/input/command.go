@@ -9,7 +9,11 @@ func commandMenuItems() []exec.MenuItem {
 	return []exec.MenuItem{
 		{
 			Name:   "quit",
-			Action: exec.NewQuitMutator(),
+			Action: exec.NewQuitMutator(false),
+		},
+		{
+			Name:   "force quit",
+			Action: exec.NewQuitMutator(true),
 		},
 		{
 			Name:   "save",

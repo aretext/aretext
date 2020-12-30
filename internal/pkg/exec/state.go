@@ -15,6 +15,7 @@ type EditorState struct {
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
 	statusMsg                 StatusMsg
+	hasUnsavedChanges         bool
 	quitFlag                  bool
 }
 

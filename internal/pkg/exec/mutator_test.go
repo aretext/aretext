@@ -348,7 +348,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 		},
 		{
 			Name:   "quit",
-			Action: NewQuitMutator(),
+			Action: NewQuitMutator(true),
 		},
 	}
 	mutator := NewCompositeMutator([]Mutator{
@@ -509,6 +509,52 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 			}
 			NewCompositeMutator(mutators).Mutate(state)
 			assert.Equal(t, tc.expectQuery, state.Menu().SearchQuery())
+		})
+	}
+}
+
+func TestQuitMutator(t *testing.T) {
+	testCases := []struct {
+		name              string
+		force             bool
+		hasUnsavedChanges bool
+		expectQuitFlag    bool
+	}{
+		{
+			name:           "no force, no unsaved changes",
+			expectQuitFlag: true,
+		},
+		{
+			name:           "force, no unsaved changes",
+			force:          true,
+			expectQuitFlag: true,
+		},
+		{
+			name:              "no force, unsaved changes",
+			hasUnsavedChanges: true,
+			expectQuitFlag:    false,
+		},
+		{
+			name:              "force, unsaved changes",
+			force:             true,
+			hasUnsavedChanges: true,
+			expectQuitFlag:    true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree := text.NewTree()
+			watcher := file.NewWatcher(time.Second, "", time.Time{}, 0, "")
+			defer watcher.Stop()
+			state := NewEditorState(100, 100, textTree, watcher)
+			state.hasUnsavedChanges = tc.hasUnsavedChanges
+			NewQuitMutator(tc.force).Mutate(state)
+			assert.Equal(t, tc.expectQuitFlag, state.QuitFlag())
+			if !tc.expectQuitFlag {
+				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+				assert.Contains(t, state.statusMsg.Text, "Document has unsaved changes")
+			}
 		})
 	}
 }

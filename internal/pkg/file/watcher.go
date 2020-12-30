@@ -55,8 +55,9 @@ func (w *Watcher) Stop() {
 	w.quitChan = nil
 }
 
-// ChangedChan returns a channel that is closed when the file's contents change.
+// ChangedChan returns a channel that receives a message when the file's contents change.
 // This can produce false negatives if an error occurs accessing the file (for example, if file permissions changed).
+// The channel will receive at most one message.
 // This method is thread-safe.
 func (w *Watcher) ChangedChan() chan struct{} {
 	return w.changedChan
@@ -79,7 +80,7 @@ func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 			if w.checkFileChanged() {
 				log.Printf("File change detected in %s\n", w.path)
 				atomic.StoreInt32(&(w.changedFlag), int32(1))
-				close(w.changedChan)
+				w.changedChan <- struct{}{}
 				return
 			}
 		case <-w.quitChan:

@@ -38,7 +38,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 	// Load a new document.
 	path2, cleanup2 := createTestFile(t, "abcd")
 	defer cleanup2()
-	NewLoadDocumentMutator(path2, false).Mutate(state)
+	NewLoadDocumentMutator(path2, true, false).Mutate(state)
 	defer state.FileWatcher().Stop()
 
 	// Expect that the text and watcher are installed.
@@ -63,7 +63,7 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	// Load a new document with a shorter text.
 	path2, cleanup2 := createTestFile(t, "ab")
 	defer cleanup2()
-	NewLoadDocumentMutator(path2, false).Mutate(state)
+	NewLoadDocumentMutator(path2, true, false).Mutate(state)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor moved back to the end of the text,
@@ -81,7 +81,7 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	state := NewEditorState(100, 100, textTree, watcher)
 
 	// Reload the document, expect success msg.
-	NewLoadDocumentMutator(path, true).Mutate(state)
+	NewLoadDocumentMutator(path, true, true).Mutate(state)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Loaded changes")
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
@@ -90,10 +90,71 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	cleanup()
 
 	// Load a non-existent path, expect error msg.
-	NewLoadDocumentMutator(path, true).Mutate(state)
+	NewLoadDocumentMutator(path, true, true).Mutate(state)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Could not open")
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+}
+
+func TestLoadDocumentMutatorUnsavedChanges(t *testing.T) {
+	testCases := []struct {
+		name              string
+		force             bool
+		hasUnsavedChanges bool
+		expectLoaded      bool
+	}{
+		{
+			name:         "no force, no unsaved changes",
+			expectLoaded: true,
+		},
+		{
+			name:         "force, no unsaved changes",
+			force:        true,
+			expectLoaded: true,
+		},
+		{
+			name:              "no force, unsaved changes",
+			hasUnsavedChanges: true,
+			expectLoaded:      false,
+		},
+		{
+			name:              "force, unsaved changes",
+			force:             true,
+			hasUnsavedChanges: true,
+			expectLoaded:      true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Load the initial document.
+			path, cleanup := createTestFile(t, "")
+			defer cleanup()
+			textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, textTree, watcher)
+
+			// Set whether there are unsaved changes.
+			if tc.hasUnsavedChanges {
+				NewInsertRuneMutator('x').Mutate(state)
+			}
+
+			// Attempt to load a different document.
+			path2, cleanup2 := createTestFile(t, "loaded")
+			defer cleanup2()
+			NewLoadDocumentMutator(path2, tc.force, true).Mutate(state)
+
+			if tc.expectLoaded {
+				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+				assert.Contains(t, state.statusMsg.Text, "Loaded changes")
+				assert.Equal(t, "loaded", state.documentBuffer.textTree.String())
+			} else {
+				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+				assert.Contains(t, state.statusMsg.Text, "Document has unsaved changes.")
+				assert.Equal(t, "x", state.documentBuffer.textTree.String())
+			}
+		})
+	}
 }
 
 func TestSaveDocumentMutator(t *testing.T) {
@@ -107,7 +168,7 @@ func TestSaveDocumentMutator(t *testing.T) {
 	// Modify and save the document
 	NewCompositeMutator([]Mutator{
 		NewInsertRuneMutator('x'),
-		NewSaveDocumentMutator(),
+		NewSaveDocumentMutator(true),
 	}).Mutate(state)
 	defer state.fileWatcher.Stop()
 
@@ -119,6 +180,69 @@ func TestSaveDocumentMutator(t *testing.T) {
 	contents, err := ioutil.ReadFile(path)
 	require.NoError(t, err)
 	assert.Equal(t, "x\n", string(contents))
+}
+
+func TestSaveDocumentMutatorFileChanged(t *testing.T) {
+	testCases := []struct {
+		name        string
+		force       bool
+		expectSaved bool
+	}{
+		{
+			name:        "force should save",
+			force:       true,
+			expectSaved: true,
+		},
+		{
+			name:        "no force should error",
+			force:       false,
+			expectSaved: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Load the initial document.
+			path, cleanup := createTestFile(t, "")
+			defer cleanup()
+			textTree, watcher, err := file.Load(path, time.Millisecond)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, textTree, watcher)
+
+			// Modify the file.
+			f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			require.NoError(t, err)
+			defer f.Close()
+			_, err = io.WriteString(f, "test")
+			require.NoError(t, err)
+
+			// Wait for the watcher to detect the change.
+			select {
+			case <-watcher.ChangedChan():
+				break
+			case <-time.After(time.Second * 10):
+				assert.Fail(t, "Timed out waiting for change")
+				return
+			}
+
+			// Attempt to save the document.
+			NewSaveDocumentMutator(tc.force).Mutate(state)
+
+			// Retrieve the file contents
+			contents, err := ioutil.ReadFile(path)
+			require.NoError(t, err)
+
+			if tc.expectSaved {
+				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+				assert.Contains(t, state.statusMsg.Text, "Saved")
+				assert.Equal(t, "\n", string(contents))
+			} else {
+				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+				assert.Contains(t, state.statusMsg.Text, "changed since last save")
+				assert.Equal(t, "test", string(contents))
+			}
+		})
+	}
 }
 
 func TestCursorMutator(t *testing.T) {

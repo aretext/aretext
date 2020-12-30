@@ -46,15 +46,27 @@ func (cm *CompositeMutator) String() string {
 
 type loadDocumentMutator struct {
 	path       string
+	force      bool
 	showStatus bool
 }
 
-func NewLoadDocumentMutator(path string, showStatus bool) Mutator {
-	return &loadDocumentMutator{path, showStatus}
+func NewLoadDocumentMutator(path string, force bool, showStatus bool) Mutator {
+	return &loadDocumentMutator{path, force, showStatus}
 }
 
 // Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
+	if state.hasUnsavedChanges && !ldm.force {
+		if ldm.showStatus {
+			NewSetStatusMsgMutator(StatusMsg{
+				Style: StatusMsgStyleError,
+				Text:  "Document has unsaved changes.  Use \"force reload\" to discard the changes.",
+			}).Mutate(state)
+		}
+		state.fileWatcher.Stop()
+		return
+	}
+
 	tree, watcher, err := file.Load(ldm.path, file.DefaultPollInterval)
 	if err != nil {
 		ldm.reportError(err, state)
@@ -97,19 +109,48 @@ func (ldm *loadDocumentMutator) reportSuccess(state *EditorState) {
 }
 
 func (ldm *loadDocumentMutator) String() string {
-	return "LoadDocument()"
+	return fmt.Sprintf("LoadDocument(force=%t,showStatus=%t)", ldm.force, ldm.showStatus)
 }
 
-type saveDocumentMutator struct{}
+type reloadDocumentMutator struct {
+	force      bool
+	showStatus bool
+}
 
-func NewSaveDocumentMutator() Mutator {
-	return &saveDocumentMutator{}
+func NewReloadDocumentMutator(force bool, showStatus bool) Mutator {
+	return &reloadDocumentMutator{force, showStatus}
+}
+
+// Mutate reloads the current document.
+func (rdm *reloadDocumentMutator) Mutate(state *EditorState) {
+	path := state.fileWatcher.Path()
+	NewLoadDocumentMutator(path, rdm.force, rdm.showStatus).Mutate(state)
+}
+
+func (rdm *reloadDocumentMutator) String() string {
+	return fmt.Sprintf("ReloadDocument(force=%t,showStatus=%t)", rdm.force, rdm.showStatus)
+}
+
+type saveDocumentMutator struct {
+	force bool
+}
+
+func NewSaveDocumentMutator(force bool) Mutator {
+	return &saveDocumentMutator{force}
 }
 
 // Mutate saves the currently loaded document to disk.
 func (sdm *saveDocumentMutator) Mutate(state *EditorState) {
-	tree := state.documentBuffer.textTree
 	path := state.fileWatcher.Path()
+	if state.fileWatcher.ChangedFlag() && !sdm.force {
+		NewSetStatusMsgMutator(StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
+		}).Mutate(state)
+		return
+	}
+
+	tree := state.documentBuffer.textTree
 	newWatcher, err := file.Save(path, tree, file.DefaultPollInterval)
 	if err != nil {
 		sdm.reportError(state, path, err)
@@ -139,7 +180,7 @@ func (sdm *saveDocumentMutator) reportSuccess(state *EditorState, path string) {
 }
 
 func (sdm *saveDocumentMutator) String() string {
-	return "SaveDocument()"
+	return fmt.Sprintf("SaveDocument(force=%t)", sdm.force)
 }
 
 type cursorMutator struct {
@@ -519,5 +560,5 @@ func (qm *quitMutator) Mutate(state *EditorState) {
 }
 
 func (qm *quitMutator) String() string {
-	return "Quit()"
+	return fmt.Sprintf("Quit(force=%t)", qm.force)
 }

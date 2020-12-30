@@ -85,9 +85,8 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 }
 
 func (e *Editor) handleFileChanged() {
-	path := e.state.FileWatcher().Path()
-	log.Printf("File change detected, reloading file from '%s'\n", path)
-	e.applyMutator(exec.NewLoadDocumentMutator(path, false))
+	log.Printf("File change detected, reloading file...\n")
+	e.applyMutator(exec.NewReloadDocumentMutator(false, false))
 }
 
 func (e *Editor) shutdown() {

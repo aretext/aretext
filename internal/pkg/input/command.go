@@ -17,7 +17,15 @@ func commandMenuItems() []exec.MenuItem {
 		},
 		{
 			Name:   "save",
-			Action: exec.NewSaveDocumentMutator(),
+			Action: exec.NewSaveDocumentMutator(false),
+		},
+		{
+			Name:   "force save",
+			Action: exec.NewSaveDocumentMutator(true),
+		},
+		{
+			Name:   "force reload",
+			Action: exec.NewReloadDocumentMutator(true, true),
 		},
 		{
 			Name:   "set syntax json",

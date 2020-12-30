@@ -46,10 +46,10 @@ func (cm *CompositeMutator) String() string {
 
 type loadDocumentMutator struct {
 	textTree    *text.Tree
-	fileWatcher file.Watcher
+	fileWatcher *file.Watcher
 }
 
-func NewLoadDocumentMutator(textTree *text.Tree, fileWatcher file.Watcher) Mutator {
+func NewLoadDocumentMutator(textTree *text.Tree, fileWatcher *file.Watcher) Mutator {
 	return &loadDocumentMutator{textTree, fileWatcher}
 }
 

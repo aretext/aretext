@@ -12,13 +12,13 @@ import (
 type EditorState struct {
 	screenWidth, screenHeight uint64
 	documentBuffer            *BufferState
+	fileWatcher               *file.Watcher
 	menu                      *MenuState
-	fileWatcher               file.Watcher
 	statusMsg                 StatusMsg
 	quitFlag                  bool
 }
 
-func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
+func NewEditorState(screenWidth, screenHeight uint64, tree *text.Tree, fileWatcher *file.Watcher) *EditorState {
 	var documentBufferHeight uint64
 	if screenHeight > 0 {
 		// Leave one line for the status bar at the bottom.
@@ -27,10 +27,10 @@ func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 	return &EditorState{
 		screenWidth:    screenWidth,
 		screenHeight:   screenHeight,
-		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
+		documentBuffer: NewBufferState(tree, 0, 0, 0, screenWidth, documentBufferHeight),
+		fileWatcher:    fileWatcher,
 		menu:           &MenuState{},
 		statusMsg:      StatusMsg{},
-		fileWatcher:    file.NewEmptyWatcher(),
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *EditorState) StatusMsg() StatusMsg {
 	return s.statusMsg
 }
 
-func (s *EditorState) FileWatcher() file.Watcher {
+func (s *EditorState) FileWatcher() *file.Watcher {
 	return s.fileWatcher
 }
 

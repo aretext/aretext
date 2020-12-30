@@ -2,6 +2,7 @@ package exec
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,24 +12,30 @@ import (
 )
 
 func TestLoadDocumentMutator(t *testing.T) {
-	state := NewEditorState(100, 100)
-
-	// Load a new document.
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	watcher := file.NewEmptyWatcher()
+	watcher := file.NewWatcher(time.Second, "test", time.Time{}, 0, "")
+	defer watcher.Stop()
+	state := NewEditorState(100, 100, textTree, watcher)
+
+	// Load a new document.
+	textTree, err = text.NewTreeFromString("xyz")
+	require.NoError(t, err)
+	watcher = file.NewWatcher(time.Second, "test", time.Now(), 3, "xyz")
+	defer watcher.Stop()
 	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
 
 	// Expect that the text and watcher are installed.
-	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
+	assert.Equal(t, "xyz", state.documentBuffer.textTree.String())
 	assert.Equal(t, watcher, state.FileWatcher())
 }
 
 func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
 	require.NoError(t, err)
-	state := NewEditorState(5, 3)
-	state.documentBuffer.textTree = textTree
+	watcher := file.NewWatcher(time.Second, "test", time.Time{}, 0, "")
+	defer watcher.Stop()
+	state := NewEditorState(5, 3, textTree, watcher)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -38,7 +45,8 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	// Load a new document with a shorter text.
 	textTree, err = text.NewTreeFromString("ab")
 	require.NoError(t, err)
-	watcher := file.NewEmptyWatcher()
+	watcher = file.NewWatcher(time.Second, "test", time.Now(), 3, "xyz")
+	defer watcher.Stop()
 	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
 
 	// Expect that the cursor moved back to the end of the text,
@@ -51,11 +59,8 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 func TestCursorMutator(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100)
-	state.documentBuffer = &BufferState{
-		textTree: textTree,
-		cursor:   cursorState{position: 2},
-	}
+	state := NewEditorState(100, 100, textTree, nil)
+	state.documentBuffer.cursor.position = 2
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
@@ -100,11 +105,8 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100)
-			state.documentBuffer = &BufferState{
-				textTree: textTree,
-				cursor:   tc.initialCursor,
-			}
+			state := NewEditorState(100, 100, textTree, nil)
+			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
@@ -160,11 +162,8 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100)
-			state.documentBuffer = &BufferState{
-				textTree: textTree,
-				cursor:   tc.initialCursor,
-			}
+			state := NewEditorState(100, 100, textTree, nil)
+			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
@@ -234,11 +233,8 @@ func TestScrollLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100)
-			state.documentBuffer = &BufferState{
-				textTree: textTree,
-				view:     tc.initialView,
-			}
+			state := NewEditorState(100, 100, textTree, nil)
+			state.documentBuffer.view = tc.initialView
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedtextOrigin, state.documentBuffer.view.textOrigin)
@@ -247,7 +243,7 @@ func TestScrollLinesMutator(t *testing.T) {
 }
 
 func TestShowMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100)
+	state := NewEditorState(100, 100, nil, nil)
 	prompt := "test prompt"
 	items := []MenuItem{
 		{Name: "test item 1"},
@@ -265,7 +261,7 @@ func TestShowMenuMutator(t *testing.T) {
 }
 
 func TestHideMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100)
+	state := NewEditorState(100, 100, nil, nil)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutator("test prompt", []MenuItem{{Name: "test item"}}),
 		NewHideMenuMutator(),
@@ -275,7 +271,7 @@ func TestHideMenuMutator(t *testing.T) {
 }
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
-	state := NewEditorState(100, 100)
+	state := NewEditorState(100, 100, nil, nil)
 	items := []MenuItem{
 		{
 			Name:   "set syntax json",
@@ -376,7 +372,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100)
+			state := NewEditorState(100, 100, nil, nil)
 			mutators := []Mutator{
 				NewShowMenuMutator("test", tc.items),
 				NewAppendMenuSearchMutator(tc.searchRune),
@@ -392,7 +388,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 }
 
 func TestAppendMenuSearchMutator(t *testing.T) {
-	state := NewEditorState(100, 100)
+	state := NewEditorState(100, 100, nil, nil)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutator("test", []MenuItem{}),
 		NewAppendMenuSearchMutator('a'),
@@ -432,7 +428,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100)
+			state := NewEditorState(100, 100, nil, nil)
 			mutators := []Mutator{
 				NewShowMenuMutator("test", []MenuItem{}),
 			}

@@ -19,6 +19,11 @@ func main() {
 	flag.Usage = printUsage
 	flag.Parse()
 
+	if flag.NArg() < 1 {
+		printUsage()
+		return
+	}
+
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
 	if *logpath != "" {
 		logFile, err := os.Create(*logpath)
@@ -40,7 +45,8 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	err := runEditor()
+	path := flag.Arg(0)
+	err := runEditor(path)
 	if err != nil {
 		exitWithError(err)
 	}
@@ -48,11 +54,11 @@ func main() {
 
 func printUsage() {
 	f := flag.CommandLine.Output()
-	fmt.Fprintf(f, "Usage: %s [OPTIONS] [path]\n", os.Args[0])
+	fmt.Fprintf(f, "Usage: %s [OPTIONS] path\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
-func runEditor() error {
+func runEditor(path string) error {
 	screen, err := tcell.NewScreen()
 	if err != nil {
 		return err
@@ -63,16 +69,9 @@ func runEditor() error {
 	}
 	defer screen.Fini()
 
-	editor, err := aretext.NewEditor(screen)
+	editor, err := aretext.NewEditor(screen, path)
 	if err != nil {
 		return err
-	}
-
-	path := flag.Arg(0)
-	if len(path) > 0 {
-		if err := editor.LoadInitialFile(path); err != nil {
-			return err
-		}
 	}
 
 	editor.RunEventLoop()

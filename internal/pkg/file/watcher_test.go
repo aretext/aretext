@@ -43,7 +43,7 @@ func appendToTestFile(t *testing.T, path string, s string) {
 	require.NoError(t, err)
 }
 
-func expectNoChange(t *testing.T, watcher Watcher) {
+func expectNoChange(t *testing.T, watcher *Watcher) {
 	select {
 	case <-watcher.ChangedChan():
 		assert.Fail(t, "Unexpected change reported")
@@ -52,7 +52,7 @@ func expectNoChange(t *testing.T, watcher Watcher) {
 	}
 }
 
-func waitForChangeOrTimeout(t *testing.T, watcher Watcher) {
+func waitForChangeOrTimeout(t *testing.T, watcher *Watcher) {
 	select {
 	case <-watcher.ChangedChan():
 		return

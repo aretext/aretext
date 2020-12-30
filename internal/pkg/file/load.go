@@ -11,7 +11,7 @@ import (
 
 // Load reads a file from disk and starts a watcher to detect changes.
 // This will remove the POSIX end-of-file indicator (line feed at end of file).
-func Load(path string, watcherPollInterval time.Duration) (*text.Tree, Watcher, error) {
+func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		// Return the error directly so callers can use os.IsNotExist(err) to check if the file exists.
@@ -33,7 +33,7 @@ func Load(path string, watcherPollInterval time.Duration) (*text.Tree, Watcher, 
 	// We remove it from the tree to simplify editor operations; we'll add it back when saving the file.
 	removePosixEof(tree)
 
-	watcher := newFileWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
+	watcher := NewWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
 	return tree, watcher, nil
 }

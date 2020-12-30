@@ -13,7 +13,7 @@ import (
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.
 // This adds the POSIX end-of-file indicator (line feed at the end of the file).
 // This directly overwrites the target file and then syncs the file to disk.
-func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (Watcher, error) {
+func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Watcher, error) {
 	// Open the target file, truncating it if it already exists.
 	// There's a risk that the file might get corrupted if an error occurs while
 	// we're writing the new contents, but it's very difficult to prevent this.
@@ -49,7 +49,7 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (Watc
 	if err != nil {
 		return nil, err
 	}
-	watcher := newFileWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
+	watcher := NewWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
 	return watcher, nil
 }

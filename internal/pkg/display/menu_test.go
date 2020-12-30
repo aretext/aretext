@@ -32,7 +32,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, initial state with prompt",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewShowMenuMutator("test", nil)
 				mutator.Mutate(state)
 				return state.Menu()
@@ -48,7 +48,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with no results",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutator("test", nil),
 					exec.NewAppendMenuSearchMutator('a'),
@@ -69,7 +69,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with results, first selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutator("test", []exec.MenuItem{
 						{Name: "test first"},
@@ -92,7 +92,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with many results, second-to-last selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutator("test", []exec.MenuItem{
 						{Name: "test 1"},

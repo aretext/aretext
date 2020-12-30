@@ -3,6 +3,7 @@ package aretext
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gdamore/tcell"
@@ -11,6 +12,7 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/input"
+	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 const fileWatcherPollInterval = time.Second
@@ -24,30 +26,21 @@ type Editor struct {
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
-func NewEditor(screen tcell.Screen) (*Editor, error) {
+func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
+	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
+	if os.IsNotExist(err) {
+		tree = text.NewTree()
+		watcher = file.NewWatcher(fileWatcherPollInterval, path, time.Time{}, 0, "")
+	} else if err != nil {
+		return nil, errors.Wrapf(err, "loading file at %s", path)
+	}
+
 	screenWidth, screenHeight := screen.Size()
-	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight))
+	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight), tree, watcher)
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
-	editor := &Editor{
-		inputInterpreter,
-		state,
-		screen,
-		termEventChan,
-	}
+	editor := &Editor{inputInterpreter, state, screen, termEventChan}
 	return editor, nil
-}
-
-// LoadInitialFile loads the initial file into the editor.
-// This should be called before starting the event loop.
-func (e *Editor) LoadInitialFile(path string) error {
-	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
-	if err != nil {
-		return errors.Wrapf(err, "loading file at %s", path)
-	}
-
-	exec.NewLoadDocumentMutator(tree, watcher).Mutate(e.state)
-	return nil
 }
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.

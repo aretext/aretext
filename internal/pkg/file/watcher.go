@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const DefaultPollInterval = time.Second
+
 // Watcher checks if a file's contents have changed.
 type Watcher struct {
 	path         string

@@ -15,8 +15,6 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-const fileWatcherPollInterval = time.Second
-
 // Editor is a terminal-based text editing program.
 type Editor struct {
 	inputInterpreter *input.Interpreter
@@ -27,10 +25,10 @@ type Editor struct {
 
 // NewEditor instantiates a new editor that uses the provided screen.
 func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
-	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
+	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if os.IsNotExist(err) {
 		tree = text.NewTree()
-		watcher = file.NewWatcher(fileWatcherPollInterval, path, time.Time{}, 0, "")
+		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
 	} else if err != nil {
 		return nil, errors.Wrapf(err, "loading file at %s", path)
 	}
@@ -89,14 +87,7 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 func (e *Editor) handleFileChanged() {
 	path := e.state.FileWatcher().Path()
 	log.Printf("File change detected, reloading file from '%s'\n", path)
-	tree, watcher, err := file.Load(path, fileWatcherPollInterval)
-	if err != nil {
-		log.Printf("Error reloading file '%s': %v\n", path, err)
-		return
-	}
-
-	e.applyMutator(exec.NewLoadDocumentMutator(tree, watcher))
-	log.Printf("Successfully reloaded file '%s' into editor\n", path)
+	e.applyMutator(exec.NewLoadDocumentMutator(path, false))
 }
 
 func (e *Editor) shutdown() {

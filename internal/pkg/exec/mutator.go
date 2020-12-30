@@ -45,20 +45,25 @@ func (cm *CompositeMutator) String() string {
 }
 
 type loadDocumentMutator struct {
-	textTree    *text.Tree
-	fileWatcher *file.Watcher
+	path       string
+	showStatus bool
 }
 
-func NewLoadDocumentMutator(textTree *text.Tree, fileWatcher *file.Watcher) Mutator {
-	return &loadDocumentMutator{textTree, fileWatcher}
+func NewLoadDocumentMutator(path string, showStatus bool) Mutator {
+	return &loadDocumentMutator{path, showStatus}
 }
 
 // Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
-	state.documentBuffer.textTree = ldm.textTree
+	tree, watcher, err := file.Load(ldm.path, file.DefaultPollInterval)
+	if err != nil {
+		ldm.reportError(err, state)
+		return
+	}
 
+	state.documentBuffer.textTree = tree
 	state.fileWatcher.Stop()
-	state.fileWatcher = ldm.fileWatcher
+	state.fileWatcher = watcher
 
 	// Make sure that the cursor is a valid position in the new document
 	// and that the cursor is visible.  If not, adjust the cursor and scroll.
@@ -67,6 +72,28 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		NewCursorMutator(NewOntoDocumentLocator()),
 		NewScrollToCursorMutator(),
 	}).Mutate(state)
+
+	ldm.reportSuccess(state)
+}
+
+func (ldm *loadDocumentMutator) reportError(err error, state *EditorState) {
+	log.Printf("Error loading file at '%s': %v\n", ldm.path, err)
+	if ldm.showStatus {
+		NewSetStatusMsgMutator(StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("Could not open %s", ldm.path),
+		}).Mutate(state)
+	}
+}
+
+func (ldm *loadDocumentMutator) reportSuccess(state *EditorState) {
+	log.Printf("Successfully loaded file from '%s'", ldm.path)
+	if ldm.showStatus {
+		NewSetStatusMsgMutator(StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  fmt.Sprintf("Loaded changes from '%s'", ldm.path),
+		}).Mutate(state)
+	}
 }
 
 func (ldm *loadDocumentMutator) String() string {
@@ -433,6 +460,7 @@ func NewQuitMutator() Mutator {
 }
 
 func (qm *quitMutator) Mutate(state *EditorState) {
+	state.fileWatcher.Stop()
 	state.quitFlag = true
 }
 

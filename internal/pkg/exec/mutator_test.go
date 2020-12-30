@@ -1,6 +1,9 @@
 package exec
 
 import (
+	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -11,30 +14,43 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-func TestLoadDocumentMutator(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abcd")
+func createTestFile(t *testing.T, contents string) (path string, cleanup func()) {
+	f, err := ioutil.TempFile(os.TempDir(), "aretext-")
 	require.NoError(t, err)
-	watcher := file.NewWatcher(time.Second, "test", time.Time{}, 0, "")
-	defer watcher.Stop()
+	defer f.Close()
+
+	_, err = io.WriteString(f, contents)
+	require.NoError(t, err)
+
+	cleanup = func() { os.Remove(f.Name()) }
+	return f.Name(), cleanup
+}
+
+func TestLoadDocumentMutator(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "")
+	defer cleanup()
+	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	require.NoError(t, err)
 	state := NewEditorState(100, 100, textTree, watcher)
 
 	// Load a new document.
-	textTree, err = text.NewTreeFromString("xyz")
-	require.NoError(t, err)
-	watcher = file.NewWatcher(time.Second, "test", time.Now(), 3, "xyz")
-	defer watcher.Stop()
-	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
+	path2, cleanup2 := createTestFile(t, "abcd")
+	defer cleanup2()
+	NewLoadDocumentMutator(path2, false).Mutate(state)
+	defer state.FileWatcher().Stop()
 
 	// Expect that the text and watcher are installed.
-	assert.Equal(t, "xyz", state.documentBuffer.textTree.String())
-	assert.Equal(t, watcher, state.FileWatcher())
+	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
+	assert.Equal(t, path2, state.FileWatcher().Path())
 }
 
 func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abcd\nefghi\njklmnop\nqrst")
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+	defer cleanup()
+	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	require.NoError(t, err)
-	watcher := file.NewWatcher(time.Second, "test", time.Time{}, 0, "")
-	defer watcher.Stop()
 	state := NewEditorState(5, 3, textTree, watcher)
 	state.documentBuffer.cursor.position = 22
 
@@ -43,17 +59,36 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
 
 	// Load a new document with a shorter text.
-	textTree, err = text.NewTreeFromString("ab")
-	require.NoError(t, err)
-	watcher = file.NewWatcher(time.Second, "test", time.Now(), 3, "xyz")
-	defer watcher.Stop()
-	NewLoadDocumentMutator(textTree, watcher).Mutate(state)
+	path2, cleanup2 := createTestFile(t, "ab")
+	defer cleanup2()
+	NewLoadDocumentMutator(path2, false).Mutate(state)
 
 	// Expect that the cursor moved back to the end of the text,
 	// and the view scrolled to make the cursor visible.
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
+}
+
+func TestLoadDocumentMutatorShowStatus(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "")
+	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, textTree, watcher)
+
+	// Reload the document, expect success msg.
+	NewLoadDocumentMutator(path, true).Mutate(state)
+	assert.Contains(t, state.statusMsg.Text, "Loaded changes")
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+
+	// Delete the test file.
+	cleanup()
+
+	// Load a non-existent path, expect error msg.
+	NewLoadDocumentMutator(path, true).Mutate(state)
+	assert.Contains(t, state.statusMsg.Text, "Could not open")
+	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 }
 
 func TestCursorMutator(t *testing.T) {
@@ -271,7 +306,11 @@ func TestHideMenuMutator(t *testing.T) {
 }
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
-	state := NewEditorState(100, 100, nil, nil)
+	textTree := text.NewTree()
+	watcher := file.NewWatcher(time.Second, "", time.Time{}, 0, "")
+	defer watcher.Stop()
+
+	state := NewEditorState(100, 100, textTree, watcher)
 	items := []MenuItem{
 		{
 			Name:   "set syntax json",

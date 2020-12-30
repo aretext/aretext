@@ -124,6 +124,29 @@ func TestMenuSearch(t *testing.T) {
 			},
 		},
 		{
+			name:  "items with shared prefix words, select shorter",
+			query: "s",
+			items: []MenuItem{
+				{Name: "save"},
+				{Name: "force save"},
+			},
+			expected: []MenuItem{
+				{Name: "save"},
+				{Name: "force save"},
+			},
+		},
+		{
+			name:  "items with shared prefix words, select longer",
+			query: "f s",
+			items: []MenuItem{
+				{Name: "save"},
+				{Name: "force save"},
+			},
+			expected: []MenuItem{
+				{Name: "force save"},
+			},
+		},
+		{
 			name:  "all separators",
 			query: "///",
 			items: []MenuItem{

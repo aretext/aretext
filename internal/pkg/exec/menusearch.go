@@ -108,7 +108,11 @@ func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string
 		cw, qw := candidateWords[i], queryWords[j]
 		if strings.HasPrefix(cw, qw) {
 			// Reward query words that match a word in the candidate.
-			score += len(qw)
+			points := len(qw)
+			if i == 0 && j == 0 {
+				points *= 2 // bonus for first word match
+			}
+			score += points
 			j++
 		}
 		i++
@@ -130,7 +134,7 @@ func (s *MenuSearch) splitWords(text string) []string {
 	i := 0
 	for j, r := range text {
 		if r == ' ' || r == '/' || r == '-' || r == '_' || r == '.' {
-			if j > i+1 {
+			if j > i {
 				wordBuffer = append(wordBuffer, text[i:j])
 			}
 			i = j + 1

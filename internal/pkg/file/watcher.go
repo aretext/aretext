@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -18,6 +19,7 @@ type Watcher struct {
 	size         int64
 	checksum     string
 	changedChan  chan struct{}
+	changedFlag  int32 // atomic boolean
 	quitChan     chan struct{}
 }
 
@@ -60,6 +62,13 @@ func (w *Watcher) ChangedChan() chan struct{} {
 	return w.changedChan
 }
 
+// ChangedFlag returns whether the file's contents have changed.
+// Like ChangedChan, this can produce false negatives.
+// This method is thread-safe.
+func (w *Watcher) ChangedFlag() bool {
+	return atomic.LoadInt32(&(w.changedFlag)) != 0
+}
+
 func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 	log.Printf("Started file watcher for %s\n", w.path)
 	ticker := time.NewTicker(pollInterval)
@@ -69,6 +78,7 @@ func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 		case <-ticker.C:
 			if w.checkFileChanged() {
 				log.Printf("File change detected in %s\n", w.path)
+				atomic.StoreInt32(&(w.changedFlag), int32(1))
 				close(w.changedChan)
 				return
 			}

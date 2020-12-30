@@ -91,6 +91,30 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 }
 
+func TestSaveDocumentMutator(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "")
+	defer cleanup()
+	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, textTree, watcher)
+
+	// Modify and save the document
+	NewCompositeMutator([]Mutator{
+		NewInsertRuneMutator('x'),
+		NewSaveDocumentMutator(),
+	}).Mutate(state)
+
+	// Expect a success message.
+	assert.Contains(t, state.statusMsg.Text, "Saved")
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+
+	// Check that the changes were persisted
+	contents, err := ioutil.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, "x\n", string(contents))
+}
+
 func TestCursorMutator(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)

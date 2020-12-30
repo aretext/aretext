@@ -12,6 +12,10 @@ func commandMenuItems() []exec.MenuItem {
 			Action: exec.NewQuitMutator(),
 		},
 		{
+			Name:   "save",
+			Action: exec.NewSaveDocumentMutator(),
+		},
+		{
 			Name:   "set syntax json",
 			Action: exec.NewSetSyntaxMutator(syntax.LanguageJson),
 		},

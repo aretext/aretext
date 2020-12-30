@@ -100,6 +100,47 @@ func (ldm *loadDocumentMutator) String() string {
 	return "LoadDocument()"
 }
 
+type saveDocumentMutator struct{}
+
+func NewSaveDocumentMutator() Mutator {
+	return &saveDocumentMutator{}
+}
+
+// Mutate saves the currently loaded document to disk.
+func (sdm *saveDocumentMutator) Mutate(state *EditorState) {
+	tree := state.documentBuffer.textTree
+	path := state.fileWatcher.Path()
+	newWatcher, err := file.Save(path, tree, file.DefaultPollInterval)
+	if err != nil {
+		sdm.reportError(state, path, err)
+		return
+	}
+
+	state.fileWatcher.Stop()
+	state.fileWatcher = newWatcher
+	sdm.reportSuccess(state, path)
+}
+
+func (sdm *saveDocumentMutator) reportError(state *EditorState, path string, err error) {
+	log.Printf("Error saving file to '%s': %v", path, err)
+	NewSetStatusMsgMutator(StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  fmt.Sprintf("Could not save %s", path),
+	}).Mutate(state)
+}
+
+func (sdm *saveDocumentMutator) reportSuccess(state *EditorState, path string) {
+	log.Printf("Successfully wrote file to '%s'", path)
+	NewSetStatusMsgMutator(StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  fmt.Sprintf("Saved %s", path),
+	}).Mutate(state)
+}
+
+func (sdm *saveDocumentMutator) String() string {
+	return "SaveDocument()"
+}
+
 type cursorMutator struct {
 	loc CursorLocator
 }

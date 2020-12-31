@@ -184,21 +184,6 @@ func TestInterpreter(t *testing.T) {
 			},
 		},
 		{
-			name: "return to normal mode with escape input as a modifier",
-			inputEvents: []tcell.Event{
-				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
-				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModCtrl),
-			},
-			expectedCommands: []string{
-				"Composite(SetStatusMsg(success, \"\"),ScrollToCursor())",
-				"Composite(InsertRune('a'),ScrollToCursor())",
-				"Composite(InsertRune('b'),ScrollToCursor())",
-				"Composite(Composite(MutateCursor(OntoLineLocator()),ScrollToCursor()),Composite(MutateCursor(CharInLineLocator(forward, 1, false)),ScrollToCursor()))",
-			},
-		},
-		{
 			name: "insert at beginning of line and return to normal mode",
 			inputEvents: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, 'I', tcell.ModNone),

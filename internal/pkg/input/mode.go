@@ -128,7 +128,7 @@ func (m *normalMode) showCommandMenu() exec.Mutator {
 	// The show menu mutator sets the input mode to menu.
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
-		exec.NewShowMenuMutator("command", commandMenuItems()),
+		exec.NewShowMenuMutator("command", commandMenuItems, false),
 	})
 }
 

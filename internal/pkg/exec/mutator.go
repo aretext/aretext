@@ -46,44 +46,41 @@ func (cm *CompositeMutator) String() string {
 
 type loadDocumentMutator struct {
 	path       string
-	force      bool
 	showStatus bool
 }
 
-func NewLoadDocumentMutator(path string, force bool, showStatus bool) Mutator {
-	return &loadDocumentMutator{path, force, showStatus}
+func NewLoadDocumentMutator(path string, showStatus bool) Mutator {
+	return &loadDocumentMutator{path, showStatus}
 }
 
 // Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
-	if state.hasUnsavedChanges && !ldm.force {
-		if ldm.showStatus {
-			NewSetStatusMsgMutator(StatusMsg{
-				Style: StatusMsgStyleError,
-				Text:  "Document has unsaved changes.  Use \"force reload\" to discard the changes.",
-			}).Mutate(state)
-		}
-		state.fileWatcher.Stop()
-		return
-	}
-
 	tree, watcher, err := file.Load(ldm.path, file.DefaultPollInterval)
 	if err != nil {
 		ldm.reportError(err, state)
 		return
 	}
 
+	oldPath := state.fileWatcher.Path()
 	state.documentBuffer.textTree = tree
 	state.fileWatcher.Stop()
 	state.fileWatcher = watcher
+	state.hasUnsavedChanges = false
 
-	// Make sure that the cursor is a valid position in the new document
-	// and that the cursor is visible.  If not, adjust the cursor and scroll.
-	NewCompositeMutator([]Mutator{
-		NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
-		NewCursorMutator(NewOntoDocumentLocator()),
-		NewScrollToCursorMutator(),
-	}).Mutate(state)
+	if ldm.path == oldPath {
+		// Make sure that the cursor is a valid position in the updated document
+		// and that the cursor is visible.  If not, adjust the cursor and scroll.
+		NewCompositeMutator([]Mutator{
+			NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
+			NewCursorMutator(NewOntoDocumentLocator()),
+			NewScrollToCursorMutator(),
+		}).Mutate(state)
+	} else {
+		// Set the cursor to the beginning of the new document and disable syntax highlighting.
+		state.documentBuffer.cursor = cursorState{}
+		state.documentBuffer.view.textOrigin = 0
+		state.documentBuffer.SetSyntax(syntax.LanguageUndefined)
+	}
 
 	ldm.reportSuccess(state)
 }
@@ -103,32 +100,31 @@ func (ldm *loadDocumentMutator) reportSuccess(state *EditorState) {
 	if ldm.showStatus {
 		NewSetStatusMsgMutator(StatusMsg{
 			Style: StatusMsgStyleSuccess,
-			Text:  fmt.Sprintf("Loaded changes from '%s'", ldm.path),
+			Text:  fmt.Sprintf("Opened %s", ldm.path),
 		}).Mutate(state)
 	}
 }
 
 func (ldm *loadDocumentMutator) String() string {
-	return fmt.Sprintf("LoadDocument(force=%t,showStatus=%t)", ldm.force, ldm.showStatus)
+	return fmt.Sprintf("LoadDocument(%s, showStatus=%t)", ldm.path, ldm.showStatus)
 }
 
 type reloadDocumentMutator struct {
-	force      bool
 	showStatus bool
 }
 
-func NewReloadDocumentMutator(force bool, showStatus bool) Mutator {
-	return &reloadDocumentMutator{force, showStatus}
+func NewReloadDocumentMutator(showStatus bool) Mutator {
+	return &reloadDocumentMutator{showStatus}
 }
 
 // Mutate reloads the current document.
 func (rdm *reloadDocumentMutator) Mutate(state *EditorState) {
 	path := state.fileWatcher.Path()
-	NewLoadDocumentMutator(path, rdm.force, rdm.showStatus).Mutate(state)
+	NewLoadDocumentMutator(path, rdm.showStatus).Mutate(state)
 }
 
 func (rdm *reloadDocumentMutator) String() string {
-	return fmt.Sprintf("ReloadDocument(force=%t,showStatus=%t)", rdm.force, rdm.showStatus)
+	return fmt.Sprintf("ReloadDocument(showStatus=%t)", rdm.showStatus)
 }
 
 type saveDocumentMutator struct {
@@ -401,18 +397,24 @@ func (rm *resizeMutator) String() string {
 }
 
 type showMenuMutator struct {
-	prompt string
-	items  []MenuItem
+	prompt            string
+	loadItems         func() []MenuItem
+	emptyQueryShowAll bool
 }
 
-func NewShowMenuMutator(prompt string, items []MenuItem) Mutator {
-	return &showMenuMutator{prompt, items}
+func NewShowMenuMutator(prompt string, loadItems func() []MenuItem, emptyQueryShowAll bool) Mutator {
+	return &showMenuMutator{prompt, loadItems, emptyQueryShowAll}
+}
+
+func NewShowMenuMutatorWithItems(prompt string, items []MenuItem, emptyQueryShowAll bool) Mutator {
+	loadItems := func() []MenuItem { return items }
+	return NewShowMenuMutator(prompt, loadItems, emptyQueryShowAll)
 }
 
 // Mutate displays the menu with the specified prompt and items.
 func (smm *showMenuMutator) Mutate(state *EditorState) {
-	search := &MenuSearch{}
-	search.AddItems(smm.items)
+	search := &MenuSearch{emptyQueryShowAll: smm.emptyQueryShowAll}
+	search.AddItems(smm.loadItems())
 	state.menu = &MenuState{
 		visible:           true,
 		prompt:            smm.prompt,
@@ -423,7 +425,7 @@ func (smm *showMenuMutator) Mutate(state *EditorState) {
 }
 
 func (smm *showMenuMutator) String() string {
-	return fmt.Sprintf("ShowMenu(%s)", smm.prompt)
+	return fmt.Sprintf("ShowMenu(%s, emptyQueryShowAll=%t)", smm.prompt, smm.emptyQueryShowAll)
 }
 
 type hideMenuMutator struct{}
@@ -570,7 +572,7 @@ func (qm *quitMutator) Mutate(state *EditorState) {
 	if state.hasUnsavedChanges && !qm.force {
 		NewSetStatusMsgMutator(StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  "Document has unsaved changes.  Use \"force quit\" to discard the changes and exit.",
+			Text:  "Document has unsaved changes - either save the changes or force-quit",
 		}).Mutate(state)
 		return
 	}

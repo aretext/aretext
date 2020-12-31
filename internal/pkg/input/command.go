@@ -1,7 +1,12 @@
 package input
 
 import (
+	"log"
+	"os"
+
+	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
 )
 
@@ -25,7 +30,11 @@ func commandMenuItems() []exec.MenuItem {
 		},
 		{
 			Name:   "force reload",
-			Action: exec.NewReloadDocumentMutator(true, true),
+			Action: exec.NewReloadDocumentMutator(true),
+		},
+		{
+			Name:   "find and open",
+			Action: exec.NewShowMenuMutator("file path", loadOpenMenuItems, true),
 		},
 		{
 			Name:   "set syntax json",
@@ -36,4 +45,22 @@ func commandMenuItems() []exec.MenuItem {
 			Action: exec.NewSetSyntaxMutator(syntax.LanguageUndefined),
 		},
 	}
+}
+
+func loadOpenMenuItems() []exec.MenuItem {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error loading menu items: %v\n", errors.Wrapf(err, "os.GetCwd"))
+		return nil
+	}
+
+	items := make([]exec.MenuItem, 0, 0)
+	file.Walk(dir, func(path string) {
+		items = append(items, exec.MenuItem{
+			Name:   file.RelativePathCwd(path),
+			Action: exec.NewLoadDocumentMutator(path, true),
+		})
+	})
+
+	return items
 }

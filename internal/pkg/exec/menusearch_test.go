@@ -9,16 +9,24 @@ import (
 
 func TestMenuSearch(t *testing.T) {
 	testCases := []struct {
-		name     string
-		query    string
-		items    []MenuItem
-		expected []MenuItem
+		name              string
+		query             string
+		items             []MenuItem
+		emptyQueryShowAll bool
+		expected          []MenuItem
 	}{
 		{
 			name:     "no items, empty query",
 			query:    "",
 			items:    []MenuItem{},
 			expected: []MenuItem{},
+		},
+		{
+			name:              "no items, empty query with emptyQueryShowAll true",
+			query:             "",
+			emptyQueryShowAll: true,
+			items:             []MenuItem{},
+			expected:          []MenuItem{},
 		},
 		{
 			name:     "no items, nonempty query",
@@ -35,6 +43,21 @@ func TestMenuSearch(t *testing.T) {
 				{Name: "c"},
 			},
 			expected: []MenuItem{},
+		},
+		{
+			name:              "some items, empty query with emptyQueryShowAll true",
+			query:             "",
+			emptyQueryShowAll: true,
+			items: []MenuItem{
+				{Name: "a"},
+				{Name: "b"},
+				{Name: "c"},
+			},
+			expected: []MenuItem{
+				{Name: "a"},
+				{Name: "b"},
+				{Name: "c"},
+			},
 		},
 		{
 			name:  "some items, prefix match first char",
@@ -206,7 +229,7 @@ func TestMenuSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &MenuSearch{}
+			s := &MenuSearch{emptyQueryShowAll: tc.emptyQueryShowAll}
 			s.SetQuery(tc.query)
 			s.AddItems(tc.items)
 			assert.Equal(t, tc.expected, s.Results())

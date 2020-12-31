@@ -22,9 +22,10 @@ type scoredItem struct {
 
 // MenuSearch performs approximate text searches for menu items matching a query string.
 type MenuSearch struct {
-	scoredItems []scoredItem
-	query       string
-	queryWords  []string
+	scoredItems       []scoredItem
+	query             string
+	queryWords        []string
+	emptyQueryShowAll bool
 }
 
 // Query returns the current query.
@@ -104,6 +105,13 @@ func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string
 	// It's okay to be greedy because we've defined the similarity score in terms
 	// of the number of word matches, ignoring the exact location of those matches in the candidate.
 	i, j, score := 0, 0, -1
+	if s.emptyQueryShowAll {
+		// We want the empty query to show every item, so set the default score to zero.
+		// This ensures that every item will be assigned a score of zero,
+		// and will be displayed in lexicographic order.
+		score = 0
+	}
+
 	for i < len(candidateWords) && j < len(queryWords) {
 		cw, qw := candidateWords[i], queryWords[j]
 		if strings.HasPrefix(cw, qw) {

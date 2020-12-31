@@ -88,7 +88,7 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 
 func (e *Editor) handleFileChanged() {
 	log.Printf("File change detected, reloading file...\n")
-	e.applyMutator(exec.NewReloadDocumentMutator(false, false))
+	e.applyMutator(exec.NewReloadDocumentMutator(false))
 }
 
 func (e *Editor) shutdown() {

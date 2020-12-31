@@ -38,7 +38,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 	// Load a new document.
 	path2, cleanup2 := createTestFile(t, "abcd")
 	defer cleanup2()
-	NewLoadDocumentMutator(path2, true, false).Mutate(state)
+	NewLoadDocumentMutator(path2, false).Mutate(state)
 	defer state.FileWatcher().Stop()
 
 	// Expect that the text and watcher are installed.
@@ -46,7 +46,7 @@ func TestLoadDocumentMutator(t *testing.T) {
 	assert.Equal(t, path2, state.FileWatcher().Path())
 }
 
-func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
+func TestLoadDocumentMutatorSameFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
@@ -60,17 +60,54 @@ func TestLoadDocumentMutatorMoveCursorOntoDocument(t *testing.T) {
 	NewScrollToCursorMutator().Mutate(state)
 	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
 
-	// Load a new document with a shorter text.
-	path2, cleanup2 := createTestFile(t, "ab")
-	defer cleanup2()
-	NewLoadDocumentMutator(path2, true, false).Mutate(state)
+	// Set the syntax.
+	NewSetSyntaxMutator(syntax.LanguageJson).Mutate(state)
+	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
+
+	// Update the file with shorter text and reload.
+	err = ioutil.WriteFile(path, []byte("ab"), 0644)
+	require.NoError(t, err)
+	NewReloadDocumentMutator(false).Mutate(state)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor moved back to the end of the text,
-	// and the view scrolled to make the cursor visible.
+	// the view scrolled to make the cursor visible,
+	// and the syntax language is preserved.
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
+	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
+}
+
+func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+	defer cleanup()
+	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	defer watcher.Stop()
+	require.NoError(t, err)
+	state := NewEditorState(5, 3, textTree, watcher)
+	state.documentBuffer.cursor.position = 22
+
+	// Scroll to cursor at end of document.
+	NewScrollToCursorMutator().Mutate(state)
+	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
+
+	// Set the syntax.
+	NewSetSyntaxMutator(syntax.LanguageJson).Mutate(state)
+	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
+
+	// Load a new document with a shorter text.
+	path2, cleanup2 := createTestFile(t, "ab")
+	defer cleanup2()
+	NewLoadDocumentMutator(path2, false).Mutate(state)
+	defer state.fileWatcher.Stop()
+
+	// Expect that the cursor, view, and syntax are reset.
+	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
+	assert.Equal(t, uint64(0), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
+	assert.Equal(t, syntax.LanguageUndefined, state.documentBuffer.syntaxLanguage)
 }
 
 func TestLoadDocumentMutatorShowStatus(t *testing.T) {
@@ -81,80 +118,19 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	state := NewEditorState(100, 100, textTree, watcher)
 
 	// Reload the document, expect success msg.
-	NewLoadDocumentMutator(path, true, true).Mutate(state)
+	NewLoadDocumentMutator(path, true).Mutate(state)
 	defer state.fileWatcher.Stop()
-	assert.Contains(t, state.statusMsg.Text, "Loaded changes")
+	assert.Contains(t, state.statusMsg.Text, "Opened")
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
 
 	// Delete the test file.
 	cleanup()
 
 	// Load a non-existent path, expect error msg.
-	NewLoadDocumentMutator(path, true, true).Mutate(state)
+	NewLoadDocumentMutator(path, true).Mutate(state)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Could not open")
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
-}
-
-func TestLoadDocumentMutatorUnsavedChanges(t *testing.T) {
-	testCases := []struct {
-		name              string
-		force             bool
-		hasUnsavedChanges bool
-		expectLoaded      bool
-	}{
-		{
-			name:         "no force, no unsaved changes",
-			expectLoaded: true,
-		},
-		{
-			name:         "force, no unsaved changes",
-			force:        true,
-			expectLoaded: true,
-		},
-		{
-			name:              "no force, unsaved changes",
-			hasUnsavedChanges: true,
-			expectLoaded:      false,
-		},
-		{
-			name:              "force, unsaved changes",
-			force:             true,
-			hasUnsavedChanges: true,
-			expectLoaded:      true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Load the initial document.
-			path, cleanup := createTestFile(t, "")
-			defer cleanup()
-			textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, watcher)
-
-			// Set whether there are unsaved changes.
-			if tc.hasUnsavedChanges {
-				NewInsertRuneMutator('x').Mutate(state)
-			}
-
-			// Attempt to load a different document.
-			path2, cleanup2 := createTestFile(t, "loaded")
-			defer cleanup2()
-			NewLoadDocumentMutator(path2, tc.force, true).Mutate(state)
-
-			if tc.expectLoaded {
-				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
-				assert.Contains(t, state.statusMsg.Text, "Loaded changes")
-				assert.Equal(t, "loaded", state.documentBuffer.textTree.String())
-			} else {
-				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
-				assert.Contains(t, state.statusMsg.Text, "Document has unsaved changes.")
-				assert.Equal(t, "x", state.documentBuffer.textTree.String())
-			}
-		})
-	}
 }
 
 func TestSaveDocumentMutator(t *testing.T) {
@@ -434,11 +410,10 @@ func TestScrollLinesMutator(t *testing.T) {
 func TestShowMenuMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	prompt := "test prompt"
-	items := []MenuItem{
+	mutator := NewShowMenuMutatorWithItems(prompt, []MenuItem{
 		{Name: "test item 1"},
 		{Name: "test item 2"},
-	}
-	mutator := NewShowMenuMutator(prompt, items)
+	}, false)
 	mutator.Mutate(state)
 	assert.True(t, state.Menu().Visible())
 	assert.Equal(t, prompt, state.Menu().Prompt())
@@ -452,7 +427,7 @@ func TestShowMenuMutator(t *testing.T) {
 func TestHideMenuMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutator("test prompt", []MenuItem{{Name: "test item"}}),
+		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false),
 		NewHideMenuMutator(),
 	})
 	mutator.Mutate(state)
@@ -476,7 +451,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 		},
 	}
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutator("test prompt", items),
+		NewShowMenuMutatorWithItems("test prompt", items, false),
 		NewAppendMenuSearchMutator('q'), // search for "q", should match "quit"
 		NewExecuteSelectedMenuItemMutator(),
 	})
@@ -567,7 +542,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			mutators := []Mutator{
-				NewShowMenuMutator("test", tc.items),
+				NewShowMenuMutatorWithItems("test", tc.items, false),
 				NewAppendMenuSearchMutator(tc.searchRune),
 			}
 			for _, delta := range tc.moveDeltas {
@@ -583,7 +558,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 func TestAppendMenuSearchMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutator("test", []MenuItem{}),
+		NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
 		NewAppendMenuSearchMutator('a'),
 		NewAppendMenuSearchMutator('b'),
 		NewAppendMenuSearchMutator('c'),
@@ -623,7 +598,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			mutators := []Mutator{
-				NewShowMenuMutator("test", []MenuItem{}),
+				NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
 			}
 			for _, r := range tc.searchQuery {
 				mutators = append(mutators, NewAppendMenuSearchMutator(r))

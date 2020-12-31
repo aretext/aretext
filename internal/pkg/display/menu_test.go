@@ -8,8 +8,6 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
-// DrawMenu(screen, menu)
-
 func TestDrawMenu(t *testing.T) {
 	testCases := []struct {
 		name             string
@@ -34,7 +32,7 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, initial state with prompt",
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil, nil)
-				mutator := exec.NewShowMenuMutator("test", nil)
+				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false)
 				mutator.Mutate(state)
 				return state.Menu()
 			},
@@ -52,7 +50,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutator("test", nil),
+					exec.NewShowMenuMutatorWithItems("test", nil, false),
 					exec.NewAppendMenuSearchMutator('a'),
 					exec.NewAppendMenuSearchMutator('b'),
 					exec.NewAppendMenuSearchMutator('c'),
@@ -74,11 +72,11 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutator("test", []exec.MenuItem{
+					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test first"},
 						{Name: "test second"},
 						{Name: "test third"},
-					}),
+					}, false),
 					exec.NewAppendMenuSearchMutator('t'),
 				})
 				mutator.Mutate(state)
@@ -98,7 +96,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutator("test", []exec.MenuItem{
+					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test 1"},
 						{Name: "test 2"},
 						{Name: "test 3"},
@@ -108,7 +106,7 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test 7"},
 						{Name: "test 8"},
 						{Name: "test 9"},
-					}),
+					}, false),
 					exec.NewAppendMenuSearchMutator('t'),
 					exec.NewMoveMenuSelectionMutator(-2),
 				})

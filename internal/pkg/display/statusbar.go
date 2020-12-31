@@ -3,6 +3,7 @@ package display
 import (
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/wedaly/aretext/internal/pkg/file"
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.
@@ -28,7 +29,8 @@ func statusBarContent(statusMsg exec.StatusMsg, inputMode exec.InputMode, filePa
 	case exec.InputModeInsert:
 		return "-- INSERT --", tcell.StyleDefault.Bold(true)
 	default:
-		return filePath, tcell.StyleDefault
+		relPath := file.RelativePathCwd(filePath)
+		return relPath, tcell.StyleDefault
 	}
 }
 

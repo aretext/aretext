@@ -11,6 +11,7 @@ import (
 // EditorState represents the current state of the editor.
 type EditorState struct {
 	screenWidth, screenHeight uint64
+	inputMode                 InputMode
 	documentBuffer            *BufferState
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
@@ -44,6 +45,10 @@ func (s *EditorState) SetScreenSize(width, height uint64) {
 	s.screenHeight = height
 }
 
+func (s *EditorState) InputMode() InputMode {
+	return s.inputMode
+}
+
 func (s *EditorState) DocumentBuffer() *BufferState {
 	return s.documentBuffer
 }
@@ -62,6 +67,28 @@ func (s *EditorState) FileWatcher() *file.Watcher {
 
 func (s *EditorState) QuitFlag() bool {
 	return s.quitFlag
+}
+
+// InputMode controls how the editor interprets input events.
+type InputMode int
+
+const (
+	InputModeNormal = InputMode(iota)
+	InputModeInsert
+	InputModeMenu
+)
+
+func (im InputMode) String() string {
+	switch im {
+	case InputModeNormal:
+		return "normal"
+	case InputModeInsert:
+		return "insert"
+	case InputModeMenu:
+		return "menu"
+	default:
+		panic("invalid input mode")
+	}
 }
 
 // BufferState represents the current state of a text buffer.

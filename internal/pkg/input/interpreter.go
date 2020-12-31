@@ -1,24 +1,24 @@
 package input
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
 // Interpreter translates key events to commands.
 type Interpreter struct {
-	currentMode ModeType
-	modes       map[ModeType]Mode
+	modes map[exec.InputMode]Mode
 }
 
 // NewInterpreter creates a new interpreter.
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		currentMode: ModeTypeNormal,
-		modes: map[ModeType]Mode{
-			ModeTypeNormal: newNormalMode(),
-			ModeTypeInsert: newInsertMode(),
-			ModeTypeMenu:   newMenuMode(),
+		modes: map[exec.InputMode]Mode{
+			exec.InputModeNormal: newNormalMode(),
+			exec.InputModeInsert: newInsertMode(),
+			exec.InputModeMenu:   newMenuMode(),
 		},
 	}
 }
@@ -36,19 +36,14 @@ func (inp *Interpreter) ProcessEvent(event tcell.Event, config Config) exec.Muta
 	}
 }
 
-// Mode returns the current input mode of the interpreter.
-func (inp *Interpreter) Mode() ModeType {
-	return inp.currentMode
-}
-
 func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
-	mode := inp.modes[inp.currentMode]
-	mutator, nextMode := mode.ProcessKeyEvent(event, config)
-	inp.currentMode = nextMode
-	return mutator
+	log.Printf("Processing key in mode %s\n", config.InputMode)
+	mode := inp.modes[config.InputMode]
+	return mode.ProcessKeyEvent(event, config)
 }
 
 func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) exec.Mutator {
+	log.Printf("Processing resize event\n")
 	width, height := event.Size()
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewResizeMutator(uint64(width), uint64(height)),

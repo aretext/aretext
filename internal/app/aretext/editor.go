@@ -43,7 +43,7 @@ func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	display.DrawEditor(e.screen, e.state, e.inputInterpreter.Mode())
+	display.DrawEditor(e.screen, e.state)
 	e.screen.Sync()
 
 	go e.pollTermEvents()
@@ -99,6 +99,7 @@ func (e *Editor) inputConfig() input.Config {
 	_, screenHeight := e.screen.Size()
 	scrollLines := uint64(screenHeight) / 2
 	return input.Config{
+		InputMode:   e.state.InputMode(),
 		ScrollLines: scrollLines,
 	}
 }
@@ -114,7 +115,7 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 }
 
 func (e *Editor) redraw() {
-	display.DrawEditor(e.screen, e.state, e.inputInterpreter.Mode())
+	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
 }
 

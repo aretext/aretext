@@ -183,6 +183,23 @@ func (sdm *saveDocumentMutator) String() string {
 	return fmt.Sprintf("SaveDocument(force=%t)", sdm.force)
 }
 
+type setInputModeMutator struct {
+	mode InputMode
+}
+
+func NewSetInputModeMutator(mode InputMode) Mutator {
+	return &setInputModeMutator{mode}
+}
+
+// Mutate sets the editor input mode.
+func (sim *setInputModeMutator) Mutate(state *EditorState) {
+	state.inputMode = sim.mode
+}
+
+func (sim *setInputModeMutator) String() string {
+	return fmt.Sprintf("SetInputMode(%s)", sim.mode)
+}
+
 type cursorMutator struct {
 	loc CursorLocator
 }
@@ -402,6 +419,7 @@ func (smm *showMenuMutator) Mutate(state *EditorState) {
 		search:            search,
 		selectedResultIdx: 0,
 	}
+	state.inputMode = InputModeMenu
 }
 
 func (smm *showMenuMutator) String() string {
@@ -417,6 +435,7 @@ func NewHideMenuMutator() Mutator {
 // Mutate hides the menu.
 func (hmm *hideMenuMutator) Mutate(state *EditorState) {
 	state.menu = &MenuState{}
+	state.inputMode = InputModeNormal
 }
 
 func (hmm *hideMenuMutator) String() string {
@@ -443,8 +462,9 @@ func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
 	selectedItem := results[idx]
 	log.Printf("Executing menu item %s at result index %d\n", selectedItem, idx)
 	NewCompositeMutator([]Mutator{
-		selectedItem.Action,
+		// Perform the action after hiding the menu in case the action so the action can show another menu.
 		NewHideMenuMutator(),
+		selectedItem.Action,
 	}).Mutate(state)
 }
 

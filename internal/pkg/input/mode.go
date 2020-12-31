@@ -11,20 +11,11 @@ import (
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
-type ModeType int
-
-const (
-	ModeTypeNormal = ModeType(iota)
-	ModeTypeInsert
-	ModeTypeMenu
-)
-
 // Mode represents an input mode, which is a way of interpreting key events.
 type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
 	// It will return any user-initiated mutator resulting from the keypress
-	// as well as the next input mode (which could be the same as the current mode).
-	ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType)
+	ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator
 }
 
 // normalMode is used for navigating text.
@@ -38,78 +29,77 @@ func newNormalMode() Mode {
 	}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
-	mutator, nextMode := m.processKeyEvent(event, config)
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+	mutator := m.processKeyEvent(event, config)
 	if mutator != nil {
 		m.buffer = m.buffer[:0]
 	}
-
-	return appendScrollToCursor(mutator), nextMode
+	return appendScrollToCursor(mutator)
 }
 
-func (m *normalMode) processKeyEvent(event *tcell.EventKey, config Config) (mutator exec.Mutator, mode ModeType) {
+func (m *normalMode) processKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
 	if event.Key() == tcell.KeyRune {
 		return m.processRuneKey(event.Rune())
 	}
 	return m.processSpecialKey(event.Key(), config)
 }
 
-func (m *normalMode) processSpecialKey(key tcell.Key, config Config) (exec.Mutator, ModeType) {
+func (m *normalMode) processSpecialKey(key tcell.Key, config Config) exec.Mutator {
 	switch key {
 	case tcell.KeyLeft:
-		return m.cursorLeft(), ModeTypeNormal
+		return m.cursorLeft()
 	case tcell.KeyRight:
-		return m.cursorRight(false), ModeTypeNormal
+		return m.cursorRight(false)
 	case tcell.KeyUp:
-		return m.cursorUp(), ModeTypeNormal
+		return m.cursorUp()
 	case tcell.KeyDown:
-		return m.cursorDown(), ModeTypeNormal
+		return m.cursorDown()
 	case tcell.KeyCtrlU:
-		return m.scrollUp(config.ScrollLines), ModeTypeNormal
+		return m.scrollUp(config.ScrollLines)
 	case tcell.KeyCtrlD:
-		return m.scrollDown(config.ScrollLines), ModeTypeNormal
+		return m.scrollDown(config.ScrollLines)
 	default:
-		return nil, ModeTypeNormal
+		return nil
 	}
 }
 
-func (m *normalMode) processRuneKey(r rune) (exec.Mutator, ModeType) {
+func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 	m.buffer = append(m.buffer, r)
 	count, cmd := m.parseSequence(m.buffer)
 
 	switch cmd {
 	case ":":
-		return thenClearStatusMsg(m.showCommandMenu()), ModeTypeMenu
+		return m.showCommandMenu()
 	case "h":
-		return m.cursorLeft(), ModeTypeNormal
+		return m.cursorLeft()
 	case "l":
-		return m.cursorRight(false), ModeTypeNormal
+		return m.cursorRight(false)
 	case "k":
-		return m.cursorUp(), ModeTypeNormal
+		return m.cursorUp()
 	case "j":
-		return m.cursorDown(), ModeTypeNormal
+		return m.cursorDown()
 	case "x":
-		return m.deleteNextChar(), ModeTypeNormal
+		return m.deleteNextChar()
 	case "0":
-		return m.cursorLineStart(), ModeTypeNormal
+		return m.cursorLineStart()
 	case "^":
-		return m.cursorLineStartNonWhitespace(), ModeTypeNormal
+		return m.cursorLineStartNonWhitespace()
 	case "$":
-		return m.cursorLineEnd(false), ModeTypeNormal
+		return m.cursorLineEnd(false)
 	case "gg":
-		return m.cursorStartOfLineNum(count), ModeTypeNormal
+		return m.cursorStartOfLineNum(count)
 	case "G":
-		return m.cursorStartOfLastLine(), ModeTypeNormal
+		return m.cursorStartOfLastLine()
 	case "i":
-		return thenClearStatusMsg(nil), ModeTypeInsert
+		return m.enterInsertMode()
 	case "I":
-		return thenClearStatusMsg(m.cursorLineStartNonWhitespace()), ModeTypeInsert
+		return m.enterInsertModeAtStartOfLine()
 	case "a":
-		return thenClearStatusMsg(m.cursorRight(true)), ModeTypeInsert
+		return m.enterInsertModeAtNextPos()
 	case "A":
-		return thenClearStatusMsg(m.cursorLineEnd(true)), ModeTypeInsert
+		return m.enterInsertModeAtEndOfLine()
 	default:
-		return nil, ModeTypeNormal
+		return nil
 	}
 }
 
@@ -135,7 +125,11 @@ func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 }
 
 func (m *normalMode) showCommandMenu() exec.Mutator {
-	return exec.NewShowMenuMutator("command", commandMenuItems())
+	// The show menu mutator sets the input mode to menu.
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewShowMenuMutator("command", commandMenuItems()),
+	})
 }
 
 func (m *normalMode) cursorLeft() exec.Mutator {
@@ -237,13 +231,35 @@ func (m *normalMode) deleteNextChar() exec.Mutator {
 	})
 }
 
-// thenClearStatusMsg appends a mutator to clear the status message.
-func thenClearStatusMsg(mutator exec.Mutator) exec.Mutator {
-	clearStatusMutator := exec.NewSetStatusMsgMutator(exec.StatusMsg{})
-	if mutator == nil {
-		return clearStatusMutator
-	}
-	return exec.NewCompositeMutator([]exec.Mutator{mutator, clearStatusMutator})
+func (m *normalMode) enterInsertMode() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
+	})
+}
+
+func (m *normalMode) enterInsertModeAtStartOfLine() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
+		m.cursorLineStartNonWhitespace(),
+	})
+}
+
+func (m *normalMode) enterInsertModeAtNextPos() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
+		m.cursorRight(true),
+	})
+}
+
+func (m *normalMode) enterInsertModeAtEndOfLine() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
+		m.cursorLineEnd(true),
+	})
 }
 
 // insertMode is used for inserting characters into text.
@@ -253,23 +269,23 @@ func newInsertMode() Mode {
 	return &insertMode{}
 }
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
-	mutator, nextMode := m.processKeyEvent(event)
-	return appendScrollToCursor(mutator), nextMode
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+	mutator := m.processKeyEvent(event)
+	return appendScrollToCursor(mutator)
 }
 
-func (m *insertMode) processKeyEvent(event *tcell.EventKey) (exec.Mutator, ModeType) {
+func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
 	switch event.Key() {
 	case tcell.KeyRune:
-		return m.insert(event.Rune()), ModeTypeInsert
+		return m.insert(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return m.deletePrevChar(), ModeTypeInsert
+		return m.deletePrevChar()
 	case tcell.KeyEnter:
-		return m.insert('\n'), ModeTypeInsert
+		return m.insert('\n')
 	case tcell.KeyTab:
-		return m.insert('\t'), ModeTypeInsert
+		return m.insert('\t')
 	default:
-		return m.moveCursorOntoLine(), ModeTypeNormal
+		return m.returnToNormalMode()
 	}
 }
 
@@ -280,11 +296,6 @@ func (m *insertMode) insert(r rune) exec.Mutator {
 func (m *insertMode) deletePrevChar() exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
 	return exec.NewDeleteMutator(loc)
-}
-
-func (m *insertMode) moveCursorOntoLine() exec.Mutator {
-	loc := exec.NewOntoLineLocator()
-	return exec.NewCursorMutator(loc)
 }
 
 // appendScrollToCursor appends a mutator to scroll the view so the cursor is visible.
@@ -299,6 +310,14 @@ func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
 	})
 }
 
+func (m *insertMode) returnToNormalMode() exec.Mutator {
+	loc := exec.NewOntoLineLocator()
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(loc),
+		exec.NewSetInputModeMutator(exec.InputModeNormal),
+	})
+}
+
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
@@ -306,32 +325,35 @@ func newMenuMode() Mode {
 	return &menuMode{}
 }
 
-func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) (exec.Mutator, ModeType) {
+func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
 	switch event.Key() {
 	case tcell.KeyEscape:
-		return m.closeMenu(), ModeTypeNormal
+		return m.closeMenu()
 	case tcell.KeyEnter:
-		return m.executeSelectedMenuItem(), ModeTypeNormal
+		return m.executeSelectedMenuItem()
 	case tcell.KeyUp:
-		return m.menuSelectionUp(), ModeTypeMenu
+		return m.menuSelectionUp()
 	case tcell.KeyDown:
-		return m.menuSelectionDown(), ModeTypeMenu
+		return m.menuSelectionDown()
 	case tcell.KeyTab:
-		return m.menuSelectionDown(), ModeTypeMenu
+		return m.menuSelectionDown()
 	case tcell.KeyRune:
-		return m.appendMenuSearch(event.Rune()), ModeTypeMenu
+		return m.appendMenuSearch(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return m.deleteMenuSearch(), ModeTypeMenu
+		return m.deleteMenuSearch()
 	default:
-		return nil, ModeTypeMenu
+		return nil
 	}
 }
 
 func (m *menuMode) closeMenu() exec.Mutator {
+	// Returns to normal mode.
 	return exec.NewHideMenuMutator()
 }
 
 func (m *menuMode) executeSelectedMenuItem() exec.Mutator {
+	// Hides the menu, then executes the menu item action.
+	// This usually returns to normal mode, unless the menu item action sets a different mode.
 	return exec.NewExecuteSelectedMenuItemMutator()
 }
 

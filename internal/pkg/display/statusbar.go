@@ -3,11 +3,10 @@ package display
 import (
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/input"
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.
-func DrawStatusBar(screen tcell.Screen, statusMsg exec.StatusMsg, inputMode input.ModeType, filePath string) {
+func DrawStatusBar(screen tcell.Screen, statusMsg exec.StatusMsg, inputMode exec.InputMode, filePath string) {
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 {
 		return
@@ -20,13 +19,13 @@ func DrawStatusBar(screen tcell.Screen, statusMsg exec.StatusMsg, inputMode inpu
 	drawStringNoWrap(sr, text, 0, 0, style)
 }
 
-func statusBarContent(statusMsg exec.StatusMsg, inputMode input.ModeType, filePath string) (string, tcell.Style) {
+func statusBarContent(statusMsg exec.StatusMsg, inputMode exec.InputMode, filePath string) (string, tcell.Style) {
 	if len(statusMsg.Text) > 0 {
 		return statusMsg.Text, styleForStatusMsg(statusMsg)
 	}
 
 	switch inputMode {
-	case input.ModeTypeInsert:
+	case exec.InputModeInsert:
 		return "-- INSERT --", tcell.StyleDefault.Bold(true)
 	default:
 		return filePath, tcell.StyleDefault

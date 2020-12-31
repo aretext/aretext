@@ -5,20 +5,19 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/input"
 )
 
 func TestDrawStatusBar(t *testing.T) {
 	testCases := []struct {
 		name             string
 		statusMsg        exec.StatusMsg
-		inputMode        input.ModeType
+		inputMode        exec.InputMode
 		filePath         string
 		expectedContents [][]rune
 	}{
 		{
 			name:      "normal mode shows file path",
-			inputMode: input.ModeTypeNormal,
+			inputMode: exec.InputModeNormal,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -27,7 +26,7 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name:      "insert mode shows INSERT",
-			inputMode: input.ModeTypeInsert,
+			inputMode: exec.InputModeInsert,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -36,7 +35,7 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name:      "menu mode shows file path",
-			inputMode: input.ModeTypeMenu,
+			inputMode: exec.InputModeMenu,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},

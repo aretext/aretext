@@ -44,6 +44,37 @@ func (cm *CompositeMutator) String() string {
 	return fmt.Sprintf("Composite(%s)", strings.Join(args, ","))
 }
 
+type abortIfUnsavedChangesMutator struct {
+	subMutator Mutator
+	showStatus bool
+}
+
+func NewAbortIfUnsavedChangesMutator(subMutator Mutator, showStatus bool) Mutator {
+	return &abortIfUnsavedChangesMutator{subMutator, showStatus}
+}
+
+// Mutate executes a sub-mutator only if the document does not have unsaved changes.
+func (am *abortIfUnsavedChangesMutator) Mutate(state *EditorState) {
+	if state.hasUnsavedChanges {
+		log.Printf("Aborting mutator %s because document has unsaved changes", am.subMutator)
+
+		if am.showStatus {
+			NewSetStatusMsgMutator(StatusMsg{
+				Style: StatusMsgStyleError,
+				Text:  "Document has unsaved changes - either save the changes or force-quit",
+			}).Mutate(state)
+		}
+
+		return
+	}
+
+	am.subMutator.Mutate(state)
+}
+
+func (am *abortIfUnsavedChangesMutator) String() string {
+	return fmt.Sprintf("AbortIfUnsavedChanges(%s, showStatus=%t)", am.subMutator, am.showStatus)
+}
+
 type loadDocumentMutator struct {
 	path       string
 	showStatus bool
@@ -560,27 +591,17 @@ func (smm *setStatusMsgMutator) String() string {
 	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
 }
 
-type quitMutator struct {
-	force bool
-}
+type quitMutator struct{}
 
-func NewQuitMutator(force bool) Mutator {
-	return &quitMutator{force}
+func NewQuitMutator() Mutator {
+	return &quitMutator{}
 }
 
 func (qm *quitMutator) Mutate(state *EditorState) {
-	if state.hasUnsavedChanges && !qm.force {
-		NewSetStatusMsgMutator(StatusMsg{
-			Style: StatusMsgStyleError,
-			Text:  "Document has unsaved changes - either save the changes or force-quit",
-		}).Mutate(state)
-		return
-	}
-
 	state.fileWatcher.Stop()
 	state.quitFlag = true
 }
 
 func (qm *quitMutator) String() string {
-	return fmt.Sprintf("Quit(force=%t)", qm.force)
+	return fmt.Sprintf("Quit()")
 }

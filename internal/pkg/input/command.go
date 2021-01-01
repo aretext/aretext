@@ -11,14 +11,15 @@ import (
 )
 
 func commandMenuItems() []exec.MenuItem {
+	const showStatus = true
 	return []exec.MenuItem{
 		{
 			Name:   "quit",
-			Action: exec.NewQuitMutator(false),
+			Action: exec.NewAbortIfUnsavedChangesMutator(exec.NewQuitMutator(), showStatus),
 		},
 		{
 			Name:   "force quit",
-			Action: exec.NewQuitMutator(true),
+			Action: exec.NewQuitMutator(),
 		},
 		{
 			Name:   "save",
@@ -33,8 +34,11 @@ func commandMenuItems() []exec.MenuItem {
 			Action: exec.NewReloadDocumentMutator(true),
 		},
 		{
-			Name:   "find and open",
-			Action: exec.NewShowMenuMutator("file path", loadOpenMenuItems, true),
+			Name: "find and open",
+			Action: exec.NewAbortIfUnsavedChangesMutator(
+				exec.NewShowMenuMutator("file path", loadOpenMenuItems, true),
+				showStatus,
+			),
 		},
 		{
 			Name:   "set syntax json",

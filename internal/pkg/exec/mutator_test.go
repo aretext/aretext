@@ -447,7 +447,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 		},
 		{
 			Name:   "quit",
-			Action: NewQuitMutator(true),
+			Action: NewQuitMutator(),
 		},
 	}
 	mutator := NewCompositeMutator([]Mutator{
@@ -648,7 +648,13 @@ func TestQuitMutator(t *testing.T) {
 			defer watcher.Stop()
 			state := NewEditorState(100, 100, textTree, watcher)
 			state.hasUnsavedChanges = tc.hasUnsavedChanges
-			NewQuitMutator(tc.force).Mutate(state)
+
+			mutator := NewQuitMutator()
+			if !tc.force {
+				mutator = NewAbortIfUnsavedChangesMutator(mutator, true)
+			}
+
+			mutator.Mutate(state)
 			assert.Equal(t, tc.expectQuitFlag, state.QuitFlag())
 			if !tc.expectQuitFlag {
 				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)

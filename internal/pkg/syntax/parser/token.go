@@ -11,6 +11,7 @@ const (
 	TokenRoleIdentifier
 	TokenRoleNumber
 	TokenRoleString
+	TokenRoleKey
 	TokenRoleComment
 )
 

@@ -20,6 +20,10 @@ func init() {
 			Regexp:    `"([^\"\n]|\\")*"`,
 			TokenRole: parser.TokenRoleString,
 		},
+		{
+			Regexp:    `"([^\"\n]|\\")*"[ \t]*:`,
+			TokenRole: parser.TokenRoleKey,
+		},
 
 		// This prevents the number and keyword rules from matching substrings of a symbol.
 		{

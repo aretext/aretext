@@ -3,6 +3,7 @@ package file
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
@@ -12,6 +13,11 @@ import (
 // Load reads a file from disk and starts a watcher to detect changes.
 // This will remove the POSIX end-of-file indicator (line feed at end of file).
 func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "filepath.Abs()")
+	}
+
 	f, err := os.Open(path)
 	if err != nil {
 		// Return the error directly so callers can use os.IsNotExist(err) to check if the file exists.

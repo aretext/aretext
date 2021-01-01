@@ -23,10 +23,10 @@ Design principles:
 - [x] soft-wrap long lines
 - [x] automatic reload when file changes on disk
 - [x] syntax highlighting
-- [ ] command menu with fuzzy search
-- [ ] save changes
-- [ ] close and open new document
-- [ ] grep -> fuzzy-searchable menu
+- [x] command menu with fuzzy search
+- [x] save changes
+- [x] close and open new document
+- [ ] custom menu items that invoke external programs
 - [ ] undo/redo
 - [ ] line numbers
 - [ ] copy/paste using system clipboard integration
@@ -42,6 +42,7 @@ Design principles:
 ### Beyond 1.0
 
 - [ ] autoindent
+- [ ] match parens
 - [ ] repeat last action ('.')
 - [ ] vim repeat commands ('10x')
 - [ ] jump to definition (without an index)

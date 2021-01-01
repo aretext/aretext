@@ -33,7 +33,7 @@ func generateTokenizer(tokenizerName string, tokenizerRules []parser.TokenizerRu
 func writeTokenizer(tokenizer *parser.Tokenizer, tokenizerName string, outputPath string) error {
 	f, err := os.Create(outputPath)
 	if err != nil {
-		return errors.Wrapf(err, "os.Create()")
+		return errors.Wrapf(err, "os.Create")
 	}
 	defer f.Close()
 
@@ -66,7 +66,7 @@ func init() {
 
 	tmpl, err := template.New("tokenizer").Parse(tmplStr)
 	if err != nil {
-		return errors.Wrapf(err, "template.New()")
+		return errors.Wrapf(err, "template.New")
 	}
 
 	return tmpl.Execute(f, map[string]interface{}{

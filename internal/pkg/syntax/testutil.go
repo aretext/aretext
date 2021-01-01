@@ -25,7 +25,7 @@ func ParseTokensWithText(language Language, s string) ([]TokenWithText, error) {
 	textLen := uint64(len(s))
 	tokenTree, err := tokenizer.TokenizeAll(r, textLen)
 	if err != nil {
-		return nil, errors.Wrapf(err, "TokenizeAll()")
+		return nil, errors.Wrapf(err, "TokenizeAll")
 	}
 
 	tokens := tokenTree.IterFromPosition(0).Collect()

@@ -123,13 +123,13 @@ func (w *Watcher) checkFileChanged() bool {
 func (w *Watcher) calculateChecksum() (string, error) {
 	f, err := os.Open(w.path)
 	if err != nil {
-		return "", errors.Wrapf(err, "os.Open()")
+		return "", errors.Wrapf(err, "os.Open")
 	}
 	defer f.Close()
 
 	checksummer := NewChecksummer()
 	if _, err := io.Copy(checksummer, f); err != nil {
-		return "", errors.Wrapf(err, "io.Copy()")
+		return "", errors.Wrapf(err, "io.Copy")
 	}
 
 	return checksummer.Checksum(), nil

@@ -178,7 +178,7 @@ func (s *BufferState) retokenizeAfterEdit(edit parser.Edit) error {
 	}
 	updatedTokenTree, err := s.tokenizer.RetokenizeAfterEdit(s.tokenTree, edit, textLen, readerAtPos)
 	if err != nil {
-		return errors.Wrapf(err, "RetokenizeAfterEdit()")
+		return errors.Wrapf(err, "RetokenizeAfterEdit")
 	}
 
 	s.tokenTree = updatedTokenTree

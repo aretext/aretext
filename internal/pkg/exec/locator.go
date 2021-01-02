@@ -16,6 +16,21 @@ type CursorLocator interface {
 	Locate(state *BufferState) cursorState
 }
 
+type currentCursorLocator struct{}
+
+// NewCurrentCursorLocator locates the current cursor position.
+func NewCurrentCursorLocator() CursorLocator {
+	return &currentCursorLocator{}
+}
+
+func (loc *currentCursorLocator) Locate(state *BufferState) cursorState {
+	return state.cursor
+}
+
+func (loc *currentCursorLocator) String() string {
+	return "CurrentCursorLocator()"
+}
+
 // charInLineLocator locates a character (grapheme cluster) in the current line.
 type charInLineLocator struct {
 	direction              text.ReadDirection
@@ -436,20 +451,23 @@ func (loc *lineBoundaryLocator) Locate(state *BufferState) cursorState {
 	return cursorState{position: newPosition}
 }
 
-// nonWhitespaceOrNewlineLocator finds the next non-whitespace character or newline on or after the cursor.
-type nonWhitespaceOrNewlineLocator struct{}
+// nonWhitespaceOrNewlineLocator finds the next non-whitespace character or newline on or after a locator position.
+type nonWhitespaceOrNewlineLocator struct {
+	childLocator CursorLocator
+}
 
-func NewNonWhitespaceOrNewlineLocator() CursorLocator {
-	return &nonWhitespaceOrNewlineLocator{}
+func NewNonWhitespaceOrNewlineLocator(childLocator CursorLocator) CursorLocator {
+	return &nonWhitespaceOrNewlineLocator{childLocator}
 }
 
 func (loc *nonWhitespaceOrNewlineLocator) String() string {
-	return "NonWhitespaceOrNewlineLocator()"
+	return fmt.Sprintf("NonWhitespaceOrNewlineLocator(%s)", loc.childLocator)
 }
 
 // Locate finds the nearest non-whitespace character or newline on or after the cursor.
 func (loc *nonWhitespaceOrNewlineLocator) Locate(state *BufferState) cursorState {
-	segmentIter := gcIterForTree(state.textTree, state.cursor.position, text.ReadDirectionForward)
+	startPos := loc.childLocator.Locate(state).position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var offset uint64
 
@@ -462,7 +480,7 @@ func (loc *nonWhitespaceOrNewlineLocator) Locate(state *BufferState) cursorState
 		offset += seg.NumRunes()
 	}
 
-	newPosition := state.cursor.position + offset
+	newPosition := startPos + offset
 	if newPosition == state.cursor.position {
 		return state.cursor
 	}

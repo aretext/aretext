@@ -936,7 +936,7 @@ func TestNonWhitespaceOrNewlineLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			loc := NewNonWhitespaceOrNewlineLocator()
+			loc := NewNonWhitespaceOrNewlineLocator(NewCurrentCursorLocator())
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
 		})

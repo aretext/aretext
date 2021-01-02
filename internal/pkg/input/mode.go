@@ -191,11 +191,8 @@ func (m *normalMode) cursorLineStart() exec.Mutator {
 
 func (m *normalMode) cursorLineStartNonWhitespace() exec.Mutator {
 	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(lineStartLoc),
-		exec.NewCursorMutator(firstNonWhitespaceLoc),
-	})
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineStartLoc)
+	return exec.NewCursorMutator(firstNonWhitespaceLoc)
 }
 
 func (m *normalMode) cursorLineEnd(includeEndOfLineOrFile bool) exec.Mutator {
@@ -211,20 +208,14 @@ func (m *normalMode) cursorStartOfLineNum(count uint64) exec.Mutator {
 	}
 
 	lineNumLoc := exec.NewLineNumLocator(lineNum)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(lineNumLoc),
-		exec.NewCursorMutator(firstNonWhitespaceLoc),
-	})
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineNumLoc)
+	return exec.NewCursorMutator(firstNonWhitespaceLoc)
 }
 
 func (m *normalMode) cursorStartOfLastLine() exec.Mutator {
 	lastLineLoc := exec.NewLastLineLocator()
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator()
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(lastLineLoc),
-		exec.NewCursorMutator(firstNonWhitespaceLoc),
-	})
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lastLineLoc)
+	return exec.NewCursorMutator(firstNonWhitespaceLoc)
 }
 
 func (m *normalMode) deleteNextChar() exec.Mutator {

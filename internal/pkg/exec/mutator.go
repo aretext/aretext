@@ -487,7 +487,13 @@ func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
 	results := search.Results()
 	if len(results) == 0 {
 		// If there are no results, then there is no action to perform.
-		NewHideMenuMutator().Mutate(state)
+		NewCompositeMutator([]Mutator{
+			NewSetStatusMsgMutator(StatusMsg{
+				Style: StatusMsgStyleError,
+				Text:  "No menu item selected",
+			}),
+			NewHideMenuMutator(),
+		}).Mutate(state)
 		return
 	}
 

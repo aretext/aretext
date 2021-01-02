@@ -11,11 +11,10 @@ import (
 )
 
 func commandMenuItems() []exec.MenuItem {
-	const showStatus = true
 	return []exec.MenuItem{
 		{
 			Name:   "quit",
-			Action: exec.NewAbortIfUnsavedChangesMutator(exec.NewQuitMutator(), showStatus),
+			Action: exec.NewAbortIfUnsavedChangesMutator(exec.NewQuitMutator(), true),
 		},
 		{
 			Name:   "force quit",
@@ -34,11 +33,8 @@ func commandMenuItems() []exec.MenuItem {
 			Action: exec.NewReloadDocumentMutator(true),
 		},
 		{
-			Name: "find and open",
-			Action: exec.NewAbortIfUnsavedChangesMutator(
-				exec.NewShowMenuMutator("file path", loadOpenMenuItems, true),
-				showStatus,
-			),
+			Name:   "find and open",
+			Action: exec.NewAbortIfUnsavedChangesMutator(ShowFileMenuMutator(), true),
 		},
 		{
 			Name:   "set syntax json",
@@ -51,7 +47,11 @@ func commandMenuItems() []exec.MenuItem {
 	}
 }
 
-func loadOpenMenuItems() []exec.MenuItem {
+func ShowFileMenuMutator() exec.Mutator {
+	return exec.NewShowMenuMutator("file path", findFileMenuItems, true)
+}
+
+func findFileMenuItems() []exec.MenuItem {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error loading menu items: %v\n", errors.Wrapf(err, "os.GetCwd"))

@@ -2,6 +2,7 @@ package aretext
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -25,12 +26,9 @@ type Editor struct {
 
 // NewEditor instantiates a new editor that uses the provided screen.
 func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
-	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if os.IsNotExist(err) {
-		tree = text.NewTree()
-		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
-	} else if err != nil {
-		return nil, errors.Wrapf(err, "loading file at %s", path)
+	tree, watcher, err := initDocument(path)
+	if err != nil {
+		return nil, err
 	}
 
 	screenWidth, screenHeight := screen.Size()
@@ -38,6 +36,13 @@ func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 	editor := &Editor{inputInterpreter, state, screen, termEventChan}
+
+	if path == "" {
+		// If the user didn't specify a path, automatically open the "find files" menu
+		// so they can search for a file to open.
+		editor.applyMutator(input.ShowFileMenuMutator())
+	}
+
 	return editor, nil
 }
 
@@ -122,6 +127,29 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
+}
+
+func initDocument(path string) (*text.Tree, *file.Watcher, error) {
+	if path == "" {
+		// If no path is specified, open a temporary file.
+		// The user can use this as a scratchpad or open another file.
+		f, err := ioutil.TempFile("", "untitled-")
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "ioutil.TempFile")
+		}
+		path = f.Name()
+		f.Close()
+	}
+
+	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	if os.IsNotExist(err) {
+		tree = text.NewTree()
+		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
+	} else if err != nil {
+		return nil, nil, errors.Wrapf(err, "loading file at %s", path)
+	}
+
+	return tree, watcher, nil
 }
 
 func describeTermEvent(event tcell.Event) string {

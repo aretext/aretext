@@ -19,11 +19,6 @@ func main() {
 	flag.Usage = printUsage
 	flag.Parse()
 
-	if flag.NArg() < 1 {
-		printUsage()
-		return
-	}
-
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
 	if *logpath != "" {
 		logFile, err := os.Create(*logpath)
@@ -54,7 +49,7 @@ func main() {
 
 func printUsage() {
 	f := flag.CommandLine.Output()
-	fmt.Fprintf(f, "Usage: %s [OPTIONS] path\n", os.Args[0])
+	fmt.Fprintf(f, "Usage: %s [options...] [path]\n", os.Args[0])
 	flag.PrintDefaults()
 }
 

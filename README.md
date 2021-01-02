@@ -26,11 +26,11 @@ Design principles:
 - [x] command menu with fuzzy search
 - [x] save changes
 - [x] close and open new document
+- [x] vim newline command ('o')
 - [ ] custom menu items that invoke external programs
 - [ ] undo/redo
 - [ ] line numbers
 - [ ] copy/paste using system clipboard integration
-- [ ] vim newline command ('o')
 - [ ] vim replace/change commands
 - [ ] vim word navigation
 - [ ] vim section navigation

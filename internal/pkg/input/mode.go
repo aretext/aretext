@@ -98,12 +98,16 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 		return m.enterInsertModeAtNextPos()
 	case "A":
 		return m.enterInsertModeAtEndOfLine()
+	case "o":
+		return m.beginNewLineBelow()
+	case "O":
+		return m.beginNewLineAbove()
 	default:
 		return nil
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -259,6 +263,23 @@ func (m *normalMode) enterInsertModeAtEndOfLine() exec.Mutator {
 		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
 		exec.NewSetInputModeMutator(exec.InputModeInsert),
 		m.cursorLineEnd(true),
+	})
+}
+
+func (m *normalMode) beginNewLineBelow() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		m.cursorLineEnd(true),
+		exec.NewInsertRuneMutator('\n'),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
+	})
+}
+
+func (m *normalMode) beginNewLineAbove() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		m.cursorLineStart(),
+		exec.NewInsertRuneMutator('\n'),
+		m.cursorUp(),
+		exec.NewSetInputModeMutator(exec.InputModeInsert),
 	})
 }
 

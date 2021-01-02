@@ -79,7 +79,7 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 	case "j":
 		return m.cursorDown()
 	case "x":
-		return m.deleteNextChar()
+		return m.deleteNextCharInLine()
 	case "0":
 		return m.cursorLineStart()
 	case "^":
@@ -102,12 +102,30 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 		return m.beginNewLineBelow()
 	case "O":
 		return m.beginNewLineAbove()
+	case "dd":
+		return m.deleteLine()
+	case "dh":
+		return m.deletePrevCharInLine()
+	case "dj":
+		return m.deleteDown()
+	case "dk":
+		return m.deleteUp()
+	case "dl":
+		return m.deleteNextCharInLine()
+	case "d$":
+		return m.deleteToEndOfLine()
+	case "d0":
+		return m.deleteToStartOfLine()
+	case "d^":
+		return m.deleteToStartOfLineNonWhitespace()
+	case "D":
+		return m.deleteToEndOfLine()
 	default:
 		return nil
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O|d[dhjkl0$^]|D)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -218,14 +236,6 @@ func (m *normalMode) cursorStartOfLastLine() exec.Mutator {
 	return exec.NewCursorMutator(firstNonWhitespaceLoc)
 }
 
-func (m *normalMode) deleteNextChar() exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewDeleteMutator(loc),
-		exec.NewCursorMutator(exec.NewOntoLineLocator()),
-	})
-}
-
 func (m *normalMode) enterInsertMode() exec.Mutator {
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
@@ -272,6 +282,66 @@ func (m *normalMode) beginNewLineAbove() exec.Mutator {
 		m.cursorUp(),
 		exec.NewSetInputModeMutator(exec.InputModeInsert),
 	})
+}
+
+func (m *normalMode) deleteLine() exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteLinesMutator(exec.NewCurrentCursorLocator(), false),
+		m.cursorLineStartNonWhitespace(),
+	})
+}
+
+func (m *normalMode) deletePrevChar() exec.Mutator {
+	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
+	return exec.NewDeleteMutator(loc)
+}
+
+func (m *normalMode) deletePrevCharInLine() exec.Mutator {
+	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
+	return exec.NewDeleteMutator(loc)
+}
+
+func (m *normalMode) deleteNextCharInLine() exec.Mutator {
+	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteMutator(loc),
+		exec.NewCursorMutator(exec.NewOntoLineLocator()),
+	})
+}
+
+func (m *normalMode) deleteDown() exec.Mutator {
+	targetLineLoc := exec.NewRelativeLineStartLocator(text.ReadDirectionForward, 1)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteLinesMutator(targetLineLoc, true),
+		m.cursorLineStartNonWhitespace(),
+	})
+}
+
+func (m *normalMode) deleteUp() exec.Mutator {
+	targetLineLoc := exec.NewRelativeLineStartLocator(text.ReadDirectionBackward, 1)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteLinesMutator(targetLineLoc, true),
+		m.cursorLineStartNonWhitespace(),
+	})
+}
+
+func (m *normalMode) deleteToEndOfLine() exec.Mutator {
+	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewDeleteMutator(loc),
+		exec.NewCursorMutator(exec.NewOntoLineLocator()),
+	})
+}
+
+func (m *normalMode) deleteToStartOfLine() exec.Mutator {
+	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	return exec.NewDeleteMutator(loc)
+}
+
+func (m *normalMode) deleteToStartOfLineNonWhitespace() exec.Mutator {
+	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
+	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineStartLoc)
+	return exec.NewDeleteMutator(firstNonWhitespaceLoc)
 }
 
 // insertMode is used for inserting characters into text.

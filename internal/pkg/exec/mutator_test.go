@@ -337,6 +337,116 @@ func TestDeleteMutator(t *testing.T) {
 	}
 }
 
+func TestDeleteLinesMutator(t *testing.T) {
+	testCases := []struct {
+		name                       string
+		inputString                string
+		initialCursor              cursorState
+		targetLineLocator          CursorLocator
+		abortIfTargetIsCurrentLine bool
+		expectedCursor             cursorState
+		expectedText               string
+		expectedUnsavedChanges     bool
+	}{
+		{
+			name:                   "empty",
+			inputString:            "",
+			initialCursor:          cursorState{position: 0},
+			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionForward, 1),
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "",
+			expectedUnsavedChanges: false,
+		},
+		{
+			name:                   "delete single line",
+			inputString:            "abcd",
+			initialCursor:          cursorState{position: 2},
+			targetLineLocator:      NewCurrentCursorLocator(),
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                       "delete single line, abort if same line",
+			inputString:                "abcd",
+			initialCursor:              cursorState{position: 2},
+			targetLineLocator:          NewCurrentCursorLocator(),
+			abortIfTargetIsCurrentLine: true,
+			expectedCursor:             cursorState{position: 2},
+			expectedText:               "abcd",
+			expectedUnsavedChanges:     false,
+		},
+		{
+			name:                   "delete single line, first line",
+			inputString:            "abcd\nefgh\nijk",
+			initialCursor:          cursorState{position: 2},
+			targetLineLocator:      NewCurrentCursorLocator(),
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "efgh\nijk",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                   "delete single line, interior line",
+			inputString:            "abcd\nefgh\nijk",
+			initialCursor:          cursorState{position: 6},
+			targetLineLocator:      NewCurrentCursorLocator(),
+			expectedCursor:         cursorState{position: 5},
+			expectedText:           "abcd\nijk",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                   "delete single line, last line",
+			inputString:            "abcd\nefgh\nijk",
+			initialCursor:          cursorState{position: 12},
+			targetLineLocator:      NewCurrentCursorLocator(),
+			expectedCursor:         cursorState{position: 5},
+			expectedText:           "abcd\nefgh",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                   "delete empty line",
+			inputString:            "abcd\n\nefgh",
+			initialCursor:          cursorState{position: 5},
+			targetLineLocator:      NewCurrentCursorLocator(),
+			expectedCursor:         cursorState{position: 5},
+			expectedText:           "abcd\nefgh",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                   "delete multiple lines down",
+			inputString:            "abcd\nefgh\nijk\nlmnop",
+			initialCursor:          cursorState{position: 0},
+			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionForward, 2),
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "lmnop",
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                   "delete multiple lines down",
+			inputString:            "abcd\nefgh\nijk\nlmnop",
+			initialCursor:          cursorState{position: 16},
+			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionBackward, 2),
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "abcd",
+			expectedUnsavedChanges: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, textTree, nil)
+			state.documentBuffer.cursor = tc.initialCursor
+			mutator := NewDeleteLinesMutator(tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectedUnsavedChanges, state.hasUnsavedChanges)
+		})
+	}
+}
+
 func TestScrollLinesMutator(t *testing.T) {
 	testCases := []struct {
 		name               string

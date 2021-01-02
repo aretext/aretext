@@ -382,6 +382,65 @@ func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
 }
 
+type deleteLinesMutator struct {
+	targetLineLocator          CursorLocator
+	abortIfTargetIsCurrentLine bool
+}
+
+func NewDeleteLinesMutator(targetLineLocator CursorLocator, abortIfTargetIsCurrentLine bool) Mutator {
+	return &deleteLinesMutator{targetLineLocator, abortIfTargetIsCurrentLine}
+}
+
+// Mutate deletes lines from the cursor's current line to the line of a target cursor.
+// It moves the cursor to the start of the line following the last deleted line.
+func (dlm *deleteLinesMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
+	targetCursor := dlm.targetLineLocator.Locate(buffer)
+	targetLine := buffer.textTree.LineNumForPosition(targetCursor.position)
+
+	if targetLine == currentLine && dlm.abortIfTargetIsCurrentLine {
+		return
+	}
+
+	if targetLine < currentLine {
+		currentLine, targetLine = targetLine, currentLine
+	}
+
+	numLinesToDelete := targetLine - currentLine + 1
+	for i := uint64(0); i < numLinesToDelete; i++ {
+		dlm.deleteLine(state, currentLine)
+	}
+}
+
+func (dlm *deleteLinesMutator) deleteLine(state *EditorState, lineNum uint64) {
+	buffer := state.documentBuffer
+	startOfLinePos := buffer.textTree.LineStartPosition(lineNum)
+	startOfNextLinePos := buffer.textTree.LineStartPosition(lineNum + 1)
+
+	isLastLine := lineNum+1 >= buffer.textTree.NumLines()
+	if isLastLine && startOfLinePos > 0 {
+		// The last line does not have a newline at the end, so delete the newline from the end of the previous line instead.
+		startOfLinePos--
+	}
+
+	numToDelete := startOfNextLinePos - startOfLinePos
+	for i := uint64(0); i < numToDelete; i++ {
+		buffer.textTree.DeleteAtPosition(startOfLinePos)
+	}
+
+	buffer.cursor = cursorState{position: startOfLinePos}
+	if buffer.cursor.position >= buffer.textTree.NumChars() {
+		buffer.cursor = NewLastLineLocator().Locate(buffer)
+	}
+
+	state.hasUnsavedChanges = state.hasUnsavedChanges || numToDelete > 0
+}
+
+func (dlm *deleteLinesMutator) String() string {
+	return fmt.Sprintf("DeleteLines(%s, abortIfTargetIsCurrentLine=%t)", dlm.targetLineLocator, dlm.abortIfTargetIsCurrentLine)
+}
+
 type setSyntaxMutator struct {
 	language syntax.Language
 }

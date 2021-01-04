@@ -145,7 +145,12 @@ func NewOntoDocumentLocator() CursorLocator {
 
 // Locate finds the valid position within the document closest to the current cursor position.
 func (loc *ontoDocumentLocator) Locate(state *BufferState) cursorState {
-	lastValidPos := state.textTree.NumChars()
+	n := state.textTree.NumChars()
+	if n == 0 {
+		return cursorState{position: 0}
+	}
+
+	lastValidPos := n - 1
 	newPos := state.cursor.position
 	if newPos > lastValidPos {
 		newPos = lastValidPos

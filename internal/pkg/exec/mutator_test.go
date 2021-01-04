@@ -74,7 +74,7 @@ func TestLoadDocumentMutatorSameFile(t *testing.T) {
 	// the view scrolled to make the cursor visible,
 	// and the syntax language is preserved.
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
-	assert.Equal(t, uint64(2), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(1), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
 	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
 }

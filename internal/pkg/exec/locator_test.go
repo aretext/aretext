@@ -290,13 +290,13 @@ func TestOntoDocumentLocator(t *testing.T) {
 			name:           "past end of file ending with newline",
 			inputString:    "abcd\n",
 			initialCursor:  cursorState{position: 20},
-			expectedCursor: cursorState{position: 5},
+			expectedCursor: cursorState{position: 4},
 		},
 		{
 			name:           "past end of file ending with character",
 			inputString:    "abcd",
 			initialCursor:  cursorState{position: 20},
-			expectedCursor: cursorState{position: 4},
+			expectedCursor: cursorState{position: 3},
 		},
 		{
 			name:           "discard logical offset",

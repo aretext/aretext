@@ -2,7 +2,6 @@ package aretext
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -131,14 +130,9 @@ func (e *Editor) redraw() {
 
 func initDocument(path string) (*text.Tree, *file.Watcher, error) {
 	if path == "" {
-		// If no path is specified, open a temporary file.
+		// If no path is specified, set a default that's probably unique.
 		// The user can use this as a scratchpad or open another file.
-		f, err := ioutil.TempFile("", "untitled-")
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "ioutil.TempFile")
-		}
-		path = f.Name()
-		f.Close()
+		path = fmt.Sprintf("untitled-%d.txt", time.Now().Unix())
 	}
 
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)

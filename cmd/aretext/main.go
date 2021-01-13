@@ -64,11 +64,7 @@ func runEditor(path string) error {
 	}
 	defer screen.Fini()
 
-	editor, err := aretext.NewEditor(screen, path)
-	if err != nil {
-		return err
-	}
-
+	editor := aretext.NewEditor(screen, path)
 	editor.RunEventLoop()
 	return nil
 }

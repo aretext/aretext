@@ -3,7 +3,9 @@ package exec
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
@@ -76,20 +78,27 @@ func (am *abortIfUnsavedChangesMutator) String() string {
 }
 
 type loadDocumentMutator struct {
-	path       string
-	showStatus bool
+	path          string
+	requireExists bool
+	showStatus    bool
 }
 
-func NewLoadDocumentMutator(path string, showStatus bool) Mutator {
-	return &loadDocumentMutator{path, showStatus}
+func NewLoadDocumentMutator(path string, requireExists bool, showStatus bool) Mutator {
+	return &loadDocumentMutator{path, requireExists, showStatus}
 }
 
 // Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
+	var fileExists bool
 	tree, watcher, err := file.Load(ldm.path, file.DefaultPollInterval)
-	if err != nil {
+	if os.IsNotExist(err) && !ldm.requireExists {
+		tree = text.NewTree()
+		watcher = file.NewWatcher(file.DefaultPollInterval, ldm.path, time.Time{}, 0, "")
+	} else if err != nil {
 		ldm.reportError(err, state)
 		return
+	} else {
+		fileExists = true
 	}
 
 	oldPath := state.fileWatcher.Path()
@@ -113,7 +122,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		state.documentBuffer.SetSyntax(syntax.LanguageUndefined)
 	}
 
-	ldm.reportSuccess(state)
+	ldm.reportSuccess(state, fileExists)
 }
 
 func (ldm *loadDocumentMutator) reportError(err error, state *EditorState) {
@@ -126,12 +135,19 @@ func (ldm *loadDocumentMutator) reportError(err error, state *EditorState) {
 	}
 }
 
-func (ldm *loadDocumentMutator) reportSuccess(state *EditorState) {
+func (ldm *loadDocumentMutator) reportSuccess(state *EditorState, fileExists bool) {
 	log.Printf("Successfully loaded file from '%s'", ldm.path)
 	if ldm.showStatus {
+		var msg string
+		if fileExists {
+			msg = fmt.Sprintf("Opened %s", ldm.path)
+		} else {
+			msg = fmt.Sprintf("New file %s", ldm.path)
+		}
+
 		NewSetStatusMsgMutator(StatusMsg{
 			Style: StatusMsgStyleSuccess,
-			Text:  fmt.Sprintf("Opened %s", ldm.path),
+			Text:  msg,
 		}).Mutate(state)
 	}
 }
@@ -151,7 +167,7 @@ func NewReloadDocumentMutator(showStatus bool) Mutator {
 // Mutate reloads the current document.
 func (rdm *reloadDocumentMutator) Mutate(state *EditorState) {
 	path := state.fileWatcher.Path()
-	NewLoadDocumentMutator(path, rdm.showStatus).Mutate(state)
+	NewLoadDocumentMutator(path, true, rdm.showStatus).Mutate(state)
 }
 
 func (rdm *reloadDocumentMutator) String() string {

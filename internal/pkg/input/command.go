@@ -62,7 +62,7 @@ func findFileMenuItems() []exec.MenuItem {
 	file.Walk(dir, func(path string) {
 		items = append(items, exec.MenuItem{
 			Name:   file.RelativePathCwd(path),
-			Action: exec.NewLoadDocumentMutator(path, true),
+			Action: exec.NewLoadDocumentMutator(path, true, true),
 		})
 	})
 

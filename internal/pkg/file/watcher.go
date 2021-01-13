@@ -40,6 +40,11 @@ func NewWatcher(pollInterval time.Duration, path string, lastModified time.Time,
 	return w
 }
 
+// NewEmptyWatcher returns a watcher that has an empty path and never triggers.
+func NewEmptyWatcher() *Watcher {
+	return &Watcher{changedChan: make(chan struct{}, 0)}
+}
+
 // Path returns the path to the file being watched.
 func (w *Watcher) Path() string {
 	return w.path

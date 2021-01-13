@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
 	"github.com/wedaly/aretext/internal/pkg/text"
 )
@@ -27,33 +26,28 @@ func createTestFile(t *testing.T, contents string) (path string, cleanup func())
 }
 
 func TestLoadDocumentMutator(t *testing.T) {
-	// Load the initial document.
-	path, cleanup := createTestFile(t, "")
-	defer cleanup()
-	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	defer watcher.Stop()
-	require.NoError(t, err)
-	state := NewEditorState(100, 100, textTree, watcher)
+	// Start with an empty document.
+	state := NewEditorState(100, 100)
+	assert.Equal(t, "", state.documentBuffer.textTree.String())
+	assert.Equal(t, "", state.FileWatcher().Path())
 
 	// Load a new document.
-	path2, cleanup2 := createTestFile(t, "abcd")
-	defer cleanup2()
-	NewLoadDocumentMutator(path2, false).Mutate(state)
+	path, cleanup := createTestFile(t, "abcd")
+	defer cleanup()
+	NewLoadDocumentMutator(path, true, false).Mutate(state)
 	defer state.FileWatcher().Stop()
 
 	// Expect that the text and watcher are installed.
 	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
-	assert.Equal(t, path2, state.FileWatcher().Path())
+	assert.Equal(t, path, state.FileWatcher().Path())
 }
 
 func TestLoadDocumentMutatorSameFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	defer watcher.Stop()
-	require.NoError(t, err)
-	state := NewEditorState(5, 3, textTree, watcher)
+	state := NewEditorState(5, 3)
+	NewLoadDocumentMutator(path, true, false).Mutate(state)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -65,7 +59,7 @@ func TestLoadDocumentMutatorSameFile(t *testing.T) {
 	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
 
 	// Update the file with shorter text and reload.
-	err = ioutil.WriteFile(path, []byte("ab"), 0644)
+	err := ioutil.WriteFile(path, []byte("ab"), 0644)
 	require.NoError(t, err)
 	NewReloadDocumentMutator(false).Mutate(state)
 	defer state.fileWatcher.Stop()
@@ -83,10 +77,8 @@ func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	defer watcher.Stop()
-	require.NoError(t, err)
-	state := NewEditorState(5, 3, textTree, watcher)
+	state := NewEditorState(5, 3)
+	NewLoadDocumentMutator(path, true, false).Mutate(state)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -100,7 +92,7 @@ func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
 	// Load a new document with a shorter text.
 	path2, cleanup2 := createTestFile(t, "ab")
 	defer cleanup2()
-	NewLoadDocumentMutator(path2, false).Mutate(state)
+	NewLoadDocumentMutator(path2, true, false).Mutate(state)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor, view, and syntax are reset.
@@ -111,14 +103,12 @@ func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
 }
 
 func TestLoadDocumentMutatorShowStatus(t *testing.T) {
-	// Load the initial document.
-	path, cleanup := createTestFile(t, "")
-	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	require.NoError(t, err)
-	state := NewEditorState(100, 100, textTree, watcher)
+	// Start with an empty document.
+	state := NewEditorState(100, 100)
 
-	// Reload the document, expect success msg.
-	NewLoadDocumentMutator(path, true).Mutate(state)
+	// Load a document, expect success msg.
+	path, cleanup := createTestFile(t, "")
+	NewLoadDocumentMutator(path, true, true).Mutate(state)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Opened")
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
@@ -127,19 +117,21 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	cleanup()
 
 	// Load a non-existent path, expect error msg.
-	NewLoadDocumentMutator(path, true).Mutate(state)
+	NewLoadDocumentMutator(path, true, true).Mutate(state)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Could not open")
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 }
 
 func TestSaveDocumentMutator(t *testing.T) {
-	// Load the initial document.
+	// Start with an empty document.
+	state := NewEditorState(100, 100)
+
+	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
 	defer cleanup()
-	textTree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	require.NoError(t, err)
-	state := NewEditorState(100, 100, textTree, watcher)
+	NewLoadDocumentMutator(path, true, true).Mutate(state)
+	defer state.fileWatcher.Stop()
 
 	// Modify and save the document
 	NewCompositeMutator([]Mutator{
@@ -181,9 +173,8 @@ func TestSaveDocumentMutatorFileChanged(t *testing.T) {
 			// Load the initial document.
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
-			textTree, watcher, err := file.Load(path, time.Millisecond)
-			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, watcher)
+			state := NewEditorState(100, 100)
+			NewLoadDocumentMutator(path, true, true).Mutate(state)
 
 			// Modify the file.
 			f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -194,7 +185,7 @@ func TestSaveDocumentMutatorFileChanged(t *testing.T) {
 
 			// Wait for the watcher to detect the change.
 			select {
-			case <-watcher.ChangedChan():
+			case <-state.fileWatcher.ChangedChan():
 				break
 			case <-time.After(time.Second * 10):
 				assert.Fail(t, "Timed out waiting for change")
@@ -224,7 +215,8 @@ func TestSaveDocumentMutatorFileChanged(t *testing.T) {
 func TestCursorMutator(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, textTree, nil)
+	state := NewEditorState(100, 100)
+	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 2
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
 	mutator.Mutate(state)
@@ -270,7 +262,8 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, nil)
+			state := NewEditorState(100, 100)
+			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewInsertRuneMutator(tc.insertRune)
 			mutator.Mutate(state)
@@ -327,7 +320,8 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, nil)
+			state := NewEditorState(100, 100)
+			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewDeleteMutator(tc.locator)
 			mutator.Mutate(state)
@@ -436,7 +430,8 @@ func TestDeleteLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, nil)
+			state := NewEditorState(100, 100)
+			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewDeleteLinesMutator(tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
 			mutator.Mutate(state)
@@ -508,7 +503,8 @@ func TestScrollLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, textTree, nil)
+			state := NewEditorState(100, 100)
+			state.documentBuffer.textTree = textTree
 			state.documentBuffer.view = tc.initialView
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
 			mutator.Mutate(state)
@@ -518,7 +514,7 @@ func TestScrollLinesMutator(t *testing.T) {
 }
 
 func TestShowMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100, nil, nil)
+	state := NewEditorState(100, 100)
 	prompt := "test prompt"
 	mutator := NewShowMenuMutatorWithItems(prompt, []MenuItem{
 		{Name: "test item 1"},
@@ -535,7 +531,7 @@ func TestShowMenuMutator(t *testing.T) {
 }
 
 func TestHideMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100, nil, nil)
+	state := NewEditorState(100, 100)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false),
 		NewHideMenuMutator(),
@@ -545,11 +541,7 @@ func TestHideMenuMutator(t *testing.T) {
 }
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
-	textTree := text.NewTree()
-	watcher := file.NewWatcher(time.Second, "", time.Time{}, 0, "")
-	defer watcher.Stop()
-
-	state := NewEditorState(100, 100, textTree, watcher)
+	state := NewEditorState(100, 100)
 	items := []MenuItem{
 		{
 			Name:   "set syntax json",
@@ -650,7 +642,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil, nil)
+			state := NewEditorState(100, 100)
 			mutators := []Mutator{
 				NewShowMenuMutatorWithItems("test", tc.items, false),
 				NewAppendMenuSearchMutator(tc.searchRune),
@@ -666,7 +658,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 }
 
 func TestAppendMenuSearchMutator(t *testing.T) {
-	state := NewEditorState(100, 100, nil, nil)
+	state := NewEditorState(100, 100)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
 		NewAppendMenuSearchMutator('a'),
@@ -706,7 +698,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil, nil)
+			state := NewEditorState(100, 100)
 			mutators := []Mutator{
 				NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
 			}
@@ -753,10 +745,7 @@ func TestQuitMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree := text.NewTree()
-			watcher := file.NewWatcher(time.Second, "", time.Time{}, 0, "")
-			defer watcher.Stop()
-			state := NewEditorState(100, 100, textTree, watcher)
+			state := NewEditorState(100, 100)
 			state.hasUnsavedChanges = tc.hasUnsavedChanges
 
 			mutator := NewQuitMutator()

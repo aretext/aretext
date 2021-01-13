@@ -3,16 +3,14 @@ package aretext
 import (
 	"fmt"
 	"log"
-	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/display"
 	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/input"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Editor is a terminal-based text editing program.
@@ -24,17 +22,18 @@ type Editor struct {
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
-func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
-	tree, watcher, err := initDocument(path)
-	if err != nil {
-		return nil, err
-	}
-
+func NewEditor(screen tcell.Screen, path string) *Editor {
 	screenWidth, screenHeight := screen.Size()
-	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight), tree, watcher)
+	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight))
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 	editor := &Editor{inputInterpreter, state, screen, termEventChan}
+
+	// Attempt to load the file.
+	// If it doesn't exist, this will start with an empty document
+	// that the user can edit and save to the specified path.
+	loadMutator := exec.NewLoadDocumentMutator(effectivePath(path), false, true)
+	editor.applyMutator(loadMutator)
 
 	if path == "" {
 		// If the user didn't specify a path, automatically open the "find files" menu
@@ -42,7 +41,23 @@ func NewEditor(screen tcell.Screen, path string) (*Editor, error) {
 		editor.applyMutator(input.ShowFileMenuMutator())
 	}
 
-	return editor, nil
+	return editor
+}
+
+func effectivePath(path string) string {
+	if path == "" {
+		// If no path is specified, set a default that is probably unique.
+		// The user can treat this as a scratchpad or discard it and open another file.
+		path = fmt.Sprintf("untitled-%d.txt", time.Now().Unix())
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		log.Printf("Error converting '%s' to absolute path: %v", path, errors.Wrapf(err, "filepath.Abs"))
+		return path
+	}
+
+	return absPath
 }
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
@@ -126,24 +141,6 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.state)
 	e.screen.Show()
-}
-
-func initDocument(path string) (*text.Tree, *file.Watcher, error) {
-	if path == "" {
-		// If no path is specified, set a default that's probably unique.
-		// The user can use this as a scratchpad or open another file.
-		path = fmt.Sprintf("untitled-%d.txt", time.Now().Unix())
-	}
-
-	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if os.IsNotExist(err) {
-		tree = text.NewTree()
-		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
-	} else if err != nil {
-		return nil, nil, errors.Wrapf(err, "loading file at %s", path)
-	}
-
-	return tree, watcher, nil
 }
 
 func describeTermEvent(event tcell.Event) string {

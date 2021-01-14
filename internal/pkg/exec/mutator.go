@@ -130,7 +130,7 @@ func (ldm *loadDocumentMutator) reportError(err error, state *EditorState) {
 	if ldm.showStatus {
 		NewSetStatusMsgMutator(StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Could not open %s", ldm.path),
+			Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(ldm.path)),
 		}).Mutate(state)
 	}
 }
@@ -139,10 +139,11 @@ func (ldm *loadDocumentMutator) reportSuccess(state *EditorState, fileExists boo
 	log.Printf("Successfully loaded file from '%s'", ldm.path)
 	if ldm.showStatus {
 		var msg string
+		relPath := file.RelativePathCwd(ldm.path)
 		if fileExists {
-			msg = fmt.Sprintf("Opened %s", ldm.path)
+			msg = fmt.Sprintf("Opened %s", relPath)
 		} else {
-			msg = fmt.Sprintf("New file %s", ldm.path)
+			msg = fmt.Sprintf("New file %s", relPath)
 		}
 
 		NewSetStatusMsgMutator(StatusMsg{

@@ -1,10 +1,8 @@
 package syntax
 
 import (
-	"fmt"
-	"strings"
+	"log"
 
-	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 )
 
@@ -29,18 +27,15 @@ func (language Language) String() string {
 	}
 }
 
-func LanguageFromString(s string) (Language, error) {
+func LanguageFromString(s string) Language {
 	switch s {
 	case "undefined":
-		return LanguageUndefined, nil
+		return LanguageUndefined
 	case "json":
-		return LanguageJson, nil
+		return LanguageJson
 	default:
-		availableLanguages := strings.Join([]string{
-			LanguageJson.String(),
-		}, ", ")
-		err := errors.New(fmt.Sprintf("Unrecognized language, please choose one of [%s]", availableLanguages))
-		return LanguageUndefined, err
+		log.Printf("Unrecognized syntax language '%s'\n", s)
+		return LanguageUndefined
 	}
 }
 

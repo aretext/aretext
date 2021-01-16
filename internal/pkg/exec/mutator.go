@@ -116,10 +116,11 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 			NewScrollToCursorMutator(),
 		}).Mutate(state)
 	} else {
-		// Set the cursor to the beginning of the new document and disable syntax highlighting.
+		// Otherwise, reset state for the new document.
+		config := state.configRuleSet.ConfigForPath(ldm.path)
 		state.documentBuffer.cursor = cursorState{}
 		state.documentBuffer.view.textOrigin = 0
-		state.documentBuffer.SetSyntax(syntax.LanguageUndefined)
+		state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
 	}
 
 	ldm.reportSuccess(state, fileExists)

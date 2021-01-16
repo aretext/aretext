@@ -2,6 +2,7 @@ package exec
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wedaly/aretext/internal/pkg/config"
 	"github.com/wedaly/aretext/internal/pkg/file"
 	"github.com/wedaly/aretext/internal/pkg/syntax"
 	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
@@ -11,6 +12,7 @@ import (
 // EditorState represents the current state of the editor.
 type EditorState struct {
 	screenWidth, screenHeight uint64
+	configRuleSet             config.RuleSet
 	inputMode                 InputMode
 	documentBuffer            *BufferState
 	fileWatcher               *file.Watcher
@@ -20,7 +22,7 @@ type EditorState struct {
 	quitFlag                  bool
 }
 
-func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
+func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleSet) *EditorState {
 	var documentBufferHeight uint64
 	if screenHeight > 0 {
 		// Leave one line for the status bar at the bottom.
@@ -29,6 +31,7 @@ func NewEditorState(screenWidth, screenHeight uint64) *EditorState {
 	return &EditorState{
 		screenWidth:    screenWidth,
 		screenHeight:   screenHeight,
+		configRuleSet:  configRuleSet,
 		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
 		fileWatcher:    file.NewEmptyWatcher(),
 		menu:           &MenuState{},

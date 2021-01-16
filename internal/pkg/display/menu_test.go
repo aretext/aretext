@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell"
 
+	"github.com/wedaly/aretext/internal/pkg/config"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
@@ -31,7 +32,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, initial state with prompt",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, config.RuleSet{})
 				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false)
 				mutator.Mutate(state)
 				return state.Menu()
@@ -48,7 +49,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with no results",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, config.RuleSet{})
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", nil, false),
 					exec.NewAppendMenuSearchMutator('a'),
@@ -70,7 +71,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with results, first selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, config.RuleSet{})
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test first"},
@@ -94,7 +95,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with many results, second-to-last selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100)
+				state := exec.NewEditorState(100, 100, config.RuleSet{})
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test 1"},

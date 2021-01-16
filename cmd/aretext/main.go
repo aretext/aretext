@@ -14,6 +14,7 @@ import (
 
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var noconfig = flag.Bool("noconfig", false, "use default configuration instead of loading it from $HOME/.config/aretext")
 
 func main() {
 	flag.Usage = printUsage
@@ -54,6 +55,11 @@ func printUsage() {
 }
 
 func runEditor(path string) error {
+	configRuleSet, err := aretext.LoadOrCreateConfig(*noconfig)
+	if err != nil {
+		return err
+	}
+
 	screen, err := tcell.NewScreen()
 	if err != nil {
 		return err
@@ -64,7 +70,7 @@ func runEditor(path string) error {
 	}
 	defer screen.Fini()
 
-	editor := aretext.NewEditor(screen, path)
+	editor := aretext.NewEditor(screen, path, configRuleSet)
 	editor.RunEventLoop()
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/pkg/errors"
+	"github.com/wedaly/aretext/internal/pkg/config"
 	"github.com/wedaly/aretext/internal/pkg/display"
 	"github.com/wedaly/aretext/internal/pkg/exec"
 	"github.com/wedaly/aretext/internal/pkg/input"
@@ -22,9 +23,9 @@ type Editor struct {
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
-func NewEditor(screen tcell.Screen, path string) *Editor {
+func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *Editor {
 	screenWidth, screenHeight := screen.Size()
-	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight))
+	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight), configRuleSet)
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 	editor := &Editor{inputInterpreter, state, screen, termEventChan}

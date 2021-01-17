@@ -20,10 +20,10 @@ Design principles:
 
 To build aretext and run tests, use `make`.
 
-You can then open a file: `./aretext /path/to/file.txt`
+You can then open a file in the editor: `./aretext path/to/file.txt`
 
 * The editor supports most key sequences from vim's insert and normal modes.
-* Press ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
+* Type ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
 
 
 ## Roadmap

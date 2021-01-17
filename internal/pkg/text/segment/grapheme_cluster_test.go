@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 //go:generate go run gen_test_cases.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_cluster_test_cases.go

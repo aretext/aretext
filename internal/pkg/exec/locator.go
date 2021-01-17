@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/wedaly/aretext/internal/pkg/text"
-	"github.com/wedaly/aretext/internal/pkg/text/segment"
+	"github.com/aretext/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/text/segment"
 )
 
 // CursorLocator finds the position of the cursor according to some criteria.

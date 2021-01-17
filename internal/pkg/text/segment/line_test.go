@@ -4,9 +4,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 func gcWidthFunc(defaultWidth uint64) GraphemeClusterWidthFunc {

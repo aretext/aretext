@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/wedaly/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/text"
 )
 
 // GraphemeClusterWidthFunc returns the width in cells for a given grapheme cluster.

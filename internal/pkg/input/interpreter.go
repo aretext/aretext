@@ -3,8 +3,8 @@ package input
 import (
 	"log"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
 // Interpreter translates key events to commands.

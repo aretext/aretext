@@ -1,12 +1,12 @@
 package exec
 
 import (
+	"github.com/aretext/aretext/internal/pkg/config"
+	"github.com/aretext/aretext/internal/pkg/file"
+	"github.com/aretext/aretext/internal/pkg/syntax"
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/config"
-	"github.com/wedaly/aretext/internal/pkg/file"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // EditorState represents the current state of the editor.

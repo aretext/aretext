@@ -3,7 +3,7 @@ package segment
 import (
 	"io"
 
-	"github.com/wedaly/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/text"
 )
 
 //go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_cluster_props.go

@@ -3,9 +3,9 @@ package exec
 import (
 	"testing"
 
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 func TestNextCharInLine(t *testing.T) {

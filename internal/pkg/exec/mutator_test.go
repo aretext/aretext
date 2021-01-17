@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aretext/aretext/internal/pkg/config"
+	"github.com/aretext/aretext/internal/pkg/syntax"
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/config"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 func createTestFile(t *testing.T, contents string) (path string, cleanup func()) {

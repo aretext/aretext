@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/aretext/aretext/internal/pkg/config"
+	"github.com/aretext/aretext/internal/pkg/display"
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/input"
 	"github.com/gdamore/tcell"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/config"
-	"github.com/wedaly/aretext/internal/pkg/display"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/input"
 )
 
 // Editor is a terminal-based text editing program.

@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 )
 
 func TestJsonTokenizer(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.

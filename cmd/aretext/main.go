@@ -8,8 +8,8 @@ import (
 	"os"
 	"runtime/pprof"
 
+	"github.com/aretext/aretext/internal/app/aretext"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/app/aretext"
 )
 
 var logpath = flag.String("log", "", "log to file")

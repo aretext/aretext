@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wedaly/aretext/internal/pkg/file"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
-	"github.com/wedaly/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/file"
+	"github.com/aretext/aretext/internal/pkg/syntax"
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
+	"github.com/aretext/aretext/internal/pkg/text"
 )
 
 // Mutator modifies the state of the editor.

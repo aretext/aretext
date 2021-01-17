@@ -1,7 +1,7 @@
 package input
 
 import (
-	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/exec"
 )
 
 // Config controls how user input is interpreted.

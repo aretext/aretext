@@ -3,8 +3,8 @@ package exec
 import (
 	"unicode"
 
+	"github.com/aretext/aretext/internal/pkg/text/segment"
 	grw "github.com/mattn/go-runewidth"
-	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
 // RuneWidth returns the width in cells of an individual rune.

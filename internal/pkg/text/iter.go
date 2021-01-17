@@ -5,7 +5,7 @@ import (
 	"log"
 	"unicode/utf8"
 
-	textUtf8 "github.com/wedaly/aretext/internal/pkg/text/utf8"
+	textUtf8 "github.com/aretext/aretext/internal/pkg/text/utf8"
 )
 
 // RuneIter iterates over UTF-8 codepoints (runes).

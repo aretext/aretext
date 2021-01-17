@@ -1,8 +1,8 @@
 package display
 
 import (
+	"github.com/aretext/aretext/internal/pkg/exec"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
 // DrawMenu draws the menu at the top of the screen.

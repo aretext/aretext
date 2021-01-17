@@ -6,9 +6,9 @@ import (
 
 	"log"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.

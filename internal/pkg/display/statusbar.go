@@ -1,9 +1,9 @@
 package display
 
 import (
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/file"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/file"
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.

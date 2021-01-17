@@ -4,11 +4,11 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
+	"github.com/aretext/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/text/segment"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
-	"github.com/wedaly/aretext/internal/pkg/text"
-	"github.com/wedaly/aretext/internal/pkg/text/segment"
 )
 
 // DrawBuffer draws text buffer in the screen.

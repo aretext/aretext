@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 // Load reads a file from disk and starts a watcher to detect changes.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	textUtf8 "github.com/wedaly/aretext/internal/pkg/text/utf8"
+	textUtf8 "github.com/aretext/aretext/internal/pkg/text/utf8"
 )
 
 // text.Tree is a data structure for representing UTF-8 text.

@@ -3,7 +3,7 @@ package parser
 import (
 	"io"
 
-	"github.com/wedaly/aretext/internal/pkg/text/utf8"
+	"github.com/aretext/aretext/internal/pkg/text/utf8"
 )
 
 // Nfa is a non-deterministic finite automaton.

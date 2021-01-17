@@ -4,8 +4,8 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/internal/pkg/text/utf8"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/text/utf8"
 )
 
 // Edit represents a change to a document.

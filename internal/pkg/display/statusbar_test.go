@@ -3,8 +3,8 @@ package display
 import (
 	"testing"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
 	"github.com/gdamore/tcell"
-	"github.com/wedaly/aretext/internal/pkg/exec"
 )
 
 func TestDrawStatusBar(t *testing.T) {

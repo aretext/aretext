@@ -5,11 +5,11 @@ import (
 
 	"github.com/gdamore/tcell"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/syntax"
+	"github.com/aretext/aretext/internal/pkg/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
-	"github.com/wedaly/aretext/internal/pkg/text"
 )
 
 func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language) {

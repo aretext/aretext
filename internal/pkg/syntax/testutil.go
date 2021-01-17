@@ -3,8 +3,8 @@ package syntax
 import (
 	"strings"
 
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
 )
 
 // TokenWithText is a token that includes its text value.

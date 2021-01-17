@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aretext/aretext/internal/pkg/config"
+	"github.com/aretext/aretext/internal/pkg/syntax"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/config"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
 )
 
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.

@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/aretext/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/file"
+	"github.com/aretext/aretext/internal/pkg/syntax"
 	"github.com/pkg/errors"
-	"github.com/wedaly/aretext/internal/pkg/exec"
-	"github.com/wedaly/aretext/internal/pkg/file"
-	"github.com/wedaly/aretext/internal/pkg/syntax"
 )
 
 func commandMenuItems() []exec.MenuItem {

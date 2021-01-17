@@ -3,7 +3,7 @@ package syntax
 import (
 	"log"
 
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
 )
 
 //go:generate go run gen_tokenizers.go

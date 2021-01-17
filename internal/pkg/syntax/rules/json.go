@@ -1,7 +1,7 @@
 package rules
 
 import (
-	"github.com/wedaly/aretext/internal/pkg/syntax/parser"
+	"github.com/aretext/aretext/internal/pkg/syntax/parser"
 )
 
 var JsonRules []parser.TokenizerRule

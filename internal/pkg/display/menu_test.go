@@ -5,8 +5,8 @@ import (
 
 	"github.com/gdamore/tcell"
 
-	"github.com/wedaly/aretext/internal/pkg/config"
-	"github.com/wedaly/aretext/internal/pkg/exec"
+	"github.com/aretext/aretext/internal/pkg/config"
+	"github.com/aretext/aretext/internal/pkg/exec"
 )
 
 func TestDrawMenu(t *testing.T) {

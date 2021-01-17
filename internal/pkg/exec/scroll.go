@@ -4,8 +4,8 @@ import (
 	"io"
 	"log"
 
-	"github.com/wedaly/aretext/internal/pkg/text"
-	"github.com/wedaly/aretext/internal/pkg/text/segment"
+	"github.com/aretext/aretext/internal/pkg/text"
+	"github.com/aretext/aretext/internal/pkg/text/segment"
 )
 
 // posRange is a contiguous range of positions within a text.

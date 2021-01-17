@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/wedaly/aretext/internal/pkg/config"
+	"github.com/wedaly/aretext/internal/pkg/syntax"
 )
 
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.
@@ -55,6 +56,13 @@ func defaultConfigRuleSet() config.RuleSet {
 				Name:    "default",
 				Pattern: "**",
 				Config:  config.DefaultConfig(),
+			},
+			{
+				Name:    "json",
+				Pattern: "**/*.json",
+				Config: config.Config{
+					SyntaxLanguage: syntax.LanguageJson.String(),
+				},
 			},
 		},
 	}

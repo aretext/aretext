@@ -1,15 +1,13 @@
 all: generate fmt build vet test
 
 fmt:
-	goimports -w ./internal/..
-	goimports -w ./cmd/..
+	goimports -w .
 
 generate:
 	go generate ./...
 
 build:
-	go build ./...
-	go build ./cmd/aretext
+	go build -o aretext main.go
 
 test:
 	go test ./...

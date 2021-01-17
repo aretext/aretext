@@ -365,7 +365,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
 	case tcell.KeyEnter:
 		return m.insertNewline()
 	case tcell.KeyTab:
-		return m.insertRune('\t')
+		return m.insertTab()
 	default:
 		return m.returnToNormalMode()
 	}
@@ -377,6 +377,10 @@ func (m *insertMode) insertRune(r rune) exec.Mutator {
 
 func (m *insertMode) insertNewline() exec.Mutator {
 	return exec.NewInsertNewlineMutator()
+}
+
+func (m *insertMode) insertTab() exec.Mutator {
+	return exec.NewInsertTabMutator()
 }
 
 func (m *insertMode) deletePrevChar() exec.Mutator {

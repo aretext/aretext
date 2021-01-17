@@ -372,6 +372,21 @@ func (inm *insertNewlineMutator) String() string {
 	return "InsertNewline()"
 }
 
+// insertTabMutator inserts a tab at the current cursor position.
+type insertTabMutator struct{}
+
+func NewInsertTabMutator() Mutator {
+	return &insertTabMutator{}
+}
+
+func (itm *insertTabMutator) Mutate(state *EditorState) {
+	NewInsertRuneMutator('\t').Mutate(state)
+}
+
+func (itm *insertTabMutator) String() string {
+	return "InsertTab()"
+}
+
 // deleteMutator deletes characters from the cursor position up to (but not including) the position returned by the locator.
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,

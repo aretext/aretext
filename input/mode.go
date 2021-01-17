@@ -270,7 +270,7 @@ func (m *normalMode) enterInsertModeAtEndOfLine() exec.Mutator {
 func (m *normalMode) beginNewLineBelow() exec.Mutator {
 	return exec.NewCompositeMutator([]exec.Mutator{
 		m.cursorLineEnd(true),
-		exec.NewInsertRuneMutator('\n'),
+		exec.NewInsertNewlineMutator(),
 		exec.NewSetInputModeMutator(exec.InputModeInsert),
 	})
 }
@@ -278,7 +278,7 @@ func (m *normalMode) beginNewLineBelow() exec.Mutator {
 func (m *normalMode) beginNewLineAbove() exec.Mutator {
 	return exec.NewCompositeMutator([]exec.Mutator{
 		m.cursorLineStart(),
-		exec.NewInsertRuneMutator('\n'),
+		exec.NewInsertNewlineMutator(),
 		m.cursorUp(),
 		exec.NewSetInputModeMutator(exec.InputModeInsert),
 	})
@@ -359,20 +359,24 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.
 func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
 	switch event.Key() {
 	case tcell.KeyRune:
-		return m.insert(event.Rune())
+		return m.insertRune(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		return m.deletePrevChar()
 	case tcell.KeyEnter:
-		return m.insert('\n')
+		return m.insertNewline()
 	case tcell.KeyTab:
-		return m.insert('\t')
+		return m.insertRune('\t')
 	default:
 		return m.returnToNormalMode()
 	}
 }
 
-func (m *insertMode) insert(r rune) exec.Mutator {
+func (m *insertMode) insertRune(r rune) exec.Mutator {
 	return exec.NewInsertRuneMutator(r)
+}
+
+func (m *insertMode) insertNewline() exec.Mutator {
+	return exec.NewInsertNewlineMutator()
 }
 
 func (m *insertMode) deletePrevChar() exec.Mutator {

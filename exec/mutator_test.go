@@ -332,6 +332,18 @@ func TestDeleteMutator(t *testing.T) {
 	}
 }
 
+func TestInsertNewlineMutator(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abcd")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, config.RuleSet{})
+	state.documentBuffer.textTree = textTree
+	state.documentBuffer.cursor = cursorState{position: 2}
+	mutator := NewInsertNewlineMutator()
+	mutator.Mutate(state)
+	assert.Equal(t, cursorState{position: 3}, state.documentBuffer.cursor)
+	assert.Equal(t, "ab\ncd", textTree.String())
+}
+
 func TestDeleteLinesMutator(t *testing.T) {
 	testCases := []struct {
 		name                       string

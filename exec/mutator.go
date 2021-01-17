@@ -357,6 +357,21 @@ func (irm *insertRuneMutator) String() string {
 	return fmt.Sprintf("InsertRune(%q)", irm.r)
 }
 
+// insertNewlineMutator inserts a newline at the current cursor position.
+type insertNewlineMutator struct{}
+
+func NewInsertNewlineMutator() Mutator {
+	return &insertNewlineMutator{}
+}
+
+func (inm *insertNewlineMutator) Mutate(state *EditorState) {
+	NewInsertRuneMutator('\n').Mutate(state)
+}
+
+func (inm *insertNewlineMutator) String() string {
+	return "InsertNewline()"
+}
+
 // deleteMutator deletes characters from the cursor position up to (but not including) the position returned by the locator.
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,

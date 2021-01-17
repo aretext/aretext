@@ -22,7 +22,7 @@ type Mutator interface {
 	Mutate(state *EditorState)
 }
 
-// CompositeMutator executes a series of mutations.
+// CompositeMutator executes a series of mutations in order.
 type CompositeMutator struct {
 	subMutators []Mutator
 }
@@ -31,7 +31,6 @@ func NewCompositeMutator(subMutators []Mutator) Mutator {
 	return &CompositeMutator{subMutators}
 }
 
-// Mutate executes a series of mutations in order.
 func (cm *CompositeMutator) Mutate(state *EditorState) {
 	for _, mut := range cm.subMutators {
 		mut.Mutate(state)
@@ -46,6 +45,7 @@ func (cm *CompositeMutator) String() string {
 	return fmt.Sprintf("Composite(%s)", strings.Join(args, ","))
 }
 
+// abortIfUnsavedChangesMutator executes a sub-mutator only if the document does not have unsaved changes.
 type abortIfUnsavedChangesMutator struct {
 	subMutator Mutator
 	showStatus bool
@@ -55,7 +55,6 @@ func NewAbortIfUnsavedChangesMutator(subMutator Mutator, showStatus bool) Mutato
 	return &abortIfUnsavedChangesMutator{subMutator, showStatus}
 }
 
-// Mutate executes a sub-mutator only if the document does not have unsaved changes.
 func (am *abortIfUnsavedChangesMutator) Mutate(state *EditorState) {
 	if state.hasUnsavedChanges {
 		log.Printf("Aborting mutator %s because document has unsaved changes", am.subMutator)
@@ -77,6 +76,7 @@ func (am *abortIfUnsavedChangesMutator) String() string {
 	return fmt.Sprintf("AbortIfUnsavedChanges(%s, showStatus=%t)", am.subMutator, am.showStatus)
 }
 
+// loadDocumentMutator loads the document into the editor.
 type loadDocumentMutator struct {
 	path          string
 	requireExists bool
@@ -87,7 +87,6 @@ func NewLoadDocumentMutator(path string, requireExists bool, showStatus bool) Mu
 	return &loadDocumentMutator{path, requireExists, showStatus}
 }
 
-// Mutate loads the document into the editor.
 func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 	var fileExists bool
 	tree, watcher, err := file.Load(ldm.path, file.DefaultPollInterval)
@@ -158,6 +157,7 @@ func (ldm *loadDocumentMutator) String() string {
 	return fmt.Sprintf("LoadDocument(%s, showStatus=%t)", ldm.path, ldm.showStatus)
 }
 
+// reloadDocumentMutator reloads the current document.
 type reloadDocumentMutator struct {
 	showStatus bool
 }
@@ -166,7 +166,6 @@ func NewReloadDocumentMutator(showStatus bool) Mutator {
 	return &reloadDocumentMutator{showStatus}
 }
 
-// Mutate reloads the current document.
 func (rdm *reloadDocumentMutator) Mutate(state *EditorState) {
 	path := state.fileWatcher.Path()
 	NewLoadDocumentMutator(path, true, rdm.showStatus).Mutate(state)
@@ -176,6 +175,7 @@ func (rdm *reloadDocumentMutator) String() string {
 	return fmt.Sprintf("ReloadDocument(showStatus=%t)", rdm.showStatus)
 }
 
+// saveDocumentMutator saves the currently loaded document to disk.
 type saveDocumentMutator struct {
 	force bool
 }
@@ -184,7 +184,6 @@ func NewSaveDocumentMutator(force bool) Mutator {
 	return &saveDocumentMutator{force}
 }
 
-// Mutate saves the currently loaded document to disk.
 func (sdm *saveDocumentMutator) Mutate(state *EditorState) {
 	path := state.fileWatcher.Path()
 	if state.fileWatcher.ChangedFlag() && !sdm.force {
@@ -228,6 +227,7 @@ func (sdm *saveDocumentMutator) String() string {
 	return fmt.Sprintf("SaveDocument(force=%t)", sdm.force)
 }
 
+// setInputModeMutator sets the editor input mode.
 type setInputModeMutator struct {
 	mode InputMode
 }
@@ -236,7 +236,6 @@ func NewSetInputModeMutator(mode InputMode) Mutator {
 	return &setInputModeMutator{mode}
 }
 
-// Mutate sets the editor input mode.
 func (sim *setInputModeMutator) Mutate(state *EditorState) {
 	state.inputMode = sim.mode
 }
@@ -245,11 +244,11 @@ func (sim *setInputModeMutator) String() string {
 	return fmt.Sprintf("SetInputMode(%s)", sim.mode)
 }
 
+// cursorMutator returns a mutator that updates the cursor location.
 type cursorMutator struct {
 	loc CursorLocator
 }
 
-// NewCursorMutator returns a mutator that updates the cursor location.
 func NewCursorMutator(loc CursorLocator) Mutator {
 	return &cursorMutator{loc}
 }
@@ -263,13 +262,13 @@ func (cpm *cursorMutator) String() string {
 	return fmt.Sprintf("MutateCursor(%s)", cpm.loc)
 }
 
+// scrollToCursorMutator updates the view origin so that the cursor is visible.
 type scrollToCursorMutator struct{}
 
 func NewScrollToCursorMutator() Mutator {
 	return &scrollToCursorMutator{}
 }
 
-// Mutate updates the view origin so that the cursor is visible.
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 	bufferState := state.documentBuffer
 	bufferState.view.textOrigin = ScrollToCursor(
@@ -284,6 +283,7 @@ func (sm *scrollToCursorMutator) String() string {
 	return "ScrollToCursor()"
 }
 
+// scrollLinesMutator moves the view origin up/down by the specified number of lines.
 type scrollLinesMutator struct {
 	direction text.ReadDirection
 	numLines  uint64
@@ -293,7 +293,6 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 	return &scrollLinesMutator{direction, numLines}
 }
 
-// Mutate moves the view origin up/down by the specified number of lines.
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 	bufferState := state.documentBuffer
 	lineNum := bufferState.textTree.LineNumForPosition(bufferState.view.textOrigin)
@@ -327,6 +326,7 @@ func (sm *scrollLinesMutator) String() string {
 	return fmt.Sprintf("ScrollLines(%s, %d)", sm.direction, sm.numLines)
 }
 
+// insertRuneMutator inserts a rune at the current cursor location.
 type insertRuneMutator struct {
 	r rune
 }
@@ -335,7 +335,6 @@ func NewInsertRuneMutator(r rune) Mutator {
 	return &insertRuneMutator{r}
 }
 
-// Mutate inserts a rune at the current cursor location.
 func (irm *insertRuneMutator) Mutate(state *EditorState) {
 	bufferState := state.documentBuffer
 	startPos := bufferState.cursor.position
@@ -358,6 +357,10 @@ func (irm *insertRuneMutator) String() string {
 	return fmt.Sprintf("InsertRune(%q)", irm.r)
 }
 
+// deleteMutator deletes characters from the cursor position up to (but not including) the position returned by the locator.
+// It can delete either forwards or backwards from the cursor.
+// The cursor position will be set to the start of the deleted region,
+// which could be on a newline character or past the end of the text.
 type deleteMutator struct {
 	loc CursorLocator
 }
@@ -366,10 +369,6 @@ func NewDeleteMutator(loc CursorLocator) Mutator {
 	return &deleteMutator{loc}
 }
 
-// Mutate deletes characters from the cursor position up to (but not including) the position returned by the locator.
-// It can delete either forwards or backwards from the cursor.
-// The cursor position will be set to the start of the deleted region,
-// which could be on a newline character or past the end of the text.
 func (dm *deleteMutator) Mutate(state *EditorState) {
 	bufferState := state.documentBuffer
 	startPos := bufferState.cursor.position
@@ -400,6 +399,8 @@ func (dm *deleteMutator) String() string {
 	return fmt.Sprintf("Delete(%s)", dm.loc)
 }
 
+// deleteLinesMutator deletes lines from the cursor's current line to the line of a target cursor.
+// It moves the cursor to the start of the line following the last deleted line.
 type deleteLinesMutator struct {
 	targetLineLocator          CursorLocator
 	abortIfTargetIsCurrentLine bool
@@ -409,8 +410,6 @@ func NewDeleteLinesMutator(targetLineLocator CursorLocator, abortIfTargetIsCurre
 	return &deleteLinesMutator{targetLineLocator, abortIfTargetIsCurrentLine}
 }
 
-// Mutate deletes lines from the cursor's current line to the line of a target cursor.
-// It moves the cursor to the start of the line following the last deleted line.
 func (dlm *deleteLinesMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
 	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
@@ -459,6 +458,7 @@ func (dlm *deleteLinesMutator) String() string {
 	return fmt.Sprintf("DeleteLines(%s, abortIfTargetIsCurrentLine=%t)", dlm.targetLineLocator, dlm.abortIfTargetIsCurrentLine)
 }
 
+// setSyntaxMutator sets the syntax language for the current document.
 type setSyntaxMutator struct {
 	language syntax.Language
 }
@@ -478,6 +478,7 @@ func (ssm *setSyntaxMutator) String() string {
 	return fmt.Sprintf("SetSyntax(%s)", ssm.language)
 }
 
+// resizeMutator resizes the view to the specified width and height.
 type resizeMutator struct {
 	width, height uint64
 }
@@ -486,7 +487,6 @@ func NewResizeMutator(width, height uint64) Mutator {
 	return &resizeMutator{width, height}
 }
 
-// Mutate resizes the view to the specified width and height.
 func (rm *resizeMutator) Mutate(state *EditorState) {
 	state.screenWidth = rm.width
 	state.screenHeight = rm.height
@@ -504,6 +504,7 @@ func (rm *resizeMutator) String() string {
 	return fmt.Sprintf("Resize(%d,%d)", rm.width, rm.height)
 }
 
+// showMenuMutator displays the menu with the specified prompt and items.
 type showMenuMutator struct {
 	prompt            string
 	loadItems         func() []MenuItem
@@ -519,7 +520,6 @@ func NewShowMenuMutatorWithItems(prompt string, items []MenuItem, emptyQueryShow
 	return NewShowMenuMutator(prompt, loadItems, emptyQueryShowAll)
 }
 
-// Mutate displays the menu with the specified prompt and items.
 func (smm *showMenuMutator) Mutate(state *EditorState) {
 	search := &MenuSearch{emptyQueryShowAll: smm.emptyQueryShowAll}
 	search.AddItems(smm.loadItems())
@@ -536,13 +536,13 @@ func (smm *showMenuMutator) String() string {
 	return fmt.Sprintf("ShowMenu(%s, emptyQueryShowAll=%t)", smm.prompt, smm.emptyQueryShowAll)
 }
 
+// hideMenuMutator hides the menu.
 type hideMenuMutator struct{}
 
 func NewHideMenuMutator() Mutator {
 	return &hideMenuMutator{}
 }
 
-// Mutate hides the menu.
 func (hmm *hideMenuMutator) Mutate(state *EditorState) {
 	state.menu = &MenuState{}
 	state.inputMode = InputModeNormal
@@ -552,13 +552,13 @@ func (hmm *hideMenuMutator) String() string {
 	return "HideMenu()"
 }
 
+// executeSelectedMenuItemMutator executes the action of the selected menu item and closes the menu.
 type executeSelectedMenuItemMutator struct{}
 
 func NewExecuteSelectedMenuItemMutator() Mutator {
 	return &executeSelectedMenuItemMutator{}
 }
 
-// Mutate executes the action of the selected menu item and closes the menu.
 func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
 	search := state.menu.search
 	results := search.Results()
@@ -588,6 +588,7 @@ func (esm *executeSelectedMenuItemMutator) String() string {
 	return "ExecuteSelectedMenuItem()"
 }
 
+// moveMenuSelectionMutator moves the menu selection up or down with wraparound.
 type moveMenuSelectionMutator struct {
 	// Number of items to move up/down.
 	// Negative deltas move the selection up; positive deltas move the selection down.
@@ -598,7 +599,6 @@ func NewMoveMenuSelectionMutator(delta int) Mutator {
 	return &moveMenuSelectionMutator{delta}
 }
 
-// Mutate moves the menu selection up or down with wraparound.
 func (mms *moveMenuSelectionMutator) Mutate(state *EditorState) {
 	numResults := len(state.menu.search.Results())
 	if numResults == 0 {
@@ -617,6 +617,7 @@ func (mms *moveMenuSelectionMutator) String() string {
 	return fmt.Sprintf("MoveMenuSelection(%d)", mms.delta)
 }
 
+// appendMenuSearchMutator appends a rune to the menu search query.
 type appendMenuSearchMutator struct {
 	r rune
 }
@@ -636,6 +637,7 @@ func (ams *appendMenuSearchMutator) String() string {
 	return fmt.Sprintf("AppendMenuSearch(%q)", ams.r)
 }
 
+// deleteMenuSearchMutator deletes a rune from the menu search query.
 type deleteMenuSearchMutator struct{}
 
 func NewDeleteMenuSearchMutator() Mutator {
@@ -657,6 +659,7 @@ func (dms *deleteMenuSearchMutator) String() string {
 	return "DeleteMenuSearch()"
 }
 
+// setStatusMsgMutator sets the message displayed in the status bar.
 type setStatusMsgMutator struct {
 	statusMsg StatusMsg
 }
@@ -665,7 +668,6 @@ func NewSetStatusMsgMutator(statusMsg StatusMsg) Mutator {
 	return &setStatusMsgMutator{statusMsg}
 }
 
-// Mutate sets the message displayed in the status bar.
 func (smm *setStatusMsgMutator) Mutate(state *EditorState) {
 	state.statusMsg = smm.statusMsg
 }
@@ -674,6 +676,7 @@ func (smm *setStatusMsgMutator) String() string {
 	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
 }
 
+// quitMutator sets a flag that terminates the program.
 type quitMutator struct{}
 
 func NewQuitMutator() Mutator {

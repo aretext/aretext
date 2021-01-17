@@ -3,13 +3,30 @@ Minimalist terminal-based text editor, mostly vim-compatible.
 
 Design principles:
 
-1. Choose speed over flexibility.
+1. Prioritize simplicity and performance over flexibility.
 2. Compose seamlessly with the rest of the \*nix ecosystem (tmux, grep, code formatters, compilers, git, zsh, etc).
 
 
-## Roadmap
+## Project Status
 
-### 1.0: "just enough to use it as an editor"
+**Pre-alpha!**
+
+* Important features are planned, but not yet implemented.
+* Documentation has not yet been written.
+* The user interface may change in fundamental ways.
+
+
+## Getting Started
+
+To build aretext and run tests, use `make`.
+
+You can then open a file: `./aretext /path/to/file.txt`
+
+* The editor supports most key sequences from vim's insert and normal modes.
+* Press ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
+
+
+## Roadmap
 
 - [x] display file contents, with support for wide characters and grapheme clustering
 - [x] exit
@@ -27,22 +44,21 @@ Design principles:
 - [x] save changes
 - [x] close and open new document
 - [x] vim newline command ('o')
+- [ ] autoindent
+- [ ] replace tabs with spaces
+- [ ] display tabs
 - [ ] custom menu items that invoke external programs
 - [ ] undo/redo
 - [ ] line numbers
-- [ ] copy/paste using system clipboard integration
 - [ ] vim replace/change commands
 - [ ] vim word navigation
 - [ ] vim section navigation
 - [ ] visual mode / selection
+- [ ] selection clipboard (delete/yank/put)
+- [ ] copy/paste using system clipboard integration
 - [ ] forward search through file
 - [ ] backward search through file
-
-
-### Beyond 1.0
-
-- [ ] autoindent
 - [ ] match parens
 - [ ] repeat last action ('.')
 - [ ] vim repeat commands ('10x')
-- [ ] jump to definition (without an index)
+- [ ] jump to definition

@@ -20,8 +20,11 @@ const scrollMargin = 3
 
 // ScrollToCursor returns a new view origin such that the cursor is visible.
 // It attempts to display a few lines before/after the cursor to help the user navigate.
-func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight uint64) uint64 {
-	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), GraphemeClusterWidth)
+func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight, tabSize uint64) uint64 {
+	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
+		return GraphemeClusterWidth(gc, offsetInLine, tabSize)
+	}
+	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), gcWidthFunc)
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)
 	if cursorPos < rng.startPos {
 		// scroll backward

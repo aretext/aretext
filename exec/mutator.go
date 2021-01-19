@@ -120,6 +120,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		state.documentBuffer.cursor = cursorState{}
 		state.documentBuffer.view.textOrigin = 0
 		state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
+		state.documentBuffer.tabSize = uint64(config.TabSize) // This is safe because tab size is always a positive int.
 	}
 
 	ldm.reportSuccess(state, fileExists)
@@ -276,7 +277,8 @@ func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 		bufferState.textTree,
 		bufferState.view.textOrigin,
 		bufferState.view.width,
-		bufferState.view.height)
+		bufferState.view.height,
+		bufferState.tabSize)
 }
 
 func (sm *scrollToCursorMutator) String() string {

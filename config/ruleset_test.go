@@ -33,8 +33,11 @@ func TestConfigForPath(t *testing.T) {
 					Config:  Config{SyntaxLanguage: "undefined"},
 				},
 			},
-			path:           "test.json",
-			expectedConfig: Config{SyntaxLanguage: "json"},
+			path: "test.json",
+			expectedConfig: Config{
+				SyntaxLanguage: "json",
+				TabSize:        4,
+			},
 		},
 	}
 

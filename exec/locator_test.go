@@ -772,6 +772,7 @@ func TestRelativeLineLocator(t *testing.T) {
 			state := BufferState{
 				textTree: textTree,
 				cursor:   tc.initialCursor,
+				tabSize:  4,
 			}
 			loc := NewRelativeLineLocator(tc.direction, tc.count)
 			nextCursor := loc.Locate(&state)

@@ -310,7 +310,7 @@ func (loc *relativeLineLocator) Locate(state *BufferState) cursorState {
 	}
 
 	targetOffset := loc.findOffsetFromLineStart(state, lineStartPos)
-	newPos, actualOffset := loc.advanceToOffset(state.textTree, targetLineStartPos, targetOffset)
+	newPos, actualOffset := loc.advanceToOffset(state.textTree, targetLineStartPos, targetOffset, state.TabSize())
 	return cursorState{
 		position:      newPos,
 		logicalOffset: targetOffset - actualOffset,
@@ -355,14 +355,14 @@ func (loc *relativeLineLocator) findOffsetFromLineStart(state *BufferState, line
 			break
 		}
 
-		offset += GraphemeClusterWidth(seg.Runes(), offset)
+		offset += GraphemeClusterWidth(seg.Runes(), offset, state.TabSize())
 		pos += seg.NumRunes()
 	}
 
 	return offset + state.cursor.logicalOffset
 }
 
-func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos uint64, targetOffset uint64) (newPos, actualOffset uint64) {
+func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos uint64, targetOffset uint64, tabSize uint64) (newPos, actualOffset uint64) {
 	segmentIter := gcIterForTree(tree, lineStartPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	var endOfLineOrFile bool
@@ -380,7 +380,7 @@ func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos ui
 			break
 		}
 
-		gcWidth := GraphemeClusterWidth(seg.Runes(), cellOffset)
+		gcWidth := GraphemeClusterWidth(seg.Runes(), cellOffset, tabSize)
 		if cellOffset+gcWidth > targetOffset {
 			break
 		}

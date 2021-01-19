@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -24,7 +25,7 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := exec.GraphemeClusterWidth(gcRunes, uint64(col))
+		gcWidth := exec.GraphemeClusterWidth(gcRunes, uint64(col), config.DefaultTabSize)
 		if uint64(col)+gcWidth > uint64(maxLineWidth) {
 			break
 		}

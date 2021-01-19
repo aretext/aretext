@@ -185,7 +185,7 @@ func TestScrollToCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			updatedViewStartPos := ScrollToCursor(tc.cursorPos, tree, tc.viewStartPos, tc.viewWidth, tc.viewHeight)
+			updatedViewStartPos := ScrollToCursor(tc.cursorPos, tree, tc.viewStartPos, tc.viewWidth, tc.viewHeight, 4)
 			assert.Equal(t, tc.expectedPos, updatedViewStartPos)
 		})
 	}

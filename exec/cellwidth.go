@@ -23,13 +23,11 @@ func RuneWidth(r rune) uint64 {
 	return uint64(grw.RuneWidth(r))
 }
 
-const tabSize = uint64(4)
-
 // GraphemeClusterWidth returns the width in cells of a grapheme cluster.
 // It attempts to handle combining characters, emoji, and regional indicators reasonably,
 // but can't be 100% accurate without knowing how the terminal will render the glyphs.
 // Tab width is determined based on the position within the line.
-func GraphemeClusterWidth(gc []rune, offsetInLine uint64) uint64 {
+func GraphemeClusterWidth(gc []rune, offsetInLine uint64, tabSize uint64) uint64 {
 	if len(gc) == 0 {
 		return 0
 	}

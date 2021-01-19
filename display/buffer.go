@@ -21,7 +21,10 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	pos := viewTextOrigin
 	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
-	wrapConfig := segment.NewLineWrapConfig(uint64(width), exec.GraphemeClusterWidth)
+	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
+		return exec.GraphemeClusterWidth(gc, offsetInLine, bufferState.TabSize())
+	}
+	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
 	tokenIter := bufferState.TokenTree().IterFromPosition(pos)
@@ -35,7 +38,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos)
+		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, gcWidthFunc)
 		pos += wrappedLine.NumRunes()
 	}
 
@@ -51,7 +54,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64) {
+func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, gcWidthFunc segment.GraphemeClusterWidthFunc) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -69,7 +72,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := exec.GraphemeClusterWidth(gcRunes, totalWidth)
+		gcWidth := gcWidthFunc(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {

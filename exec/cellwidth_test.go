@@ -134,7 +134,7 @@ func TestGraphemeClusterWidth(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			width := GraphemeClusterWidth(tc.gc, tc.offset)
+			width := GraphemeClusterWidth(tc.gc, tc.offset, 4)
 			assert.Equal(t, tc.expectedWidth, width)
 		})
 	}

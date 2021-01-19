@@ -102,6 +102,7 @@ type BufferState struct {
 	syntaxLanguage syntax.Language
 	tokenTree      *parser.TokenTree
 	tokenizer      *parser.Tokenizer
+	tabSize        uint64
 }
 
 func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
@@ -118,6 +119,7 @@ func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth
 		syntaxLanguage: syntax.LanguageUndefined,
 		tokenTree:      nil,
 		tokenizer:      nil,
+		tabSize:        uint64(config.DefaultTabSize),
 	}
 }
 
@@ -186,6 +188,10 @@ func (s *BufferState) retokenizeAfterEdit(edit parser.Edit) error {
 
 	s.tokenTree = updatedTokenTree
 	return nil
+}
+
+func (s *BufferState) TabSize() uint64 {
+	return s.tabSize
 }
 
 // cursorState is the current state of the cursor.

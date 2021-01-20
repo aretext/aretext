@@ -31,6 +31,8 @@ func main() {
 		log.Fatalf("Must specify outputPath\n")
 	}
 
+	fmt.Printf("Generating config implementation at '%s' from '%s'\n", outputPath, inputPath)
+
 	fields, err := loadSpecFields(inputPath)
 	if err != nil {
 		log.Fatalf("Could not load spec from '%s': %v\n", inputPath, err)

@@ -11,6 +11,7 @@ import (
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/text/segment"
 )
 
 // Mutator modifies the state of the editor.
@@ -121,6 +122,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		state.documentBuffer.view.textOrigin = 0
 		state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
 		state.documentBuffer.tabSize = uint64(config.TabSize) // This is safe because tab size is always a positive int.
+		state.documentBuffer.autoIndent = config.AutoIndent
 	}
 
 	ldm.reportSuccess(state, fileExists)
@@ -368,6 +370,57 @@ func NewInsertNewlineMutator() Mutator {
 
 func (inm *insertNewlineMutator) Mutate(state *EditorState) {
 	NewInsertRuneMutator('\n').Mutate(state)
+
+	buffer := state.documentBuffer
+	if buffer.autoIndent {
+		numCols := inm.numColsIndentedPrevLine(buffer)
+		inm.indentFromCursor(state, numCols)
+	}
+}
+
+func (inm *insertNewlineMutator) numColsIndentedPrevLine(buffer *BufferState) uint64 {
+	tabSize := buffer.tabSize
+	lineNum := buffer.textTree.LineNumForPosition(buffer.cursor.position)
+	if lineNum == 0 {
+		return 0
+	}
+
+	prevLineStartPos := buffer.textTree.LineStartPosition(lineNum - 1)
+	iter := gcIterForTree(buffer.textTree, prevLineStartPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	numCols := uint64(0)
+	for {
+		eof := nextSegmentOrEof(iter, seg)
+		if eof {
+			break
+		}
+
+		gc := seg.Runes()
+		if gc[0] != '\t' && gc[0] != ' ' {
+			break
+		}
+
+		numCols += GraphemeClusterWidth(gc, numCols, tabSize)
+	}
+
+	return numCols
+}
+
+func (inm *insertNewlineMutator) indentFromCursor(state *EditorState, numCols uint64) {
+	tabSize := state.documentBuffer.tabSize
+	insertTabMutator := NewInsertRuneMutator('\t')
+	insertSpaceMutator := NewInsertRuneMutator(' ')
+
+	i := uint64(0)
+	for i < numCols {
+		if numCols-i >= tabSize {
+			insertTabMutator.Mutate(state)
+			i += tabSize
+		} else {
+			insertSpaceMutator.Mutate(state)
+			i++
+		}
+	}
 }
 
 func (inm *insertNewlineMutator) String() string {

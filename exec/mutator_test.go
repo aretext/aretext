@@ -333,15 +333,91 @@ func TestDeleteMutator(t *testing.T) {
 }
 
 func TestInsertNewlineMutator(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abcd")
-	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
-	state.documentBuffer.textTree = textTree
-	state.documentBuffer.cursor = cursorState{position: 2}
-	mutator := NewInsertNewlineMutator()
-	mutator.Mutate(state)
-	assert.Equal(t, cursorState{position: 3}, state.documentBuffer.cursor)
-	assert.Equal(t, "ab\ncd", textTree.String())
+	testCases := []struct {
+		name              string
+		inputString       string
+		autoIndent        bool
+		cursorPos         uint64
+		expectedCursorPos uint64
+		expectedText      string
+	}{
+		{
+			name:              "empty document, autoindent disabled",
+			inputString:       "",
+			cursorPos:         0,
+			expectedCursorPos: 1,
+			expectedText:      "\n",
+		},
+		{
+			name:              "single line, autoindent disabled, no indentation",
+			inputString:       "abcd",
+			cursorPos:         2,
+			expectedCursorPos: 3,
+			expectedText:      "ab\ncd",
+		},
+		{
+			name:              "single line, autoindent disabled, with indentation",
+			inputString:       "\tabcd",
+			cursorPos:         3,
+			expectedCursorPos: 4,
+			expectedText:      "\tab\ncd",
+		},
+		{
+			name:              "single line, autoindent enabled, no indentation",
+			inputString:       "abcd",
+			autoIndent:        true,
+			cursorPos:         2,
+			expectedCursorPos: 3,
+			expectedText:      "ab\ncd",
+		},
+		{
+			name:              "single line, autoindent enabled, tab indentation",
+			inputString:       "\tabcd",
+			autoIndent:        true,
+			cursorPos:         3,
+			expectedCursorPos: 5,
+			expectedText:      "\tab\n\tcd",
+		},
+		{
+			name:              "single line, autoindent enabled, space indentation",
+			inputString:       "    abcd",
+			autoIndent:        true,
+			cursorPos:         6,
+			expectedCursorPos: 8,
+			expectedText:      "    ab\n\tcd",
+		},
+		{
+			name:              "single line, autoindent enabled, mixed tabs and spaces aligned indentation",
+			inputString:       " \tabcd",
+			autoIndent:        true,
+			cursorPos:         4,
+			expectedCursorPos: 6,
+			expectedText:      " \tab\n\tcd",
+		},
+		{
+			name:              "single line, autoindent enabled, mixed tabs and spaces misaligned indentation",
+			inputString:       "\t abcd",
+			autoIndent:        true,
+			cursorPos:         4,
+			expectedCursorPos: 7,
+			expectedText:      "\t ab\n\t cd",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, config.RuleSet{})
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
+			state.documentBuffer.autoIndent = tc.autoIndent
+			mutator := NewInsertNewlineMutator()
+			mutator.Mutate(state)
+			assert.Equal(t, cursorState{position: tc.expectedCursorPos}, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
 }
 
 func TestInsertTabMutator(t *testing.T) {

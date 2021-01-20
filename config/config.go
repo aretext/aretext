@@ -15,16 +15,21 @@ type Config struct {
 
 	// Size of a tab character in columns.
 	TabSize int
+
+	// If enabled, indent a new line to match indentation of the previous line.
+	AutoIndent bool
 }
 
 const DefaultSyntaxLanguage = "undefined"
 const DefaultTabSize = 4
+const DefaultAutoIndent = false
 
 // DefaultConfig constructs a configuration with default values.
 func DefaultConfig() Config {
 	return Config{
 		SyntaxLanguage: "undefined",
 		TabSize:        4,
+		AutoIndent:     false,
 	}
 }
 
@@ -39,6 +44,10 @@ func (c *Config) Apply(o PartialConfig) {
 		c.TabSize = *o.TabSize
 	}
 
+	if o.AutoIndent != nil {
+		c.AutoIndent = *o.AutoIndent
+	}
+
 }
 
 // ToPartial converts the config to a partial config.
@@ -46,6 +55,7 @@ func (c Config) ToPartial() PartialConfig {
 	return PartialConfig{
 		SyntaxLanguage: &c.SyntaxLanguage,
 		TabSize:        &c.TabSize,
+		AutoIndent:     &c.AutoIndent,
 	}
 }
 
@@ -53,6 +63,7 @@ func (c Config) ToPartial() PartialConfig {
 type PartialConfig struct {
 	SyntaxLanguage *string
 	TabSize        *int
+	AutoIndent     *bool
 }
 
 // Validate checks that all fields in the partial config are valid.

@@ -103,6 +103,7 @@ type BufferState struct {
 	tokenTree      *parser.TokenTree
 	tokenizer      *parser.Tokenizer
 	tabSize        uint64
+	autoIndent     bool
 }
 
 func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
@@ -120,6 +121,7 @@ func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth
 		tokenTree:      nil,
 		tokenizer:      nil,
 		tabSize:        uint64(config.DefaultTabSize),
+		autoIndent:     config.DefaultAutoIndent,
 	}
 }
 

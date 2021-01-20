@@ -35,13 +35,6 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 	// that the user can edit and save to the specified path.
 	loadMutator := exec.NewLoadDocumentMutator(effectivePath(path), false, true)
 	editor.applyMutator(loadMutator)
-
-	if path == "" {
-		// If the user didn't specify a path, automatically open the "find files" menu
-		// so they can search for a file to open.
-		editor.applyMutator(input.ShowFileMenuMutator())
-	}
-
 	return editor
 }
 

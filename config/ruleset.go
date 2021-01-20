@@ -45,5 +45,6 @@ func (rs *RuleSet) ConfigForPath(path string) Config {
 			config.Apply(rule.Config)
 		}
 	}
+	log.Printf("Resolved config for path '%s': %#v\n", path, config)
 	return config
 }

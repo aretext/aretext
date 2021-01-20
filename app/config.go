@@ -36,6 +36,12 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	} else if err != nil {
 		return config.RuleSet{}, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
 	}
+
+	err = rs.Validate()
+	if err != nil {
+		return config.RuleSet{}, err
+	}
+
 	return rs, nil
 }
 
@@ -55,14 +61,14 @@ func defaultConfigRuleSet() config.RuleSet {
 			{
 				Name:    "default",
 				Pattern: "**",
-				Config:  config.DefaultConfig(),
+				Config:  config.DefaultConfig().ToPartial(),
 			},
 			{
 				Name:    "json",
 				Pattern: "**/*.json",
 				Config: config.Config{
 					SyntaxLanguage: syntax.LanguageJson.String(),
-				},
+				}.ToPartial(),
 			},
 		},
 	}

@@ -18,14 +18,14 @@ func TestSaveAndLoadRuleSet(t *testing.T) {
 				Pattern: "**",
 				Config: Config{
 					SyntaxLanguage: "undefined",
-				},
+				}.ToPartial(),
 			},
 			{
 				Name:    "json",
 				Pattern: "**/*.json",
 				Config: Config{
 					SyntaxLanguage: "json",
-				},
+				}.ToPartial(),
 			},
 		},
 	}

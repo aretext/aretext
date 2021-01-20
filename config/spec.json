@@ -1,0 +1,22 @@
+[
+  {
+    "name": "SyntaxLanguage",
+    "type": "string",
+    "validators": [{
+      "name": "StringLenGreaterThan",
+      "args": [0]
+    }],
+    "default": "undefined",
+    "description": "Language used for syntax highlighting."
+  },
+  {
+    "name": "TabSize",
+    "type": "int",
+    "validators": [{
+      "name": "IntGreaterThan",
+      "args": [0]
+    }],
+    "default": 4,
+    "description": "Size of a tab character in columns."
+  }
+]

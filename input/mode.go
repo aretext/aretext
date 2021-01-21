@@ -384,7 +384,10 @@ func (m *insertMode) insertTab() exec.Mutator {
 }
 
 func (m *insertMode) deletePrevChar() exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
+	loc := exec.NewMinPosLocator([]exec.CursorLocator{
+		exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true),
+		exec.NewPrevAutoIndentLocator(),
+	})
 	return exec.NewDeleteMutator(loc)
 }
 

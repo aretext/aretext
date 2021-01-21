@@ -3,6 +3,7 @@ package exec
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -16,9 +17,9 @@ type CursorLocator interface {
 	Locate(state *BufferState) cursorState
 }
 
+// currentCursorLocator locates the current cursor position.
 type currentCursorLocator struct{}
 
-// NewCurrentCursorLocator locates the current cursor position.
 func NewCurrentCursorLocator() CursorLocator {
 	return &currentCursorLocator{}
 }
@@ -29,6 +30,35 @@ func (loc *currentCursorLocator) Locate(state *BufferState) cursorState {
 
 func (loc *currentCursorLocator) String() string {
 	return "CurrentCursorLocator()"
+}
+
+// mnPosLocator returns the cursor with the smallest position.
+type minPosLocator struct {
+	childLocators []CursorLocator
+}
+
+func NewMinPosLocator(childLocators []CursorLocator) CursorLocator {
+	return &minPosLocator{childLocators}
+}
+
+func (loc *minPosLocator) Locate(state *BufferState) cursorState {
+	min := state.cursor
+	for i, child := range loc.childLocators {
+		c := child.Locate(state)
+		if i == 0 || c.position < min.position {
+			min = c
+		}
+	}
+	return min
+}
+
+func (loc *minPosLocator) String() string {
+	childStrings := make([]string, 0, len(loc.childLocators))
+	for _, child := range loc.childLocators {
+		childStrings = append(childStrings, child.String())
+	}
+
+	return fmt.Sprintf("MinPosLocator(%s)", strings.Join(childStrings, ","))
 }
 
 // charInLineLocator locates a character (grapheme cluster) in the current line.
@@ -134,6 +164,60 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *BufferState) uint64
 		return startPos + prevOffset
 	}
 	return startPos + prevPrevOffset
+}
+
+// prevAutoIndentLocator returns the location of the previous tab stop if autoIndent is enabled.
+// It returns the current cursor position if autoIndent is disabled or the characters before the cursor are not spaces/tabs.
+type prevAutoIndentLocator struct{}
+
+func NewPrevAutoIndentLocator() CursorLocator {
+	return &prevAutoIndentLocator{}
+}
+
+func (loc *prevAutoIndentLocator) Locate(state *BufferState) cursorState {
+	if !state.autoIndent {
+		return state.cursor
+	}
+
+	tabSize := state.TabSize()
+	lineNum := state.textTree.LineNumForPosition(state.cursor.position)
+	pos := state.textTree.LineStartPosition(lineNum)
+
+	// Iterate grapheme clusters from the start of the current line.
+	iter := gcIterForTree(state.textTree, pos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+
+	var offset uint64
+	lastAlignedPos := pos
+	for pos < state.cursor.position {
+		if offset%tabSize == 0 {
+			// Keep track of the last position at the start of a tab stop.
+			lastAlignedPos = pos
+		}
+
+		eof := nextSegmentOrEof(iter, seg)
+		if eof {
+			break
+		}
+
+		r := seg.Runes()[0]
+		if r != ' ' && r != '\t' {
+			// Terminate because we're past the indent at the beginning of the line.
+			return state.cursor
+		}
+
+		// Move the offset by the number of cells.
+		// This correctly extends tab characters to fill cells to the next tab stop.
+		offset += GraphemeClusterWidth(seg.Runes(), offset, tabSize)
+		pos += seg.NumRunes()
+	}
+
+	// Outdent to the last tab stop position before the cursor.
+	return cursorState{position: lastAlignedPos}
+}
+
+func (loc *prevAutoIndentLocator) String() string {
+	return "PrevAutoIndentLocator()"
 }
 
 // ontoDocumentLocator finds a valid position within the document closest to the cursor.

@@ -267,6 +267,94 @@ func TestPrevCharInLine(t *testing.T) {
 	}
 }
 
+func TestPrevAutoIndentLocator(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		autoIndentEnabled bool
+		initialCursor     cursorState
+		expectedCursor    cursorState
+	}{
+		{
+			name:           "empty string",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "multiple tabs, autoindent disabled",
+			inputString:    "\t\t",
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:              "single space, autoindent enabled",
+			inputString:       " ",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 1},
+			expectedCursor:    cursorState{position: 0},
+		},
+		{
+			name:              "multiple spaces, autoindent enabled",
+			inputString:       "        ",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 8},
+			expectedCursor:    cursorState{position: 4},
+		},
+		{
+			name:              "multiple tabs, autoindent enabled",
+			inputString:       "\t\t",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 2},
+			expectedCursor:    cursorState{position: 1},
+		},
+		{
+			name:              "mixed tabs and spaces, autoindent enabled",
+			inputString:       " \t",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 2},
+			expectedCursor:    cursorState{position: 0},
+		},
+		{
+			name:              "no tabs or spaces, autoindent enabled",
+			inputString:       "ab",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 2},
+			expectedCursor:    cursorState{position: 2},
+		},
+		{
+			name:              "start of line, autoindent enabled",
+			inputString:       "ab\ncd",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 2},
+			expectedCursor:    cursorState{position: 2},
+		},
+		{
+			name:              "end of document, autoindent enabled",
+			inputString:       "ab\n\n",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 3},
+			expectedCursor:    cursorState{position: 3},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree:   textTree,
+				cursor:     tc.initialCursor,
+				autoIndent: tc.autoIndentEnabled,
+				tabSize:    4,
+			}
+			loc := NewPrevAutoIndentLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
 func TestOntoDocumentLocator(t *testing.T) {
 	testCases := []struct {
 		name           string

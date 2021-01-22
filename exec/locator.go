@@ -166,6 +166,33 @@ func (loc *charInLineLocator) findPositionAfterCursor(state *BufferState) uint64
 	return startPos + prevPrevOffset
 }
 
+// prevCharLocator returns the position before the cursor, which may be on a previous line.
+type prevCharLocator struct {
+	count uint64
+}
+
+func NewPrevCharLocator(count uint64) CursorLocator {
+	return &prevCharLocator{count}
+}
+
+func (loc *prevCharLocator) Locate(state *BufferState) cursorState {
+	pos := state.cursor.position
+	iter := gcIterForTree(state.textTree, pos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	for i := uint64(0); i < loc.count; i++ {
+		eof := nextSegmentOrEof(iter, seg)
+		if eof {
+			break
+		}
+		pos -= seg.NumRunes()
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *prevCharLocator) String() string {
+	return fmt.Sprintf("PrevCharLocator(%d)", loc.count)
+}
+
 // prevAutoIndentLocator returns the location of the previous tab stop if autoIndent is enabled.
 // It returns the current cursor position if autoIndent is disabled or the characters before the cursor are not spaces/tabs.
 type prevAutoIndentLocator struct{}

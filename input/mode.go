@@ -54,6 +54,8 @@ func (m *normalMode) processSpecialKey(key tcell.Key, config Config) exec.Mutato
 		return m.cursorUp()
 	case tcell.KeyDown:
 		return m.cursorDown()
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		return m.cursorBack()
 	case tcell.KeyCtrlU:
 		return m.scrollUp(config.ScrollLines)
 	case tcell.KeyCtrlD:
@@ -156,6 +158,11 @@ func (m *normalMode) showCommandMenu() exec.Mutator {
 
 func (m *normalMode) cursorLeft() exec.Mutator {
 	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
+	return exec.NewCursorMutator(loc)
+}
+
+func (m *normalMode) cursorBack() exec.Mutator {
+	loc := exec.NewPrevCharLocator(1)
 	return exec.NewCursorMutator(loc)
 }
 

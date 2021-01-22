@@ -267,6 +267,73 @@ func TestPrevCharInLine(t *testing.T) {
 	}
 }
 
+func TestPrevCharLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		count          uint64
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty string",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			count:          1,
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "back single char, same line",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 5},
+			count:          1,
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "back single char, prev line",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 3},
+			count:          1,
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "back multi-char grapheme cluster",
+			inputString:    "e\u0301xyz",
+			initialCursor:  cursorState{position: 2},
+			count:          1,
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "back multiple chars, within document",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 5},
+			count:          3,
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "back multiple chars, outside document",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 5},
+			count:          100,
+			expectedCursor: cursorState{position: 0},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			loc := NewPrevCharLocator(tc.count)
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
 func TestPrevAutoIndentLocator(t *testing.T) {
 	testCases := []struct {
 		name              string

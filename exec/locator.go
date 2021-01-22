@@ -207,8 +207,7 @@ func (loc *prevAutoIndentLocator) Locate(state *BufferState) cursorState {
 	}
 
 	tabSize := state.TabSize()
-	lineNum := state.textTree.LineNumForPosition(state.cursor.position)
-	pos := state.textTree.LineStartPosition(lineNum)
+	pos := lineStartPos(state.textTree, state.cursor.position)
 
 	// Iterate grapheme clusters from the start of the current line.
 	iter := gcIterForTree(state.textTree, pos, text.ReadDirectionForward)
@@ -414,7 +413,7 @@ func NewRelativeLineLocator(direction text.ReadDirection, count uint64) CursorLo
 // If the target line has more characters than the starting line, then the cursor will move
 // as close as possible to the logical offset.
 func (loc *relativeLineLocator) Locate(state *BufferState) cursorState {
-	lineStartPos := loc.findLineStart(state.textTree, state.cursor.position)
+	lineStartPos := lineStartPos(state.textTree, state.cursor.position)
 	targetLineStartPos := loc.findTargetLineStartPos(state)
 	if targetLineStartPos == lineStartPos {
 		return state.cursor
@@ -426,11 +425,6 @@ func (loc *relativeLineLocator) Locate(state *BufferState) cursorState {
 		position:      newPos,
 		logicalOffset: targetOffset - actualOffset,
 	}
-}
-
-func (loc *relativeLineLocator) findLineStart(tree *text.Tree, pos uint64) uint64 {
-	lineNum := tree.LineNumForPosition(pos)
-	return tree.LineStartPosition(lineNum)
 }
 
 func (loc *relativeLineLocator) findTargetLineStartPos(state *BufferState) uint64 {

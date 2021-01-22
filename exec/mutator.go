@@ -122,6 +122,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		state.documentBuffer.view.textOrigin = 0
 		state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
 		state.documentBuffer.tabSize = uint64(config.TabSize) // This is safe because tab size is always a positive int.
+		state.documentBuffer.tabExpand = config.TabExpand
 		state.documentBuffer.autoIndent = config.AutoIndent
 	}
 
@@ -435,7 +436,23 @@ func NewInsertTabMutator() Mutator {
 }
 
 func (itm *insertTabMutator) Mutate(state *EditorState) {
+	if state.documentBuffer.tabExpand {
+		itm.insertSpaces(state)
+		return
+	}
 	NewInsertRuneMutator('\t').Mutate(state)
+}
+
+func (itm *insertTabMutator) insertSpaces(state *EditorState) {
+	buffer := state.documentBuffer
+	tabSize := buffer.tabSize
+	startPos := lineStartPos(buffer.textTree, buffer.cursor.position)
+	offsetInLine := buffer.cursor.position - startPos
+	numSpaces := tabSize - (offsetInLine % tabSize)
+	insertSpaceMut := NewInsertRuneMutator(' ')
+	for i := uint64(0); i < numSpaces; i++ {
+		insertSpaceMut.Mutate(state)
+	}
 }
 
 func (itm *insertTabMutator) String() string {

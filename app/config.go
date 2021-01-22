@@ -68,6 +68,9 @@ func defaultConfigRuleSet() config.RuleSet {
 				Pattern: "**/*.json",
 				Config: config.Config{
 					SyntaxLanguage: syntax.LanguageJson.String(),
+					TabSize:        2,
+					TabExpand:      true,
+					AutoIndent:     true,
 				}.ToPartial(),
 			},
 		},

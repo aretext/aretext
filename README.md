@@ -44,8 +44,8 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 - [x] save changes
 - [x] close and open new document
 - [x] vim newline command ('o')
-- [ ] autoindent
-- [ ] replace tabs with spaces
+- [x] autoindent
+- [x] replace tabs with spaces
 - [ ] display tabs
 - [ ] custom menu items that invoke external programs
 - [ ] undo/redo

@@ -421,15 +421,54 @@ func TestInsertNewlineMutator(t *testing.T) {
 }
 
 func TestInsertTabMutator(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abcd")
-	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
-	state.documentBuffer.textTree = textTree
-	state.documentBuffer.cursor = cursorState{position: 2}
-	mutator := NewInsertTabMutator()
-	mutator.Mutate(state)
-	assert.Equal(t, cursorState{position: 3}, state.documentBuffer.cursor)
-	assert.Equal(t, "ab\tcd", textTree.String())
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedText   string
+		expectedCursor cursorState
+		tabExpand      bool
+	}{
+		{
+			name:           "insert tab, no expand",
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "ab\tcd",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "insert tab, expand full width",
+			tabExpand:      true,
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 0},
+			expectedText:   "    abcd",
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "insert tab, partial width",
+			tabExpand:      true,
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "ab  cd",
+			expectedCursor: cursorState{position: 4},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, config.RuleSet{})
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			state.documentBuffer.tabSize = 4
+			state.documentBuffer.tabExpand = tc.tabExpand
+			mutator := NewInsertTabMutator()
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+		})
+	}
 }
 
 func TestDeleteLinesMutator(t *testing.T) {

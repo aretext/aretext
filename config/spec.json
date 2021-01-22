@@ -20,6 +20,13 @@
     "description": "Size of a tab character in columns."
   },
   {
+    "name": "TabExpand",
+    "type": "bool",
+    "validators": [],
+    "default": false,
+    "description": "If enabled, the tab key inserts spaces."
+  },
+  {
     "name": "AutoIndent",
     "type": "bool",
     "validators": [],

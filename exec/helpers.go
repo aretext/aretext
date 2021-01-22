@@ -48,3 +48,9 @@ func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	}
 	return targetLineNum
 }
+
+// lineStartPos returns the position at the start of the current line.
+func lineStartPos(tree *text.Tree, cursorPos uint64) uint64 {
+	lineNum := tree.LineNumForPosition(cursorPos)
+	return tree.LineStartPosition(lineNum)
+}

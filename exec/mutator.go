@@ -548,6 +548,11 @@ func (dlm *deleteLinesMutator) deleteLine(state *EditorState, lineNum uint64) {
 		buffer.textTree.DeleteAtPosition(startOfLinePos)
 	}
 
+	edit := parser.Edit{Pos: startOfLinePos, NumDeleted: numToDelete}
+	if err := buffer.retokenizeAfterEdit(edit); err != nil {
+		log.Printf("Error retokenizing doument: %v\n", err)
+	}
+
 	buffer.cursor = cursorState{position: startOfLinePos}
 	if buffer.cursor.position >= buffer.textTree.NumChars() {
 		buffer.cursor = NewLastLineLocator().Locate(buffer)

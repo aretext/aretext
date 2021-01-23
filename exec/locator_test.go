@@ -403,6 +403,41 @@ func TestPrevAutoIndentLocator(t *testing.T) {
 			initialCursor:     cursorState{position: 3},
 			expectedCursor:    cursorState{position: 3},
 		},
+		{
+			name:              "spaces within line aligned, autoindent enabled",
+			inputString:       "abcd    ef",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 8},
+			expectedCursor:    cursorState{position: 4},
+		},
+		{
+			name:              "spaces within line misaligned, autoindent enabled",
+			inputString:       "ab    cd",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 6},
+			expectedCursor:    cursorState{position: 4},
+		},
+		{
+			name:              "tabs within line, autoindent enabled",
+			inputString:       "ab\t\tcd",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 4},
+			expectedCursor:    cursorState{position: 3},
+		},
+		{
+			name:              "spaces within line but not before cursor, autoindent enabled",
+			inputString:       "ab    cdef",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 7},
+			expectedCursor:    cursorState{position: 7},
+		},
+		{
+			name:              "spaces at end of line less than tab size, autoident enabled",
+			inputString:       "abcdef  ",
+			autoIndentEnabled: true,
+			initialCursor:     cursorState{position: 8},
+			expectedCursor:    cursorState{position: 6},
+		},
 	}
 
 	for _, tc := range testCases {

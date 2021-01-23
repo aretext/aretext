@@ -206,10 +206,17 @@ func (loc *prevAutoIndentLocator) Locate(state *BufferState) cursorState {
 		return state.cursor
 	}
 
+	prevTabAlignedPos := loc.findPrevTabAlignedPos(state)
+	prevWhitespaceStartPos := loc.findPrevWhitespaceStartPos(state)
+	if prevTabAlignedPos < prevWhitespaceStartPos {
+		return cursorState{position: prevWhitespaceStartPos}
+	}
+	return cursorState{position: prevTabAlignedPos}
+}
+
+func (loc *prevAutoIndentLocator) findPrevTabAlignedPos(state *BufferState) uint64 {
 	tabSize := state.TabSize()
 	pos := lineStartPos(state.textTree, state.cursor.position)
-
-	// Iterate grapheme clusters from the start of the current line.
 	iter := gcIterForTree(state.textTree, pos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 
@@ -217,7 +224,6 @@ func (loc *prevAutoIndentLocator) Locate(state *BufferState) cursorState {
 	lastAlignedPos := pos
 	for pos < state.cursor.position {
 		if offset%tabSize == 0 {
-			// Keep track of the last position at the start of a tab stop.
 			lastAlignedPos = pos
 		}
 
@@ -226,20 +232,30 @@ func (loc *prevAutoIndentLocator) Locate(state *BufferState) cursorState {
 			break
 		}
 
-		r := seg.Runes()[0]
-		if r != ' ' && r != '\t' {
-			// Terminate because we're past the indent at the beginning of the line.
-			return state.cursor
-		}
-
-		// Move the offset by the number of cells.
-		// This correctly extends tab characters to fill cells to the next tab stop.
 		offset += GraphemeClusterWidth(seg.Runes(), offset, tabSize)
 		pos += seg.NumRunes()
 	}
 
-	// Outdent to the last tab stop position before the cursor.
-	return cursorState{position: lastAlignedPos}
+	return lastAlignedPos
+}
+
+func (loc *prevAutoIndentLocator) findPrevWhitespaceStartPos(state *BufferState) uint64 {
+	pos := state.cursor.position
+	iter := gcIterForTree(state.textTree, pos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	for {
+		eof := nextSegmentOrEof(iter, seg)
+		if eof {
+			break
+		}
+
+		r := seg.Runes()[0]
+		if r != ' ' && r != '\t' {
+			break
+		}
+		pos -= seg.NumRunes()
+	}
+	return pos
 }
 
 func (loc *prevAutoIndentLocator) String() string {

@@ -452,6 +452,14 @@ func TestInsertTabMutator(t *testing.T) {
 			expectedText:   "ab  cd",
 			expectedCursor: cursorState{position: 4},
 		},
+		{
+			name: "insert tab, expand with mixed tabs/spaces",
+			tabExpand: true,
+			inputString: "\t\tab",
+			initialCursor: cursorState{position: 2},
+			expectedText: "\t\t    ab",
+			expectedCursor: cursorState{position: 6},
+		},
 	}
 
 	for _, tc := range testCases {

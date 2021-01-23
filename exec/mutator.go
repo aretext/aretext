@@ -446,13 +446,28 @@ func (itm *insertTabMutator) Mutate(state *EditorState) {
 func (itm *insertTabMutator) insertSpaces(state *EditorState) {
 	buffer := state.documentBuffer
 	tabSize := buffer.tabSize
-	startPos := lineStartPos(buffer.textTree, buffer.cursor.position)
-	offsetInLine := buffer.cursor.position - startPos
-	numSpaces := tabSize - (offsetInLine % tabSize)
+	offset := itm.offsetInLine(state.documentBuffer)
+	numSpaces := tabSize - (offset % tabSize)
 	insertSpaceMut := NewInsertRuneMutator(' ')
 	for i := uint64(0); i < numSpaces; i++ {
 		insertSpaceMut.Mutate(state)
 	}
+}
+
+func (itm *insertTabMutator) offsetInLine(buffer *BufferState) uint64 {
+	var offset uint64
+	pos := lineStartPos(buffer.textTree, buffer.cursor.position)
+	iter := gcIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	for pos < buffer.cursor.position {
+		eof := nextSegmentOrEof(iter, seg)
+		if eof {
+			break
+		}
+		offset += GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
+		pos += seg.NumRunes()
+	}
+	return offset
 }
 
 func (itm *insertTabMutator) String() string {

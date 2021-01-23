@@ -409,12 +409,13 @@ func (inm *insertNewlineMutator) numColsIndentedPrevLine(buffer *BufferState) ui
 
 func (inm *insertNewlineMutator) indentFromCursor(state *EditorState, numCols uint64) {
 	tabSize := state.documentBuffer.tabSize
+	tabExpand := state.documentBuffer.tabExpand
 	insertTabMutator := NewInsertRuneMutator('\t')
 	insertSpaceMutator := NewInsertRuneMutator(' ')
 
 	i := uint64(0)
 	for i < numCols {
-		if numCols-i >= tabSize {
+		if !tabExpand && numCols-i >= tabSize {
 			insertTabMutator.Mutate(state)
 			i += tabSize
 		} else {

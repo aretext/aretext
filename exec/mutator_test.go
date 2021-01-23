@@ -338,6 +338,7 @@ func TestInsertNewlineMutator(t *testing.T) {
 		inputString       string
 		autoIndent        bool
 		cursorPos         uint64
+		tabExpand         bool
 		expectedCursorPos uint64
 		expectedText      string
 	}{
@@ -402,6 +403,15 @@ func TestInsertNewlineMutator(t *testing.T) {
 			expectedCursorPos: 7,
 			expectedText:      "\t ab\n\t cd",
 		},
+		{
+			name:              "expand tab inserts spaces",
+			inputString:       "    abcd",
+			autoIndent:        true,
+			tabExpand:         true,
+			cursorPos:         8,
+			expectedCursorPos: 13,
+			expectedText:      "    abcd\n    ",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -412,6 +422,8 @@ func TestInsertNewlineMutator(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.autoIndent = tc.autoIndent
+			state.documentBuffer.tabSize = 4
+			state.documentBuffer.tabExpand = tc.tabExpand
 			mutator := NewInsertNewlineMutator()
 			mutator.Mutate(state)
 			assert.Equal(t, cursorState{position: tc.expectedCursorPos}, state.documentBuffer.cursor)
@@ -453,11 +465,11 @@ func TestInsertTabMutator(t *testing.T) {
 			expectedCursor: cursorState{position: 4},
 		},
 		{
-			name: "insert tab, expand with mixed tabs/spaces",
-			tabExpand: true,
-			inputString: "\t\tab",
-			initialCursor: cursorState{position: 2},
-			expectedText: "\t\t    ab",
+			name:           "insert tab, expand with mixed tabs/spaces",
+			tabExpand:      true,
+			inputString:    "\t\tab",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "\t\t    ab",
 			expectedCursor: cursorState{position: 6},
 		},
 	}

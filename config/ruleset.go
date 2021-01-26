@@ -27,9 +27,7 @@ func (rs *RuleSet) ConfigForPath(path string) Config {
 	for _, rule := range rs.Rules {
 		if GlobMatch(rule.Pattern, path) {
 			log.Printf("Applying config rule '%s' with pattern '%s' for path '%s'\n", rule.Name, rule.Pattern, path)
-			for k, v := range rule.Config {
-				c[k] = v
-			}
+			c = MergeRecursive(c, rule.Config).(map[string]interface{})
 		}
 	}
 	log.Printf("Resolved config for path '%s': %#v\n", path, c)

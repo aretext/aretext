@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
@@ -95,7 +96,7 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 		tree = text.NewTree()
 		watcher = file.NewWatcher(file.DefaultPollInterval, ldm.path, time.Time{}, 0, "")
 	} else if err != nil {
-		ldm.reportError(err, state)
+		ldm.reportLoadError(err, state)
 		return
 	} else {
 		fileExists = true
@@ -108,33 +109,56 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 	state.hasUnsavedChanges = false
 
 	if ldm.path == oldPath {
-		// Make sure that the cursor is a valid position in the updated document
-		// and that the cursor is visible.  If not, adjust the cursor and scroll.
-		NewCompositeMutator([]Mutator{
-			NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
-			NewCursorMutator(NewOntoDocumentLocator()),
-			NewScrollToCursorMutator(),
-		}).Mutate(state)
-	} else {
-		// Otherwise, reset state for the new document.
-		config := state.configRuleSet.ConfigForPath(ldm.path)
-		state.documentBuffer.cursor = cursorState{}
-		state.documentBuffer.view.textOrigin = 0
-		state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
-		state.documentBuffer.tabSize = uint64(config.TabSize) // This is safe because tab size is always a positive int.
-		state.documentBuffer.tabExpand = config.TabExpand
-		state.documentBuffer.autoIndent = config.AutoIndent
+		ldm.updateAfterReload(state)
+		ldm.reportSuccess(state, fileExists)
+		return
 	}
 
+	config := state.configRuleSet.ConfigForPath(ldm.path)
+	if err := config.Validate(); err != nil {
+		ldm.reportConfigError(err, state)
+		return
+	}
+
+	ldm.initializeAfterLoad(state, config)
 	ldm.reportSuccess(state, fileExists)
 }
 
-func (ldm *loadDocumentMutator) reportError(err error, state *EditorState) {
+func (ldm *loadDocumentMutator) updateAfterReload(state *EditorState) {
+	// Make sure that the cursor is a valid position in the updated document
+	// and that the cursor is visible.  If not, adjust the cursor and scroll.
+	NewCompositeMutator([]Mutator{
+		NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
+		NewCursorMutator(NewOntoDocumentLocator()),
+		NewScrollToCursorMutator(),
+	}).Mutate(state)
+}
+
+func (ldm *loadDocumentMutator) initializeAfterLoad(state *EditorState, config config.Config) {
+	state.documentBuffer.cursor = cursorState{}
+	state.documentBuffer.view.textOrigin = 0
+	state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
+	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
+	state.documentBuffer.tabExpand = config.TabExpand
+	state.documentBuffer.autoIndent = config.AutoIndent
+}
+
+func (ldm *loadDocumentMutator) reportLoadError(err error, state *EditorState) {
 	log.Printf("Error loading file at '%s': %v\n", ldm.path, err)
 	if ldm.showStatus {
 		NewSetStatusMsgMutator(StatusMsg{
 			Style: StatusMsgStyleError,
 			Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(ldm.path)),
+		}).Mutate(state)
+	}
+}
+
+func (ldm *loadDocumentMutator) reportConfigError(err error, state *EditorState) {
+	log.Printf("Invalid configuration for file at '%s': %v\n", ldm.path, err)
+	if ldm.showStatus {
+		NewSetStatusMsgMutator(StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("Invalid configuration for file at %s: %v", file.RelativePathCwd(ldm.path), err),
 		}).Mutate(state)
 	}
 }

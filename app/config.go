@@ -37,11 +37,6 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return config.RuleSet{}, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
 	}
 
-	err = rs.Validate()
-	if err != nil {
-		return config.RuleSet{}, err
-	}
-
 	return rs, nil
 }
 
@@ -61,17 +56,22 @@ func defaultConfigRuleSet() config.RuleSet {
 			{
 				Name:    "default",
 				Pattern: "**",
-				Config:  config.DefaultConfig().ToPartial(),
+				Config: map[string]interface{}{
+					"syntaxLanguage": syntax.LanguageUndefined.String(),
+					"tabSize":        4,
+					"tabExpand":      false,
+					"autoIndent":     false,
+				},
 			},
 			{
 				Name:    "json",
 				Pattern: "**/*.json",
-				Config: config.Config{
-					SyntaxLanguage: syntax.LanguageJson.String(),
-					TabSize:        2,
-					TabExpand:      true,
-					AutoIndent:     true,
-				}.ToPartial(),
+				Config: map[string]interface{}{
+					"syntaxLanguage": syntax.LanguageJson.String(),
+					"tabSize":        2,
+					"tabExpand":      true,
+					"autoIndent":     true,
+				},
 			},
 		},
 	}

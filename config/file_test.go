@@ -16,16 +16,16 @@ func TestSaveAndLoadRuleSet(t *testing.T) {
 			{
 				Name:    "default",
 				Pattern: "**",
-				Config: Config{
-					SyntaxLanguage: "undefined",
-				}.ToPartial(),
+				Config: map[string]interface{}{
+					"syntaxLanguage": "undefined",
+				},
 			},
 			{
 				Name:    "json",
 				Pattern: "**/*.json",
-				Config: Config{
-					SyntaxLanguage: "json",
-				}.ToPartial(),
+				Config: map[string]interface{}{
+					"syntaxLanguage": "json",
+				},
 			},
 		},
 	}

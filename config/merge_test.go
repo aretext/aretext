@@ -174,6 +174,37 @@ func TestMergeRecursive(t *testing.T) {
 			overlay:  []int{3, 4},
 			expected: []int{3, 4},
 		},
+		{
+			name:     "slices with heterogeneous types",
+			base:     []interface{}{1, "a"},
+			overlay:  []interface{}{nil, 2, "b"},
+			expected: []interface{}{1, "a", nil, 2, "b"},
+		},
+		{
+			name: "nested slices and structs",
+			base: map[string]interface{}{
+				"subMap": map[string]interface{}{
+					"a": 1,
+					"b": 2,
+				},
+				"subSlice": []interface{}{"x"},
+			},
+			overlay: map[string]interface{}{
+				"subMap": map[string]interface{}{
+					"b": 3,
+					"c": 4,
+				},
+				"subSlice": []interface{}{"y"},
+			},
+			expected: map[string]interface{}{
+				"subMap": map[string]interface{}{
+					"a": 1,
+					"b": 3,
+					"c": 4,
+				},
+				"subSlice": []interface{}{"x", "y"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

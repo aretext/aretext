@@ -1,5 +1,3 @@
-//go:generate go run gen.go -inputPath=spec.json -outputPath=config.go
-
 package config
 
 import (

@@ -33,7 +33,7 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, initial state with prompt",
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, config.RuleSet{})
-				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false)
+				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false, false)
 				mutator.Mutate(state)
 				return state.Menu()
 			},
@@ -51,7 +51,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, config.RuleSet{})
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", nil, false),
+					exec.NewShowMenuMutatorWithItems("test", nil, false, false),
 					exec.NewAppendMenuSearchMutator('a'),
 					exec.NewAppendMenuSearchMutator('b'),
 					exec.NewAppendMenuSearchMutator('c'),
@@ -77,7 +77,7 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test first"},
 						{Name: "test second"},
 						{Name: "test third"},
-					}, false),
+					}, false, false),
 					exec.NewAppendMenuSearchMutator('t'),
 				})
 				mutator.Mutate(state)
@@ -107,7 +107,7 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test 7"},
 						{Name: "test 8"},
 						{Name: "test 9"},
-					}, false),
+					}, false, false),
 					exec.NewAppendMenuSearchMutator('t'),
 					exec.NewMoveMenuSelectionMutator(-2),
 				})

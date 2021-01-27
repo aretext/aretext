@@ -679,7 +679,7 @@ func TestShowMenuMutator(t *testing.T) {
 	mutator := NewShowMenuMutatorWithItems(prompt, []MenuItem{
 		{Name: "test item 1"},
 		{Name: "test item 2"},
-	}, false)
+	}, false, false)
 	mutator.Mutate(state)
 	assert.True(t, state.Menu().Visible())
 	assert.Equal(t, prompt, state.Menu().Prompt())
@@ -693,7 +693,7 @@ func TestShowMenuMutator(t *testing.T) {
 func TestHideMenuMutator(t *testing.T) {
 	state := NewEditorState(100, 100, config.RuleSet{})
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false),
+		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false, false),
 		NewHideMenuMutator(),
 	})
 	mutator.Mutate(state)
@@ -713,7 +713,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 		},
 	}
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutatorWithItems("test prompt", items, false),
+		NewShowMenuMutatorWithItems("test prompt", items, false, false),
 		NewAppendMenuSearchMutator('q'), // search for "q", should match "quit"
 		NewExecuteSelectedMenuItemMutator(),
 	})
@@ -804,7 +804,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, config.RuleSet{})
 			mutators := []Mutator{
-				NewShowMenuMutatorWithItems("test", tc.items, false),
+				NewShowMenuMutatorWithItems("test", tc.items, false, false),
 				NewAppendMenuSearchMutator(tc.searchRune),
 			}
 			for _, delta := range tc.moveDeltas {
@@ -820,7 +820,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 func TestAppendMenuSearchMutator(t *testing.T) {
 	state := NewEditorState(100, 100, config.RuleSet{})
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
+		NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
 		NewAppendMenuSearchMutator('a'),
 		NewAppendMenuSearchMutator('b'),
 		NewAppendMenuSearchMutator('c'),
@@ -860,7 +860,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, config.RuleSet{})
 			mutators := []Mutator{
-				NewShowMenuMutatorWithItems("test", []MenuItem{}, false),
+				NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
 			}
 			for _, r := range tc.searchQuery {
 				mutators = append(mutators, NewAppendMenuSearchMutator(r))

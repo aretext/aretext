@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/gdamore/tcell v1.4.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.10
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0

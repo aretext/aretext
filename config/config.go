@@ -23,6 +23,20 @@ type Config struct {
 
 	// If enabled, indent a new line to match indentation of the previous line.
 	AutoIndent bool
+
+	// User-defined commands to include in the menu.
+	MenuCommands []MenuCommandConfig
+}
+
+// MenuCommandConfig is a configuration for a user-defined menu item.
+type MenuCommandConfig struct {
+	// Name is the displayed name of the menu.
+	Name string
+
+	// ShellCmd is the shell command to execute when the menu item is selected.
+	// The command's output will be piped to a pager (usually `less`),
+	// so it should be non-interactive.
+	ShellCmd string
 }
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
@@ -33,6 +47,7 @@ func ConfigFromUntypedMap(m map[string]interface{}) Config {
 		TabSize:        intOrDefault(m, "tabSize", DefaultTabSize),
 		TabExpand:      boolOrDefault(m, "tabExpand", DefaultTabExpand),
 		AutoIndent:     boolOrDefault(m, "autoIndent", DefaultAutoIndent),
+		MenuCommands:   menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 	}
 }
 
@@ -95,4 +110,36 @@ func boolOrDefault(m map[string]interface{}, key string, defaultVal bool) bool {
 	}
 
 	return b
+}
+
+func sliceOrNil(m map[string]interface{}, key string) []interface{} {
+	v, ok := m[key]
+	if !ok {
+		return nil
+	}
+
+	s, ok := v.([]interface{})
+	if !ok {
+		log.Printf("Could not decode slice for config key '%s'\n", key)
+		return nil
+	}
+
+	return s
+}
+
+func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
+	result := make([]MenuCommandConfig, 0, len(s))
+	for _, m := range s {
+		menuMap, ok := m.(map[string]interface{})
+		if !ok {
+			log.Printf("Could not decode menu command map from %v\n", m)
+			continue
+		}
+
+		result = append(result, MenuCommandConfig{
+			Name:     stringOrDefault(menuMap, "name", "[nil]"),
+			ShellCmd: stringOrDefault(menuMap, "shellCmd", ""),
+		})
+	}
+	return result
 }

@@ -48,7 +48,7 @@ func commandMenuItems() []exec.MenuItem {
 }
 
 func ShowFileMenuMutator() exec.Mutator {
-	return exec.NewShowMenuMutator("file path", findFileMenuItems, true)
+	return exec.NewShowMenuMutator("file path", findFileMenuItems, true, false)
 }
 
 func findFileMenuItems() []exec.MenuItem {

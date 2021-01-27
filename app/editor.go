@@ -134,6 +134,13 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 
 func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.state)
+
+	if e.state.ForceRedrawFlag() {
+		e.screen.Sync()
+		e.state.SetForceRedrawFlag(false)
+		return
+	}
+
 	e.screen.Show()
 }
 

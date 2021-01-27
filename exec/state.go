@@ -17,8 +17,10 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
+	customMenuItems           []MenuItem
 	statusMsg                 StatusMsg
 	hasUnsavedChanges         bool
+	forceRedrawFlag           bool
 	quitFlag                  bool
 }
 
@@ -29,13 +31,14 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		documentBufferHeight = screenHeight - 1
 	}
 	return &EditorState{
-		screenWidth:    screenWidth,
-		screenHeight:   screenHeight,
-		configRuleSet:  configRuleSet,
-		documentBuffer: NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
-		fileWatcher:    file.NewEmptyWatcher(),
-		menu:           &MenuState{},
-		statusMsg:      StatusMsg{},
+		screenWidth:     screenWidth,
+		screenHeight:    screenHeight,
+		configRuleSet:   configRuleSet,
+		documentBuffer:  NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
+		fileWatcher:     file.NewEmptyWatcher(),
+		menu:            &MenuState{},
+		customMenuItems: nil,
+		statusMsg:       StatusMsg{},
 	}
 }
 
@@ -70,6 +73,14 @@ func (s *EditorState) FileWatcher() *file.Watcher {
 
 func (s *EditorState) QuitFlag() bool {
 	return s.quitFlag
+}
+
+func (s *EditorState) ForceRedrawFlag() bool {
+	return s.forceRedrawFlag
+}
+
+func (s *EditorState) SetForceRedrawFlag(flag bool) {
+	s.forceRedrawFlag = flag
 }
 
 // InputMode controls how the editor interprets input events.

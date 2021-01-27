@@ -141,6 +141,18 @@ func (ldm *loadDocumentMutator) initializeAfterLoad(state *EditorState, config c
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent
+	state.customMenuItems = ldm.customMenuItems(config)
+}
+
+func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []MenuItem {
+	items := make([]MenuItem, 0, len(config.MenuCommands))
+	for _, cmd := range config.MenuCommands {
+		items = append(items, MenuItem{
+			Name:   cmd.Name,
+			Action: NewExecuteShellCmdMutator(cmd.ShellCmd),
+		})
+	}
+	return items
 }
 
 func (ldm *loadDocumentMutator) reportLoadError(err error, state *EditorState) {
@@ -653,23 +665,34 @@ func (rm *resizeMutator) String() string {
 
 // showMenuMutator displays the menu with the specified prompt and items.
 type showMenuMutator struct {
-	prompt            string
-	loadItems         func() []MenuItem
-	emptyQueryShowAll bool
+	prompt              string
+	loadItems           func() []MenuItem
+	emptyQueryShowAll   bool
+	showCustomMenuItems bool
 }
 
-func NewShowMenuMutator(prompt string, loadItems func() []MenuItem, emptyQueryShowAll bool) Mutator {
-	return &showMenuMutator{prompt, loadItems, emptyQueryShowAll}
+func NewShowMenuMutator(prompt string, loadItems func() []MenuItem, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
+	return &showMenuMutator{
+		prompt:              prompt,
+		loadItems:           loadItems,
+		emptyQueryShowAll:   emptyQueryShowAll,
+		showCustomMenuItems: showCustomMenuItems,
+	}
 }
 
-func NewShowMenuMutatorWithItems(prompt string, items []MenuItem, emptyQueryShowAll bool) Mutator {
+func NewShowMenuMutatorWithItems(prompt string, items []MenuItem, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
 	loadItems := func() []MenuItem { return items }
-	return NewShowMenuMutator(prompt, loadItems, emptyQueryShowAll)
+	return NewShowMenuMutator(prompt, loadItems, emptyQueryShowAll, showCustomMenuItems)
 }
 
 func (smm *showMenuMutator) Mutate(state *EditorState) {
 	search := &MenuSearch{emptyQueryShowAll: smm.emptyQueryShowAll}
 	search.AddItems(smm.loadItems())
+
+	if smm.showCustomMenuItems {
+		search.AddItems(state.customMenuItems)
+	}
+
 	state.menu = &MenuState{
 		visible:           true,
 		prompt:            smm.prompt,
@@ -680,7 +703,7 @@ func (smm *showMenuMutator) Mutate(state *EditorState) {
 }
 
 func (smm *showMenuMutator) String() string {
-	return fmt.Sprintf("ShowMenu(%s, emptyQueryShowAll=%t)", smm.prompt, smm.emptyQueryShowAll)
+	return fmt.Sprintf("ShowMenu(%s, emptyQueryShowAll=%t, showCustomMenuItems=%t)", smm.prompt, smm.emptyQueryShowAll, smm.showCustomMenuItems)
 }
 
 // hideMenuMutator hides the menu.
@@ -821,6 +844,50 @@ func (smm *setStatusMsgMutator) Mutate(state *EditorState) {
 
 func (smm *setStatusMsgMutator) String() string {
 	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
+}
+
+// executeShellCmdMutator runs a command in a shell and pipes the output to a pager (usually `less`).
+// Once the command completes and the user exits the pager, control returns to the event loop.
+type executeShellCmdMutator struct {
+	shellCmd string
+}
+
+func NewExecuteShellCmdMutator(shellCmd string) Mutator {
+	return &executeShellCmdMutator{shellCmd}
+}
+
+func (esm *executeShellCmdMutator) Mutate(state *EditorState) {
+	// The command will overwrite the terminal, so we need to redraw after it completes.
+	state.forceRedrawFlag = true
+
+	// Run the shell command and pipe the output to a pager (usually `less`).
+	// This will take control of the tty, effectively pausing the event loop until the command completes and the user exits the pager.
+	err := RunShellCmd(esm.shellCmd)
+	if err != nil {
+		esm.reportError(state, err)
+		return
+	}
+	esm.reportSuccess(state)
+}
+
+func (esm *executeShellCmdMutator) reportError(state *EditorState, err error) {
+	log.Printf("Error running shell cmd '%s': %v\n", esm.shellCmd, err)
+	NewSetStatusMsgMutator(StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  err.Error(),
+	}).Mutate(state)
+}
+
+func (esm *executeShellCmdMutator) reportSuccess(state *EditorState) {
+	log.Printf("Completed shell cmd '%s'\n", esm.shellCmd)
+	NewSetStatusMsgMutator(StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  "Command completed successfully",
+	}).Mutate(state)
+}
+
+func (esm *executeShellCmdMutator) String() string {
+	return fmt.Sprintf("ExecuteShellCmd('%s')", esm.shellCmd)
 }
 
 // quitMutator sets a flag that terminates the program.

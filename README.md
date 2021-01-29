@@ -3,7 +3,7 @@ Minimalist terminal-based text editor, mostly vim-compatible.
 
 Design principles:
 
-1. Prioritize simplicity and performance over flexibility.
+1. Prioritize stability and speed over flexibility and features.
 2. Compose seamlessly with the rest of the \*nix ecosystem (tmux, grep, code formatters, compilers, git, zsh, etc).
 
 

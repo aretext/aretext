@@ -530,10 +530,11 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 
 	if startPos < deleteToPos {
 		dm.deleteCharacters(bufferState, startPos, deleteToPos-startPos)
+		state.hasUnsavedChanges = true
 	} else if startPos > deleteToPos {
 		dm.deleteCharacters(bufferState, deleteToPos, startPos-deleteToPos)
+		state.hasUnsavedChanges = true
 	}
-	state.hasUnsavedChanges = true
 }
 
 func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, count uint64) {

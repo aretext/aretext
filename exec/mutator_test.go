@@ -276,12 +276,13 @@ func TestInsertRuneMutator(t *testing.T) {
 
 func TestDeleteMutator(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		initialCursor  cursorState
-		locator        CursorLocator
-		expectedCursor cursorState
-		expectedText   string
+		name                 string
+		inputString          string
+		initialCursor        cursorState
+		locator              CursorLocator
+		expectedCursor       cursorState
+		expectedText         string
+		expectUnsavedChanges bool
 	}{
 		{
 			name:           "delete from empty string",
@@ -292,28 +293,31 @@ func TestDeleteMutator(t *testing.T) {
 			expectedText:   "",
 		},
 		{
-			name:           "delete next character at start of string",
-			inputString:    "abcd",
-			initialCursor:  cursorState{position: 0},
-			locator:        NewCharInLineLocator(text.ReadDirectionForward, 1, true),
-			expectedCursor: cursorState{position: 0},
-			expectedText:   "bcd",
+			name:                 "delete next character at start of string",
+			inputString:          "abcd",
+			initialCursor:        cursorState{position: 0},
+			locator:              NewCharInLineLocator(text.ReadDirectionForward, 1, true),
+			expectedCursor:       cursorState{position: 0},
+			expectedText:         "bcd",
+			expectUnsavedChanges: true,
 		},
 		{
-			name:           "delete from end of text",
-			inputString:    "abcd",
-			initialCursor:  cursorState{position: 3},
-			locator:        NewCharInLineLocator(text.ReadDirectionForward, 1, true),
-			expectedCursor: cursorState{position: 3},
-			expectedText:   "abc",
+			name:                 "delete from end of text",
+			inputString:          "abcd",
+			initialCursor:        cursorState{position: 3},
+			locator:              NewCharInLineLocator(text.ReadDirectionForward, 1, true),
+			expectedCursor:       cursorState{position: 3},
+			expectedText:         "abc",
+			expectUnsavedChanges: true,
 		},
 		{
-			name:           "delete multiple characters",
-			inputString:    "abcd",
-			initialCursor:  cursorState{position: 1},
-			locator:        NewCharInLineLocator(text.ReadDirectionForward, 10, true),
-			expectedCursor: cursorState{position: 1},
-			expectedText:   "a",
+			name:                 "delete multiple characters",
+			inputString:          "abcd",
+			initialCursor:        cursorState{position: 1},
+			locator:              NewCharInLineLocator(text.ReadDirectionForward, 10, true),
+			expectedCursor:       cursorState{position: 1},
+			expectedText:         "a",
+			expectUnsavedChanges: true,
 		},
 	}
 
@@ -328,6 +332,7 @@ func TestDeleteMutator(t *testing.T) {
 			mutator.Mutate(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectUnsavedChanges, state.hasUnsavedChanges)
 		})
 	}
 }

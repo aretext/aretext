@@ -2,6 +2,7 @@ package parser
 
 import (
 	"testing"
+	"unicode"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -471,6 +472,27 @@ func TestParseRegexp(t *testing.T) {
 			},
 		},
 		{
+			name:     "unicode letter char class",
+			input:    `\p{L}`,
+			expected: regexpUnicodeCharClass{rangeTable: unicode.Letter},
+		},
+		{
+			name:     "unicode number, decimal digit",
+			input:    `\p{Nd}`,
+			expected: regexpUnicodeCharClass{rangeTable: unicode.Nd},
+		},
+		{
+			name:  "unicode letter char class with prefix and suffix",
+			input: `x\p{L}y`,
+			expected: regexpConcat{
+				left: regexpConcat{
+					left:  regexpChar{'x'},
+					right: regexpUnicodeCharClass{rangeTable: unicode.Letter},
+				},
+				right: regexpChar{'y'},
+			},
+		},
+		{
 			name:     "start of text",
 			input:    "^",
 			expected: regexpStartOfText{},
@@ -639,6 +661,16 @@ func TestParseRegexpErrors(t *testing.T) {
 			name:          "multiple hyphens in character class",
 			input:         "[---]",
 			expectedError: "Unexpected '-' in character class",
+		},
+		{
+			name:          "unsupported unicode char class",
+			input:         `\pX`,
+			expectedError: "Unsupported unicode char class",
+		},
+		{
+			name:          "unicode char class missing name",
+			input:         `\p`,
+			expectedError: "Unsupported unicode char class",
 		},
 	}
 

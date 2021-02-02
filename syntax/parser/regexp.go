@@ -3,6 +3,9 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Regexp represents a regular expression.
@@ -89,6 +92,36 @@ type regexpEndOfText struct{}
 
 func (r regexpEndOfText) CompileNfa() *Nfa {
 	return NfaForEndOfText()
+}
+
+// regexpUnicodeCharClass represents all runes with a particular unicode class (e..g "letter")
+type regexpUnicodeCharClass struct {
+	rangeTable *unicode.RangeTable
+}
+
+func (re regexpUnicodeCharClass) CompileNfa() *Nfa {
+	var buf [4]byte
+	nfa := EmptyLanguageNfa()
+	for _, r16 := range re.rangeTable.R16 {
+		for r := rune(r16.Lo); r <= rune(r16.Hi); r += rune(r16.Stride) {
+			nfa = nfa.Union(re.nfaForRune(r, buf[:]))
+		}
+	}
+	for _, r32 := range re.rangeTable.R32 {
+		for r := rune(r32.Lo); r <= rune(r32.Hi); r += rune(r32.Stride) {
+			nfa = nfa.Union(re.nfaForRune(r, buf[:]))
+		}
+	}
+	return nfa
+}
+
+func (re regexpUnicodeCharClass) nfaForRune(r rune, buf []byte) *Nfa {
+	nfa := EmptyLanguageNfa()
+	n := utf8.EncodeRune(buf, r)
+	for i := 0; i < n; i++ {
+		nfa = nfa.Concat(NfaForChars(buf[i : i+1]))
+	}
+	return nfa
 }
 
 // ParseRegexp parses a regular expression string.
@@ -197,19 +230,35 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 			pos++
 
 		case '\\':
-			c, newPos, err := parseEscapeSequence(s, pos)
-			if err != nil {
-				return nil, 0, err
-			}
+			if pos+1 < len(s) && s[pos+1] == 'p' {
+				rt, newPos, err := parseUnicodeCharClass(s, pos+2)
+				if err != nil {
+					return nil, 0, err
+				}
 
-			nextRegexp := regexpChar{char: c}
-			if _, ok := regexp.(regexpEmpty); ok {
-				regexp = nextRegexp
+				nextRegexp := regexpUnicodeCharClass{rangeTable: rt}
+				if _, ok := regexp.(regexpEmpty); ok {
+					regexp = nextRegexp
+				} else {
+					regexp = regexpConcat{left: regexp, right: nextRegexp}
+				}
+
+				pos = newPos
 			} else {
-				regexp = regexpConcat{left: regexp, right: nextRegexp}
-			}
+				c, newPos, err := parseEscapeSequence(s, pos)
+				if err != nil {
+					return nil, 0, err
+				}
 
-			pos = newPos
+				nextRegexp := regexpChar{char: c}
+				if _, ok := regexp.(regexpEmpty); ok {
+					regexp = nextRegexp
+				} else {
+					regexp = regexpConcat{left: regexp, right: nextRegexp}
+				}
+
+				pos = newPos
+			}
 
 		case '[':
 			nextRegexp, newPos, err := parseCharacterClass(s, pos)
@@ -348,4 +397,23 @@ func parseCharacterClassItem(s string, pos int) (byte, int, error) {
 	}
 
 	return parseEscapeSequence(s, pos)
+}
+
+var unicodeClassMap map[string]*unicode.RangeTable
+
+func init() {
+	unicodeClassMap = map[string]*unicode.RangeTable{
+		"L":  unicode.L,
+		"Nd": unicode.Nd,
+	}
+}
+
+func parseUnicodeCharClass(s string, pos int) (*unicode.RangeTable, int, error) {
+	for classCode, rangeTable := range unicodeClassMap {
+		prefix := fmt.Sprintf("{%s}", classCode)
+		if strings.HasPrefix(s[pos:], prefix) {
+			return rangeTable, pos + len(prefix), nil
+		}
+	}
+	return nil, 0, errors.New("Unsupported unicode char class")
 }

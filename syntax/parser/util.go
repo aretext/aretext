@@ -32,7 +32,7 @@ func insertUniqueSorted(s []int, v int) []int {
 }
 
 func sortedKeys(m map[int]struct{}) []int {
-	result := make([]int, len(m))
+	result := make([]int, 0, len(m))
 	for key := range m {
 		result = append(result, key)
 	}

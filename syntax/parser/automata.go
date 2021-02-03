@@ -235,7 +235,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 // emptyTransitionsClosure returns all states reachable from the current states through empty transitions.
 func (nfa *Nfa) emptyTransitionsClosure(startStates []int) []int {
 	var state int
-	reachedStates := make(map[int]struct{}, len(nfa.states))
+	reachedStates := make(map[int]struct{}, 0)
 	stack := append([]int{}, startStates...)
 	for len(stack) > 0 {
 		state, stack = stack[len(stack)-1], stack[:len(stack)-1]

@@ -474,12 +474,12 @@ func TestParseRegexp(t *testing.T) {
 		{
 			name:     "unicode letter char class",
 			input:    `\p{L}`,
-			expected: regexpUnicodeCharClass{rangeTable: unicode.Letter},
+			expected: regexpUnicodeCategory{rangeTable: unicode.Letter},
 		},
 		{
 			name:     "unicode number, decimal digit",
 			input:    `\p{Nd}`,
-			expected: regexpUnicodeCharClass{rangeTable: unicode.Nd},
+			expected: regexpUnicodeCategory{rangeTable: unicode.Nd},
 		},
 		{
 			name:  "unicode letter char class with prefix and suffix",
@@ -487,7 +487,7 @@ func TestParseRegexp(t *testing.T) {
 			expected: regexpConcat{
 				left: regexpConcat{
 					left:  regexpChar{'x'},
-					right: regexpUnicodeCharClass{rangeTable: unicode.Letter},
+					right: regexpUnicodeCategory{rangeTable: unicode.Letter},
 				},
 				right: regexpChar{'y'},
 			},
@@ -663,14 +663,14 @@ func TestParseRegexpErrors(t *testing.T) {
 			expectedError: "Unexpected '-' in character class",
 		},
 		{
-			name:          "unsupported unicode char class",
+			name:          "unsupported unicode category",
 			input:         `\pX`,
-			expectedError: "Unsupported unicode char class",
+			expectedError: "Unsupported unicode category",
 		},
 		{
 			name:          "unicode char class missing name",
 			input:         `\p`,
-			expectedError: "Unsupported unicode char class",
+			expectedError: "Unsupported unicode category",
 		},
 	}
 

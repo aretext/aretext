@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 )
 
 // Regexp represents a regular expression.
@@ -94,34 +93,13 @@ func (r regexpEndOfText) CompileNfa() *Nfa {
 	return NfaForEndOfText()
 }
 
-// regexpUnicodeCharClass represents all runes with a particular unicode class (e..g "letter")
-type regexpUnicodeCharClass struct {
+// regexpUnicodeCategory represents all runes with a particular unicode category (e.g. "letter" or "digit").
+type regexpUnicodeCategory struct {
 	rangeTable *unicode.RangeTable
 }
 
-func (re regexpUnicodeCharClass) CompileNfa() *Nfa {
-	var buf [4]byte
-	nfa := EmptyLanguageNfa()
-	for _, r16 := range re.rangeTable.R16 {
-		for r := rune(r16.Lo); r <= rune(r16.Hi); r += rune(r16.Stride) {
-			nfa = nfa.Union(re.nfaForRune(r, buf[:]))
-		}
-	}
-	for _, r32 := range re.rangeTable.R32 {
-		for r := rune(r32.Lo); r <= rune(r32.Hi); r += rune(r32.Stride) {
-			nfa = nfa.Union(re.nfaForRune(r, buf[:]))
-		}
-	}
-	return nfa
-}
-
-func (re regexpUnicodeCharClass) nfaForRune(r rune, buf []byte) *Nfa {
-	nfa := EmptyLanguageNfa()
-	n := utf8.EncodeRune(buf, r)
-	for i := 0; i < n; i++ {
-		nfa = nfa.Concat(NfaForChars(buf[i : i+1]))
-	}
-	return nfa
+func (r regexpUnicodeCategory) CompileNfa() *Nfa {
+	return NfaForUnicodeCategory(r.rangeTable)
 }
 
 // ParseRegexp parses a regular expression string.
@@ -231,12 +209,12 @@ func parseRegexp(s string, pos int, inParen bool) (Regexp, int, error) {
 
 		case '\\':
 			if pos+1 < len(s) && s[pos+1] == 'p' {
-				rt, newPos, err := parseUnicodeCharClass(s, pos+2)
+				rt, newPos, err := parseUnicodeCategory(s, pos+2)
 				if err != nil {
 					return nil, 0, err
 				}
 
-				nextRegexp := regexpUnicodeCharClass{rangeTable: rt}
+				nextRegexp := regexpUnicodeCategory{rangeTable: rt}
 				if _, ok := regexp.(regexpEmpty); ok {
 					regexp = nextRegexp
 				} else {
@@ -408,12 +386,12 @@ func init() {
 	}
 }
 
-func parseUnicodeCharClass(s string, pos int) (*unicode.RangeTable, int, error) {
+func parseUnicodeCategory(s string, pos int) (*unicode.RangeTable, int, error) {
 	for classCode, rangeTable := range unicodeClassMap {
 		prefix := fmt.Sprintf("{%s}", classCode)
 		if strings.HasPrefix(s[pos:], prefix) {
 			return rangeTable, pos + len(prefix), nil
 		}
 	}
-	return nil, 0, errors.New("Unsupported unicode char class")
+	return nil, 0, errors.New("Unsupported unicode category")
 }

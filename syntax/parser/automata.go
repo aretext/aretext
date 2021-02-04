@@ -2,8 +2,10 @@ package parser
 
 import (
 	"io"
+	"unicode"
+	"unicode/utf8"
 
-	"github.com/aretext/aretext/text/utf8"
+	textUtf8 "github.com/aretext/aretext/text/utf8"
 )
 
 // Nfa is a non-deterministic finite automaton.
@@ -70,6 +72,72 @@ func NfaForNegatedChars(negatedChars []byte) *Nfa {
 	}
 
 	return nfa
+}
+
+// NfaForUnicodeCategory constructs an NFA that matches UTF-8 encoded runes in a unicode category (letter, digit, etc.).
+func NfaForUnicodeCategory(rangeTable *unicode.RangeTable) *Nfa {
+	var buf [4]byte
+	dfa := NewDfa()
+
+	// Construct the initial automata as a trie of the bytes in each rune.
+	// Runes that share the same byte prefix will share states/transitions.
+	iterRunes(rangeTable, func(r rune) {
+		state := dfa.StartState
+		n := utf8.EncodeRune(buf[:], r)
+		for _, b := range buf[:n] {
+			nextState := dfa.NextState(state, int(b))
+			if nextState == DfaDeadState {
+				nextState = dfa.AddState()
+				dfa.AddTransition(state, int(b), nextState)
+			}
+			state = nextState
+		}
+		dfa.AddAcceptAction(state, 1) // Choose 1 arbitrarily because we'll discard it later.
+	})
+
+	// Some categories contain hundreds of thousands of runes, so the automata may have a large number of states.
+	// If this automata is embedded in a larger automata, the total number of states can quickly explode.
+	// Keep it under control by combining redundant states.
+	dfa.Minimize()
+
+	return convertDfaToNfaWithoutAcceptActions(dfa)
+}
+
+func convertDfaToNfaWithoutAcceptActions(dfa *Dfa) *Nfa {
+	nfa := EmptyLanguageNfa()
+
+	for state := 1; state < dfa.NumStates; state++ {
+		acceptActions := dfa.AcceptActions[state]
+		nfaState := newNfaState(len(acceptActions) > 0)
+		nfa.states = append(nfa.states, nfaState)
+	}
+
+	for i, nextState := range dfa.Transitions {
+		if nextState == DfaDeadState {
+			continue
+		}
+
+		prevState := i / maxTransitionsPerState
+		input := i % maxTransitionsPerState
+		nfa.states[prevState].inputTransitions[input] = []int{nextState}
+	}
+
+	nfa.states[0].emptyTransitions = []int{dfa.StartState}
+
+	return nfa
+}
+
+func iterRunes(rangeTable *unicode.RangeTable, f func(rune)) {
+	for _, r16 := range rangeTable.R16 {
+		for r := rune(r16.Lo); r <= rune(r16.Hi); r += rune(r16.Stride) {
+			f(r)
+		}
+	}
+	for _, r32 := range rangeTable.R32 {
+		for r := rune(r32.Lo); r <= rune(r32.Hi); r += rune(r32.Stride) {
+			f(r)
+		}
+	}
 }
 
 // SetAcceptAction sets all accept states in the NFA to the specified action.
@@ -272,7 +340,7 @@ type nfaState struct {
 func newNfaState(accept bool) *nfaState {
 	return &nfaState{
 		accept:           accept,
-		inputTransitions: make(map[int][]int, maxTransitionsPerState),
+		inputTransitions: make(map[int][]int, 0),
 	}
 }
 
@@ -353,9 +421,14 @@ func (dfa *Dfa) AddState() int {
 	return state
 }
 
-// AddTransition adds a transition from one state to another based on an input character.
+// AddTransition adds a transition from one state to another based on an input.
 func (dfa *Dfa) AddTransition(fromState int, onInput int, toState int) {
 	dfa.Transitions[fromState*maxTransitionsPerState+onInput] = toState
+}
+
+// NextState returns the next state after a transition based on an input.
+func (dfa *Dfa) NextState(fromState int, onInput int) int {
+	return dfa.Transitions[fromState*maxTransitionsPerState+onInput]
 }
 
 // AddAcceptAction adds an accept action to take when a state is reached.
@@ -378,7 +451,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 
 	if startPos == 0 {
 		prevState := state
-		state = dfa.Transitions[state*maxTransitionsPerState+startOfText]
+		state = dfa.NextState(state, startOfText)
 		if state == DfaDeadState {
 			// The DFA doesn't match start-of-text, so try to recover by restarting at the first character.
 			state = prevState
@@ -397,8 +470,8 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		totalBytesRead += n
 
 		for i, c := range dfa.buf[:n] {
-			pos += uint64(utf8.StartByteIndicator[c])
-			state = dfa.Transitions[state*maxTransitionsPerState+int(c)]
+			pos += uint64(textUtf8.StartByteIndicator[c])
+			state = dfa.NextState(state, int(c))
 			if state == DfaDeadState {
 				break
 			} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
@@ -412,7 +485,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	}
 
 	if pos == textLen {
-		state = dfa.Transitions[state*maxTransitionsPerState+endOfText]
+		state = dfa.NextState(state, endOfText)
 		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 			accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, totalBytesRead, acceptActions
 		}
@@ -485,9 +558,8 @@ func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
 	for g := 0; g < len(groups); g++ {
 		states := groups[g]
 
-		// Cannot split a group with a single state.
-		// By construction, all groups must have at least one state.
-		if len(states) == 1 {
+		// Fast path for groups that cannot be split.
+		if !dfa.canSplitGroup(states) {
 			newGroups = append(newGroups, states)
 			continue
 		}
@@ -511,6 +583,25 @@ func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
 	}
 
 	return newGroups
+}
+
+func (dfa *Dfa) canSplitGroup(states []int) bool {
+	// Cannot split a group with a single state.
+	// By construction, all groups must have at least one state.
+	if len(states) == 1 {
+		return false
+	}
+
+	// Cannot split a group where every state has the same transitions.
+	firstState := states[0]
+	firstStateTransitions := dfa.Transitions[firstState*maxTransitionsPerState : (firstState+1)*maxTransitionsPerState]
+	for _, s := range states[1:] {
+		transitions := dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState]
+		if !intSliceEqual(firstStateTransitions, transitions) {
+			return true
+		}
+	}
+	return false
 }
 
 func (dfa *Dfa) newDfaFromGroups(groups [][]int) *Dfa {

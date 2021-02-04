@@ -41,12 +41,34 @@ func sortedKeys(m map[int]struct{}) []int {
 }
 
 func intSliceKey(s []int) string {
+	if len(s) == 0 {
+		return ""
+	}
+
+	if len(s) == 1 {
+		return strconv.Itoa(s[0])
+	}
+
 	var sb strings.Builder
 	for _, x := range s {
 		sb.WriteString(strconv.Itoa(x))
-		sb.WriteString("|")
+		sb.WriteRune('|')
 	}
 	return sb.String()
+}
+
+func intSliceEqual(x, y []int) bool {
+	if len(x) != len(y) {
+		return false
+	}
+
+	for i := 0; i < len(x); i++ {
+		if x[i] != y[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func forEachPartitionInKeyOrder(partitions map[string][]int, f func(states []int)) {

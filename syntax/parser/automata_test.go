@@ -3,6 +3,7 @@ package parser
 import (
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -278,6 +279,38 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			startPos:       0,
 			expectAccepted: false,
 		},
+		{
+			name:           "unicode category digit single byte accepts",
+			nfa:            NfaForUnicodeCategory(unicode.Digit).SetAcceptAction(99),
+			inputString:    "6",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{99},
+		},
+		{
+			name:           "unicode category digit single byte rejects",
+			nfa:            NfaForUnicodeCategory(unicode.Digit),
+			inputString:    "x",
+			startPos:       0,
+			expectAccepted: false,
+		},
+		{
+			name:           "unicode category digit multi byte accepts",
+			nfa:            NfaForUnicodeCategory(unicode.Digit).SetAcceptAction(99),
+			inputString:    "\u0660",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{99},
+		},
+		{
+			name:           "unicode category digit multi byte rejects",
+			nfa:            NfaForUnicodeCategory(unicode.Digit),
+			inputString:    "\u0700",
+			startPos:       0,
+			expectAccepted: false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -329,5 +362,11 @@ func TestMinimizeDfa(t *testing.T) {
 		assert.Equal(t, accepted, newAccepted)
 		assert.Equal(t, endPos, newEndPos)
 		assert.Equal(t, actions, newActions)
+	}
+}
+
+func BenchmarkNfaForUnicodeCategory(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		NfaForUnicodeCategory(unicode.Letter)
 	}
 }

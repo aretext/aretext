@@ -235,6 +235,7 @@ func (left *Nfa) Concat(right *Nfa) *Nfa {
 // Only accept states with at least one accept action are accepted by the DFA,
 // so make sure to call SetAcceptAction at least once before compiling!
 func (nfa *Nfa) CompileDfa() *Dfa {
+	km := &intSliceKeyMaker{}
 	dfa := NewDfa()
 
 	// Construct the DFA using the subset construction algorithm.
@@ -245,7 +246,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 	}
 
 	stateSetToDfaState := map[string]int{
-		intSliceKey([]int{0}): dfa.StartState,
+		km.makeKey([]int{0}): dfa.StartState,
 	}
 
 	var dfaState int
@@ -283,7 +284,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 			// Include all states reachable through empty transitions in the new state.
 			nextNfaStates = nfa.emptyTransitionsClosure(nextNfaStates)
 
-			if nextDfaState, ok := stateSetToDfaState[intSliceKey(nextNfaStates)]; ok {
+			if nextDfaState, ok := stateSetToDfaState[km.makeKey(nextNfaStates)]; ok {
 				// The new state already exists, so update it with the new transitions.
 				dfa.AddTransition(dfaState, i, nextDfaState)
 			} else {
@@ -291,7 +292,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 				nextDfaState = dfa.AddState()
 				dfa.AddTransition(dfaState, i, nextDfaState)
 				dfaStateToNfaStates[nextDfaState] = nextNfaStates
-				stateSetToDfaState[intSliceKey(nextNfaStates)] = nextDfaState
+				stateSetToDfaState[km.makeKey(nextNfaStates)] = nextDfaState
 				stack = append(stack, nextDfaState)
 			}
 		}
@@ -509,10 +510,11 @@ func (dfa *Dfa) Minimize() *Dfa {
 }
 
 func (dfa *Dfa) groupEquivalentStates() [][]int {
-	groups := dfa.initialGroups()
+	km := &intSliceKeyMaker{}
+	groups := dfa.initialGroups(km)
 	for {
 		prevNumGroups := len(groups)
-		groups = dfa.splitGroupsIfNecessary(groups)
+		groups = dfa.splitGroupsIfNecessary(groups, km)
 		if prevNumGroups == len(groups) {
 			// The groups haven't changed, so they cannot be further split.
 			break
@@ -522,7 +524,7 @@ func (dfa *Dfa) groupEquivalentStates() [][]int {
 	return groups
 }
 
-func (dfa *Dfa) initialGroups() [][]int {
+func (dfa *Dfa) initialGroups(km *intSliceKeyMaker) [][]int {
 	groups := make([][]int, 0, dfa.NumStates)
 
 	// The dead state must come first so that it becomes the first state in the new DFA.
@@ -531,7 +533,7 @@ func (dfa *Dfa) initialGroups() [][]int {
 	// Partition the remaining groups by their accept actions.
 	partitions := make(map[string][]int, dfa.NumStates)
 	for s := 1; s < dfa.NumStates; s++ {
-		key := intSliceKey(dfa.AcceptActions[s])
+		key := km.makeKey(dfa.AcceptActions[s])
 		partitions[key] = append(partitions[key], s)
 	}
 
@@ -552,7 +554,7 @@ func (dfa *Dfa) indexStatesByGroup(groups [][]int) []int {
 	return stateToGroup
 }
 
-func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
+func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int, km *intSliceKeyMaker) [][]int {
 	stateToGroup := dfa.indexStatesByGroup(groups)
 	newGroups := make([][]int, 0, len(groups))
 	for g := 0; g < len(groups); g++ {
@@ -573,7 +575,7 @@ func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int) [][]int {
 			for c, nextState := range dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState] {
 				nextStateGroups[c] = stateToGroup[nextState]
 			}
-			key := intSliceKey(nextStateGroups[:])
+			key := km.makeKey(nextStateGroups[:])
 			partitions[key] = append(partitions[key], s)
 		}
 

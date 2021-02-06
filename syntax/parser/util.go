@@ -40,6 +40,36 @@ func sortedKeys(m map[int]struct{}) []int {
 	return result
 }
 
+// intSliceKeyMaker constructs a unique key for a slice of integers.
+// It reuses a byte buffer for all keys to avoid unnecessary allocations.
+type intSliceKeyMaker struct {
+	buf []byte
+}
+
+func (k *intSliceKeyMaker) makeKey(s []int) string {
+	if len(s) == 0 {
+		return ""
+	}
+
+	if k.buf != nil {
+		k.buf = k.buf[:0]
+	}
+
+	for _, x := range s {
+		y := int64(x)
+		k.buf = append(k.buf,
+			byte(y),
+			byte(y>>8),
+			byte(y>>16),
+			byte(y>>24),
+			byte(y>>32),
+			byte(y>>40),
+			byte(y>>48),
+			byte(y>>56))
+	}
+	return string(k.buf)
+}
+
 func intSliceKey(s []int) string {
 	if len(s) == 0 {
 		return ""

@@ -41,6 +41,10 @@ func commandMenuItems() []exec.MenuItem {
 			Action: exec.NewSetSyntaxMutator(syntax.LanguageJson),
 		},
 		{
+			Name:   "set syntax go",
+			Action: exec.NewSetSyntaxMutator(syntax.LanguageGo),
+		},
+		{
 			Name:   "set syntax none",
 			Action: exec.NewSetSyntaxMutator(syntax.LanguageUndefined),
 		},

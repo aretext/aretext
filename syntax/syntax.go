@@ -14,6 +14,7 @@ type Language int
 const (
 	LanguageUndefined = Language(iota)
 	LanguageJson
+	LanguageGo
 )
 
 func (language Language) String() string {
@@ -22,6 +23,8 @@ func (language Language) String() string {
 		return "undefined"
 	case LanguageJson:
 		return "json"
+	case LanguageGo:
+		return "go"
 	default:
 		return ""
 	}
@@ -33,6 +36,8 @@ func LanguageFromString(s string) Language {
 		return LanguageUndefined
 	case "json":
 		return LanguageJson
+	case "go":
+		return LanguageGo
 	default:
 		log.Printf("Unrecognized syntax language '%s'\n", s)
 		return LanguageUndefined
@@ -45,6 +50,8 @@ func TokenizerForLanguage(language Language) *parser.Tokenizer {
 	switch language {
 	case LanguageJson:
 		return JsonTokenizer
+	case LanguageGo:
+		return GolangTokenizer
 	default:
 		return nil
 	}

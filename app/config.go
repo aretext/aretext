@@ -73,6 +73,16 @@ func defaultConfigRuleSet() config.RuleSet {
 					"autoIndent":     true,
 				},
 			},
+			{
+				Name:    "go",
+				Pattern: "**/*.go",
+				Config: map[string]interface{}{
+					"syntaxLanguage": syntax.LanguageGo.String(),
+					"tabSize":        4,
+					"tabExpand":      false,
+					"autoIndent":     true,
+				},
+			},
 		},
 	}
 }

@@ -2,6 +2,7 @@ package syntax
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/pkg/errors"
@@ -22,7 +23,7 @@ func ParseTokensWithText(language Language, s string) ([]TokenWithText, error) {
 	}
 
 	r := &parser.ReadSeekerInput{R: strings.NewReader(s)}
-	textLen := uint64(len(s))
+	textLen := uint64(utf8.RuneCountInString(s))
 	tokenTree, err := tokenizer.TokenizeAll(r, textLen)
 	if err != nil {
 		return nil, errors.Wrapf(err, "TokenizeAll")
@@ -37,9 +38,26 @@ func ParseTokensWithText(language Language, s string) ([]TokenWithText, error) {
 
 		tokensWithText = append(tokensWithText, TokenWithText{
 			Role: tok.Role,
-			Text: s[tok.StartPos:tok.EndPos],
+			Text: runeSlice(s, tok.StartPos, tok.EndPos),
 		})
 	}
 
 	return tokensWithText, nil
+}
+
+func runeSlice(s string, startPos, endPos uint64) string {
+	var pos uint64
+	var runes []rune
+	for _, r := range s {
+		if pos < startPos {
+			pos++
+			continue
+		}
+		if pos >= endPos {
+			break
+		}
+		runes = append(runes, r)
+		pos++
+	}
+	return string(runes)
 }

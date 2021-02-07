@@ -328,40 +328,78 @@ func TestCompileAndMatchLongest(t *testing.T) {
 }
 
 func TestMinimizeDfa(t *testing.T) {
-	dfa := NewDfa()
-	s1, s2, s3, s4 := dfa.AddState(), dfa.AddState(), dfa.AddState(), dfa.AddState()
-	dfa.AddTransition(dfa.StartState, 'a', s1)
-	dfa.AddTransition(dfa.StartState, 'b', s2)
-	dfa.AddTransition(s1, 'a', s1)
-	dfa.AddTransition(s1, 'b', s3)
-	dfa.AddTransition(s2, 'b', s2)
-	dfa.AddTransition(s2, 'a', s1)
-	dfa.AddTransition(s3, 'a', s1)
-	dfa.AddTransition(s3, 'b', s4)
-	dfa.AddTransition(s4, 'a', s1)
-	dfa.AddTransition(s4, 'b', s2)
-	dfa.AddAcceptAction(s4, 99)
+	builder := NewDfaBuilder()
+	s1, s2, s3, s4 := builder.AddState(), builder.AddState(), builder.AddState(), builder.AddState()
+	builder.AddTransition(builder.StartState(), 'a', s1)
+	builder.AddTransition(builder.StartState(), 'b', s2)
+	builder.AddTransition(s1, 'a', s1)
+	builder.AddTransition(s1, 'b', s3)
+	builder.AddTransition(s2, 'b', s2)
+	builder.AddTransition(s2, 'a', s1)
+	builder.AddTransition(s3, 'a', s1)
+	builder.AddTransition(s3, 'b', s4)
+	builder.AddTransition(s4, 'a', s1)
+	builder.AddTransition(s4, 'b', s2)
+	builder.AddAcceptAction(s4, 99)
 
-	// Expect that the minimized DFA has fewer states than the original DFA.
-	newDfa := dfa.Minimize()
-	assert.Less(t, newDfa.NumStates, dfa.NumStates)
+	// Expect that the minimized DFA has fewer states than the builder.
+	dfa := builder.Build()
+	assert.Less(t, dfa.NumStates, builder.NumStates())
 
-	// Expect that the two DFAs give the same results.
-	inputStrings := []string{"", "a", "b", "abb", "bbabb", "aaaabb", "aba"}
-	for _, s := range inputStrings {
-		textLen := uint64(len(s))
+	// Expect that the DFA gives correct results.
+	testCases := []struct {
+		inputString    string
+		expectAccepted bool
+		expectEndPos   uint64
+	}{
+		{
+			inputString:    "",
+			expectAccepted: false,
+		},
+		{
+			inputString:    "a",
+			expectAccepted: false,
+		},
+		{
+			inputString:    "b",
+			expectAccepted: false,
+		},
+		{
+			inputString:    "abb",
+			expectAccepted: true,
+			expectEndPos:   3,
+		},
+		{
+			inputString:    "bbabb",
+			expectAccepted: true,
+			expectEndPos:   5,
+		},
+		{
+			inputString:    "aaaabb",
+			expectAccepted: true,
+			expectEndPos:   6,
+		},
+		{
+			inputString:    "aba",
+			expectAccepted: false,
+		},
+		{
+			inputString:    "abbaaaaaa",
+			expectAccepted: true,
+			expectEndPos:   3,
+		},
+	}
 
-		r := &ReadSeekerInput{R: strings.NewReader(s)}
+	for _, tc := range testCases {
+		textLen := uint64(len(tc.inputString))
+		r := &ReadSeekerInput{R: strings.NewReader(tc.inputString)}
 		accepted, endPos, _, actions, _, err := dfa.MatchLongest(r, 0, textLen)
 		require.NoError(t, err)
-
-		r = &ReadSeekerInput{R: strings.NewReader(s)}
-		newAccepted, newEndPos, _, newActions, _, err := newDfa.MatchLongest(r, 0, textLen)
-		require.NoError(t, err)
-
-		assert.Equal(t, accepted, newAccepted)
-		assert.Equal(t, endPos, newEndPos)
-		assert.Equal(t, actions, newActions)
+		assert.Equal(t, tc.expectAccepted, accepted)
+		assert.Equal(t, tc.expectEndPos, endPos)
+		if tc.expectAccepted {
+			assert.Equal(t, []int{99}, actions)
+		}
 	}
 }
 

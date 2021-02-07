@@ -77,29 +77,28 @@ func NfaForNegatedChars(negatedChars []byte) *Nfa {
 // NfaForUnicodeCategory constructs an NFA that matches UTF-8 encoded runes in a unicode category (letter, digit, etc.).
 func NfaForUnicodeCategory(rangeTable *unicode.RangeTable) *Nfa {
 	var buf [4]byte
-	dfa := NewDfa()
+	builder := NewDfaBuilder()
 
 	// Construct the initial automata as a trie of the bytes in each rune.
 	// Runes that share the same byte prefix will share states/transitions.
 	iterRunes(rangeTable, func(r rune) {
-		state := dfa.StartState
+		state := builder.StartState()
 		n := utf8.EncodeRune(buf[:], r)
 		for _, b := range buf[:n] {
-			nextState := dfa.NextState(state, int(b))
+			nextState := builder.NextState(state, int(b))
 			if nextState == DfaDeadState {
-				nextState = dfa.AddState()
-				dfa.AddTransition(state, int(b), nextState)
+				nextState = builder.AddState()
+				builder.AddTransition(state, int(b), nextState)
 			}
 			state = nextState
 		}
-		dfa.AddAcceptAction(state, 1) // Choose 1 arbitrarily because we'll discard it later.
+		builder.AddAcceptAction(state, 1) // Choose 1 arbitrarily because we'll discard it later.
 	})
 
 	// Some categories contain hundreds of thousands of runes, so the automata may have a large number of states.
 	// If this automata is embedded in a larger automata, the total number of states can quickly explode.
 	// Keep it under control by combining redundant states.
-	dfa.Minimize()
-
+	dfa := builder.Build()
 	return convertDfaToNfaWithoutAcceptActions(dfa)
 }
 
@@ -236,21 +235,22 @@ func (left *Nfa) Concat(right *Nfa) *Nfa {
 // so make sure to call SetAcceptAction at least once before compiling!
 func (nfa *Nfa) CompileDfa() *Dfa {
 	km := &intSliceKeyMaker{}
-	dfa := NewDfa()
+	builder := NewDfaBuilder()
+	startState := builder.StartState()
 
 	// Construct the DFA using the subset construction algorithm.
 	// See Aho, Alfred V. (2003). Compilers: Principles, Techniques and Tools
 	// or Grune, D. (2008). Parsing Techniques: A Practical Guide.
 	dfaStateToNfaStates := map[int][]int{
-		dfa.StartState: nfa.emptyTransitionsClosure([]int{0}),
+		startState: nfa.emptyTransitionsClosure([]int{0}),
 	}
 
 	stateSetToDfaState := map[string]int{
-		km.makeKey([]int{0}): dfa.StartState,
+		km.makeKey([]int{0}): startState,
 	}
 
 	var dfaState int
-	stack := []int{dfa.StartState}
+	stack := []int{startState}
 	for len(stack) > 0 {
 		dfaState, stack = stack[len(stack)-1], stack[:len(stack)-1]
 
@@ -260,7 +260,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 			nfaState := nfa.states[nfaStateIdx]
 			if nfaState.accept {
 				for _, action := range nfaState.acceptActions {
-					dfa.AddAcceptAction(dfaState, action)
+					builder.AddAcceptAction(dfaState, action)
 				}
 			}
 		}
@@ -286,11 +286,11 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 
 			if nextDfaState, ok := stateSetToDfaState[km.makeKey(nextNfaStates)]; ok {
 				// The new state already exists, so update it with the new transitions.
-				dfa.AddTransition(dfaState, i, nextDfaState)
+				builder.AddTransition(dfaState, i, nextDfaState)
 			} else {
 				// The new state does not yet exist, so create it and push it onto the stack.
-				nextDfaState = dfa.AddState()
-				dfa.AddTransition(dfaState, i, nextDfaState)
+				nextDfaState = builder.AddState()
+				builder.AddTransition(dfaState, i, nextDfaState)
 				dfaStateToNfaStates[nextDfaState] = nextNfaStates
 				stateSetToDfaState[km.makeKey(nextNfaStates)] = nextDfaState
 				stack = append(stack, nextDfaState)
@@ -298,7 +298,7 @@ func (nfa *Nfa) CompileDfa() *Dfa {
 		}
 	}
 
-	return dfa.Minimize()
+	return builder.Build()
 }
 
 // emptyTransitionsClosure returns all states reachable from the current states through empty transitions.
@@ -367,6 +367,221 @@ func (state *nfaState) copyWithShiftedTransitions(n int) *nfaState {
 	return newState
 }
 
+// dfaState represents a state in the deterministic finite automata.
+// It uses a map to represent transitions and avoids materializing transitions to the dead state.
+// This is used when building the DFA, since the initial representation may have many redundant states that are eliminated by the minimization algorithm.
+// However, the full DFA uses a slice to represent transitions to avoid the runtime cost of map lookups when running the DFA.
+type dfaState struct {
+	inputTransitions map[int]int
+	acceptActions    []int
+}
+
+func newDfaState() *dfaState {
+	return &dfaState{
+		inputTransitions: make(map[int]int, 0),
+		acceptActions:    nil,
+	}
+}
+
+// DfaBuilder constructs a DFA with the minimal number of states.
+type DfaBuilder struct {
+	states     []*dfaState
+	startState int
+}
+
+// NewDfaBuilder initializes a new builder.
+func NewDfaBuilder() *DfaBuilder {
+	deadState, startState := newDfaState(), newDfaState()
+	return &DfaBuilder{
+		states:     []*dfaState{deadState, startState},
+		startState: 1,
+	}
+}
+
+func (b *DfaBuilder) StartState() int {
+	return b.startState
+}
+
+func (b *DfaBuilder) NumStates() int {
+	return len(b.states)
+}
+
+// AddState adds a new state to the DFA, returning the state index.
+func (b *DfaBuilder) AddState() int {
+	id := len(b.states)
+	b.states = append(b.states, newDfaState())
+	return id
+}
+
+// AddTransition adds a transition from one state to another based on an input.
+func (b *DfaBuilder) AddTransition(fromState int, onInput int, toState int) {
+	if toState == DfaDeadState {
+		// Transitions to the dead state are always represented by an absence of a key in the transition map.
+		// It's important to be consistent about this, because later we compare transition maps to determine
+		// if two states have the same transitions in the state minimization algorithm.
+		delete(b.states[fromState].inputTransitions, onInput)
+	}
+
+	b.states[fromState].inputTransitions[onInput] = toState
+}
+
+// AddAcceptAction adds an accept action to take when a state is reached.
+// This marks the state as an accept state.
+func (b *DfaBuilder) AddAcceptAction(state int, action int) {
+	s := b.states[state]
+	s.acceptActions = insertUniqueSorted(s.acceptActions, action)
+}
+
+// NextState returns the next state after a transition based on an input.
+func (b *DfaBuilder) NextState(fromState int, onInput int) int {
+	return b.states[fromState].inputTransitions[onInput]
+}
+
+// Build produces a DFA with the minimal number of states.
+func (b *DfaBuilder) Build() *Dfa {
+	// This is the DFA state minimization algorithm from
+	// Aho, Alfred V. (2003). Compilers: Principles, Techniques and Tools
+	groups := b.groupEquivalentStates()
+	return b.newDfaFromGroups(groups)
+}
+
+func (b *DfaBuilder) groupEquivalentStates() [][]int {
+	km := &intSliceKeyMaker{}
+	groups := b.initialGroups(km)
+	for {
+		prevNumGroups := len(groups)
+		groups = b.splitGroupsIfNecessary(groups, km)
+		if prevNumGroups == len(groups) {
+			// The groups haven't changed, so they cannot be further split.
+			break
+		}
+	}
+
+	return groups
+}
+
+func (b *DfaBuilder) initialGroups(km *intSliceKeyMaker) [][]int {
+	groups := make([][]int, 0, len(b.states))
+
+	// The dead state must come first so that it becomes the first state in the new DFA.
+	groups = append(groups, []int{DfaDeadState})
+
+	// Partition the remaining groups by their accept actions.
+	partitions := make(map[string][]int, len(b.states))
+	for s := 1; s < len(b.states); s++ {
+		key := km.makeKey(b.states[s].acceptActions)
+		partitions[key] = append(partitions[key], s)
+	}
+
+	forEachPartitionInKeyOrder(partitions, func(states []int) {
+		groups = append(groups, states)
+	})
+
+	return groups
+}
+
+func (b *DfaBuilder) indexStatesByGroup(groups [][]int) []int {
+	stateToGroup := make([]int, len(b.states))
+	for g, states := range groups {
+		for _, s := range states {
+			stateToGroup[s] = g
+		}
+	}
+	return stateToGroup
+}
+
+func (b *DfaBuilder) splitGroupsIfNecessary(groups [][]int, km *intSliceKeyMaker) [][]int {
+	stateToGroup := b.indexStatesByGroup(groups)
+	newGroups := make([][]int, 0, len(groups))
+	for g := 0; g < len(groups); g++ {
+		groupStates := groups[g]
+
+		// Fast path for groups that cannot be split.
+		if !b.canSplitGroup(groupStates) {
+			newGroups = append(newGroups, groupStates)
+			continue
+		}
+
+		// Partition states in the group by their transitions to other groups.
+		// Two states with the same transitions are considered
+		// equivalent and should remain in the same group.
+		partitions := make(map[string][]int, len(groupStates))
+		for _, gs := range groupStates {
+			var nextStateGroups [maxTransitionsPerState]int
+			for c, nextState := range b.states[gs].inputTransitions {
+				nextStateGroups[c] = stateToGroup[nextState]
+			}
+			key := km.makeKey(nextStateGroups[:])
+			partitions[key] = append(partitions[key], gs)
+		}
+
+		forEachPartitionInKeyOrder(partitions, func(groupStates []int) {
+			newGroups = append(newGroups, groupStates)
+		})
+	}
+
+	return newGroups
+}
+
+func (b *DfaBuilder) canSplitGroup(states []int) bool {
+	// Cannot split a group with a single state.
+	// By construction, all groups must have at least one state.
+	if len(states) == 1 {
+		return false
+	}
+
+	// Cannot split a group where every state has the same transitions.
+	firstStateTransitions := b.states[states[0]].inputTransitions
+	for _, s := range states[1:] {
+		transitions := b.states[s].inputTransitions
+		if len(firstStateTransitions) != len(transitions) {
+			return true
+		}
+
+		for c, expectedNextState := range firstStateTransitions {
+			actualNextState, ok := b.states[s].inputTransitions[c]
+			if !ok || actualNextState != expectedNextState {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (b *DfaBuilder) newDfaFromGroups(groups [][]int) *Dfa {
+	stateToGroup := b.indexStatesByGroup(groups)
+
+	// Initialize a new DFA with one state for each group.
+	// Intially, all transitions go to the dead state.
+	newDfa := &Dfa{
+		NumStates:     len(groups),
+		Transitions:   make([]int, len(groups)*maxTransitionsPerState),
+		AcceptActions: make([][]int, len(groups)),
+	}
+
+	// Add transitions and accept actions.
+	for g, groupStates := range groups {
+		s := groupStates[0] // Arbitrarily choose the first state as representative.
+
+		for c, nextState := range b.states[s].inputTransitions {
+			newDfa.Transitions[g*maxTransitionsPerState+c] = stateToGroup[nextState]
+		}
+
+		for _, a := range b.states[s].acceptActions {
+			newDfa.AcceptActions[g] = append(newDfa.AcceptActions[g], a)
+		}
+
+		for _, s := range groupStates {
+			if s == b.startState {
+				newDfa.StartState = stateToGroup[s]
+				break
+			}
+		}
+	}
+
+	return newDfa
+}
+
 // DfaDeadState represents a state in which the DFA will never accept the string,
 // regardless of the remaining input characters.
 const DfaDeadState int = 0
@@ -400,42 +615,9 @@ type Dfa struct {
 	buf [16]byte
 }
 
-// NewDfa constructs a DFA with only the dead state and the start state.
-// This recognizes the empty language (rejects all strings, even the empty string).
-func NewDfa() *Dfa {
-	numStates := 2 // The dead state and the start state.
-	return &Dfa{
-		NumStates:     numStates,
-		StartState:    1,
-		Transitions:   make([]int, maxTransitionsPerState*numStates),
-		AcceptActions: make([][]int, numStates),
-	}
-}
-
-// AddState adds a new state to the DFA, returning the state index.
-func (dfa *Dfa) AddState() int {
-	state := dfa.NumStates
-	dfa.NumStates++
-	transitions := make([]int, maxTransitionsPerState)
-	dfa.Transitions = append(dfa.Transitions, transitions...)
-	dfa.AcceptActions = append(dfa.AcceptActions, nil)
-	return state
-}
-
-// AddTransition adds a transition from one state to another based on an input.
-func (dfa *Dfa) AddTransition(fromState int, onInput int, toState int) {
-	dfa.Transitions[fromState*maxTransitionsPerState+onInput] = toState
-}
-
 // NextState returns the next state after a transition based on an input.
 func (dfa *Dfa) NextState(fromState int, onInput int) int {
 	return dfa.Transitions[fromState*maxTransitionsPerState+onInput]
-}
-
-// AddAcceptAction adds an accept action to take when a state is reached.
-// This marks the state as an accept state.
-func (dfa *Dfa) AddAcceptAction(state int, action int) {
-	dfa.AcceptActions[state] = insertUniqueSorted(dfa.AcceptActions[state], action)
 }
 
 // MatchLongest returns the longest match in an input string.
@@ -499,152 +681,4 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	}
 
 	return accepted, endPos, pos, actions, numBytesReadAtLastAccept, nil
-}
-
-// Minimize produces an equivalent DFA with the minimum number of states.
-func (dfa *Dfa) Minimize() *Dfa {
-	// This is the DFA state minimization algorithm from
-	// Aho, Alfred V. (2003). Compilers: Principles, Techniques and Tools
-	groups := dfa.groupEquivalentStates()
-	return dfa.newDfaFromGroups(groups)
-}
-
-func (dfa *Dfa) groupEquivalentStates() [][]int {
-	km := &intSliceKeyMaker{}
-	groups := dfa.initialGroups(km)
-	for {
-		prevNumGroups := len(groups)
-		groups = dfa.splitGroupsIfNecessary(groups, km)
-		if prevNumGroups == len(groups) {
-			// The groups haven't changed, so they cannot be further split.
-			break
-		}
-	}
-
-	return groups
-}
-
-func (dfa *Dfa) initialGroups(km *intSliceKeyMaker) [][]int {
-	groups := make([][]int, 0, dfa.NumStates)
-
-	// The dead state must come first so that it becomes the first state in the new DFA.
-	groups = append(groups, []int{DfaDeadState})
-
-	// Partition the remaining groups by their accept actions.
-	partitions := make(map[string][]int, dfa.NumStates)
-	for s := 1; s < dfa.NumStates; s++ {
-		key := km.makeKey(dfa.AcceptActions[s])
-		partitions[key] = append(partitions[key], s)
-	}
-
-	forEachPartitionInKeyOrder(partitions, func(states []int) {
-		groups = append(groups, states)
-	})
-
-	return groups
-}
-
-func (dfa *Dfa) indexStatesByGroup(groups [][]int) []int {
-	stateToGroup := make([]int, dfa.NumStates)
-	for g, states := range groups {
-		for _, s := range states {
-			stateToGroup[s] = g
-		}
-	}
-	return stateToGroup
-}
-
-func (dfa *Dfa) splitGroupsIfNecessary(groups [][]int, km *intSliceKeyMaker) [][]int {
-	stateToGroup := dfa.indexStatesByGroup(groups)
-	newGroups := make([][]int, 0, len(groups))
-	for g := 0; g < len(groups); g++ {
-		states := groups[g]
-
-		// Fast path for groups that cannot be split.
-		if !dfa.canSplitGroup(states) {
-			newGroups = append(newGroups, states)
-			continue
-		}
-
-		// Partition states in the group by their transitions to other groups.
-		// Two states with the same transitions are considered
-		// equivalent and should remain in the same group.
-		partitions := make(map[string][]int, len(states))
-		for _, s := range states {
-			var nextStateGroups [maxTransitionsPerState]int
-			for c, nextState := range dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState] {
-				nextStateGroups[c] = stateToGroup[nextState]
-			}
-			key := km.makeKey(nextStateGroups[:])
-			partitions[key] = append(partitions[key], s)
-		}
-
-		forEachPartitionInKeyOrder(partitions, func(states []int) {
-			newGroups = append(newGroups, states)
-		})
-	}
-
-	return newGroups
-}
-
-func (dfa *Dfa) canSplitGroup(states []int) bool {
-	// Cannot split a group with a single state.
-	// By construction, all groups must have at least one state.
-	if len(states) == 1 {
-		return false
-	}
-
-	// Cannot split a group where every state has the same transitions.
-	firstState := states[0]
-	firstStateTransitions := dfa.Transitions[firstState*maxTransitionsPerState : (firstState+1)*maxTransitionsPerState]
-	for _, s := range states[1:] {
-		transitions := dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState]
-		if !intSliceEqual(firstStateTransitions, transitions) {
-			return true
-		}
-	}
-	return false
-}
-
-func (dfa *Dfa) newDfaFromGroups(groups [][]int) *Dfa {
-	stateToGroup := dfa.indexStatesByGroup(groups)
-
-	newDfa := &Dfa{
-		Transitions:   make([]int, 0, len(groups)*maxTransitionsPerState),
-		AcceptActions: make([][]int, len(groups)),
-	}
-
-	// Add states, one for each group.
-	groupToNewState := make([]int, len(groups))
-	for g := 0; g < len(groups); g++ {
-		newState := newDfa.AddState()
-		groupToNewState[g] = newState
-	}
-
-	// Add transitions and accept actions.
-	for g, states := range groups {
-		newState := groupToNewState[g]
-		s := states[0] // Arbitrarily choose the first state as representative.
-
-		for i, nextState := range dfa.Transitions[s*maxTransitionsPerState : (s+1)*maxTransitionsPerState] {
-			nextGroup := stateToGroup[nextState]
-			newNextState := groupToNewState[nextGroup]
-			newDfa.AddTransition(newState, i, newNextState)
-		}
-
-		for _, a := range dfa.AcceptActions[s] {
-			newDfa.AddAcceptAction(newState, a)
-		}
-
-		for _, state := range states {
-			if state == dfa.StartState {
-				startGroup := stateToGroup[state]
-				newStartState := groupToNewState[startGroup]
-				newDfa.StartState = newStartState
-				break
-			}
-		}
-	}
-
-	return newDfa
 }

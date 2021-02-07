@@ -2,8 +2,6 @@ package parser
 
 import (
 	"sort"
-	"strconv"
-	"strings"
 )
 
 // insertUniqueSorted inserts an integer into a sorted array with unique elements.
@@ -68,37 +66,6 @@ func (k *intSliceKeyMaker) makeKey(s []int) string {
 			byte(y>>56))
 	}
 	return string(k.buf)
-}
-
-func intSliceKey(s []int) string {
-	if len(s) == 0 {
-		return ""
-	}
-
-	if len(s) == 1 {
-		return strconv.Itoa(s[0])
-	}
-
-	var sb strings.Builder
-	for _, x := range s {
-		sb.WriteString(strconv.Itoa(x))
-		sb.WriteRune('|')
-	}
-	return sb.String()
-}
-
-func intSliceEqual(x, y []int) bool {
-	if len(x) != len(y) {
-		return false
-	}
-
-	for i := 0; i < len(x); i++ {
-		if x[i] != y[i] {
-			return false
-		}
-	}
-
-	return true
 }
 
 func forEachPartitionInKeyOrder(partitions map[string][]int, f func(states []int)) {

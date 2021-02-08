@@ -47,17 +47,17 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 - [x] autoindent
 - [x] replace tabs with spaces
 - [x] custom menu items that invoke external programs
-- [ ] display tabs
-- [ ] undo/redo
-- [ ] line numbers
-- [ ] vim replace/change commands
+- [ ] forward search through file
+- [ ] backward search through file
 - [ ] vim word navigation
 - [ ] vim section navigation
+- [ ] vim replace/change commands
 - [ ] visual mode / selection
 - [ ] selection clipboard (delete/yank/put)
 - [ ] copy/paste using system clipboard integration
-- [ ] forward search through file
-- [ ] backward search through file
+- [ ] undo/redo
+- [ ] display tabs
+- [ ] line numbers
 - [ ] match parens
 - [ ] repeat last action ('.')
 - [ ] vim repeat commands ('10x')

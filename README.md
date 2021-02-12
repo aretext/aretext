@@ -48,7 +48,7 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 The project isn't yet ready to accept external contributions.  If you're interested in contributing, please star the repo and check back soon!
 
 
-# Copyright and License
+## Copyright and License
 
 Copyright (C) 2021 Will Daly
 

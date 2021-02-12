@@ -20,6 +20,7 @@ See the [Version 1.0 board](https://github.com/aretext/aretext/projects/1) for m
 * (Mostly) vim-compatible key bindings.
 * Built-in fuzzy search for commands and files.
 * Fast and accurate incremental syntax highlighting.
+* Intuitive and flexible configuration in a single JSON file.
 
 
 ## Supported Platforms

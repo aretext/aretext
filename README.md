@@ -1,10 +1,7 @@
 # aretext
 Minimalist terminal-based text editor, mostly vim-compatible.
 
-Design principles:
-
-1. Prioritize stability and speed over flexibility and features.
-2. Compose seamlessly with the rest of the \*nix ecosystem (tmux, grep, code formatters, compilers, git, zsh, etc).
+Aretext prioritizes stability and speed over flexibility and features.  It works reliably and consistently across heterogeneous projects and machines.  If you live in a terminal, have multiple hosts in your ssh config, and rarely install vim plugins, this might be the editor for you.
 
 
 ## Project Status
@@ -15,6 +12,25 @@ Design principles:
 * Documentation has not yet been written.
 * The user interface may change in fundamental ways.
 
+See the [Version 1.0 board](https://github.com/aretext/aretext/projects/1) for more details!
+
+
+## Key Features
+
+* (Mostly) vim-compatible key bindings.
+* Built-in fuzzy search for commands and files.
+* Fast and accurate incremental syntax highlighting.
+
+
+## Supported Platforms
+
+| Platform | Status             |
+|----------|--------------------|
+| Linux    | Fully supported    |
+| OpenBSD  | Will probably work |
+| macOS    | Will probably work |
+| Windows  | Not supported      |
+
 
 ## Getting Started
 
@@ -24,44 +40,6 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 
 * The editor supports most key sequences from vim's insert and normal modes.
 * Type ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
-
-
-## Roadmap
-
-- [x] display file contents, with support for wide characters and grapheme clustering
-- [x] exit
-- [x] handle terminal resize
-- [x] navigate up/down/left/right
-- [x] scroll file contents vertically
-- [x] scroll file contents horizontally, handle long lines
-- [x] insert text
-- [x] delete text
-- [x] handle tabs
-- [x] soft-wrap long lines
-- [x] automatic reload when file changes on disk
-- [x] syntax highlighting
-- [x] command menu with fuzzy search
-- [x] save changes
-- [x] close and open new document
-- [x] vim newline command ('o')
-- [x] autoindent
-- [x] replace tabs with spaces
-- [x] custom menu items that invoke external programs
-- [ ] forward search through file
-- [ ] backward search through file
-- [ ] vim word navigation
-- [ ] vim section navigation
-- [ ] vim replace/change commands
-- [ ] visual mode / selection
-- [ ] selection clipboard (delete/yank/put)
-- [ ] copy/paste using system clipboard integration
-- [ ] undo/redo
-- [ ] display tabs
-- [ ] line numbers
-- [ ] match parens
-- [ ] repeat last action ('.')
-- [ ] vim repeat commands ('10x')
-- [ ] jump to definition
 
 
 # Copyright and License

@@ -410,9 +410,15 @@ func (inm *insertNewlineMutator) Mutate(state *EditorState) {
 
 	buffer := state.documentBuffer
 	if buffer.autoIndent {
+		inm.deleteToNextNonWhitespace(state)
 		numCols := inm.numColsIndentedPrevLine(buffer)
 		inm.indentFromCursor(state, numCols)
 	}
+}
+
+func (inm *insertNewlineMutator) deleteToNextNonWhitespace(state *EditorState) {
+	loc := NewNonWhitespaceOrNewlineLocator(NewCurrentCursorLocator())
+	NewDeleteMutator(loc).Mutate(state)
 }
 
 func (inm *insertNewlineMutator) numColsIndentedPrevLine(buffer *BufferState) uint64 {

@@ -417,6 +417,15 @@ func TestInsertNewlineMutator(t *testing.T) {
 			expectedCursorPos: 13,
 			expectedText:      "    abcd\n    ",
 		},
+		{
+			name:              "dedent if extra whitespace at end of current line",
+			inputString:       "    abcd        xyz",
+			autoIndent:        true,
+			tabExpand:         true,
+			cursorPos:         8,
+			expectedCursorPos: 13,
+			expectedText:      "    abcd\n    xyz",
+		},
 	}
 
 	for _, tc := range testCases {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -652,4 +653,80 @@ func (loc *lastLineLocator) Locate(state *BufferState) cursorState {
 
 func (loc *lastLineLocator) String() string {
 	return "LastLineLocator()"
+}
+
+// nextWordStartLocator finds the start of the next word after the cursor.
+// Word boundaries occur:
+//  1) at the first non-whitespace after a whitespace
+//  2) at the start of an empty line
+//  3) at the start of a non-empty syntax token
+type nextWordStartLocator struct{}
+
+func NewNextWordStartLocator() CursorLocator {
+	return &nextWordStartLocator{}
+}
+
+func (loc *nextWordStartLocator) Locate(state *BufferState) cursorState {
+	pos := loc.findBasedOnWhitespace(state)
+	if state.tokenTree != nil {
+		nextTokenPos := loc.findBasedOnSyntaxTokens(state)
+		if nextTokenPos < pos {
+			pos = nextTokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *nextWordStartLocator) findBasedOnWhitespace(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	var whitespaceFlag, newlineFlag bool
+	var offset, prevOffset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			// Stop on (not after) the last character in the document.
+			return startPos + prevOffset
+		}
+
+		if seg.HasNewline() {
+			if newlineFlag {
+				// An empty line is a word boundary.
+				break
+			}
+			newlineFlag = true
+		}
+
+		if seg.IsWhitespace() {
+			whitespaceFlag = true
+		} else if whitespaceFlag {
+			// Non-whitespace after whitespace is a word boundary.
+			break
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+	}
+	return startPos + offset
+}
+
+func (loc *nextWordStartLocator) findBasedOnSyntaxTokens(state *BufferState) uint64 {
+	pos := state.cursor.position
+	startPos := pos
+	iter := state.tokenTree.IterFromPosition(pos)
+	var tok parser.Token
+	for iter.Get(&tok) {
+		pos = tok.StartPos
+		if tok.Role != parser.TokenRoleNone && pos > startPos {
+			break
+		}
+		pos = tok.EndPos
+		iter.Advance()
+	}
+	return pos
+}
+
+func (loc *nextWordStartLocator) String() string {
+	return "NextWordStart()"
 }

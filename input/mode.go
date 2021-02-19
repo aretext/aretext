@@ -80,6 +80,8 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 		return m.cursorUp()
 	case "j":
 		return m.cursorDown()
+	case "w":
+		return m.cursorWordForward()
 	case "x":
 		return m.deleteNextCharInLine()
 	case "0":
@@ -127,7 +129,7 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O|d[dhjkl0$^]|D)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|w|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O|d[dhjkl0$^]|D)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -178,6 +180,11 @@ func (m *normalMode) cursorUp() exec.Mutator {
 
 func (m *normalMode) cursorDown() exec.Mutator {
 	loc := exec.NewRelativeLineLocator(text.ReadDirectionForward, 1)
+	return exec.NewCursorMutator(loc)
+}
+
+func (m *normalMode) cursorWordForward() exec.Mutator {
+	loc := exec.NewNextWordStartLocator()
 	return exec.NewCursorMutator(loc)
 }
 

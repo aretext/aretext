@@ -730,3 +730,75 @@ func (loc *nextWordStartLocator) findBasedOnSyntaxTokens(state *BufferState) uin
 func (loc *nextWordStartLocator) String() string {
 	return "NextWordStart()"
 }
+
+// prevWordStartLocator finds the start of the word before the cursor.
+// It uses the same word break rules as nextWordStartLocator.
+type prevWordStartLocator struct{}
+
+func NewPrevWordStartLocator() CursorLocator {
+	return &prevWordStartLocator{}
+}
+
+func (loc *prevWordStartLocator) Locate(state *BufferState) cursorState {
+	pos := loc.findBasedOnWhitespace(state)
+	if state.tokenTree != nil {
+		prevTokenPos := loc.findBasedOnSyntaxTokens(state)
+		if prevTokenPos > pos {
+			pos = prevTokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *prevWordStartLocator) findBasedOnWhitespace(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	var nonwhitespaceFlag, newlineFlag bool
+	var offset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			// Start of the document.
+			return 0
+		}
+
+		if seg.HasNewline() {
+			if newlineFlag {
+				// An empty line is a word boundary.
+				return startPos - offset
+			}
+			newlineFlag = true
+		}
+
+		if seg.IsWhitespace() {
+			if nonwhitespaceFlag {
+				// A whitespace after a nonwhitespace is a word boundary.
+				return startPos - offset
+			}
+		} else {
+			nonwhitespaceFlag = true
+		}
+
+		offset += seg.NumRunes()
+	}
+}
+
+func (loc *prevWordStartLocator) findBasedOnSyntaxTokens(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	pos := startPos
+	iter := state.tokenTree.IterFromPosition(pos, parser.IterDirectionBackward)
+	var tok parser.Token
+	for iter.Get(&tok) {
+		pos = tok.StartPos
+		if tok.Role != parser.TokenRoleNone && pos < startPos {
+			break
+		}
+		iter.Advance()
+	}
+	return pos
+}
+
+func (loc *prevWordStartLocator) String() string {
+	return "PrevWordStart()"
+}

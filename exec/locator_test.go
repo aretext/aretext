@@ -1343,3 +1343,85 @@ func TestNextWordStartLocator(t *testing.T) {
 		})
 	}
 }
+
+func TestPrevWordStartLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		syntaxLanguage syntax.Language
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "prev word from current word, same line",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "prev word from whitespace, same line",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 12},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "prev word from different line",
+			inputString:    "abc\n   123",
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "prev word to empty line",
+			inputString:    "abc\n\n   123",
+			initialCursor:  cursorState{position: 8},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "empty line to prev word",
+			inputString:    "abc\n\n   123",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "multiple empty lines",
+			inputString:    "\n\n\n\n",
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 1},
+		},
+		{
+			name:           "prev syntax token",
+			inputString:    "123+456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "prev syntax token skip empty",
+			inputString:    "123    +      456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 14},
+			expectedCursor: cursorState{position: 7},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			state.SetSyntax(tc.syntaxLanguage)
+			loc := NewPrevWordStartLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}

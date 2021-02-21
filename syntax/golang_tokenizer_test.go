@@ -34,6 +34,8 @@ func TestGolangTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: "var", Role: parser.TokenRoleKeyword},
 				{Text: "foo", Role: parser.TokenRoleIdentifier},
+				{Text: "[", Role: parser.TokenRolePunctuation},
+				{Text: "]", Role: parser.TokenRolePunctuation},
 				{Text: "int", Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -325,7 +327,7 @@ func TestGolangTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: `0`, Role: parser.TokenRoleNumber},
 				{Text: `x`, Role: parser.TokenRoleIdentifier},
-				{Text: `.`, Role: parser.TokenRoleOperator},
+				{Text: `.`, Role: parser.TokenRolePunctuation},
 				{Text: `p1`, Role: parser.TokenRoleIdentifier},
 			},
 		},

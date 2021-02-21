@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"strings"
+
 	"github.com/aretext/aretext/syntax/parser"
 )
 
@@ -23,6 +25,10 @@ func init() {
 		{
 			Regexp:    `"([^\"\n]|\\")*"[ \t]*:`,
 			TokenRole: parser.TokenRoleKey,
+		},
+		{
+			Regexp:    strings.Join([]string{`\{`, `\}`, `\[`, `\]`, `,`}, "|"),
+			TokenRole: parser.TokenRolePunctuation,
 		},
 
 		// This prevents the number and keyword rules from matching substrings of a symbol.

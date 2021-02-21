@@ -109,8 +109,10 @@ func TestJsonTokenizer(t *testing.T) {
 			name:        "key with string value",
 			inputString: `{"key": "abcd"}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"key":`, Role: parser.TokenRoleKey},
 				{Text: `"abcd"`, Role: parser.TokenRoleString},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
@@ -136,24 +138,30 @@ func TestJsonTokenizer(t *testing.T) {
 			name:        "true value",
 			inputString: `{"bool": true}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"bool":`, Role: parser.TokenRoleKey},
 				{Text: `true`, Role: parser.TokenRoleKeyword},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
 			name:        "false value",
 			inputString: `{"bool": false}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"bool":`, Role: parser.TokenRoleKey},
 				{Text: `false`, Role: parser.TokenRoleKeyword},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
 			name:        "null value",
 			inputString: `{"nullable": null}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"nullable":`, Role: parser.TokenRoleKey},
 				{Text: `null`, Role: parser.TokenRoleKeyword},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
@@ -168,10 +176,13 @@ func TestJsonTokenizer(t *testing.T) {
 				"k2": "v2"
 			}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"k1":`, Role: parser.TokenRoleKey},
 				{Text: `"v1"`, Role: parser.TokenRoleString},
+				{Text: `,`, Role: parser.TokenRolePunctuation},
 				{Text: `"k2":`, Role: parser.TokenRoleKey},
 				{Text: `"v2"`, Role: parser.TokenRoleString},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
@@ -183,27 +194,36 @@ func TestJsonTokenizer(t *testing.T) {
 				}
 			}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"nested":`, Role: parser.TokenRoleKey},
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"k1":`, Role: parser.TokenRoleKey},
 				{Text: `123`, Role: parser.TokenRoleNumber},
+				{Text: `,`, Role: parser.TokenRolePunctuation},
 				{Text: `"k2":`, Role: parser.TokenRoleKey},
 				{Text: `456`, Role: parser.TokenRoleNumber},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
 			name:        "spaces between key and colon",
 			inputString: `{"key"      : 1}`,
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"key"      :`, Role: parser.TokenRoleKey},
 				{Text: `1`, Role: parser.TokenRoleNumber},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 		{
 			name:        "tabs between key and colon",
 			inputString: "{\"key\"\t\t: 1}",
 			expectedTokens: []TokenWithText{
+				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: "\"key\"\t\t:", Role: parser.TokenRoleKey},
 				{Text: "1", Role: parser.TokenRoleNumber},
+				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
 	}

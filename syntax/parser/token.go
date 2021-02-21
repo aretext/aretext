@@ -13,6 +13,7 @@ const (
 	TokenRoleString
 	TokenRoleKey
 	TokenRoleComment
+	TokenRolePunctuation
 )
 
 // Token represents a distinct element in a document.

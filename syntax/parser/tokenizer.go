@@ -86,11 +86,11 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	// or an empty token (TokenRoleNone) from error recovery.
 	var pos uint64
 	var tok Token
-	iter := tree.iterFromFirstAffected(edit.Pos)
+	iter := tree.iterFromFirstAffected(edit.Pos, IterDirectionForward)
 	if iter.Get(&tok) {
 		pos = tok.StartPos
 	} else {
-		iter = tree.IterFromPosition(0)
+		iter = tree.IterFromPosition(0, IterDirectionForward)
 	}
 
 	// Retrieve a reader from the start of the first affected token in the tree.

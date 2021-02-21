@@ -11,18 +11,21 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 		name           string
 		tokens         []Token
 		position       uint64
+		direction      IterDirection
 		expectedTokens []Token
 	}{
 		{
 			name:           "empty tree, position zero",
 			tokens:         []Token{},
 			position:       0,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
 		},
 		{
 			name:           "empty tree, position greater than zero",
 			tokens:         []Token{},
 			position:       10,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
 		},
 		{
@@ -30,7 +33,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 			tokens: []Token{
 				{StartPos: 0, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
-			position: 0,
+			position:  0,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 0, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
@@ -40,7 +44,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 			tokens: []Token{
 				{StartPos: 0, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
-			position: 1,
+			position:  1,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 0, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
@@ -51,7 +56,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleOperator},
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
-			position: 0,
+			position:  0,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleOperator},
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
@@ -64,6 +70,7 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
 			position:       2,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
 		},
 		{
@@ -73,6 +80,7 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
 			},
 			position:       3,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
 		},
 		{
@@ -83,7 +91,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
 			},
-			position: 0,
+			position:  0,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleOperator},
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
@@ -99,7 +108,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
 			},
-			position: 2,
+			position:  2,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
@@ -113,7 +123,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
 			},
-			position: 3,
+			position:  3,
+			direction: IterDirectionForward,
 			expectedTokens: []Token{
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
 			},
@@ -127,38 +138,74 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
 			},
 			position:       6,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
+		},
+		{
+			name: "multiple tokens, iter from end backwards",
+			tokens: []Token{
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleOperator},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
+				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
+			},
+			position:  6,
+			direction: IterDirectionBackward,
+			expectedTokens: []Token{
+				{StartPos: 3, EndPos: 6, LookaheadPos: 6, Role: TokenRoleComment},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3, Role: TokenRoleIdentifier},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleOperator},
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleOperator},
+			},
 		},
 		{
 			name:           "many tokens, iter from beginning",
 			tokens:         generateTokens(1000),
 			position:       0,
+			direction:      IterDirectionForward,
 			expectedTokens: generateTokens(1000),
 		},
 		{
 			name:           "many tokens, iter from middle",
 			tokens:         generateTokens(1000),
 			position:       500,
+			direction:      IterDirectionForward,
 			expectedTokens: generateTokens(1000)[500:1000],
 		},
 		{
 			name:           "many tokens, iter from end",
 			tokens:         generateTokens(1000),
 			position:       1000,
+			direction:      IterDirectionForward,
 			expectedTokens: []Token{},
+		},
+		{
+			name:           "many tokens, iter from end backward",
+			tokens:         generateTokens(1000),
+			position:       1000,
+			direction:      IterDirectionBackward,
+			expectedTokens: reverseTokens(generateTokens(1000)),
 		},
 		{
 			name:           "very large tree, iter from beginning",
 			tokens:         generateTokens(maxEntriesPerLeafNode * maxEntriesPerInnerNode * 2),
 			position:       0,
+			direction:      IterDirectionForward,
 			expectedTokens: generateTokens(maxEntriesPerLeafNode * maxEntriesPerInnerNode * 2),
+		},
+		{
+			name:           "very large tree, iter from end backward",
+			tokens:         generateTokens(maxEntriesPerLeafNode * maxEntriesPerInnerNode * 2),
+			position:       maxEntriesPerLeafNode * maxEntriesPerInnerNode * 2,
+			direction:      IterDirectionBackward,
+			expectedTokens: reverseTokens(generateTokens(maxEntriesPerLeafNode * maxEntriesPerInnerNode * 2)),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := NewTokenTree(tc.tokens)
-			tokens := tree.IterFromPosition(tc.position).Collect()
+			tokens := tree.IterFromPosition(tc.position, tc.direction).Collect()
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}
@@ -223,7 +270,7 @@ func TestTokenTreeIterFromFirstAffected(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := NewTokenTree(tc.tokens)
-			iter := tree.iterFromFirstAffected(tc.editPos)
+			iter := tree.iterFromFirstAffected(tc.editPos, IterDirectionForward)
 
 			var tok Token
 			iter.Get(&tok)
@@ -315,7 +362,7 @@ func TestTokenTreeInsertToken(t *testing.T) {
 			for _, token := range tc.insertTokens {
 				tree.insertToken(token)
 			}
-			actualTokens := tree.IterFromPosition(0).Collect()
+			actualTokens := tree.IterFromPosition(0, IterDirectionForward).Collect()
 			assert.Equal(t, tc.expectedTokens, actualTokens)
 		})
 	}
@@ -406,7 +453,7 @@ func TestTokenTreeDeleteRange(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := NewTokenTree(tc.initialTokens)
 			tree.deleteRange(tc.startPos, tc.numDeleted)
-			actualTokens := tree.IterFromPosition(0).Collect()
+			actualTokens := tree.IterFromPosition(0, IterDirectionForward).Collect()
 			assert.Equal(t, tc.expectedTokens, actualTokens)
 		})
 	}
@@ -467,7 +514,7 @@ func TestTokenTreeExtendTokenIntersectingPos(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := NewTokenTree(tc.initialTokens)
 			tree.extendTokenIntersectingPos(tc.pos, tc.extendLen)
-			iter := tree.IterFromPosition(tc.pos)
+			iter := tree.IterFromPosition(tc.pos, IterDirectionForward)
 			var token Token
 			assert.True(t, iter.Get(&token))
 			assert.Equal(t, tc.expectedToken, token)
@@ -496,6 +543,14 @@ func generateTokens(n int) []Token {
 		})
 	}
 	return tokens
+}
+
+func reverseTokens(tokens []Token) []Token {
+	reversed := make([]Token, len(tokens))
+	for i := 0; i < len(tokens); i++ {
+		reversed[i] = tokens[len(tokens)-1-i]
+	}
+	return reversed
 }
 
 func shiftPositionsForward(tokens []Token, shift uint64) []Token {

@@ -712,9 +712,9 @@ func (loc *nextWordStartLocator) findBasedOnWhitespace(state *BufferState) uint6
 }
 
 func (loc *nextWordStartLocator) findBasedOnSyntaxTokens(state *BufferState) uint64 {
-	pos := state.cursor.position
-	startPos := pos
-	iter := state.tokenTree.IterFromPosition(pos)
+	startPos := state.cursor.position
+	pos := startPos
+	iter := state.tokenTree.IterFromPosition(pos, parser.IterDirectionForward)
 	var tok parser.Token
 	for iter.Get(&tok) {
 		pos = tok.StartPos

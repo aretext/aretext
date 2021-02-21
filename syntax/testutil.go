@@ -29,7 +29,7 @@ func ParseTokensWithText(language Language, s string) ([]TokenWithText, error) {
 		return nil, errors.Wrapf(err, "TokenizeAll")
 	}
 
-	tokens := tokenTree.IterFromPosition(0).Collect()
+	tokens := tokenTree.IterFromPosition(0, parser.IterDirectionForward).Collect()
 	tokensWithText := make([]TokenWithText, 0, len(tokens))
 	for _, tok := range tokens {
 		if tok.Role == parser.TokenRoleNone {

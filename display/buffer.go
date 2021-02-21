@@ -27,7 +27,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
-	tokenIter := bufferState.TokenTree().IterFromPosition(pos)
+	tokenIter := bufferState.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
 
 	sr.HideCursor()
 

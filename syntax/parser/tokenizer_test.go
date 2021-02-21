@@ -72,7 +72,7 @@ func TestTokenizeAll(t *testing.T) {
 			r := &ReadSeekerInput{R: strings.NewReader(tc.inputText)}
 			tokenTree, err := tokenizer.TokenizeAll(r, textLen)
 			require.NoError(t, err)
-			tokens := tokenTree.IterFromPosition(0).Collect()
+			tokens := tokenTree.IterFromPosition(0, IterDirectionForward).Collect()
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}
@@ -275,7 +275,7 @@ func assertRetokenizeMatchesFullTokenize(t *testing.T, tokenizer *Tokenizer, ini
 	})
 	require.NoError(t, err)
 
-	expectedTokens := expectedTree.IterFromPosition(0).Collect()
-	actualTokens := retokenizedTree.IterFromPosition(0).Collect()
+	expectedTokens := expectedTree.IterFromPosition(0, IterDirectionForward).Collect()
+	actualTokens := retokenizedTree.IterFromPosition(0, IterDirectionForward).Collect()
 	assert.Equal(t, expectedTokens, actualTokens)
 }

@@ -98,22 +98,22 @@ func buildTreeFromLeaves(leaves []node) *innerNode {
 }
 
 // IterFromPosition returns a token iterator from the token intersecting a position.
-func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
+func (t *TokenTree) IterFromPosition(pos uint64, direction IterDirection) *TokenIter {
 	if t == nil || t.root == nil {
 		return nil
 	}
-	return t.root.iter(0, pos, func(e entry) uint64 {
+	return t.root.iter(0, pos, direction, func(e entry) uint64 {
 		return e.length
 	})
 }
 
 // iterFromFirstAffected returns a token iterator from the first token that could be affected by an edit.
 // A token could be affected by an edit if the edit occurred in the half-open interval from the token's start position and its lookahead position.
-func (t *TokenTree) iterFromFirstAffected(editPos uint64) *TokenIter {
+func (t *TokenTree) iterFromFirstAffected(editPos uint64, direction IterDirection) *TokenIter {
 	if t == nil || t.root == nil {
 		return nil
 	}
-	return t.root.iter(0, editPos, func(e entry) uint64 {
+	return t.root.iter(0, editPos, direction, func(e entry) uint64 {
 		return e.lookaheadLength + 1
 	})
 }
@@ -169,7 +169,7 @@ type node interface {
 	entry() entry
 
 	// iter returns an iterator at the specified position.
-	iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter
+	iter(startPos uint64, relativePos uint64, direction IterDirection, entryLenFunc func(entry) uint64) *TokenIter
 
 	// extendTokenIntersectingPos increases the length of the token at the specified position.
 	extendTokenIntersectingPos(relativePos uint64, extendLen uint64)
@@ -209,11 +209,11 @@ func (in *innerNode) entry() entry {
 	return sumEntries(in.entries[0:in.numEntries])
 }
 
-func (in *innerNode) iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter {
+func (in *innerNode) iter(startPos uint64, relativePos uint64, direction IterDirection, entryLenFunc func(entry) uint64) *TokenIter {
 	for i := 0; i < in.numEntries; i++ {
 		entry := in.entries[i]
-		if entryLenFunc(entry) > relativePos {
-			return in.children[i].iter(startPos, relativePos, entryLenFunc)
+		if entryLenFunc(entry) > relativePos || (direction == IterDirectionBackward && i == in.numEntries-1) {
+			return in.children[i].iter(startPos, relativePos, direction, entryLenFunc)
 		}
 		startPos += entry.length
 		relativePos = subtractNoUnderflowUint64(relativePos, entry.length)
@@ -375,14 +375,15 @@ func (ln *leafNode) entry() entry {
 	return sumEntries(ln.entries[0:ln.numEntries])
 }
 
-func (ln *leafNode) iter(startPos uint64, relativePos uint64, entryLenFunc func(entry) uint64) *TokenIter {
+func (ln *leafNode) iter(startPos uint64, relativePos uint64, direction IterDirection, entryLenFunc func(entry) uint64) *TokenIter {
 	for i := 0; i < ln.numEntries; i++ {
 		entry := ln.entries[i]
-		if entryLenFunc(entry) > relativePos {
+		if entryLenFunc(entry) > relativePos || (direction == IterDirectionBackward && i == ln.numEntries-1) {
 			return &TokenIter{
 				leaf:        ln,
 				entryOffset: i,
 				startPos:    startPos,
+				direction:   direction,
 			}
 		}
 		startPos += entry.length
@@ -514,12 +515,21 @@ func (ln *leafNode) leftAndRightLeaves() (*leafNode, *leafNode) {
 	return ln, ln
 }
 
+// IterDirection determines the direction of the token iterator.
+type IterDirection int
+
+const (
+	IterDirectionForward = IterDirection(iota)
+	IterDirectionBackward
+)
+
 // TokenIter iterates over tokens.
 // Iterator operations are NOT thread-safe because they can mutate the tree (applying lazy edits).
 type TokenIter struct {
 	leaf        *leafNode
 	entryOffset int
 	startPos    uint64
+	direction   IterDirection
 }
 
 // Get retrieves the current token, if it exists.
@@ -546,11 +556,45 @@ func (iter *TokenIter) Advance() {
 		return
 	}
 
+	if iter.direction == IterDirectionForward {
+		iter.moveForward()
+	} else {
+		iter.moveBackward()
+	}
+}
+
+func (iter *TokenIter) moveForward() {
 	entry := iter.leaf.entries[iter.entryOffset]
 	iter.startPos += entry.length
 	iter.entryOffset++
 	for iter.leaf != nil && iter.entryOffset >= iter.leaf.numEntries {
 		iter.leaf = iter.leaf.next
+		iter.entryOffset = 0
+	}
+}
+
+func (iter *TokenIter) moveBackward() {
+	iter.moveToPreviousEntry()
+	if iter.leaf != nil {
+		entry := iter.leaf.entries[iter.entryOffset]
+		iter.startPos = subtractNoUnderflowUint64(iter.startPos, entry.length)
+	}
+}
+
+func (iter *TokenIter) moveToPreviousEntry() {
+	if iter.entryOffset > 0 {
+		iter.entryOffset--
+		return
+	}
+
+	iter.leaf = iter.leaf.prev
+	for iter.leaf != nil && iter.leaf.numEntries == 0 {
+		iter.leaf = iter.leaf.prev
+	}
+
+	if iter.leaf != nil && iter.leaf.numEntries > 0 {
+		iter.entryOffset = iter.leaf.numEntries - 1
+	} else {
 		iter.entryOffset = 0
 	}
 }

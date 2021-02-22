@@ -1447,7 +1447,7 @@ func TestNextParagraphLocator(t *testing.T) {
 		},
 		{
 			name:           "from non-empty line to first empty line",
-			inputString:    "ab\ncd\n\nef",
+			inputString:    "ab\ncd\n\n\nef",
 			initialCursor:  cursorState{position: 1},
 			expectedCursor: cursorState{position: 6},
 		},
@@ -1468,6 +1468,54 @@ func TestNextParagraphLocator(t *testing.T) {
 				cursor:   tc.initialCursor,
 			}
 			loc := NewNextParagraphLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
+func TestPrevParagraphLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "start of document",
+			inputString:    "abcd1234",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "from non-empty line to previous empty line",
+			inputString:    "ab\n\n\ncd\n\nef",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "from empty line to next empty line",
+			inputString:    "ab\n\n\n\ncd\n\nef",
+			initialCursor:  cursorState{position: 9},
+			expectedCursor: cursorState{position: 5},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			loc := NewPrevParagraphLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
 		})

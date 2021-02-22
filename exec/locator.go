@@ -846,3 +846,43 @@ func (loc *nextParagraphLocator) Locate(state *BufferState) cursorState {
 func (loc *nextParagraphLocator) String() string {
 	return "NextParagraph()"
 }
+
+// prevParagraphLocator finds the start of the first paragraph before the cursor.
+// Paragraph boundaries occur at empty lines.
+type prevParagraphLocator struct{}
+
+func NewPrevParagraphLocator() CursorLocator {
+	return &prevParagraphLocator{}
+}
+
+func (loc *prevParagraphLocator) Locate(state *BufferState) cursorState {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	var prevWasNewlineFlag, nonNewlineFlag bool
+	var offset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			// Start of the document.
+			return cursorState{position: 0}
+		}
+
+		if seg.HasNewline() {
+			if prevWasNewlineFlag && nonNewlineFlag {
+				// An empty line is a paragraph boundary.
+				return cursorState{position: startPos - offset}
+			}
+			prevWasNewlineFlag = true
+		} else {
+			prevWasNewlineFlag = false
+			nonNewlineFlag = true
+		}
+
+		offset += seg.NumRunes()
+	}
+}
+
+func (loc *prevParagraphLocator) String() string {
+	return "PrevParagraph()"
+}

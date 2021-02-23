@@ -624,6 +624,39 @@ func (dlm *deleteLinesMutator) String() string {
 	return fmt.Sprintf("DeleteLines(%s, abortIfTargetIsCurrentLine=%t)", dlm.targetLineLocator, dlm.abortIfTargetIsCurrentLine)
 }
 
+// replaceCharMutator replaces the character under the cursor.
+type replaceCharMutator struct {
+	newText string
+}
+
+func NewReplaceCharMutator(newText string) Mutator {
+	return &replaceCharMutator{newText}
+}
+
+func (rm *replaceCharMutator) Mutate(state *EditorState) {
+	nextCharLoc := NewCharInLineLocator(text.ReadDirectionForward, 1, true)
+	nextCharPos := nextCharLoc.Locate(state.documentBuffer).position
+
+	cursorPos := state.documentBuffer.cursor.position
+	if nextCharPos == cursorPos {
+		// No character under the cursor on the current line, so abort.
+		return
+	}
+
+	NewDeleteMutator(nextCharLoc).Mutate(state)
+	for _, r := range rm.newText {
+		NewInsertRuneMutator(r).Mutate(state)
+	}
+
+	if rm.newText != "\n" {
+		state.documentBuffer.cursor.position = cursorPos
+	}
+}
+
+func (rm *replaceCharMutator) String() string {
+	return fmt.Sprintf("ReplaceCharMutator('%s')", rm.newText)
+}
+
 // setSyntaxMutator sets the syntax language for the current document.
 type setSyntaxMutator struct {
 	language syntax.Language

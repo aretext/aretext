@@ -40,6 +40,8 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.
 func (m *normalMode) processKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
 	if event.Key() == tcell.KeyRune {
 		return m.processRuneKey(event.Rune())
+	} else if event.Key() == tcell.KeyEnter {
+		return m.processRuneKey('\n')
 	}
 	return m.processSpecialKey(event.Key(), config)
 }
@@ -131,11 +133,14 @@ func (m *normalMode) processRuneKey(r rune) exec.Mutator {
 	case "D":
 		return m.deleteToEndOfLine()
 	default:
+		if len(cmd) > 1 && cmd[0] == 'r' {
+			return m.replaceCharacter(cmd[1:])
+		}
 		return nil
 	}
 }
 
-var normalModeSequenceRegex = regexp.MustCompile(`(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|w|b|\{|\}|x|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O|d[dhjkl0$^]|D)$`)
+var normalModeSequenceRegex = regexp.MustCompile(`(?s)(?P<count>[1-9][0-9]*)?(?P<command>:|h|l|k|j|w|b|\{|\}|x|r.|^[1-9]?0|\^|\$|gg|G|i|I|a|A|o|O|d[dhjkl0$^]|D)$`)
 
 func (m *normalMode) parseSequence(seq []rune) (uint64, string) {
 	submatches := normalModeSequenceRegex.FindStringSubmatch(string(seq))
@@ -377,6 +382,10 @@ func (m *normalMode) deleteToStartOfLineNonWhitespace() exec.Mutator {
 	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineStartLoc)
 	return exec.NewDeleteMutator(firstNonWhitespaceLoc)
+}
+
+func (m *normalMode) replaceCharacter(newChar string) exec.Mutator {
+	return exec.NewReplaceCharMutator(newChar)
 }
 
 // insertMode is used for inserting characters into text.

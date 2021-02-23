@@ -616,6 +616,64 @@ func TestDeleteLinesMutator(t *testing.T) {
 	}
 }
 
+func TestReplaceCharMutator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		newText        string
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			newText:        "a",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "replace char",
+			inputString:    "abcd",
+			newText:        "x",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "axcd",
+		},
+		{
+			name:           "empty line",
+			inputString:    "ab\n\ncd",
+			newText:        "x",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\n\ncd",
+		},
+		{
+			name:           "insert newline",
+			inputString:    "abcd",
+			newText:        "\n",
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\nd",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, config.RuleSet{})
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			mutator := NewReplaceCharMutator(tc.newText)
+			mutator.Mutate(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestScrollLinesMutator(t *testing.T) {
 	testCases := []struct {
 		name               string

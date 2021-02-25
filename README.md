@@ -48,6 +48,11 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 The project isn't yet ready to accept external contributions.  If you're interested in contributing, please star the repo and check back soon!
 
 
+## Security
+
+Please do NOT post security issues in public.  To report a vulnerability, please send an email to [security@aretext.org](mailto:security@aretext.org).
+
+
 ## Copyright and License
 
 Copyright (C) 2021 Will Daly

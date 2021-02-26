@@ -1,7 +1,5 @@
 # aretext
-Minimalist terminal-based text editor, mostly vim-compatible.
-
-Aretext prioritizes stability and speed over flexibility and features.  It works reliably and consistently across heterogeneous projects and machines.  If you live in a terminal, have multiple hosts in your ssh config, and rarely install vim plugins, this might be the editor for you.
+Minimalist text editor that never slows you down.
 
 
 ## Project Status
@@ -20,7 +18,7 @@ See the [Version 1.0 board](https://github.com/aretext/aretext/projects/1) for m
 * (Mostly) vim-compatible key bindings.
 * Built-in fuzzy search for commands and files.
 * Fast and accurate incremental syntax highlighting.
-* Intuitive and flexible configuration in a single JSON file.
+* Intuitive yet powerful configuration in a single JSON file.
 
 
 ## Supported Platforms

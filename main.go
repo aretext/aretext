@@ -12,13 +12,21 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+const version = "development"
+
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var noconfig = flag.Bool("noconfig", false, "use default configuration instead of loading it from $HOME/.config/aretext")
+var versionFlag = flag.Bool("version", false, "print version")
 
 func main() {
 	flag.Usage = printUsage
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("%s\n", version)
+		return
+	}
 
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
 	if *logpath != "" {

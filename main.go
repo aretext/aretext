@@ -12,6 +12,8 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// The version is set automatically as part of the release process.
+// Please do NOT modify the following line.
 const version = "development"
 
 var logpath = flag.String("log", "", "log to file")

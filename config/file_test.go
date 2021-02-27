@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -30,7 +29,8 @@ func TestSaveAndLoadRuleSet(t *testing.T) {
 		},
 	}
 
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir := "tmp"
+	err := os.Mkdir("tmp", 0744)
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 

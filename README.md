@@ -15,10 +15,13 @@ See the [Version 1.0 board](https://github.com/aretext/aretext/projects/1) for m
 
 ## Key Features
 
-* (Mostly) vim-compatible key bindings.
+* Vim-compatible\* key bindings.
 * Built-in fuzzy search for commands and files.
+* Auto-reload when files are modified outside the editor.
 * Fast and accurate incremental syntax highlighting.
 * Intuitive yet powerful configuration in a single JSON file.
+
+*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes.  Not all keybindings are implemented yet, but the ones that are should match vim's behavior exactly.*
 
 
 ## Supported Platforms

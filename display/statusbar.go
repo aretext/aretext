@@ -3,7 +3,7 @@ package display
 import (
 	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/file"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.

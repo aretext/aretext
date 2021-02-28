@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aretext/aretext/exec"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 func TestDrawStatusBar(t *testing.T) {

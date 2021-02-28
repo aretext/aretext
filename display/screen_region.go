@@ -3,7 +3,7 @@ package display
 import (
 	"log"
 
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // ScreenRegion draws to a rectangular region in a screen.

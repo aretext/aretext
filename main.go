@@ -9,7 +9,7 @@ import (
 	"runtime/pprof"
 
 	"github.com/aretext/aretext/app"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // The version is set automatically as part of the release process.

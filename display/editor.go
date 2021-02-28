@@ -2,7 +2,7 @@ package display
 
 import (
 	"github.com/aretext/aretext/exec"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // DrawEditor draws the editor in the screen.

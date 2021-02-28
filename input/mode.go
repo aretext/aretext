@@ -8,7 +8,7 @@ import (
 
 	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/text"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.

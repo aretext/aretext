@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/exec"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 // Interpreter translates key events to commands.

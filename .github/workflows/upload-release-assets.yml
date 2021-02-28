@@ -1,6 +1,4 @@
-on:
-  release:
-    types: [created]
+on: release
 
 name: Upload release assets
 

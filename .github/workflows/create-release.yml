@@ -1,4 +1,4 @@
-name: Tag a release
+name: Create a release
 
 on:
   workflow_dispatch:
@@ -20,7 +20,8 @@ jobs:
           go-version: 1.16
 
       - uses: actions/checkout@v2
-      - run: |
+      - id: commit-and-tag
+        run: |
           BRANCH="${{ github.event.inputs.majorVersion }}.${{ github.event.inputs.minorVersion }}.x"
           echo "Checking out branch $BRANCH"
           git fetch origin "$BRANCH"
@@ -37,3 +38,13 @@ jobs:
           git add .
           git commit -m "Set version to ${NEXT_VERSION}"
           git push origin $BRANCH
+          echo "::set-output name=version::$VERSION"
+
+      - uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.commit-and-tag.outputs.version }}
+          release_name: ${{ steps.commit-and-tag.outputs.version }}
+          draft: true
+          prerelease: false

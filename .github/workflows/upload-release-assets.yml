@@ -1,4 +1,6 @@
-on: release
+on:
+  release:
+    types: [created, published, edited, prereleased, released]
 
 name: Upload release assets
 

@@ -34,7 +34,7 @@ func SaveRuleSet(path string, rs RuleSet) error {
 	}
 
 	dirPath := filepath.Dir(path)
-	err = os.MkdirAll(dirPath, 0744)
+	err = os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return errors.Wrapf(err, "os.MkdirAll")
 	}

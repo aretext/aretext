@@ -30,7 +30,7 @@ func TestSaveAndLoadRuleSet(t *testing.T) {
 	}
 
 	tmpDir := "tmp"
-	err := os.Mkdir("tmp", 0744)
+	err := os.Mkdir("tmp", 0755)
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 

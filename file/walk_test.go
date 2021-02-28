@@ -15,7 +15,7 @@ func TestWalk(t *testing.T) {
 	// Create a tmpdir (and delete at end of test).
 	tmpDir, err := filepath.Abs("./tmp")
 	require.NoError(t, err)
-	err = os.MkdirAll(tmpDir, 0744)
+	err = os.MkdirAll(tmpDir, 0755)
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -36,7 +36,7 @@ func TestWalk(t *testing.T) {
 
 	for _, p := range paths {
 		fullPath := filepath.Join(tmpDir, p)
-		err = os.MkdirAll(filepath.Dir(fullPath), 0744)
+		err = os.MkdirAll(filepath.Dir(fullPath), 0755)
 		require.NoError(t, err)
 		err = ioutil.WriteFile(fullPath, []byte("test"), 0644)
 		require.NoError(t, err)

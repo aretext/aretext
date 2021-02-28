@@ -1,6 +1,6 @@
 module github.com/aretext/aretext
 
-go 1.15
+go 1.16
 
 require (
 	github.com/gdamore/tcell v1.4.0

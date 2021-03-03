@@ -1344,6 +1344,95 @@ func TestNextWordStartLocator(t *testing.T) {
 	}
 }
 
+func TestNextWordEndLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		syntaxLanguage syntax.Language
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "end of word from start of current word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "end of word from middle of current word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "next word from end of current word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "next word from whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "next word past empty line",
+			inputString:    "abc\n\n   123   xyz",
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "empty line to next word",
+			inputString:    "abc\n\n   123  xyz",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "next syntax token",
+			inputString:    "123+456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "next syntax token skip empty",
+			inputString:    "123    +      456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 7},
+		},
+		{
+			name:           "end of current syntax token",
+			inputString:    "123+456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 2},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			state.SetSyntax(tc.syntaxLanguage)
+			loc := NewNextWordEndLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
 func TestPrevWordStartLocator(t *testing.T) {
 	testCases := []struct {
 		name           string

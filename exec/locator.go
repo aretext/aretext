@@ -803,6 +803,77 @@ func (loc *prevWordStartLocator) String() string {
 	return "PrevWordStart()"
 }
 
+// nextWordEndLocator finds the next word-end boundary after the cursor.
+// The word break rules are the same as for nextWordStartLocator, except
+// that empty lines are NOT treated as word boundaries.
+type nextWordEndLocator struct{}
+
+func NewNextWordEndLocator() CursorLocator {
+	return &nextWordEndLocator{}
+}
+
+func (loc *nextWordEndLocator) Locate(state *BufferState) cursorState {
+	pos := loc.findBasedOnWhitespace(state)
+	if state.tokenTree != nil {
+		nextTokenPos := loc.findBasedOnSyntaxTokens(state)
+		if nextTokenPos < pos {
+			pos = nextTokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *nextWordEndLocator) findBasedOnWhitespace(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	var prevWasNonwhitespace bool
+	var offset, prevOffset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			// Stop on (not after) the last character in the document.
+			return startPos + prevOffset
+		}
+
+		if seg.IsWhitespace() {
+			if prevWasNonwhitespace && offset > 1 {
+				// Nonwhitespace followed by whitespace should stop at the nonwhitespace.
+				return startPos + prevOffset
+			}
+			prevWasNonwhitespace = false
+		} else {
+			prevWasNonwhitespace = true
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+	}
+}
+
+func (loc *nextWordEndLocator) findBasedOnSyntaxTokens(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	pos := startPos
+	iter := state.tokenTree.IterFromPosition(pos, parser.IterDirectionForward)
+	var tok parser.Token
+	for iter.Get(&tok) {
+		// tok.EndPos should always be greater than zero,
+		// but check anyway to protect against underflow.
+		if tok.EndPos > 0 {
+			pos = tok.EndPos - 1
+		}
+		if tok.Role != parser.TokenRoleNone && pos > startPos {
+			break
+		}
+		iter.Advance()
+	}
+	return pos
+}
+
+func (loc *nextWordEndLocator) String() string {
+	return "NextWordEnd()"
+}
+
 // nextParagraphLocator finds the start of the next paragraph after the cursor.
 // Paragraph boundaries occur at empty lines.
 type nextParagraphLocator struct{}

@@ -459,6 +459,29 @@ func TestTokenTreeDeleteRange(t *testing.T) {
 	}
 }
 
+func TestTokenTreeTraversalAfterSplit(t *testing.T) {
+	tokens := generateTokensWithLength(maxEntriesPerLeafNode*10, 5)
+	tree := NewTokenTree(tokens)
+
+	// Delete tokens and replace with multiple tokens to trigger a split.
+	tree.deleteRange(0, 10)
+	newTokens := generateTokensWithLength(10, 1)
+	for _, tok := range newTokens {
+		tree.insertToken(tok)
+	}
+
+	expectedTokens := append(newTokens, tokens[2:]...)
+
+	// Verify forward traversal
+	actualTokens := tree.IterFromPosition(0, IterDirectionForward).Collect()
+	assert.Equal(t, expectedTokens, actualTokens)
+
+	// Verify backward traversal
+	lastPos := tokens[len(tokens)-1].EndPos + 1
+	actualTokens = tree.IterFromPosition(lastPos, IterDirectionBackward).Collect()
+	assert.Equal(t, reverseTokens(expectedTokens), actualTokens)
+}
+
 func TestTokenTreeExtendTokenIntersectingPos(t *testing.T) {
 	testCases := []struct {
 		name          string
@@ -533,12 +556,18 @@ func BenchmarkSequentialInsert(b *testing.B) {
 }
 
 func generateTokens(n int) []Token {
+	return generateTokensWithLength(n, 1)
+}
+
+func generateTokensWithLength(n int, length int) []Token {
 	tokens := make([]Token, 0, n)
 	for i := 0; i < n; i++ {
+		startPos := i * length
+		endPos := startPos + length
 		tokens = append(tokens, Token{
-			StartPos:     uint64(i),
-			EndPos:       uint64(i + 1),
-			LookaheadPos: uint64(i + 1),
+			StartPos:     uint64(startPos),
+			EndPos:       uint64(endPos),
+			LookaheadPos: uint64(endPos),
 			Role:         TokenRole(i % 6),
 		})
 	}

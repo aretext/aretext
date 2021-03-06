@@ -455,6 +455,10 @@ func (ln *leafNode) insertAtIdxNoSplit(idx int, token Token) {
 
 func (ln *leafNode) splitAppendEmptyNode() *leafNode {
 	splitNode := &leafNode{}
+	if ln.next != nil {
+		ln.next.prev = splitNode
+		splitNode.next = ln.next
+	}
 	ln.next = splitNode
 	splitNode.prev = ln
 	return splitNode
@@ -467,7 +471,10 @@ func (ln *leafNode) splitEvenly() *leafNode {
 		splitNode.entries[i] = ln.entries[splitIdx+i]
 		splitNode.tokenRoles[i] = ln.tokenRoles[splitIdx+i]
 	}
-	splitNode.next = ln.next
+	if ln.next != nil {
+		ln.next.prev = splitNode
+		splitNode.next = ln.next
+	}
 	splitNode.prev = ln
 	ln.next = splitNode
 	ln.numEntries = splitIdx

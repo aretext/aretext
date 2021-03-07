@@ -33,7 +33,7 @@ func (loc *currentCursorLocator) String() string {
 	return "CurrentCursorLocator()"
 }
 
-// mnPosLocator returns the cursor with the smallest position.
+// minPosLocator returns the cursor with the smallest position.
 type minPosLocator struct {
 	childLocators []CursorLocator
 }

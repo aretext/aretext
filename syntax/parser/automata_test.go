@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io/ioutil"
 	"strings"
 	"testing"
 	"unicode"
@@ -325,6 +326,26 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			assert.Equal(t, tc.expectActions, actions)
 		})
 	}
+}
+
+func TestMatchLongestTruncatedText(t *testing.T) {
+	nfa := NfaForUnicodeCategory(unicode.Letter).Star().Concat(NfaForEndOfText()).SetAcceptAction(99)
+	dfa := nfa.CompileDfa()
+	s := "αααβββδδδ"
+	r := &ReadSeekerInput{R: strings.NewReader(s)}
+
+	// Set textLen to 3 so the DFA treats the third character as the end of the text,
+	// even though the reader outputs more bytes.
+	accepted, endPos, _, actions, _, err := dfa.MatchLongest(r, 0, 3)
+	require.NoError(t, err)
+	assert.True(t, accepted)
+	assert.Equal(t, uint64(3), endPos)
+	assert.Equal(t, []int{99}, actions)
+
+	// Verify that the reader is reset to the end of the match.
+	remaining, err := ioutil.ReadAll(r)
+	require.NoError(t, err)
+	assert.Equal(t, []byte("βββδδδ"), remaining)
 }
 
 func TestMinimizeDfa(t *testing.T) {

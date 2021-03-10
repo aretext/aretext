@@ -623,6 +623,8 @@ func (dfa *Dfa) NextState(fromState int, onInput int) int {
 // MatchLongest returns the longest match in an input string.
 // In some cases, the longest match could be empty (e.g. the regular language for "a*" matches the empty string at the beginning of the string "bbb").
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
+// startPos and textLen determine the maximum number of runes the DFA will process;
+// they also control the behavior of start-of-text (^) and end-of-text ($) patterns.
 func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, numBytesReadAtLastAccept int, err error) {
 	var totalBytesRead int
 	pos := startPos
@@ -643,6 +645,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		}
 	}
 
+	var truncatedBytesRead int
 	for {
 		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
@@ -654,6 +657,14 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 
 		for i, c := range dfa.buf[:n] {
 			pos += uint64(textUtf8.StartByteIndicator[c])
+			if pos > textLen {
+				// The reader produced more bytes than the length of the text.
+				// Exit the loop and treat the last rune read as the end of the text.
+				pos = textLen
+				truncatedBytesRead = prevTotalBytesRead + i
+				break
+			}
+
 			state = dfa.NextState(state, int(c))
 			if state == DfaDeadState {
 				break
@@ -662,7 +673,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 			}
 		}
 
-		if err == io.EOF || state == DfaDeadState {
+		if err == io.EOF || state == DfaDeadState || pos >= textLen {
 			break
 		}
 	}
@@ -671,6 +682,11 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		state = dfa.NextState(state, endOfText)
 		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 			accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, totalBytesRead, acceptActions
+			// If the reader produced more bytes than the length of the text,
+			// we consume up only the bytes in the text.
+			if truncatedBytesRead > 0 {
+				numBytesReadAtLastAccept = truncatedBytesRead
+			}
 		}
 	}
 

@@ -10,8 +10,10 @@ const (
 	TokenRoleKeyword
 	TokenRoleIdentifier
 	TokenRoleNumber
+	TokenRoleStringQuote
 	TokenRoleString
 	TokenRoleKey
+	TokenRoleCommentDelimiter
 	TokenRoleComment
 	TokenRolePunctuation
 )

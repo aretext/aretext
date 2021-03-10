@@ -141,11 +141,11 @@ func styleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 		return s.Foreground(tcell.ColorOrange)
 	case parser.TokenRoleNumber:
 		return s.Foreground(tcell.ColorGreen)
-	case parser.TokenRoleString:
+	case parser.TokenRoleString, parser.TokenRoleStringQuote:
 		return s.Foreground(tcell.ColorRed)
 	case parser.TokenRoleKey:
 		return s.Foreground(tcell.ColorNavy)
-	case parser.TokenRoleComment:
+	case parser.TokenRoleComment, parser.TokenRoleCommentDelimiter:
 		return s.Foreground(tcell.ColorBlue)
 	default:
 		return s

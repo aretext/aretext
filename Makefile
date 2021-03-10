@@ -9,6 +9,9 @@ generate:
 build:
 	go build -o aretext main.go
 
+build-debug:
+	go build -o aretext -gcflags "all=-N -l" main.go
+
 test:
 	go test ./...
 

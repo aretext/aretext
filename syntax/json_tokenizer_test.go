@@ -111,7 +111,9 @@ func TestJsonTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"key":`, Role: parser.TokenRoleKey},
-				{Text: `"abcd"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `abcd`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},
@@ -119,7 +121,9 @@ func TestJsonTokenizer(t *testing.T) {
 			name:        "string with escaped quote",
 			inputString: `"abc\"xyz"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"abc\"xyz"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `abc\"xyz`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{
@@ -131,7 +135,9 @@ func TestJsonTokenizer(t *testing.T) {
 			name:        "string with escaped line break",
 			inputString: `"abc\nxyz"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"abc\nxyz"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `abc\nxyz`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{
@@ -178,10 +184,14 @@ func TestJsonTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: `{`, Role: parser.TokenRolePunctuation},
 				{Text: `"k1":`, Role: parser.TokenRoleKey},
-				{Text: `"v1"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `v1`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 				{Text: `,`, Role: parser.TokenRolePunctuation},
 				{Text: `"k2":`, Role: parser.TokenRoleKey},
-				{Text: `"v2"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `v2`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 				{Text: `}`, Role: parser.TokenRolePunctuation},
 			},
 		},

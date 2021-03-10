@@ -52,6 +52,12 @@ func init() {
 		{
 			Regexp:    `//[^\n]*`,
 			TokenRole: parser.TokenRoleComment,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `^//`,
+					TokenRole: parser.TokenRoleCommentDelimiter,
+				},
+			},
 		},
 
 		// General comment
@@ -59,6 +65,16 @@ func init() {
 		{
 			Regexp:    `/\*([^*]|(\*+[^*/]))*\*+/`,
 			TokenRole: parser.TokenRoleComment,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `^/\*`,
+					TokenRole: parser.TokenRoleCommentDelimiter,
+				},
+				{
+					Regexp:    `\*/$`,
+					TokenRole: parser.TokenRoleCommentDelimiter,
+				},
+			},
 		},
 
 		// Keywords
@@ -189,18 +205,48 @@ func init() {
 		{
 			Regexp:    "'[^']*'",
 			TokenRole: parser.TokenRoleString,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    "^'",
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+				{
+					Regexp:    "'$",
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+			},
 		},
 
 		// Raw string literal
 		{
 			Regexp:    "`[^`]*`",
 			TokenRole: parser.TokenRoleString,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    "^`",
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+				{
+					Regexp:    "`$",
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+			},
 		},
 
 		// Interpreted string literal
 		{
 			Regexp:    `"([^\"\n]|\\")*"`,
 			TokenRole: parser.TokenRoleString,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `^"`,
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+				{
+					Regexp:    `"$`,
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+			},
 		},
 	}
 }

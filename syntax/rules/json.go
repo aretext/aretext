@@ -21,6 +21,16 @@ func init() {
 		{
 			Regexp:    `"([^\"\n]|\\")*"`,
 			TokenRole: parser.TokenRoleString,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `^"`,
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+				{
+					Regexp:    `"$`,
+					TokenRole: parser.TokenRoleStringQuote,
+				},
+			},
 		},
 		{
 			Regexp:    `"([^\"\n]|\\")*"[ \t]*:`,

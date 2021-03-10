@@ -18,14 +18,17 @@ func TestGolangTokenizer(t *testing.T) {
 			name:        "line comment",
 			inputString: "// comment",
 			expectedTokens: []TokenWithText{
-				{Text: `// comment`, Role: parser.TokenRoleComment},
+				{Text: `//`, Role: parser.TokenRoleCommentDelimiter},
+				{Text: ` comment`, Role: parser.TokenRoleComment},
 			},
 		},
 		{
 			name:        "general comment",
 			inputString: "/* abcd\n123 */",
 			expectedTokens: []TokenWithText{
-				{Text: "/* abcd\n123 */", Role: parser.TokenRoleComment},
+				{Text: "/*", Role: parser.TokenRoleCommentDelimiter},
+				{Text: " abcd\n123 ", Role: parser.TokenRoleComment},
+				{Text: "*/", Role: parser.TokenRoleCommentDelimiter},
 			},
 		},
 		{
@@ -54,28 +57,36 @@ func TestGolangTokenizer(t *testing.T) {
 			name:        "raw string",
 			inputString: "`abcd\n123`",
 			expectedTokens: []TokenWithText{
-				{Text: "`abcd\n123`", Role: parser.TokenRoleString},
+				{Text: "`", Role: parser.TokenRoleStringQuote},
+				{Text: "abcd\n123", Role: parser.TokenRoleString},
+				{Text: "`", Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{
 			name:        "interpreted string",
 			inputString: `"abcd"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"abcd"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `abcd`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{
 			name:        "interpreted string with escaped quote",
 			inputString: `"ab\"cd"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"ab\"cd"`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `ab\"cd`, Role: parser.TokenRoleString},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{
 			name:        "rune",
 			inputString: `'a'`,
 			expectedTokens: []TokenWithText{
-				{Text: `'a'`, Role: parser.TokenRoleString},
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `a`, Role: parser.TokenRoleString},
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
 			},
 		},
 		{

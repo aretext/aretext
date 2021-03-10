@@ -43,29 +43,45 @@ package syntax
 
 import "github.com/aretext/aretext/syntax/parser"
 
+{{ define "rule" }}
+parser.TokenizerRule{
+	Regexp: {{ printf "%q" .Regexp }},
+	TokenRole: {{ .TokenRole }},
+	SubRules: []parser.TokenizerRule{
+		{{ range .SubRules -}}
+		{{ template "rule" . }},
+		{{ end }}
+	},
+}{{ end }}
+
+{{ define "tokenizer" }}
+&parser.Tokenizer{
+	StateMachine: &parser.Dfa{
+		NumStates: {{ .StateMachine.NumStates }},
+		StartState: {{ .StateMachine.StartState }},
+		Transitions: {{ printf "%#v" .StateMachine.Transitions }},
+		AcceptActions: {{ printf "%#v" .StateMachine.AcceptActions }},
+	},
+	SubTokenizers: []*parser.Tokenizer{
+		{{ range .SubTokenizers -}}
+		{{ if . }}{{ template "tokenizer" . }},{{ else }}nil,{{ end }}
+		{{ end }}
+	},
+	Rules: []parser.TokenizerRule{
+		{{ range .Rules }}
+		{{ template "rule" . }},
+		{{ end }}
+	},
+}{{ end }}
+
 var {{ .TokenizerName }} *parser.Tokenizer
 
 func init() {
-	{{ .TokenizerName }} = &parser.Tokenizer{
-		StateMachine: &parser.Dfa{
-			NumStates: {{ .Tokenizer.StateMachine.NumStates }},
-			StartState: {{ .Tokenizer.StateMachine.StartState }},
-			Transitions: {{ printf "%#v" .Tokenizer.StateMachine.Transitions }},
-			AcceptActions: {{ printf "%#v" .Tokenizer.StateMachine.AcceptActions }},
-		},
-		Rules: []parser.TokenizerRule{
-			{{ range $rule := .Tokenizer.Rules }}
-			{
-				Regexp: {{ printf "%q" $rule.Regexp }},
-				TokenRole: {{ $rule.TokenRole }},
-			},
-			{{ end }}
-		},
-	}
+	{{ .TokenizerName }} = {{ template "tokenizer" .Tokenizer }}
 }
 `
 
-	tmpl, err := template.New("tokenizer").Parse(tmplStr)
+	tmpl, err := template.New("root").Parse(tmplStr)
 	if err != nil {
 		return errors.Wrapf(err, "template.New")
 	}

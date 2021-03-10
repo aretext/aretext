@@ -19,17 +19,20 @@ type Edit struct {
 type TokenizerRule struct {
 	Regexp    string
 	TokenRole TokenRole
+	SubRules  []TokenizerRule
 }
 
 // Tokenizer parses a text into tokens based on a set of rules.
 type Tokenizer struct {
-	StateMachine *Dfa
-	Rules        []TokenizerRule
-	buf          [4]byte
+	StateMachine  *Dfa
+	SubTokenizers []*Tokenizer
+	Rules         []TokenizerRule
+	buf           [4]byte
 }
 
 // GenerateTokenizer compiles a tokenizer from a set of rules.
 func GenerateTokenizer(rules []TokenizerRule) (*Tokenizer, error) {
+	subTokenizers := make([]*Tokenizer, len(rules))
 	nfa := EmptyLanguageNfa()
 	for i, r := range rules {
 		regexp, err := ParseRegexp(r.Regexp)
@@ -38,11 +41,19 @@ func GenerateTokenizer(rules []TokenizerRule) (*Tokenizer, error) {
 		}
 		ruleNfa := regexp.CompileNfa().SetAcceptAction(i)
 		nfa = nfa.Union(ruleNfa)
+
+		if len(r.SubRules) > 0 {
+			subTokenizers[i], err = GenerateTokenizer(r.SubRules)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	tokenizer := &Tokenizer{
-		StateMachine: nfa.CompileDfa(),
-		Rules:        rules,
+		StateMachine:  nfa.CompileDfa(),
+		SubTokenizers: subTokenizers,
+		Rules:         rules,
 	}
 
 	return tokenizer, nil
@@ -54,11 +65,11 @@ func (t *Tokenizer) TokenizeAll(r InputReader, textLen uint64) (*TokenTree, erro
 	var tokens []Token
 	pos := uint64(0)
 	for pos < textLen {
-		nextPos, nextTok, err := t.nextToken(r, textLen, pos)
+		nextPos, nextTokens, err := t.nextTokens(r, textLen, pos)
 		if err != nil {
 			return nil, err
 		}
-		tokens = append(tokens, nextTok)
+		tokens = append(tokens, nextTokens...)
 		pos = nextPos
 	}
 
@@ -98,31 +109,43 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 
 	// Run the tokenizer from the start position.
 	// This will generate new tokens that replace existing tokens in the tree.
-	// We continue until we encounter a token after the edit that matches the next generated token.
+	// We continue until we encounter a set of tokens after the edit that match the next generated set of tokens.
 	// At this point, we know all subsequent tokens in the tree match what the tokenizer would output,
 	// so we can stop retokenizing.
 	startPos := pos
 	var newTokens []Token
 	for pos < textLen {
-		nextPos, nextTok, err := t.nextToken(r, textLen, pos)
+		nextPos, nextTokens, err := t.nextTokens(r, textLen, pos)
 		if err != nil {
 			return nil, errors.Wrapf(err, "next token")
 		}
 
-		// Advance to the next existing token on or after the next new token's start position.
-		advanceIterToPos(iter, nextTok.StartPos)
+		if len(nextTokens) > 0 && nextTokens[0].StartPos > edit.Pos+edit.NumInserted {
+			var mismatchDetected bool
+			for _, nextTok := range nextTokens {
+				// Advance to the next existing token on or after the next new token's start position.
+				advanceIterToPos(iter, nextTok.StartPos)
 
-		var oldTok Token
-		if nextTok.StartPos > edit.Pos+edit.NumInserted && iter.Get(&oldTok) && nextTok == oldTok {
-			// The new token exactly matches an existing token after the edit,
+				var oldTok Token
+				if iter.Get(&oldTok) && oldTok == nextTok {
+					continue
+				}
+
+				mismatchDetected = true
+				break
+			}
+
+			// The new tokens exactly match the existing tokens after the edit,
 			// so all subsequent tokens would match as well.  This means we're done!
-			break
+			if !mismatchDetected {
+				break
+			}
 		}
 
 		// Advance past all tokens that overlap with the new token.
 		advanceIterToPos(iter, nextPos)
 
-		newTokens = append(newTokens, nextTok)
+		newTokens = append(newTokens, nextTokens...)
 		pos = nextPos
 	}
 
@@ -161,7 +184,10 @@ func (t *Tokenizer) shiftPositionsAfterEdit(tree *TokenTree, edit Edit) {
 	}
 }
 
-func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64, Token, error) {
+// nextTokens runs the top-level DFA to produce a single "next" token (which may be empty).
+// If the rule that produced the token has sub-rules, then the token is further tokenized to potentially
+// produce more tokens, and so on recursively until all relevant sub-tokenizers have executed.
+func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint64, []Token, error) {
 	emptyToken := Token{
 		StartPos:     pos,
 		EndPos:       pos,
@@ -172,7 +198,7 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 	for pos < textLen {
 		accepted, endPos, lookaheadPos, actions, numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
-			return 0, Token{}, errors.Wrapf(err, "tokenizing input")
+			return 0, nil, errors.Wrapf(err, "tokenizing input")
 		}
 
 		// Identify a token if the DFA accepts AND the accepted prefix is non-empty.
@@ -181,25 +207,36 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 			// We already skipped some characters, so we need to output an empty token.
 			if emptyToken.StartPos < emptyToken.EndPos {
 				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
-					return 0, Token{}, errors.Wrapf(err, "rewind reader")
+					return 0, nil, errors.Wrapf(err, "rewind reader")
 				}
-				return pos, emptyToken, nil
+				return pos, []Token{emptyToken}, nil
 			}
 
-			rule := t.actionsToRule(actions) // Choose matched rule with the lowest index.
+			ruleIdx, rule := t.actionsToRule(actions) // Choose matched rule with the lowest index.
 			acceptedToken := Token{
 				StartPos:     pos,
 				EndPos:       endPos,
 				LookaheadPos: lookaheadPos,
 				Role:         rule.TokenRole,
 			}
-			return endPos, acceptedToken, nil
+
+			subTokenizer := t.SubTokenizers[ruleIdx]
+			if subTokenizer != nil {
+				// Rewind the reader to the start of the token.
+				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
+					return 0, nil, errors.Wrapf(err, "rewind reader")
+				}
+				// Run the relevant sub-tokenizer on the contents of the token.
+				return t.runSubTokenizer(r, subTokenizer, acceptedToken)
+			}
+
+			return endPos, []Token{acceptedToken}, nil
 		}
 
 		// We couldn't find a match, so advance to the next position and try again.
 		pos++
 		if err := t.advanceReaderOneRune(r); err != nil {
-			return 0, Token{}, errors.Wrapf(err, "advance reader")
+			return 0, nil, errors.Wrapf(err, "advance reader")
 		}
 
 		// Cover the skipped position with an empty token.
@@ -209,7 +246,46 @@ func (t *Tokenizer) nextToken(r InputReader, textLen uint64, pos uint64) (uint64
 		}
 	}
 
-	return pos, emptyToken, nil
+	return pos, []Token{emptyToken}, nil
+}
+
+func (t *Tokenizer) runSubTokenizer(r InputReader, subTokenizer *Tokenizer, token Token) (uint64, []Token, error) {
+	// The sub tokenizer treats the start/end of token as the start/end of the text.
+	// This affects the behavior of the start-of-text (^) and end-of-text ($) patterns.
+	// For this reason, we "translate" the text positions relative to the start of the token
+	// and set textLen to the end of the token.
+	var newTokens []Token
+	var posInToken uint64
+	tokenLen := token.EndPos - token.StartPos
+	for posInToken < tokenLen {
+		nextPos, nextTokens, err := subTokenizer.nextTokens(r, tokenLen, posInToken)
+		if err != nil {
+			return 0, nil, err
+		}
+
+		newTokens = append(newTokens, nextTokens...)
+		posInToken = nextPos
+	}
+
+	for i := 0; i < len(newTokens); i++ {
+		newTok := &(newTokens[i])
+
+		// Translate the positions back to the original text.
+		newTok.StartPos += token.StartPos
+		newTok.EndPos += token.StartPos
+
+		// Set the lookahead position to the same as the parent token so that
+		// modifications to any of the tokens trigger retokenization from the
+		// start of the first token (if not earlier).
+		newTok.LookaheadPos = token.LookaheadPos
+
+		// Any tokens unrecognized by the sub-tokenizer default to the role of the parent token.
+		if newTok.Role == TokenRoleNone {
+			newTok.Role = token.Role
+		}
+	}
+
+	return token.EndPos, newTokens, nil
 }
 
 func (t *Tokenizer) rewriteTokens(tree *TokenTree, startPos uint64, endPos uint64, newTokens []Token) {
@@ -221,14 +297,14 @@ func (t *Tokenizer) rewriteTokens(tree *TokenTree, startPos uint64, endPos uint6
 	}
 }
 
-func (t *Tokenizer) actionsToRule(actions []int) TokenizerRule {
+func (t *Tokenizer) actionsToRule(actions []int) (int, TokenizerRule) {
 	ruleIdx := actions[0]
 	for _, a := range actions[1:] {
 		if a < ruleIdx {
 			ruleIdx = a
 		}
 	}
-	return t.Rules[ruleIdx]
+	return ruleIdx, t.Rules[ruleIdx]
 }
 
 func (t *Tokenizer) advanceReaderOneRune(r InputReader) error {

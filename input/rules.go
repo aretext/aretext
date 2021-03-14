@@ -289,6 +289,15 @@ var normalModeRules = []Rule{
 		Action: DeleteInnerWord,
 	},
 	{
+		Name: "change inner word (ciw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 'i'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		Action: ChangeInnerWord,
+	},
+	{
 		Name: "replace character (r)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'r'},

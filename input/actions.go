@@ -257,6 +257,13 @@ func DeleteInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config)
 	})
 }
 
+func ChangeInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	return exec.NewCompositeMutator([]exec.Mutator{
+		DeleteInnerWord(nil, nil, config),
+		EnterInsertMode(nil, nil, config),
+	})
+}
+
 func ReplaceCharacter(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
 	if len(inputEvents) == 0 {
 		// This should never happen if the parser rule is configured correctly.

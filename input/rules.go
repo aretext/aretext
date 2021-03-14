@@ -280,6 +280,15 @@ var normalModeRules = []Rule{
 		Action: DeleteToEndOfLine,
 	},
 	{
+		Name: "delete inner word (diw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'i'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		Action: DeleteInnerWord,
+	},
+	{
 		Name: "replace character (r)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'r'},

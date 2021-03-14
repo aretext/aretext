@@ -248,6 +248,15 @@ func DeleteToStartOfLineNonWhitespace(inputEvents []*tcell.EventKey, count *int6
 	return exec.NewDeleteMutator(firstNonWhitespaceLoc)
 }
 
+func DeleteInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	startLoc := exec.NewCurrentWordStartLocator()
+	endLoc := exec.NewCurrentWordEndLocator()
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewCursorMutator(startLoc),
+		exec.NewDeleteMutator(endLoc),
+	})
+}
+
 func ReplaceCharacter(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
 	if len(inputEvents) == 0 {
 		// This should never happen if the parser rule is configured correctly.

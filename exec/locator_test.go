@@ -1515,6 +1515,204 @@ func TestPrevWordStartLocator(t *testing.T) {
 	}
 }
 
+func TestCurrentWordStartLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		syntaxLanguage syntax.Language
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "start of document",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "start of word in middle of document",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "middle of word to start of word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 8},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "end of word to start of word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 9},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "start of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "middle of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "end of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 5},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "word at start of line",
+			inputString:    "abc\nxyz",
+			initialCursor:  cursorState{position: 5},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "whitespace at start of line",
+			inputString:    "abc\n    xyz",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "empty line",
+			inputString:    "abc\n\n   123",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "adjacent syntax tokens",
+			inputString:    "123+456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 5},
+			expectedCursor: cursorState{position: 4},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			state.SetSyntax(tc.syntaxLanguage)
+			loc := NewCurrentWordStartLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
+func TestCurrentWordEndLocator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		syntaxLanguage syntax.Language
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "end of document",
+			inputString:    "abc   defg   hijk",
+			initialCursor:  cursorState{position: 14},
+			expectedCursor: cursorState{position: 17},
+		},
+		{
+			name:           "start of word in middle of document",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 6},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "middle of word to end of word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "end of word",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 9},
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "start of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "middle of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "end of whitespace",
+			inputString:    "abc   defg   hij",
+			initialCursor:  cursorState{position: 5},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "word before end of line",
+			inputString:    "abc\nxyz",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "whitespace at end of line",
+			inputString:    "abc     \nxyz",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 8},
+		},
+		{
+			name:           "empty line",
+			inputString:    "abc\n\n   123",
+			initialCursor:  cursorState{position: 4},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "adjacent syntax tokens",
+			inputString:    "123+456",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 3},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := BufferState{
+				textTree: textTree,
+				cursor:   tc.initialCursor,
+			}
+			state.SetSyntax(tc.syntaxLanguage)
+			loc := NewCurrentWordEndLocator()
+			nextCursor := loc.Locate(&state)
+			assert.Equal(t, tc.expectedCursor, nextCursor)
+		})
+	}
+}
+
 func TestNextParagraphLocator(t *testing.T) {
 	testCases := []struct {
 		name           string

@@ -874,6 +874,170 @@ func (loc *nextWordEndLocator) String() string {
 	return "NextWordEnd()"
 }
 
+// currentWordStartLocator finds the start of the word or whitespace under the cursor.
+// Word boundaries are determined by both whitespace and syntax tokens.
+type currentWordStartLocator struct{}
+
+func NewCurrentWordStartLocator() CursorLocator {
+	return &currentWordStartLocator{}
+}
+
+func (loc *currentWordStartLocator) Locate(state *BufferState) cursorState {
+	if isCursorOnWhitespace(state.textTree, state.cursor.position) {
+		return loc.locateEndOfWordBeforeWhitespace(state)
+	}
+	return loc.locateStartOfCurrentWord(state)
+}
+
+func (loc *currentWordStartLocator) locateEndOfWordBeforeWhitespace(state *BufferState) cursorState {
+	pos := loc.findStartOfWhitespace(state)
+	if state.tokenTree != nil {
+		tokenPos := loc.findEndOfPrevNonEmptyToken(state)
+		if tokenPos > pos {
+			pos = tokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *currentWordStartLocator) findStartOfWhitespace(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	var offset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			return 0
+		} else if seg.HasNewline() || !seg.IsWhitespace() {
+			return startPos - offset
+		}
+		offset += seg.NumRunes()
+	}
+}
+
+func (loc *currentWordStartLocator) findEndOfPrevNonEmptyToken(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	iter := state.tokenTree.IterFromPosition(startPos, parser.IterDirectionBackward)
+	var tok parser.Token
+	for iter.Get(&tok) {
+		if tok.Role != parser.TokenRoleNone && tok.EndPos < startPos {
+			return tok.EndPos
+		}
+		iter.Advance()
+	}
+	return 0
+}
+
+func (loc *currentWordStartLocator) locateStartOfCurrentWord(state *BufferState) cursorState {
+	pos := loc.findLastNonWhitspaceBeforeCursor(state)
+	if state.tokenTree != nil {
+		tokenPos := loc.findStartOfCurrentToken(state)
+		if tokenPos > pos {
+			pos = tokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *currentWordStartLocator) findLastNonWhitspaceBeforeCursor(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionBackward)
+	seg := segment.NewSegment()
+	var offset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			return 0
+		} else if seg.HasNewline() || seg.IsWhitespace() {
+			return startPos - offset
+		}
+		offset += seg.NumRunes()
+	}
+}
+
+func (loc *currentWordStartLocator) findStartOfCurrentToken(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	iter := state.tokenTree.IterFromPosition(startPos, parser.IterDirectionBackward)
+	var tok parser.Token
+	if iter.Get(&tok) && tok.Role != parser.TokenRoleNone {
+		return tok.StartPos
+	}
+	return 0
+}
+
+func (loc *currentWordStartLocator) String() string {
+	return "CurrentWordStart()"
+}
+
+// currentWordEndLocator finds the end of the word or whitespace under the cursor.
+// The returned position is one past the last character in the word or whitespace,
+// so this can be used in a DeleteMutator to delete all the characters in the word.
+// Word boundaries are determined by whitespace and syntax tokens.
+type currentWordEndLocator struct{}
+
+func NewCurrentWordEndLocator() CursorLocator {
+	return &currentWordEndLocator{}
+}
+
+func (loc *currentWordEndLocator) Locate(state *BufferState) cursorState {
+	if isCursorOnWhitespace(state.textTree, state.cursor.position) {
+		return loc.locateStartOfWordAfterWhitespace(state)
+	} else {
+		return loc.locateEndOfCurrentWord(state)
+	}
+}
+
+func (loc *currentWordEndLocator) locateStartOfWordAfterWhitespace(state *BufferState) cursorState {
+	return NewMinPosLocator([]CursorLocator{
+		NewNextWordStartLocator(),
+		NewLineBoundaryLocator(text.ReadDirectionForward, true),
+	}).Locate(state)
+}
+
+func (loc *currentWordEndLocator) locateEndOfCurrentWord(state *BufferState) cursorState {
+	pos := loc.findFirstWhitespaceAfterCursor(state)
+	if state.tokenTree != nil {
+		tokenPos := loc.findEndOfCurrentToken(state)
+		if tokenPos < pos {
+			pos = tokenPos
+		}
+	}
+	return cursorState{position: pos}
+}
+
+func (loc *currentWordEndLocator) findFirstWhitespaceAfterCursor(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	segmentIter := gcIterForTree(state.textTree, startPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	var offset uint64
+	for {
+		eof := nextSegmentOrEof(segmentIter, seg)
+		if eof {
+			break
+		} else if seg.HasNewline() || seg.IsWhitespace() {
+			break
+		}
+		offset += seg.NumRunes()
+	}
+
+	return startPos + offset
+}
+
+func (loc *currentWordEndLocator) findEndOfCurrentToken(state *BufferState) uint64 {
+	startPos := state.cursor.position
+	iter := state.tokenTree.IterFromPosition(startPos, parser.IterDirectionBackward)
+	var tok parser.Token
+	if iter.Get(&tok) && tok.Role != parser.TokenRoleNone {
+		return tok.EndPos
+	}
+	return startPos
+}
+
+func (loc *currentWordEndLocator) String() string {
+	return "CurrentWordEnd()"
+}
+
 // nextParagraphLocator finds the start of the next paragraph after the cursor.
 // Paragraph boundaries occur at empty lines.
 type nextParagraphLocator struct{}

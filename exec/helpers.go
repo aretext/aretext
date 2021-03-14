@@ -35,6 +35,14 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eo
 	return false
 }
 
+// isCursorOnWhitepace returns whether the character under the cursor is whitespace.
+func isCursorOnWhitespace(tree *text.Tree, cursorPos uint64) bool {
+	segmentIter := gcIterForTree(tree, cursorPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	eof := nextSegmentOrEof(segmentIter, seg)
+	return !eof && seg.IsWhitespace()
+}
+
 // closestValidLineNum finds the line number in the text that is closest to the target.
 func closestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	numLines := tree.NumLines()

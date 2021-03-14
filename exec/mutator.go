@@ -208,7 +208,7 @@ func NewReloadDocumentMutator(showStatus bool) Mutator {
 
 func (rdm *reloadDocumentMutator) Mutate(state *EditorState) {
 	path := state.fileWatcher.Path()
-	NewLoadDocumentMutator(path, true, rdm.showStatus).Mutate(state)
+	NewLoadDocumentMutator(path, false, rdm.showStatus).Mutate(state)
 }
 
 func (rdm *reloadDocumentMutator) String() string {

@@ -10,20 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func repeat(c rune, n int) string {
-	runes := make([]rune, n)
-	for i := 0; i < n; i++ {
-		runes[i] = c
-	}
-	return string(runes)
-}
-
 func lines(numLines int, charsPerLine int) string {
 	lines := make([]string, 0, numLines)
 	currentChar := byte(65)
 
 	for i := 0; i < numLines; i++ {
-		l := repeat(rune(currentChar), charsPerLine)
+		l := Repeat(rune(currentChar), charsPerLine)
 		lines = append(lines, l)
 		currentChar++
 		if currentChar > 90 { // letter Z
@@ -47,16 +39,16 @@ func TestTreeBulkLoadAndReadAll(t *testing.T) {
 		{"empty", ""},
 		{"single ASCII char", "a"},
 		{"multiple ASCII chars", "abcdefg"},
-		{"very long ASCII chars", repeat('a', 300000)},
+		{"very long ASCII chars", Repeat('a', 300000)},
 		{"single 2-byte char", "£"},
 		{"multiple 2-byte chars", "£ôƊ"},
-		{"very long 2-byte chars", repeat('£', 300000)},
+		{"very long 2-byte chars", Repeat('£', 300000)},
 		{"single 3-byte char", "፴"},
 		{"multiple 3-byte chars:", "፴ऴஅ"},
-		{"very long 3-byte char", repeat('፴', 3000000)},
+		{"very long 3-byte char", Repeat('፴', 3000000)},
 		{"single 4-byte char", "\U0010AAAA"},
 		{"multiple 4-byte chars", "\U0010AAAA\U0010BBBB\U0010CCCC"},
-		{"very long 4-byte chars", repeat('\U0010AAAA', 300000)},
+		{"very long 4-byte chars", Repeat('\U0010AAAA', 300000)},
 	}
 
 	for _, tc := range testCases {
@@ -84,31 +76,31 @@ func TestReaderStartLocation(t *testing.T) {
 		},
 		{
 			name:  "medium, ASCII",
-			runes: []rune(repeat('a', 4096)),
+			runes: []rune(Repeat('a', 4096)),
 		},
 		{
 			name:  "short, 2-byte chars",
-			runes: []rune(repeat('£', 10)),
+			runes: []rune(Repeat('£', 10)),
 		},
 		{
 			name:  "medium, 2-byte chars",
-			runes: []rune(repeat('£', 4096)),
+			runes: []rune(Repeat('£', 4096)),
 		},
 		{
 			name:  "short, 3-byte chars",
-			runes: []rune(repeat('፴', 5)),
+			runes: []rune(Repeat('፴', 5)),
 		},
 		{
 			name:  "medium, 3-byte chars",
-			runes: []rune(repeat('፴', 4096)),
+			runes: []rune(Repeat('፴', 4096)),
 		},
 		{
 			name:  "short, 4-byte chars",
-			runes: []rune(repeat('\U0010AAAA', 5)),
+			runes: []rune(Repeat('\U0010AAAA', 5)),
 		},
 		{
 			name:  "medium, 4-byte chars",
-			runes: []rune(repeat('\U0010AAAA', 4096)),
+			runes: []rune(Repeat('\U0010AAAA', 4096)),
 		},
 	}
 
@@ -156,12 +148,12 @@ func TestReaderPastLastCharacter(t *testing.T) {
 		},
 		{
 			name: "full leaf, position at end of leaf",
-			text: repeat('a', maxBytesPerLeaf),
+			text: Repeat('a', maxBytesPerLeaf),
 			pos:  maxBytesPerLeaf,
 		},
 		{
 			name: "full leaf, position one after end of leaf",
-			text: repeat('b', maxBytesPerLeaf),
+			text: Repeat('b', maxBytesPerLeaf),
 			pos:  maxBytesPerLeaf + 1,
 		},
 	}
@@ -443,9 +435,9 @@ func TestReadBackwards(t *testing.T) {
 		},
 		{
 			name:        "long string with non-ASCII characters",
-			inputString: repeat('፴', 4096),
+			inputString: Repeat('፴', 4096),
 			position:    2048,
-			expected:    Reverse(repeat('፴', 2048)),
+			expected:    Reverse(Repeat('፴', 2048)),
 		},
 		{
 			name:        "all characters from end",
@@ -513,17 +505,17 @@ func TestReaderSeekBackward(t *testing.T) {
 		},
 		{
 			name:         "very long string, short seek",
-			inputString:  repeat('a', 300000),
+			inputString:  Repeat('a', 300000),
 			readPosition: 300000,
 			seekOffset:   100,
-			expected:     repeat('a', 100),
+			expected:     Repeat('a', 100),
 		},
 		{
 			name:         "very long string, long seek",
-			inputString:  repeat('a', 300000),
+			inputString:  Repeat('a', 300000),
 			readPosition: 300000,
 			seekOffset:   10000,
-			expected:     repeat('a', 10000),
+			expected:     Repeat('a', 10000),
 		},
 	}
 
@@ -544,7 +536,7 @@ func TestReaderSeekBackward(t *testing.T) {
 }
 
 func TestReadToEndThenSeekBackward(t *testing.T) {
-	s := repeat('a', 1000)
+	s := Repeat('a', 1000)
 	tree, err := NewTreeFromString(s)
 	require.NoError(t, err)
 
@@ -558,7 +550,7 @@ func TestReadToEndThenSeekBackward(t *testing.T) {
 	retrieved, err := ioutil.ReadAll(reader)
 	require.NoError(t, err)
 
-	expected := repeat('a', 100)
+	expected := Repeat('a', 100)
 	require.Equal(t, expected, string(retrieved))
 }
 
@@ -740,87 +732,87 @@ func TestInsertAtPosition(t *testing.T) {
 		},
 		{
 			name:         "insert ASCII before long string",
-			initialText:  repeat('a', 4096),
+			initialText:  Repeat('a', 4096),
 			insertPos:    0,
 			insertChar:   'x',
-			expectedText: "x" + repeat('a', 4096),
+			expectedText: "x" + Repeat('a', 4096),
 		},
 		{
 			name:         "insert 2-byte char before long string",
-			initialText:  repeat('£', 4096),
+			initialText:  Repeat('£', 4096),
 			insertPos:    0,
 			insertChar:   'ô',
-			expectedText: "ô" + repeat('£', 4096),
+			expectedText: "ô" + Repeat('£', 4096),
 		},
 		{
 			name:         "insert 3-byte char before long string",
-			initialText:  repeat('፴', 4096),
+			initialText:  Repeat('፴', 4096),
 			insertPos:    0,
 			insertChar:   'ऴ',
-			expectedText: "ऴ" + repeat('፴', 4096),
+			expectedText: "ऴ" + Repeat('፴', 4096),
 		},
 		{
 			name:         "insert 4-byte char before long string",
-			initialText:  repeat('\U0010AAAA', 4096),
+			initialText:  Repeat('\U0010AAAA', 4096),
 			insertPos:    0,
 			insertChar:   '\U0010BBBB',
-			expectedText: "\U0010BBBB" + repeat('\U0010AAAA', 4096),
+			expectedText: "\U0010BBBB" + Repeat('\U0010AAAA', 4096),
 		},
 		{
 			name:         "insert ASCII in middle of long string",
-			initialText:  repeat('a', 4096),
+			initialText:  Repeat('a', 4096),
 			insertPos:    2000,
 			insertChar:   'x',
-			expectedText: repeat('a', 2000) + "x" + repeat('a', 2096),
+			expectedText: Repeat('a', 2000) + "x" + Repeat('a', 2096),
 		},
 		{
 			name:         "insert 2-byte char in middle of  long string",
-			initialText:  repeat('£', 4096),
+			initialText:  Repeat('£', 4096),
 			insertPos:    2000,
 			insertChar:   'ô',
-			expectedText: repeat('£', 2000) + "ô" + repeat('£', 2096),
+			expectedText: Repeat('£', 2000) + "ô" + Repeat('£', 2096),
 		},
 		{
 			name:         "insert 3-byte char in middle of  long string",
-			initialText:  repeat('፴', 4096),
+			initialText:  Repeat('፴', 4096),
 			insertPos:    2000,
 			insertChar:   'ऴ',
-			expectedText: repeat('፴', 2000) + "ऴ" + repeat('፴', 2096),
+			expectedText: Repeat('፴', 2000) + "ऴ" + Repeat('፴', 2096),
 		},
 		{
 			name:         "insert 4-byte char in middle of  long string",
-			initialText:  repeat('\U0010AAAA', 4096),
+			initialText:  Repeat('\U0010AAAA', 4096),
 			insertPos:    2000,
 			insertChar:   '\U0010BBBB',
-			expectedText: repeat('\U0010AAAA', 2000) + "\U0010BBBB" + repeat('\U0010AAAA', 2096),
+			expectedText: Repeat('\U0010AAAA', 2000) + "\U0010BBBB" + Repeat('\U0010AAAA', 2096),
 		},
 		{
 			name:         "insert ASCII at end of long string",
-			initialText:  repeat('a', 4096),
+			initialText:  Repeat('a', 4096),
 			insertPos:    4096,
 			insertChar:   'x',
-			expectedText: repeat('a', 4096) + "x",
+			expectedText: Repeat('a', 4096) + "x",
 		},
 		{
 			name:         "insert 2-byte char at end of  long string",
-			initialText:  repeat('£', 4096),
+			initialText:  Repeat('£', 4096),
 			insertPos:    4096,
 			insertChar:   'ô',
-			expectedText: repeat('£', 4096) + "ô",
+			expectedText: Repeat('£', 4096) + "ô",
 		},
 		{
 			name:         "insert 3-byte char at end of  long string",
-			initialText:  repeat('፴', 4096),
+			initialText:  Repeat('፴', 4096),
 			insertPos:    4096,
 			insertChar:   'ऴ',
-			expectedText: repeat('፴', 4096) + "ऴ",
+			expectedText: Repeat('፴', 4096) + "ऴ",
 		},
 		{
 			name:         "insert 4-byte char at end of  long string",
-			initialText:  repeat('\U0010AAAA', 4096),
+			initialText:  Repeat('\U0010AAAA', 4096),
 			insertPos:    4096,
 			insertChar:   '\U0010BBBB',
-			expectedText: repeat('\U0010AAAA', 4096) + "\U0010BBBB",
+			expectedText: Repeat('\U0010AAAA', 4096) + "\U0010BBBB",
 		},
 	}
 
@@ -858,19 +850,19 @@ func TestInsertManySequential(t *testing.T) {
 		},
 		{
 			name: "many ASCII chars",
-			text: repeat('a', 4096),
+			text: Repeat('a', 4096),
 		},
 		{
 			name: "many 2-byte chars",
-			text: repeat('Ɗ', 4096),
+			text: Repeat('Ɗ', 4096),
 		},
 		{
 			name: "many 3-byte chars",
-			text: repeat('፴', 4096),
+			text: Repeat('፴', 4096),
 		},
 		{
 			name: "many 4-byte chars",
-			text: repeat('\U0010AAAA', 4096),
+			text: Repeat('\U0010AAAA', 4096),
 		},
 	}
 
@@ -920,7 +912,7 @@ func TestInsertNewline(t *testing.T) {
 		},
 		{
 			name:            "very long string",
-			initialText:     repeat('a', 4096),
+			initialText:     Repeat('a', 4096),
 			insertPos:       4095,
 			retrieveLineNum: 1,
 			expectedLine:    "a",
@@ -1032,19 +1024,19 @@ func TestDeleteAllCharsInLongStringFromBeginning(t *testing.T) {
 	}{
 		{
 			name: "ASCII",
-			text: repeat('a', 4096),
+			text: Repeat('a', 4096),
 		},
 		{
 			name: "2-byte chars",
-			text: repeat('£', 4096),
+			text: Repeat('£', 4096),
 		},
 		{
 			name: "3-byte chars",
-			text: repeat('፴', 4096),
+			text: Repeat('፴', 4096),
 		},
 		{
 			name: "4-byte chars",
-			text: repeat('\U0010AAAA', 4096),
+			text: Repeat('\U0010AAAA', 4096),
 		},
 	}
 
@@ -1067,19 +1059,19 @@ func TestDeleteAllCharsInLongStringFromEnd(t *testing.T) {
 	}{
 		{
 			name: "ASCII",
-			text: repeat('a', 4096),
+			text: Repeat('a', 4096),
 		},
 		{
 			name: "2-byte chars",
-			text: repeat('£', 4096),
+			text: Repeat('£', 4096),
 		},
 		{
 			name: "3-byte chars",
-			text: repeat('፴', 4096),
+			text: Repeat('፴', 4096),
 		},
 		{
 			name: "4-byte chars",
-			text: repeat('\U0010AAAA', 4096),
+			text: Repeat('\U0010AAAA', 4096),
 		},
 	}
 
@@ -1110,7 +1102,7 @@ func TestDeleteNewline(t *testing.T) {
 }
 
 func TestNodeSplit(t *testing.T) {
-	s := repeat('x', 1339)
+	s := Repeat('x', 1339)
 	tree, err := NewTreeFromString(s)
 	require.NoError(t, err)
 
@@ -1134,7 +1126,7 @@ func BenchmarkLoad(b *testing.B) {
 
 	for _, bm := range benchmarks {
 		b.Run(bm.name, func(b *testing.B) {
-			text := repeat('a', bm.numBytes)
+			text := Repeat('a', bm.numBytes)
 			for n := 0; n < b.N; n++ {
 				_, err := NewTreeFromString(text)
 				if err != nil {
@@ -1157,7 +1149,7 @@ func BenchmarkRead(b *testing.B) {
 
 	for _, bm := range benchmarks {
 		b.Run(bm.name, func(b *testing.B) {
-			text := repeat('a', bm.numBytes)
+			text := Repeat('a', bm.numBytes)
 			tree, err := NewTreeFromString(text)
 			if err != nil {
 				b.Fatalf("err = %v", err)
@@ -1187,7 +1179,7 @@ func BenchmarkInsert(b *testing.B) {
 
 	for _, bm := range benchmarks {
 		b.Run(bm.name, func(b *testing.B) {
-			text := repeat('a', bm.numBytesInTree)
+			text := Repeat('a', bm.numBytesInTree)
 			tree, err := NewTreeFromString(text)
 			if err != nil {
 				b.Fatalf("err = %v", err)

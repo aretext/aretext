@@ -38,3 +38,12 @@ func Reverse(s string) string {
 	}
 	return string(reversedBytes)
 }
+
+// Repeat creates a string with the same character repeated n times.
+func Repeat(c rune, n int) string {
+	runes := make([]rune, n)
+	for i := 0; i < n; i++ {
+		runes[i] = c
+	}
+	return string(runes)
+}

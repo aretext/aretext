@@ -157,3 +157,29 @@ func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
 		exec.NewScrollToCursorMutator(),
 	})
 }
+
+// searchMode is used to search the text for a substring.
+type searchMode struct {
+}
+
+func newSearchMode() Mode {
+	return &searchMode{}
+}
+
+func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+	switch event.Key() {
+	case tcell.KeyEscape:
+		// This returns the input mode to normal.
+		return exec.NewCompleteSearchMutator(false)
+	case tcell.KeyEnter:
+		// This returns the input mode to normal.
+		return exec.NewCompleteSearchMutator(true)
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		// This returns the input mode to normal if the search query is empty.
+		return exec.NewDeleteSearchQueryMutator()
+	case tcell.KeyRune:
+		return exec.NewAppendSearchQueryMutator(event.Rune())
+	default:
+		return nil
+	}
+}

@@ -19,6 +19,7 @@ func NewInterpreter() *Interpreter {
 			exec.InputModeNormal: newNormalMode(),
 			exec.InputModeInsert: newInsertMode(),
 			exec.InputModeMenu:   newMenuMode(),
+			exec.InputModeSearch: newSearchMode(),
 		},
 	}
 }

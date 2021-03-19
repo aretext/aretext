@@ -946,6 +946,93 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 	}
 }
 
+func TestSearchAndCommit(t *testing.T) {
+	textTree, err := text.NewTreeFromString("foo bar baz")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, config.RuleSet{})
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// Start a search.
+	NewStartSearchMutator().Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeSearch)
+	assert.Equal(t, buffer.search.query, "")
+
+	// Enter a search query.
+	NewAppendSearchQueryMutator('b').Mutate(state)
+	assert.Equal(t, "b", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(5), buffer.search.match.EndPos)
+
+	NewAppendSearchQueryMutator('a').Mutate(state)
+	assert.Equal(t, "ba", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(6), buffer.search.match.EndPos)
+
+	NewAppendSearchQueryMutator('r').Mutate(state)
+	assert.Equal(t, "bar", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(7), buffer.search.match.EndPos)
+
+	NewDeleteSearchQueryMutator().Mutate(state)
+	assert.Equal(t, "ba", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(6), buffer.search.match.EndPos)
+
+	// Commit the search.
+	NewCompleteSearchMutator(true).Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeNormal)
+	assert.Equal(t, "ba", buffer.search.query)
+	assert.Nil(t, buffer.search.match)
+	assert.Equal(t, cursorState{position: 4}, buffer.cursor)
+}
+
+func TestSearchAndAbort(t *testing.T) {
+	textTree, err := text.NewTreeFromString("foo bar baz")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, config.RuleSet{})
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// Start a search.
+	NewStartSearchMutator().Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeSearch)
+	assert.Equal(t, buffer.search.query, "")
+
+	// Enter a search query.
+	NewAppendSearchQueryMutator('b').Mutate(state)
+	assert.Equal(t, "b", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(5), buffer.search.match.EndPos)
+
+	// Abort the search.
+	NewCompleteSearchMutator(false).Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeNormal)
+	assert.Equal(t, "", buffer.search.query)
+	assert.Nil(t, buffer.search.match)
+	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
+}
+
+func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
+	textTree, err := text.NewTreeFromString("foo bar baz")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, config.RuleSet{})
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// Start a search.
+	NewStartSearchMutator().Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeSearch)
+	assert.Equal(t, buffer.search.query, "")
+
+	// Delete from the empty query, equivalent to aborting the search.
+	NewDeleteSearchQueryMutator().Mutate(state)
+	assert.Equal(t, state.inputMode, InputModeNormal)
+	assert.Equal(t, "", buffer.search.query)
+	assert.Nil(t, buffer.search.match)
+	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
+}
+
 func TestQuitMutator(t *testing.T) {
 	testCases := []struct {
 		name              string

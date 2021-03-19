@@ -90,6 +90,7 @@ const (
 	InputModeNormal = InputMode(iota)
 	InputModeInsert
 	InputModeMenu
+	InputModeSearch
 )
 
 func (im InputMode) String() string {
@@ -100,6 +101,8 @@ func (im InputMode) String() string {
 		return "insert"
 	case InputModeMenu:
 		return "menu"
+	case InputModeSearch:
+		return "search"
 	default:
 		panic("invalid input mode")
 	}
@@ -110,6 +113,7 @@ type BufferState struct {
 	textTree       *text.Tree
 	cursor         cursorState
 	view           viewState
+	search         searchState
 	syntaxLanguage syntax.Language
 	tokenTree      *parser.TokenTree
 	tokenizer      *parser.Tokenizer
@@ -129,6 +133,7 @@ func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth
 			width:      viewWidth,
 			height:     viewHeight,
 		},
+		search:         searchState{},
 		syntaxLanguage: syntax.LanguageUndefined,
 		tokenTree:      nil,
 		tokenizer:      nil,
@@ -160,6 +165,19 @@ func (s *BufferState) ViewOrigin() (uint64, uint64) {
 
 func (s *BufferState) ViewSize() (uint64, uint64) {
 	return s.view.width, s.view.height
+}
+
+func (s *BufferState) SearchQuery() string {
+	return s.search.query
+}
+
+func (s *BufferState) SearchMatch() *SearchMatch {
+	return s.search.match
+}
+
+// Used for display testing.
+func (s *BufferState) SetSearchMatch(match *SearchMatch) {
+	s.search.match = match
 }
 
 func (s *BufferState) SetViewSize(width, height uint64) {
@@ -245,6 +263,22 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
+}
+
+// searchState represents the state of a text search.
+type searchState struct {
+	query string
+	match *SearchMatch
+}
+
+// SearchMatch represents the successful result of a text search.
+type SearchMatch struct {
+	StartPos uint64
+	EndPos   uint64
+}
+
+func (sm *SearchMatch) ContainsPosition(pos uint64) bool {
+	return sm != nil && pos >= sm.StartPos && pos < sm.EndPos
 }
 
 // StatusMsgStyle controls how a status message will be displayed.

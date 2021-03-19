@@ -93,14 +93,6 @@ func ScrollDown(inputEvents []*tcell.EventKey, count *int64, config Config) exec
 	})
 }
 
-func ShowCommandMenu(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	// The show menu mutator sets the input mode to menu.
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
-		exec.NewShowMenuMutator("command", commandMenuItems, false, true),
-	})
-}
-
 func CursorLineStart(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
 	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
 	return exec.NewCursorMutator(loc)
@@ -278,4 +270,20 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey, count *int64, config Config
 
 	newChar := string([]rune{lastInput.Rune()})
 	return exec.NewReplaceCharMutator(newChar)
+}
+
+func ShowCommandMenu(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	// The show menu mutator sets the input mode to menu.
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewShowMenuMutator("command", commandMenuItems, false, true),
+	})
+}
+
+func StartSearchForward(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	// The start search mutator sets the input mode to search.
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewStartSearchMutator(),
+	})
 }

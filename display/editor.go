@@ -11,4 +11,5 @@ func DrawEditor(screen tcell.Screen, editorState *exec.EditorState) {
 	DrawBuffer(screen, editorState.DocumentBuffer())
 	DrawMenu(screen, editorState.Menu())
 	DrawStatusBar(screen, editorState.StatusMsg(), editorState.InputMode(), editorState.FileWatcher().Path())
+	DrawSearchQuery(screen, editorState.InputMode(), editorState.DocumentBuffer().SearchQuery())
 }

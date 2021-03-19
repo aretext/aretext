@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
@@ -928,6 +929,113 @@ func (esm *executeShellCmdMutator) reportSuccess(state *EditorState) {
 
 func (esm *executeShellCmdMutator) String() string {
 	return fmt.Sprintf("ExecuteShellCmd('%s')", esm.shellCmd)
+}
+
+// startSearchMutator initiates a new text search.
+type startSearchMutator struct{}
+
+func NewStartSearchMutator() Mutator {
+	return &startSearchMutator{}
+}
+
+func (ssm *startSearchMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	buffer.search = searchState{}
+	state.inputMode = InputModeSearch
+}
+
+func (ssm *startSearchMutator) String() string {
+	return "StartSearch()"
+}
+
+// completeSearchMutator terminates a text search and returns to normal mode.
+type completeSearchMutator struct {
+	// If commit is true, jump to the matching search result.
+	// Otherwise, return to the original cursor position.
+	commit bool
+}
+
+func NewCompleteSearchMutator(commit bool) Mutator {
+	return &completeSearchMutator{commit}
+}
+
+func (csm *completeSearchMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	if csm.commit {
+		if buffer.search.match != nil {
+			buffer.cursor = cursorState{position: buffer.search.match.StartPos}
+		}
+	} else {
+		buffer.search = searchState{}
+	}
+	buffer.search.match = nil
+	state.inputMode = InputModeNormal
+	NewScrollToCursorMutator().Mutate(state)
+}
+
+func (csm *completeSearchMutator) String() string {
+	return fmt.Sprintf("CompleteSearch(commit=%t)", csm.commit)
+}
+
+// updateSearchQueryMutator appends or deletes characters from the text search query.
+// A deletion in an empty query aborts the search and returns the editor to normal mode.
+type updateSearchQueryMutator struct {
+	deleteFlag bool
+	appendRune rune
+}
+
+func NewAppendSearchQueryMutator(r rune) Mutator {
+	return &updateSearchQueryMutator{appendRune: r}
+}
+
+func NewDeleteSearchQueryMutator() Mutator {
+	return &updateSearchQueryMutator{deleteFlag: true}
+}
+
+func (usm *updateSearchQueryMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	if len(buffer.search.query) == 0 && usm.deleteFlag {
+		NewCompleteSearchMutator(false).Mutate(state)
+		return
+	}
+
+	q := buffer.search.query
+	if usm.deleteFlag {
+		q = q[0 : len(q)-1]
+	} else {
+		q = q + string(usm.appendRune)
+	}
+	buffer.search.query = q
+
+	cursorPos := buffer.cursor.position
+	textReader := buffer.textTree.ReaderAtPosition(cursorPos, text.ReadDirectionForward)
+	foundMatch, matchOffset, err := text.Search(q, textReader)
+	if err != nil {
+		panic(err) // should never happen because the tree reader shouldn't return an error.
+	}
+
+	if !foundMatch {
+		buffer.search.match = nil
+		NewScrollToCursorMutator().Mutate(state)
+		return
+	}
+
+	matchStartPos := cursorPos + matchOffset
+	buffer.search.match = &SearchMatch{
+		StartPos: matchStartPos,
+		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(q)),
+	}
+	buffer.view.textOrigin = ScrollToCursor(
+		matchStartPos,
+		buffer.textTree,
+		buffer.view.textOrigin,
+		buffer.view.width,
+		buffer.view.height,
+		buffer.tabSize)
+}
+
+func (usm *updateSearchQueryMutator) String() string {
+	return fmt.Sprintf("UpdateSearchQuery(deleteFlag=%t, appendRune=%q)", usm.deleteFlag, usm.appendRune)
 }
 
 // quitMutator sets a flag that terminates the program.

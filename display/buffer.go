@@ -27,6 +27,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
+	searchMatch := bufferState.SearchMatch()
 	tokenIter := bufferState.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
 
 	sr.HideCursor()
@@ -38,7 +39,7 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, gcWidthFunc)
+		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, searchMatch, gcWidthFunc)
 		pos += wrappedLine.NumRunes()
 	}
 
@@ -54,7 +55,7 @@ func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, gcWidthFunc segment.GraphemeClusterWidthFunc) {
+func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, searchMatch *exec.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -81,7 +82,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 			return
 		}
 
-		style := styleAtPosition(pos, tokenIter)
+		style := styleAtPosition(pos, searchMatch, tokenIter)
 		drawGraphemeCluster(sr, col, row, gcRunes, style)
 
 		if pos-startPos == uint64(maxLineWidth) {
@@ -115,7 +116,11 @@ func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
 	}
 }
 
-func styleAtPosition(pos uint64, tokenIter *parser.TokenIter) tcell.Style {
+func styleAtPosition(pos uint64, searchMatch *exec.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+	if searchMatch.ContainsPosition(pos) {
+		return tcell.StyleDefault.Reverse(true)
+	}
+
 	var token parser.Token
 	for tokenIter.Get(&token) {
 		if token.StartPos <= pos && token.EndPos > pos {

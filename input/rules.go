@@ -326,4 +326,11 @@ var normalModeRules = []Rule{
 		},
 		Action: ShowCommandMenu,
 	},
+	{
+		Name: "start search",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '/'},
+		},
+		Action: StartSearchForward,
+	},
 }

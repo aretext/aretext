@@ -788,7 +788,7 @@ func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
 	selectedItem := results[idx]
 	log.Printf("Executing menu item %s at result index %d\n", selectedItem, idx)
 	NewCompositeMutator([]Mutator{
-		// Perform the action after hiding the menu in case the action so the action can show another menu.
+		// Perform the action after hiding the menu in case the action wants to show another menu.
 		NewHideMenuMutator(),
 		selectedItem.Action,
 	}).Mutate(state)

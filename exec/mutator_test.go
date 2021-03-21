@@ -993,11 +993,13 @@ func TestSearchAndAbort(t *testing.T) {
 	state := NewEditorState(100, 100, config.RuleSet{})
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
+	buffer.search.query = "xyz"
 
 	// Start a search.
 	NewStartSearchMutator().Mutate(state)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
+	assert.Equal(t, buffer.search.prevQuery, "xyz")
 
 	// Enter a search query.
 	NewAppendSearchQueryMutator('b').Mutate(state)
@@ -1008,7 +1010,7 @@ func TestSearchAndAbort(t *testing.T) {
 	// Abort the search.
 	NewCompleteSearchMutator(false).Mutate(state)
 	assert.Equal(t, state.inputMode, InputModeNormal)
-	assert.Equal(t, "", buffer.search.query)
+	assert.Equal(t, "xyz", buffer.search.query)
 	assert.Nil(t, buffer.search.match)
 	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
 }

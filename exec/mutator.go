@@ -940,7 +940,8 @@ func NewStartSearchMutator() Mutator {
 
 func (ssm *startSearchMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
-	buffer.search = searchState{}
+	prevQuery := buffer.search.query
+	buffer.search = searchState{prevQuery: prevQuery}
 	state.inputMode = InputModeSearch
 }
 
@@ -966,7 +967,8 @@ func (csm *completeSearchMutator) Mutate(state *EditorState) {
 			buffer.cursor = cursorState{position: buffer.search.match.StartPos}
 		}
 	} else {
-		buffer.search = searchState{}
+		prevQuery := buffer.search.prevQuery
+		buffer.search = searchState{query: prevQuery}
 	}
 	buffer.search.match = nil
 	state.inputMode = InputModeNormal

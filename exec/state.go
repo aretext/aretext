@@ -267,8 +267,9 @@ type viewState struct {
 
 // searchState represents the state of a text search.
 type searchState struct {
-	query string
-	match *SearchMatch
+	query     string
+	prevQuery string
+	match     *SearchMatch
 }
 
 // SearchMatch represents the successful result of a text search.

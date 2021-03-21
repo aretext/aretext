@@ -340,4 +340,11 @@ var normalModeRules = []Rule{
 		},
 		Action: FindNextMatch,
 	},
+	{
+		Name: "find previous match",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'N'},
+		},
+		Action: FindPrevMatch,
+	},
 }

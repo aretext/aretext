@@ -1041,6 +1041,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 		text              string
 		cursorPos         uint64
 		query             string
+		reverse           bool
 		expectedCursorPos uint64
 	}{
 		{
@@ -1071,6 +1072,61 @@ func TestFindNextMatchMutator(t *testing.T) {
 			query:             "ba",
 			expectedCursorPos: 10,
 		},
+		{
+			name:              "find next with multi-byte unicode",
+			text:              "丂丄丅丆丏 ¢ह€한",
+			cursorPos:         0,
+			query:             "丅丆",
+			expectedCursorPos: 2,
+		},
+		{
+			name:              "empty text, reverse search",
+			text:              "",
+			cursorPos:         0,
+			query:             "abc",
+			expectedCursorPos: 0,
+			reverse:           true,
+		},
+		{
+			name:              "find prev",
+			text:              "foo bar baz xyz",
+			cursorPos:         14,
+			query:             "ba",
+			expectedCursorPos: 8,
+			reverse:           true,
+		},
+		{
+			name:              "find prev from current match",
+			text:              "foo bar baz xyz",
+			cursorPos:         8,
+			query:             "ba",
+			expectedCursorPos: 4,
+			reverse:           true,
+		},
+		{
+			name:              "find prev from middle of current match",
+			text:              "foo bar baz xyz",
+			cursorPos:         9,
+			query:             "ba",
+			expectedCursorPos: 8,
+			reverse:           true,
+		},
+		{
+			name:              "find prev from start of text",
+			text:              "foo bar baz xyz",
+			cursorPos:         0,
+			query:             "ba",
+			expectedCursorPos: 0,
+			reverse:           true,
+		},
+		{
+			name:              "find prev with multi-byte unicode",
+			text:              "丂丄丅丆丏 ¢ह€한",
+			cursorPos:         9,
+			query:             "丅丆",
+			expectedCursorPos: 2,
+			reverse:           true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1082,7 +1138,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			buffer.textTree = textTree
 			buffer.cursor = cursorState{position: tc.cursorPos}
 			buffer.search.query = tc.query
-			NewFindNextMatchMutator().Mutate(state)
+			NewFindNextMatchMutator(tc.reverse).Mutate(state)
 			assert.Equal(t, tc.expectedCursorPos, buffer.cursor.position)
 		})
 	}

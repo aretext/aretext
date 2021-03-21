@@ -48,6 +48,17 @@ const (
 	ReadDirectionBackward
 )
 
+func (d ReadDirection) Reverse() ReadDirection {
+	switch d {
+	case ReadDirectionForward:
+		return ReadDirectionBackward
+	case ReadDirectionBackward:
+		return ReadDirectionForward
+	default:
+		panic("invalid direction")
+	}
+}
+
 func (d ReadDirection) String() string {
 	switch d {
 	case ReadDirectionForward:

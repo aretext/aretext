@@ -932,21 +932,27 @@ func (esm *executeShellCmdMutator) String() string {
 }
 
 // startSearchMutator initiates a new text search.
-type startSearchMutator struct{}
+type startSearchMutator struct {
+	direction text.ReadDirection
+}
 
-func NewStartSearchMutator() Mutator {
-	return &startSearchMutator{}
+func NewStartSearchMutator(direction text.ReadDirection) Mutator {
+	return &startSearchMutator{direction}
 }
 
 func (ssm *startSearchMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
-	prevQuery := buffer.search.query
-	buffer.search = searchState{prevQuery: prevQuery}
+	prevQuery, prevDirection := buffer.search.query, buffer.search.direction
+	buffer.search = searchState{
+		direction:     ssm.direction,
+		prevQuery:     prevQuery,
+		prevDirection: prevDirection,
+	}
 	state.inputMode = InputModeSearch
 }
 
 func (ssm *startSearchMutator) String() string {
-	return "StartSearch()"
+	return fmt.Sprintf("StartSearch(%s)", ssm.direction)
 }
 
 // completeSearchMutator terminates a text search and returns to normal mode.
@@ -967,8 +973,11 @@ func (csm *completeSearchMutator) Mutate(state *EditorState) {
 			buffer.cursor = cursorState{position: buffer.search.match.StartPos}
 		}
 	} else {
-		prevQuery := buffer.search.prevQuery
-		buffer.search = searchState{query: prevQuery}
+		prevQuery, prevDirection := buffer.search.prevQuery, buffer.search.prevDirection
+		buffer.search = searchState{
+			query:     prevQuery,
+			direction: prevDirection,
+		}
 	}
 	buffer.search.match = nil
 	state.inputMode = InputModeNormal
@@ -1009,7 +1018,19 @@ func (usm *updateSearchQueryMutator) Mutate(state *EditorState) {
 	}
 	buffer.search.query = q
 
-	foundMatch, matchStartPos := searchTextForward(buffer.cursor.position, buffer.textTree, buffer.search.query)
+	foundMatch, matchStartPos := false, uint64(0)
+	if buffer.search.direction == text.ReadDirectionForward {
+		foundMatch, matchStartPos = searchTextForward(
+			buffer.cursor.position,
+			buffer.textTree,
+			buffer.search.query)
+	} else {
+		foundMatch, matchStartPos = searchTextBackward(
+			buffer.cursor.position,
+			buffer.textTree,
+			buffer.search.query)
+	}
+
 	if !foundMatch {
 		buffer.search.match = nil
 		NewScrollToCursorMutator().Mutate(state)
@@ -1043,12 +1064,13 @@ func NewFindNextMatchMutator(reverse bool) Mutator {
 }
 
 func (fnm *findNextMatchMutator) Mutate(state *EditorState) {
-	direction := text.ReadDirectionForward
+	buffer := state.documentBuffer
+
+	direction := buffer.search.direction
 	if fnm.reverse {
 		direction = direction.Reverse()
 	}
 
-	buffer := state.documentBuffer
 	foundMatch, newCursorPos := false, uint64(0)
 	if direction == text.ReadDirectionForward {
 		foundMatch, newCursorPos = searchTextForward(

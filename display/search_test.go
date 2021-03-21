@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,6 +14,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		name                string
 		inputMode           exec.InputMode
 		query               string
+		direction           text.ReadDirection
 		expectContents      [][]rune
 		expectCursorVisible bool
 		expectCursorCol     int
@@ -22,6 +24,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "normal mode hides search query",
 			inputMode: exec.InputModeNormal,
 			query:     "abcd1234",
+			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' '},
@@ -31,6 +34,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with empty query",
 			inputMode: exec.InputModeSearch,
 			query:     "",
+			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', ' ', ' ', ' ', ' ', ' '},
@@ -43,6 +47,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with non-empty query",
 			inputMode: exec.InputModeSearch,
 			query:     "abcd",
+			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', 'a', 'b', 'c', 'd', ' '},
@@ -55,10 +60,24 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with clipped query",
 			inputMode: exec.InputModeSearch,
 			query:     "abcd1234",
+			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', 'a', 'b', 'c', 'd', '1'},
 			},
+		},
+		{
+			name:      "search mode for backward search",
+			inputMode: exec.InputModeSearch,
+			query:     "abcd",
+			direction: text.ReadDirectionBackward,
+			expectContents: [][]rune{
+				{' ', ' ', ' ', ' ', ' ', ' '},
+				{'?', 'a', 'b', 'c', 'd', ' '},
+			},
+			expectCursorVisible: true,
+			expectCursorCol:     5,
+			expectCursorRow:     1,
 		},
 	}
 
@@ -66,7 +85,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(6, 2)
-				DrawSearchQuery(s, tc.inputMode, tc.query)
+				DrawSearchQuery(s, tc.inputMode, tc.query, tc.direction)
 				s.Sync()
 				assertCellContents(t, s, tc.expectContents)
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()

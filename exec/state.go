@@ -167,8 +167,8 @@ func (s *BufferState) ViewSize() (uint64, uint64) {
 	return s.view.width, s.view.height
 }
 
-func (s *BufferState) SearchQuery() string {
-	return s.search.query
+func (s *BufferState) SearchQueryAndDirection() (string, text.ReadDirection) {
+	return s.search.query, s.search.direction
 }
 
 func (s *BufferState) SearchMatch() *SearchMatch {
@@ -267,9 +267,11 @@ type viewState struct {
 
 // searchState represents the state of a text search.
 type searchState struct {
-	query     string
-	prevQuery string
-	match     *SearchMatch
+	query         string
+	direction     text.ReadDirection
+	prevQuery     string
+	prevDirection text.ReadDirection
+	match         *SearchMatch
 }
 
 // SearchMatch represents the successful result of a text search.

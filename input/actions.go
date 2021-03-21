@@ -284,7 +284,15 @@ func StartSearchForward(inputEvents []*tcell.EventKey, count *int64, config Conf
 	// The start search mutator sets the input mode to search.
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
-		exec.NewStartSearchMutator(),
+		exec.NewStartSearchMutator(text.ReadDirectionForward),
+	})
+}
+
+func StartSearchBackward(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	// The start search mutator sets the input mode to search.
+	return exec.NewCompositeMutator([]exec.Mutator{
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
+		exec.NewStartSearchMutator(text.ReadDirectionBackward),
 	})
 }
 

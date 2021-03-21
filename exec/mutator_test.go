@@ -954,7 +954,7 @@ func TestSearchAndCommit(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Start a search.
-	NewStartSearchMutator().Mutate(state)
+	NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 
@@ -996,7 +996,7 @@ func TestSearchAndAbort(t *testing.T) {
 	buffer.search.query = "xyz"
 
 	// Start a search.
-	NewStartSearchMutator().Mutate(state)
+	NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 	assert.Equal(t, buffer.search.prevQuery, "xyz")
@@ -1023,7 +1023,7 @@ func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Start a search.
-	NewStartSearchMutator().Mutate(state)
+	NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 
@@ -1041,6 +1041,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 		text              string
 		cursorPos         uint64
 		query             string
+		direction         text.ReadDirection
 		reverse           bool
 		expectedCursorPos uint64
 	}{
@@ -1049,6 +1050,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "",
 			cursorPos:         0,
 			query:             "abc",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 0,
 		},
 		{
@@ -1056,6 +1058,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz",
 			cursorPos:         1,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 4,
 		},
 		{
@@ -1063,6 +1066,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz",
 			cursorPos:         4,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 8,
 		},
 		{
@@ -1070,6 +1074,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz",
 			cursorPos:         10,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 10,
 		},
 		{
@@ -1077,6 +1082,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "丂丄丅丆丏 ¢ह€한",
 			cursorPos:         0,
 			query:             "丅丆",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 2,
 		},
 		{
@@ -1085,6 +1091,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			cursorPos:         0,
 			query:             "abc",
 			expectedCursorPos: 0,
+			direction:         text.ReadDirectionForward,
 			reverse:           true,
 		},
 		{
@@ -1093,6 +1100,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			cursorPos:         14,
 			query:             "ba",
 			expectedCursorPos: 8,
+			direction:         text.ReadDirectionForward,
 			reverse:           true,
 		},
 		{
@@ -1100,6 +1108,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz xyz",
 			cursorPos:         8,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 4,
 			reverse:           true,
 		},
@@ -1108,6 +1117,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz xyz",
 			cursorPos:         9,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 8,
 			reverse:           true,
 		},
@@ -1116,6 +1126,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "foo bar baz xyz",
 			cursorPos:         0,
 			query:             "ba",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 0,
 			reverse:           true,
 		},
@@ -1124,7 +1135,26 @@ func TestFindNextMatchMutator(t *testing.T) {
 			text:              "丂丄丅丆丏 ¢ह€한",
 			cursorPos:         9,
 			query:             "丅丆",
+			direction:         text.ReadDirectionForward,
 			expectedCursorPos: 2,
+			reverse:           true,
+		},
+		{
+			name:              "backward search equivalent to reverse forward search",
+			text:              "foo bar baz xyz",
+			cursorPos:         14,
+			query:             "ba",
+			direction:         text.ReadDirectionBackward,
+			expectedCursorPos: 8,
+			reverse:           false,
+		},
+		{
+			name:              "reverse backward search equivalent to forward search",
+			text:              "foo bar baz xyz",
+			cursorPos:         0,
+			query:             "ba",
+			direction:         text.ReadDirectionBackward,
+			expectedCursorPos: 4,
 			reverse:           true,
 		},
 	}
@@ -1138,6 +1168,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 			buffer.textTree = textTree
 			buffer.cursor = cursorState{position: tc.cursorPos}
 			buffer.search.query = tc.query
+			buffer.search.direction = tc.direction
 			NewFindNextMatchMutator(tc.reverse).Mutate(state)
 			assert.Equal(t, tc.expectedCursorPos, buffer.cursor.position)
 		})

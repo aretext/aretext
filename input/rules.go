@@ -333,4 +333,11 @@ var normalModeRules = []Rule{
 		},
 		Action: StartSearchForward,
 	},
+	{
+		Name: "find next match",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'n'},
+		},
+		Action: FindNextMatch,
+	},
 }

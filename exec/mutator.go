@@ -1007,20 +1007,13 @@ func (usm *updateSearchQueryMutator) Mutate(state *EditorState) {
 	}
 	buffer.search.query = q
 
-	cursorPos := buffer.cursor.position
-	textReader := buffer.textTree.ReaderAtPosition(cursorPos, text.ReadDirectionForward)
-	foundMatch, matchOffset, err := text.Search(q, textReader)
-	if err != nil {
-		panic(err) // should never happen because the tree reader shouldn't return an error.
-	}
-
+	foundMatch, matchStartPos := searchText(buffer.cursor.position, buffer.textTree, buffer.search.query)
 	if !foundMatch {
 		buffer.search.match = nil
 		NewScrollToCursorMutator().Mutate(state)
 		return
 	}
 
-	matchStartPos := cursorPos + matchOffset
 	buffer.search.match = &SearchMatch{
 		StartPos: matchStartPos,
 		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(q)),
@@ -1036,6 +1029,25 @@ func (usm *updateSearchQueryMutator) Mutate(state *EditorState) {
 
 func (usm *updateSearchQueryMutator) String() string {
 	return fmt.Sprintf("UpdateSearchQuery(deleteFlag=%t, appendRune=%q)", usm.deleteFlag, usm.appendRune)
+}
+
+// findNextMatchMutator moves the cursor to the next position matching the search query.
+type findNextMatchMutator struct{}
+
+func NewFindNextMatchMutator() Mutator {
+	return &findNextMatchMutator{}
+}
+
+func (fnm *findNextMatchMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	foundMatch, matchStartPos := searchText(buffer.cursor.position+1, buffer.textTree, buffer.search.query)
+	if foundMatch {
+		buffer.cursor = cursorState{position: matchStartPos}
+	}
+}
+
+func (fnm *findNextMatchMutator) String() string {
+	return "FindNextMatch()"
 }
 
 // quitMutator sets a flag that terminates the program.

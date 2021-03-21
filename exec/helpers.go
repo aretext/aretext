@@ -62,3 +62,18 @@ func lineStartPos(tree *text.Tree, cursorPos uint64) uint64 {
 	lineNum := tree.LineNumForPosition(cursorPos)
 	return tree.LineStartPosition(lineNum)
 }
+
+// searchText finds the position of the next occurrence of a query string on or after the start position.
+func searchText(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
+	r := tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
+	foundMatch, matchOffset, err := text.Search(query, r)
+	if err != nil {
+		panic(err) // should never happen because the tree reader shouldn't return an error.
+	}
+
+	if !foundMatch {
+		return false, 0
+	}
+
+	return true, startPos + matchOffset
+}

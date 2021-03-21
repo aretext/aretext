@@ -1033,6 +1033,59 @@ func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
 }
 
+func TestFindNextMatchMutator(t *testing.T) {
+	testCases := []struct {
+		name              string
+		text              string
+		cursorPos         uint64
+		query             string
+		expectedCursorPos uint64
+	}{
+		{
+			name:              "empty text",
+			text:              "",
+			cursorPos:         0,
+			query:             "abc",
+			expectedCursorPos: 0,
+		},
+		{
+			name:              "find next after cursor",
+			text:              "foo bar baz",
+			cursorPos:         1,
+			query:             "ba",
+			expectedCursorPos: 4,
+		},
+		{
+			name:              "find next after cursor already on match",
+			text:              "foo bar baz",
+			cursorPos:         4,
+			query:             "ba",
+			expectedCursorPos: 8,
+		},
+		{
+			name:              "find next at end of text",
+			text:              "foo bar baz",
+			cursorPos:         10,
+			query:             "ba",
+			expectedCursorPos: 10,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.text)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, config.RuleSet{})
+			buffer := state.documentBuffer
+			buffer.textTree = textTree
+			buffer.cursor = cursorState{position: tc.cursorPos}
+			buffer.search.query = tc.query
+			NewFindNextMatchMutator().Mutate(state)
+			assert.Equal(t, tc.expectedCursorPos, buffer.cursor.position)
+		})
+	}
+}
+
 func TestQuitMutator(t *testing.T) {
 	testCases := []struct {
 		name              string

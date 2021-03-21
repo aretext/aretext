@@ -287,3 +287,7 @@ func StartSearchForward(inputEvents []*tcell.EventKey, count *int64, config Conf
 		exec.NewStartSearchMutator(),
 	})
 }
+
+func FindNextMatch(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	return exec.NewFindNextMatchMutator()
+}

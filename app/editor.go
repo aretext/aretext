@@ -115,8 +115,9 @@ func (e *Editor) inputConfig() input.Config {
 	_, screenHeight := e.screen.Size()
 	scrollLines := uint64(screenHeight) / 2
 	return input.Config{
-		InputMode:   e.state.InputMode(),
-		ScrollLines: scrollLines,
+		InputMode:      e.state.InputMode(),
+		ScrollLines:    scrollLines,
+		DirNamesToHide: e.state.DirNamesToHide(),
 	}
 }
 

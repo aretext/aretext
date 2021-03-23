@@ -276,7 +276,7 @@ func ShowCommandMenu(inputEvents []*tcell.EventKey, count *int64, config Config)
 	// The show menu mutator sets the input mode to menu.
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewSetStatusMsgMutator(exec.StatusMsg{}),
-		exec.NewShowMenuMutator("command", commandMenuItems, false, true),
+		exec.NewShowMenuMutator("command", commandMenuItems(config), false, true),
 	})
 }
 

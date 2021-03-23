@@ -57,10 +57,11 @@ func defaultConfigRuleSet() config.RuleSet {
 				Name:    "default",
 				Pattern: "**",
 				Config: map[string]interface{}{
-					"syntaxLanguage": syntax.LanguageUndefined.String(),
-					"tabSize":        4,
-					"tabExpand":      false,
-					"autoIndent":     false,
+					"syntaxLanguage":  syntax.LanguageUndefined.String(),
+					"tabSize":         4,
+					"tabExpand":       false,
+					"autoIndent":      false,
+					"hideDirectories": []interface{}{".git"},
 				},
 			},
 			{

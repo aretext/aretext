@@ -32,6 +32,8 @@ func TestWalk(t *testing.T) {
 		"a/2.txt",
 		"b/2.txt",
 		"a/b/4.txt",
+		"a/.hidden/1.txt",
+		"a/.hidden/2.txt",
 	}
 
 	for _, p := range paths {
@@ -42,15 +44,25 @@ func TestWalk(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	dirNamesToHide := map[string]struct{}{
+		".hidden": struct{}{},
+	}
+
 	// Walk the tmpdir and record all paths.
 	foundPaths := make([]string, 0)
-	Walk(tmpDir, func(path string) {
+	Walk(tmpDir, dirNamesToHide, func(path string) {
 		relPath := RelativePathCwd(path)
 		foundPaths = append(foundPaths, relPath)
 	})
 
-	// Check that we found all the paths we created, ignoring order.
-	sort.Strings(paths)
+	// Check that we found all the paths we created (except hidden ones), ignoring order.
+	expectedPaths := []string{
+		"a/1.txt",
+		"a/2.txt",
+		"b/2.txt",
+		"a/b/4.txt",
+	}
+	sort.Strings(expectedPaths)
 	sort.Strings(foundPaths)
-	assert.Equal(t, paths, foundPaths)
+	assert.Equal(t, expectedPaths, foundPaths)
 }

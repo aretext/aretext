@@ -26,6 +26,9 @@ type Config struct {
 
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
+
+	// Directories to exclude from file search.
+	HideDirectories []string
 }
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -43,11 +46,12 @@ type MenuCommandConfig struct {
 // The map is usually loaded from a JSON document.
 func ConfigFromUntypedMap(m map[string]interface{}) Config {
 	return Config{
-		SyntaxLanguage: stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),
-		TabSize:        intOrDefault(m, "tabSize", DefaultTabSize),
-		TabExpand:      boolOrDefault(m, "tabExpand", DefaultTabExpand),
-		AutoIndent:     boolOrDefault(m, "autoIndent", DefaultAutoIndent),
-		MenuCommands:   menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
+		SyntaxLanguage:  stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),
+		TabSize:         intOrDefault(m, "tabSize", DefaultTabSize),
+		TabExpand:       boolOrDefault(m, "tabExpand", DefaultTabExpand),
+		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
+		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
+		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
 	}
 }
 
@@ -125,6 +129,24 @@ func sliceOrNil(m map[string]interface{}, key string) []interface{} {
 	}
 
 	return s
+}
+
+func stringSliceOrNil(m map[string]interface{}, key string) []string {
+	slice := sliceOrNil(m, key)
+	if slice == nil {
+		return nil
+	}
+
+	stringSlice := make([]string, 0, len(slice))
+	for i := 0; i < len(slice); i++ {
+		s, ok := (slice[i]).(string)
+		if !ok {
+			log.Printf("Could not decode string in slice for config key '%s'\n", key)
+			continue
+		}
+		stringSlice = append(stringSlice, s)
+	}
+	return stringSlice
 }
 
 func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {

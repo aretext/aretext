@@ -143,6 +143,7 @@ func (ldm *loadDocumentMutator) initializeAfterLoad(state *EditorState, config c
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent
 	state.customMenuItems = ldm.customMenuItems(config)
+	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
 }
 
 func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []MenuItem {

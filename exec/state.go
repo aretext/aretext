@@ -18,6 +18,7 @@ type EditorState struct {
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
 	customMenuItems           []MenuItem
+	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
 	hasUnsavedChanges         bool
 	forceRedrawFlag           bool
@@ -38,6 +39,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		fileWatcher:     file.NewEmptyWatcher(),
 		menu:            &MenuState{},
 		customMenuItems: nil,
+		dirNamesToHide:  nil,
 		statusMsg:       StatusMsg{},
 	}
 }
@@ -61,6 +63,10 @@ func (s *EditorState) DocumentBuffer() *BufferState {
 
 func (s *EditorState) Menu() *MenuState {
 	return s.menu
+}
+
+func (s *EditorState) DirNamesToHide() map[string]struct{} {
+	return s.dirNamesToHide
 }
 
 func (s *EditorState) StatusMsg() StatusMsg {

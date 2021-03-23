@@ -11,11 +11,15 @@ import (
 // Walk walks the file tree at root, evaluating the function for every file path.
 // Symlinks are skipped.
 // The file paths are absolute.
-func Walk(root string, walkFn func(path string)) {
+func Walk(root string, dirNamesToHide map[string]struct{}, walkFn func(path string)) {
 	stack := []string{root}
 	var dirPath string
 	for len(stack) > 0 {
 		dirPath, stack = stack[len(stack)-1], stack[:len(stack)-1]
+		if shouldSkipDir(dirPath, dirNamesToHide) {
+			continue
+		}
+
 		subdirPaths, err := processDir(dirPath, walkFn)
 		if err != nil {
 			log.Printf("Error processing directory at '%s': %v\n", dirPath, err)
@@ -23,6 +27,12 @@ func Walk(root string, walkFn func(path string)) {
 		}
 		stack = append(stack, subdirPaths...)
 	}
+}
+
+func shouldSkipDir(path string, dirNamesToHide map[string]struct{}) bool {
+	name := filepath.Base(path)
+	_, ok := dirNamesToHide[name]
+	return ok
 }
 
 func processDir(dirPath string, walkFn func(path string)) ([]string, error) {

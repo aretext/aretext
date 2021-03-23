@@ -122,3 +122,12 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 	matchStartPos := pos - matchOffset - numRunesInQuery
 	return true, matchStartPos
 }
+
+// stringSliceToMap converts a slice of strings to a map with string keys.
+func stringSliceToMap(ss []string) map[string]struct{} {
+	m := make(map[string]struct{}, len(ss))
+	for _, s := range ss {
+		m[s] = struct{}{}
+	}
+	return m
+}

@@ -670,7 +670,7 @@ func (loc *nextWordStartLocator) Locate(state *BufferState) cursorState {
 	pos := loc.findBasedOnWhitespace(state)
 	if state.tokenTree != nil {
 		nextTokenPos := loc.findBasedOnSyntaxTokens(state)
-		if nextTokenPos < pos {
+		if nextTokenPos < pos && !isCursorOnWhitespace(state.textTree, nextTokenPos) {
 			pos = nextTokenPos
 		}
 	}
@@ -743,7 +743,7 @@ func (loc *prevWordStartLocator) Locate(state *BufferState) cursorState {
 	pos := loc.findBasedOnWhitespace(state)
 	if state.tokenTree != nil {
 		prevTokenPos := loc.findBasedOnSyntaxTokens(state)
-		if prevTokenPos > pos {
+		if prevTokenPos > pos && !isCursorOnWhitespace(state.textTree, prevTokenPos) {
 			pos = prevTokenPos
 		}
 	}
@@ -816,7 +816,7 @@ func (loc *nextWordEndLocator) Locate(state *BufferState) cursorState {
 	pos := loc.findBasedOnWhitespace(state)
 	if state.tokenTree != nil {
 		nextTokenPos := loc.findBasedOnSyntaxTokens(state)
-		if nextTokenPos < pos {
+		if nextTokenPos < pos && !isCursorOnWhitespace(state.textTree, nextTokenPos) {
 			pos = nextTokenPos
 		}
 	}

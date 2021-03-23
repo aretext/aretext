@@ -1326,6 +1326,13 @@ func TestNextWordStartLocator(t *testing.T) {
 			initialCursor:  cursorState{position: 1},
 			expectedCursor: cursorState{position: 7},
 		},
+		{
+			name:           "syntax token starts with whitespace",
+			inputString:    "//    foobar",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 6},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1407,6 +1414,13 @@ func TestNextWordEndLocator(t *testing.T) {
 			syntaxLanguage: syntax.LanguageGo,
 			initialCursor:  cursorState{position: 2},
 			expectedCursor: cursorState{position: 7},
+		},
+		{
+			name:           "next syntax token ends with whitespace",
+			inputString:    `"    abcd    "`,
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 8},
+			expectedCursor: cursorState{position: 13},
 		},
 		{
 			name:           "end of current syntax token",
@@ -1496,6 +1510,13 @@ func TestPrevWordStartLocator(t *testing.T) {
 			syntaxLanguage: syntax.LanguageGo,
 			initialCursor:  cursorState{position: 14},
 			expectedCursor: cursorState{position: 7},
+		},
+		{
+			name:           "prev syntax token starts with whitespace",
+			inputString:    "// abcd",
+			syntaxLanguage: syntax.LanguageGo,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 0},
 		},
 	}
 

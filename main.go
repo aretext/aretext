@@ -65,6 +65,10 @@ func printUsage() {
 }
 
 func runEditor(path string) error {
+	log.Printf("aretext (version: %s)\n", version)
+	log.Printf("path arg: '%s'\n", path)
+	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))
+
 	configRuleSet, err := app.LoadOrCreateConfig(*noconfig)
 	if err != nil {
 		return err

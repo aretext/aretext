@@ -5,7 +5,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/exec"
 )
 
@@ -32,7 +31,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, initial state with prompt",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, config.RuleSet{})
+				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false, false)
 				mutator.Mutate(state)
 				return state.Menu()
@@ -49,7 +48,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with no results",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, config.RuleSet{})
+				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", nil, false, false),
 					exec.NewAppendMenuSearchMutator('a'),
@@ -71,7 +70,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with results, first selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, config.RuleSet{})
+				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test first"},
@@ -95,7 +94,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with many results, second-to-last selected",
 			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, config.RuleSet{})
+				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
 					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
 						{Name: "test 1"},

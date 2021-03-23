@@ -24,7 +24,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 
 	path, err := defaultPath()
 	if err != nil {
-		return config.RuleSet{}, err
+		return nil, err
 	}
 
 	log.Printf("Loading config from '%s'\n", path)
@@ -32,11 +32,11 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if os.IsNotExist(err) {
 		log.Printf("Writing default config to '%s'\n", path)
 		if err := os.WriteFile(path, DefaultConfigJson, 0644); err != nil {
-			return config.RuleSet{}, errors.Wrapf(err, fmt.Sprintf("Error writing default config to '%s'", path))
+			return nil, errors.Wrapf(err, fmt.Sprintf("Error writing default config to '%s'", path))
 		}
 		return unmarshalRuleSet(DefaultConfigJson)
 	} else if err != nil {
-		return config.RuleSet{}, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
+		return nil, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
 	}
 
 	return unmarshalRuleSet(data)
@@ -55,7 +55,7 @@ func defaultPath() (string, error) {
 func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 	var rules []config.Rule
 	if err := json.Unmarshal(data, &rules); err != nil {
-		return config.RuleSet{}, errors.Wrapf(err, "json.Unmarshal")
+		return nil, errors.Wrapf(err, "json.Unmarshal")
 	}
-	return config.RuleSet{Rules: rules}, nil
+	return config.RuleSet(rules), nil
 }

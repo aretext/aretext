@@ -15,14 +15,12 @@ type Rule struct {
 
 // RuleSet is a set of configuration rules.
 // If multiple rules match a file path, they are applied in order.
-type RuleSet struct {
-	Rules []Rule
-}
+type RuleSet []Rule
 
 // Rules that match the file path are applied in order to produce the configuration.
-func (rs *RuleSet) ConfigForPath(path string) Config {
+func (rs RuleSet) ConfigForPath(path string) Config {
 	c := make(map[string]interface{}, 0)
-	for _, rule := range rs.Rules {
+	for _, rule := range rs {
 		if GlobMatch(rule.Pattern, path) {
 			log.Printf("Applying config rule '%s' with pattern '%s' for path '%s'\n", rule.Name, rule.Pattern, path)
 			c = MergeRecursive(c, rule.Config).(map[string]interface{})

@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +27,7 @@ func createTestFile(t *testing.T, contents string) (path string, cleanup func())
 
 func TestLoadDocumentMutator(t *testing.T) {
 	// Start with an empty document.
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	assert.Equal(t, "", state.documentBuffer.textTree.String())
 	assert.Equal(t, "", state.FileWatcher().Path())
 
@@ -47,7 +46,7 @@ func TestLoadDocumentMutatorSameFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	state := NewEditorState(5, 3, config.RuleSet{})
+	state := NewEditorState(5, 3, nil)
 	NewLoadDocumentMutator(path, true, false).Mutate(state)
 	state.documentBuffer.cursor.position = 22
 
@@ -78,7 +77,7 @@ func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	state := NewEditorState(5, 3, config.RuleSet{})
+	state := NewEditorState(5, 3, nil)
 	NewLoadDocumentMutator(path, true, false).Mutate(state)
 	state.documentBuffer.cursor.position = 22
 
@@ -105,7 +104,7 @@ func TestLoadDocumentMutatorDifferentFile(t *testing.T) {
 
 func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 	// Start with an empty document.
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 
 	// Load a document, expect success msg.
 	path, cleanup := createTestFile(t, "")
@@ -126,7 +125,7 @@ func TestLoadDocumentMutatorShowStatus(t *testing.T) {
 
 func TestSaveDocumentMutator(t *testing.T) {
 	// Start with an empty document.
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 
 	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
@@ -174,7 +173,7 @@ func TestSaveDocumentMutatorFileChanged(t *testing.T) {
 			// Load the initial document.
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			NewLoadDocumentMutator(path, true, true).Mutate(state)
 
 			// Modify the file.
@@ -216,7 +215,7 @@ func TestSaveDocumentMutatorFileChanged(t *testing.T) {
 func TestCursorMutator(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 2
 	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
@@ -263,7 +262,7 @@ func TestInsertRuneMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewInsertRuneMutator(tc.insertRune)
@@ -325,7 +324,7 @@ func TestDeleteMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewDeleteMutator(tc.locator)
@@ -432,7 +431,7 @@ func TestInsertNewlineMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.autoIndent = tc.autoIndent
@@ -492,7 +491,7 @@ func TestInsertTabMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.tabSize = 4
@@ -604,7 +603,7 @@ func TestDeleteLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewDeleteLinesMutator(tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
@@ -663,7 +662,7 @@ func TestReplaceCharMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			mutator := NewReplaceCharMutator(tc.newText)
@@ -735,7 +734,7 @@ func TestScrollLinesMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.view = tc.initialView
 			mutator := NewScrollLinesMutator(tc.direction, tc.numLines)
@@ -746,7 +745,7 @@ func TestScrollLinesMutator(t *testing.T) {
 }
 
 func TestShowMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	prompt := "test prompt"
 	mutator := NewShowMenuMutatorWithItems(prompt, []MenuItem{
 		{Name: "test item 1"},
@@ -763,7 +762,7 @@ func TestShowMenuMutator(t *testing.T) {
 }
 
 func TestHideMenuMutator(t *testing.T) {
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false, false),
 		NewHideMenuMutator(),
@@ -773,7 +772,7 @@ func TestHideMenuMutator(t *testing.T) {
 }
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	items := []MenuItem{
 		{
 			Name:   "set syntax json",
@@ -874,7 +873,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			mutators := []Mutator{
 				NewShowMenuMutatorWithItems("test", tc.items, false, false),
 				NewAppendMenuSearchMutator(tc.searchRune),
@@ -890,7 +889,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 }
 
 func TestAppendMenuSearchMutator(t *testing.T) {
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	mutator := NewCompositeMutator([]Mutator{
 		NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
 		NewAppendMenuSearchMutator('a'),
@@ -930,7 +929,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			mutators := []Mutator{
 				NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
 			}
@@ -949,7 +948,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 func TestSearchAndCommit(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 
@@ -990,7 +989,7 @@ func TestSearchAndCommit(t *testing.T) {
 func TestSearchAndAbort(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 	buffer.search.query = "xyz"
@@ -1018,7 +1017,7 @@ func TestSearchAndAbort(t *testing.T) {
 func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, config.RuleSet{})
+	state := NewEditorState(100, 100, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 
@@ -1163,7 +1162,7 @@ func TestFindNextMatchMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			buffer := state.documentBuffer
 			buffer.textTree = textTree
 			buffer.cursor = cursorState{position: tc.cursorPos}
@@ -1206,7 +1205,7 @@ func TestQuitMutator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, config.RuleSet{})
+			state := NewEditorState(100, 100, nil)
 			state.hasUnsavedChanges = tc.hasUnsavedChanges
 
 			mutator := NewQuitMutator()

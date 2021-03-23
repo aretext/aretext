@@ -9,14 +9,14 @@ import (
 func TestConfigForPath(t *testing.T) {
 	testCases := []struct {
 		name           string
-		rules          []Rule
+		ruleSet        RuleSet
 		path           string
 		expectedConfig Config
 	}{
 		{
-			name:  "no rules, default config",
-			rules: nil,
-			path:  "test.go",
+			name:    "no rules, default config",
+			ruleSet: nil,
+			path:    "test.go",
 			expectedConfig: Config{
 				SyntaxLanguage: DefaultSyntaxLanguage,
 				TabSize:        DefaultTabSize,
@@ -27,7 +27,7 @@ func TestConfigForPath(t *testing.T) {
 		},
 		{
 			name: "rule matches, set syntax language",
-			rules: []Rule{
+			ruleSet: []Rule{
 				Rule{
 					Name:    "json",
 					Pattern: "**/*.json",
@@ -56,8 +56,7 @@ func TestConfigForPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rs := RuleSet{Rules: tc.rules}
-			c := rs.ConfigForPath(tc.path)
+			c := tc.ruleSet.ConfigForPath(tc.path)
 			assert.Equal(t, tc.expectedConfig, c)
 		})
 	}

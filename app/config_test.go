@@ -10,7 +10,7 @@ import (
 func TestDefaultConfigJsonValid(t *testing.T) {
 	rs, err := unmarshalRuleSet(DefaultConfigJson)
 	require.NoError(t, err)
-	assert.Greater(t, len(rs.Rules), 1)
+	assert.Greater(t, len(rs), 1)
 
 	c := rs.ConfigForPath("test.go")
 	assert.Equal(t, "go", c.SyntaxLanguage)

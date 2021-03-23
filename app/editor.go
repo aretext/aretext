@@ -93,10 +93,8 @@ func (e *Editor) runMainEventLoop() {
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
-	for _, event := range splitEscapeSequence(event) {
-		mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
-		e.applyMutator(mutator)
-	}
+	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
+	e.applyMutator(mutator)
 }
 
 func (e *Editor) handleFileChanged() {
@@ -160,27 +158,4 @@ func describeTermEvent(event tcell.Event) string {
 	default:
 		return "OtherEvent"
 	}
-}
-
-func splitEscapeSequence(event tcell.Event) []tcell.Event {
-	eventKey, ok := event.(*tcell.EventKey)
-	if !ok {
-		return []tcell.Event{event}
-	}
-
-	if eventKey.Key() != tcell.KeyRune || eventKey.Modifiers() == tcell.ModNone {
-		return []tcell.Event{event}
-	}
-
-	// Terminal escape sequences begin with an escape character,
-	// so sometimes tcell reports an escape keypress as a modifier on
-	// another key.  Tcell uses a 50ms delay to identify individual escape chars,
-	// but this strategy doesn't always work (e.g. due to network delays over
-	// an SSH connection).
-	// Because the escape key is used to return to normal mode, we never
-	// want to miss it.  So treat ALL modifiers as an escape key followed
-	// by an unmodified keypress.
-	escKeyEvent := tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone)
-	unmodifiedKeyEvent := tcell.NewEventKey(eventKey.Key(), eventKey.Rune(), tcell.ModNone)
-	return []tcell.Event{escKeyEvent, unmodifiedKeyEvent}
 }

@@ -1,0 +1,35 @@
+[
+  {
+    "name": "default",
+    "pattern": "**",
+    "config": {
+      "autoIndent": false,
+      "hideDirectories": [
+        ".git"
+      ],
+      "syntaxLanguage": "undefined",
+      "tabExpand": false,
+      "tabSize": 4
+    }
+  },
+  {
+    "name": "json",
+    "pattern": "**/*.json",
+    "config": {
+      "autoIndent": true,
+      "syntaxLanguage": "json",
+      "tabExpand": true,
+      "tabSize": 2
+    }
+  },
+  {
+    "name": "go",
+    "pattern": "**/*.go",
+    "config": {
+      "autoIndent": true,
+      "syntaxLanguage": "go",
+      "tabExpand": false,
+      "tabSize": 4
+    }
+  }
+]

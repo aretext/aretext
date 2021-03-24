@@ -118,8 +118,10 @@ func (e *Editor) executeScheduledShellCmd() {
 
 	// Suspend input processing and reset the terminal to its original state
 	// while executing the shell command.
-	e.screen.Suspend()
-	defer e.screen.Resume()
+	if err := e.screen.Suspend(); err != nil {
+		log.Printf("Error suspending the screen: %v\n", errors.Wrapf(err, "Screen.Suspend()"))
+		return
+	}
 
 	// Run the shell command and pipe the output to a pager.
 	err := RunShellCmd(sc)
@@ -128,6 +130,10 @@ func (e *Editor) executeScheduledShellCmd() {
 			Style: exec.StatusMsgStyleError,
 			Text:  err.Error(),
 		}).Mutate(e.state)
+	}
+
+	if err := e.screen.Resume(); err != nil {
+		log.Printf("Error resuming the screen: %v\n", errors.Wrapf(err, "Screen.Resume()"))
 	}
 }
 

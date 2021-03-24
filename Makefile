@@ -7,10 +7,10 @@ generate:
 	go generate ./...
 
 build:
-	go build -o aretext main.go
+	go build -o aretext $(shell ./ldflags.sh) main.go
 
 build-debug:
-	go build -o aretext -gcflags "all=-N -l" main.go
+	go build -o aretext $(shell ./ldflags.sh) -gcflags "all=-N -l" main.go
 
 test:
 	go test ./...

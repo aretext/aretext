@@ -16,6 +16,10 @@ import (
 // Please do NOT modify the following line.
 const version = "development"
 
+// The git sha is set automatically as part of the build process.
+// Please do NOT modify the following line.
+var GitSha string
+
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var noconfig = flag.Bool("noconfig", false, "use default configuration instead of loading it from $HOME/.config/aretext")
@@ -65,7 +69,7 @@ func printUsage() {
 }
 
 func runEditor(path string) error {
-	log.Printf("aretext (version: %s)\n", version)
+	log.Printf("aretext (version: %s, git sha: %s)\n", version, GitSha)
 	log.Printf("path arg: '%s'\n", path)
 	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))
 

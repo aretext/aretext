@@ -151,7 +151,7 @@ func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []MenuItem
 	for _, cmd := range config.MenuCommands {
 		items = append(items, MenuItem{
 			Name:   cmd.Name,
-			Action: NewExecuteShellCmdMutator(cmd.ShellCmd),
+			Action: NewScheduleShellCmdMutator(cmd.ShellCmd),
 		})
 	}
 	return items
@@ -888,48 +888,21 @@ func (smm *setStatusMsgMutator) String() string {
 	return fmt.Sprintf("SetStatusMsg(%s, %q)", smm.statusMsg.Style, smm.statusMsg.Text)
 }
 
-// executeShellCmdMutator runs a command in a shell and pipes the output to a pager (usually `less`).
-// Once the command completes and the user exits the pager, control returns to the event loop.
-type executeShellCmdMutator struct {
+// scheduleShellCmdMutator schedules a shell command to be executed by the editor.
+type scheduleShellCmdMutator struct {
 	shellCmd string
 }
 
-func NewExecuteShellCmdMutator(shellCmd string) Mutator {
-	return &executeShellCmdMutator{shellCmd}
+func NewScheduleShellCmdMutator(shellCmd string) Mutator {
+	return &scheduleShellCmdMutator{shellCmd}
 }
 
-func (esm *executeShellCmdMutator) Mutate(state *EditorState) {
-	// The command will overwrite the terminal, so we need to redraw after it completes.
-	state.forceRedrawFlag = true
-
-	// Run the shell command and pipe the output to a pager (usually `less`).
-	// This will take control of the tty, effectively pausing the event loop until the command completes and the user exits the pager.
-	err := RunShellCmd(esm.shellCmd)
-	if err != nil {
-		esm.reportError(state, err)
-		return
-	}
-	esm.reportSuccess(state)
+func (ssm *scheduleShellCmdMutator) Mutate(state *EditorState) {
+	state.scheduledShellCmd = ssm.shellCmd
 }
 
-func (esm *executeShellCmdMutator) reportError(state *EditorState, err error) {
-	log.Printf("Error running shell cmd '%s': %v\n", esm.shellCmd, err)
-	NewSetStatusMsgMutator(StatusMsg{
-		Style: StatusMsgStyleError,
-		Text:  err.Error(),
-	}).Mutate(state)
-}
-
-func (esm *executeShellCmdMutator) reportSuccess(state *EditorState) {
-	log.Printf("Completed shell cmd '%s'\n", esm.shellCmd)
-	NewSetStatusMsgMutator(StatusMsg{
-		Style: StatusMsgStyleSuccess,
-		Text:  "Command completed successfully",
-	}).Mutate(state)
-}
-
-func (esm *executeShellCmdMutator) String() string {
-	return fmt.Sprintf("ExecuteShellCmd('%s')", esm.shellCmd)
+func (ssm *scheduleShellCmdMutator) String() string {
+	return fmt.Sprintf("ScheduleShellCmd('%s')", ssm.shellCmd)
 }
 
 // startSearchMutator initiates a new text search.

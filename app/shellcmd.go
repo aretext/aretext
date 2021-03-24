@@ -1,4 +1,4 @@
-package exec
+package app
 
 import (
 	"io"
@@ -20,13 +20,13 @@ func RunShellCmd(shellCmd string) error {
 	// We assume that on exit the pager process will return the terminal to its previous configuration.
 	pagerStdin, pagerCleanup, err := startPager()
 	if err != nil {
-		return errors.Wrapf(err, "startPager")
+		return err
 	}
 	defer pagerCleanup()
 
 	// Run the command in a shell, piping the output to the pager.
 	if err := runCmdInShell(shellCmd, pagerStdin); err != nil {
-		return errors.Wrapf(err, "runCmdInShell")
+		return err
 	}
 	return nil
 }
@@ -43,7 +43,7 @@ func runClearCommand() {
 func startPager() (io.Writer, func(), error) {
 	pager, err := findPagerCmd()
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "findPagerCmd")
+		return nil, nil, err
 	}
 
 	pagerCmd := exec.Command(pager[0], pager[1:]...)
@@ -76,7 +76,7 @@ func startPager() (io.Writer, func(), error) {
 func runCmdInShell(shellCmd string, pagerStdin io.Writer) error {
 	s, err := findShellCmd()
 	if err != nil {
-		return errors.Wrapf(err, "findShellCmd")
+		return err
 	}
 
 	s = append(s, "-c", shellCmd)
@@ -85,7 +85,7 @@ func runCmdInShell(shellCmd string, pagerStdin io.Writer) error {
 	c.Stdout = pagerStdin
 	c.Stderr = pagerStdin
 	if err := c.Run(); err != nil {
-		return errors.Wrapf(err, "cmd.Run")
+		return errors.Wrapf(err, "Cmd.Run")
 	}
 	return nil
 }

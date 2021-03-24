@@ -87,6 +87,7 @@ func (e *Editor) runMainEventLoop() {
 			return
 		}
 
+		e.executeScheduledShellCmd()
 		e.redraw()
 	}
 }
@@ -105,6 +106,29 @@ func (e *Editor) handleFileChanged() {
 		showStatusFlag,
 	)
 	e.applyMutator(mutator)
+}
+
+func (e *Editor) executeScheduledShellCmd() {
+	sc := e.state.ScheduledShellCmd()
+	if sc == "" {
+		return
+	}
+
+	e.state.ClearScheduledShellCmd()
+
+	// Suspend input processing and reset the terminal to its original state
+	// while executing the shell command.
+	e.screen.Suspend()
+	defer e.screen.Resume()
+
+	// Run the shell command and pipe the output to a pager.
+	err := RunShellCmd(sc)
+	if err != nil {
+		exec.NewSetStatusMsgMutator(exec.StatusMsg{
+			Style: exec.StatusMsgStyleError,
+			Text:  err.Error(),
+		}).Mutate(e.state)
+	}
 }
 
 func (e *Editor) shutdown() {
@@ -133,13 +157,6 @@ func (e *Editor) applyMutator(m exec.Mutator) {
 
 func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.state)
-
-	if e.state.ForceRedrawFlag() {
-		e.screen.Sync()
-		e.state.SetForceRedrawFlag(false)
-		return
-	}
-
 	e.screen.Show()
 }
 

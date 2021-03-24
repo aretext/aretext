@@ -21,7 +21,7 @@ type EditorState struct {
 	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
 	hasUnsavedChanges         bool
-	forceRedrawFlag           bool
+	scheduledShellCmd         string
 	quitFlag                  bool
 }
 
@@ -77,16 +77,16 @@ func (s *EditorState) FileWatcher() *file.Watcher {
 	return s.fileWatcher
 }
 
+func (s *EditorState) ScheduledShellCmd() string {
+	return s.scheduledShellCmd
+}
+
+func (s *EditorState) ClearScheduledShellCmd() {
+	s.scheduledShellCmd = ""
+}
+
 func (s *EditorState) QuitFlag() bool {
 	return s.quitFlag
-}
-
-func (s *EditorState) ForceRedrawFlag() bool {
-	return s.forceRedrawFlag
-}
-
-func (s *EditorState) SetForceRedrawFlag(flag bool) {
-	s.forceRedrawFlag = flag
 }
 
 // InputMode controls how the editor interprets input events.

@@ -379,21 +379,12 @@ func NewInsertRuneMutator(r rune) Mutator {
 }
 
 func (irm *insertRuneMutator) Mutate(state *EditorState) {
-	bufferState := state.documentBuffer
-	startPos := bufferState.cursor.position
-
-	if err := bufferState.textTree.InsertAtPosition(startPos, irm.r); err != nil {
-		// Invalid UTF-8 character; ignore it.
-		return
+	buffer := state.documentBuffer
+	startPos := buffer.cursor.position
+	if err := insertRuneAtPosition(state, irm.r, startPos); err != nil {
+		log.Printf("Error inserting rune: %v\n", err)
 	}
-
-	edit := parser.Edit{Pos: startPos, NumInserted: 1}
-	if err := retokenizeAfterEdit(bufferState, edit); err != nil {
-		log.Printf("Error retokenizing document: %v\n", err)
-	}
-
-	bufferState.cursor.position = startPos + 1
-	state.hasUnsavedChanges = true
+	buffer.cursor.position = startPos + 1
 }
 
 func (irm *insertRuneMutator) String() string {

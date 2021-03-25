@@ -39,6 +39,22 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eo
 	return false
 }
 
+// insertRuneAtPosition inserts a rune into the document.
+// It also updates the syntax tokens and unsaved changes flag.
+// It does NOT move the cursor.
+func insertRuneAtPosition(state *EditorState, r rune, pos uint64) error {
+	buffer := state.documentBuffer
+	if err := buffer.textTree.InsertAtPosition(pos, r); err != nil {
+		return errors.Wrapf(err, "text.Tree.InsertAtPosition")
+	}
+	edit := parser.Edit{Pos: pos, NumInserted: 1}
+	if err := retokenizeAfterEdit(buffer, edit); err != nil {
+		return errors.Wrapf(err, "retokenizeAfterEdit")
+	}
+	state.hasUnsavedChanges = true
+	return nil
+}
+
 // setSyntaxAndRetokenize changes the syntax language of the buffer and updates the tokens.
 func setSyntaxAndRetokenize(buffer *BufferState, language syntax.Language) error {
 	buffer.syntaxLanguage = language

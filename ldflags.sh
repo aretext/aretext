@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 if git branch &> /dev/null ; then
     sha=$(git rev-parse HEAD)

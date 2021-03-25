@@ -296,8 +296,8 @@ func NewCursorMutator(loc CursorLocator) Mutator {
 }
 
 func (cpm *cursorMutator) Mutate(state *EditorState) {
-	bufferState := state.documentBuffer
-	bufferState.cursor = cpm.loc.Locate(bufferState)
+	buffer := state.documentBuffer
+	buffer.cursor = cpm.loc.Locate(buffer)
 }
 
 func (cpm *cursorMutator) String() string {
@@ -312,14 +312,14 @@ func NewScrollToCursorMutator() Mutator {
 }
 
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
-	bufferState := state.documentBuffer
-	bufferState.view.textOrigin = ScrollToCursor(
-		bufferState.cursor.position,
-		bufferState.textTree,
-		bufferState.view.textOrigin,
-		bufferState.view.width,
-		bufferState.view.height,
-		bufferState.tabSize)
+	buffer := state.documentBuffer
+	buffer.view.textOrigin = ScrollToCursor(
+		buffer.cursor.position,
+		buffer.textTree,
+		buffer.view.textOrigin,
+		buffer.view.width,
+		buffer.view.height,
+		buffer.tabSize)
 }
 
 func (sm *scrollToCursorMutator) String() string {
@@ -337,8 +337,8 @@ func NewScrollLinesMutator(direction text.ReadDirection, numLines uint64) Mutato
 }
 
 func (sm *scrollLinesMutator) Mutate(state *EditorState) {
-	bufferState := state.documentBuffer
-	lineNum := bufferState.textTree.LineNumForPosition(bufferState.view.textOrigin)
+	buffer := state.documentBuffer
+	lineNum := buffer.textTree.LineNumForPosition(buffer.view.textOrigin)
 	if sm.direction == text.ReadDirectionForward {
 		lineNum += sm.numLines
 	} else if lineNum >= sm.numLines {
@@ -347,22 +347,22 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 		lineNum = 0
 	}
 
-	lineNum = closestValidLineNum(bufferState.textTree, lineNum)
+	lineNum = closestValidLineNum(buffer.textTree, lineNum)
 
 	// When scrolling to the end of the file, we want most of the last lines to remain visible.
 	// To achieve this, set the view origin (viewHeight - scrollMargin) lines above
 	// the last line.  This will leave a few blank lines past the end of the document
 	// (the scroll margin) for consistency with ScrollToCursor.
-	lastLineNum := closestValidLineNum(bufferState.textTree, bufferState.textTree.NumLines())
-	if lastLineNum-lineNum < bufferState.view.height {
-		if lastLineNum+scrollMargin+1 > bufferState.view.height {
-			lineNum = lastLineNum + scrollMargin + 1 - bufferState.view.height
+	lastLineNum := closestValidLineNum(buffer.textTree, buffer.textTree.NumLines())
+	if lastLineNum-lineNum < buffer.view.height {
+		if lastLineNum+scrollMargin+1 > buffer.view.height {
+			lineNum = lastLineNum + scrollMargin + 1 - buffer.view.height
 		} else {
 			lineNum = 0
 		}
 	}
 
-	bufferState.view.textOrigin = bufferState.textTree.LineStartPosition(lineNum)
+	buffer.view.textOrigin = buffer.textTree.LineStartPosition(lineNum)
 }
 
 func (sm *scrollLinesMutator) String() string {
@@ -523,16 +523,16 @@ func NewDeleteMutator(loc CursorLocator) Mutator {
 }
 
 func (dm *deleteMutator) Mutate(state *EditorState) {
-	bufferState := state.documentBuffer
-	startPos := bufferState.cursor.position
-	deleteToPos := dm.loc.Locate(bufferState).position
+	buffer := state.documentBuffer
+	startPos := buffer.cursor.position
+	deleteToPos := dm.loc.Locate(buffer).position
 
 	if startPos < deleteToPos {
 		deleteRunes(state, startPos, deleteToPos-startPos)
-		bufferState.cursor = cursorState{position: startPos}
+		buffer.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
 		deleteRunes(state, deleteToPos, startPos-deleteToPos)
-		bufferState.cursor = cursorState{position: deleteToPos}
+		buffer.cursor = cursorState{position: deleteToPos}
 	}
 }
 

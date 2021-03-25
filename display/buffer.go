@@ -12,23 +12,23 @@ import (
 )
 
 // DrawBuffer draws text buffer in the screen.
-func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
-	x, y, width, height := viewDimensions(bufferState)
+func DrawBuffer(screen tcell.Screen, buffer *exec.BufferState) {
+	x, y, width, height := viewDimensions(buffer)
 	sr := NewScreenRegion(screen, x, y, width, height)
-	textTree := bufferState.TextTree()
-	cursorPos := bufferState.CursorPosition()
-	viewTextOrigin := bufferState.ViewTextOrigin()
+	textTree := buffer.TextTree()
+	cursorPos := buffer.CursorPosition()
+	viewTextOrigin := buffer.ViewTextOrigin()
 	pos := viewTextOrigin
 	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return exec.GraphemeClusterWidth(gc, offsetInLine, bufferState.TabSize())
+		return exec.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.NewSegment()
-	searchMatch := bufferState.SearchMatch()
-	tokenIter := bufferState.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
+	searchMatch := buffer.SearchMatch()
+	tokenIter := buffer.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
 
 	sr.HideCursor()
 
@@ -49,9 +49,9 @@ func DrawBuffer(screen tcell.Screen, bufferState *exec.BufferState) {
 	}
 }
 
-func viewDimensions(bufferState *exec.BufferState) (int, int, int, int) {
-	x, y := bufferState.ViewOrigin()
-	width, height := bufferState.ViewSize()
+func viewDimensions(buffer *exec.BufferState) (int, int, int, int) {
+	x, y := buffer.ViewOrigin()
+	width, height := buffer.ViewSize()
 	return int(x), int(y), int(width), int(height)
 }
 

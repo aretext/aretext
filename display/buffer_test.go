@@ -16,11 +16,11 @@ func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, l
 	tree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)
 	screenWidth, screenHeight := screen.Size()
-	bufferState := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
-	err = bufferState.SetSyntax(language)
+	buffer := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
+	err = buffer.SetSyntax(language)
 	require.NoError(t, err)
-	bufferState.SetSearchMatch(searchMatch)
-	DrawBuffer(screen, bufferState)
+	buffer.SetSearchMatch(searchMatch)
+	DrawBuffer(screen, buffer)
 	screen.Sync()
 }
 

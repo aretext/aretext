@@ -5,8 +5,11 @@ import (
 	"log"
 	"unicode/utf8"
 
+	"github.com/aretext/aretext/syntax"
+	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
+	"github.com/pkg/errors"
 )
 
 // gcIterForTree constructs a grapheme cluster iterator for the tree.
@@ -34,6 +37,46 @@ func nextSegmentOrEof(segmentIter segment.SegmentIter, seg *segment.Segment) (eo
 	}
 
 	return false
+}
+
+// setSyntaxAndRetokenize changes the syntax language of the buffer and updates the tokens.
+func setSyntaxAndRetokenize(buffer *BufferState, language syntax.Language) error {
+	buffer.syntaxLanguage = language
+	buffer.tokenizer = syntax.TokenizerForLanguage(language)
+
+	if buffer.tokenizer == nil {
+		buffer.tokenTree = nil
+		return nil
+	}
+
+	r := buffer.textTree.ReaderAtPosition(0, text.ReadDirectionForward)
+	textLen := buffer.textTree.NumChars()
+	tokenTree, err := buffer.tokenizer.TokenizeAll(r, textLen)
+	if err != nil {
+		return errors.Wrapf(err, "TokenizeAll")
+	}
+
+	buffer.tokenTree = tokenTree
+	return nil
+}
+
+// retokenizeAfterEdit updates syntax tokens after an edit to the text (insert or delete).
+func retokenizeAfterEdit(buffer *BufferState, edit parser.Edit) error {
+	if buffer.tokenizer == nil {
+		return nil
+	}
+
+	textLen := buffer.textTree.NumChars()
+	readerAtPos := func(pos uint64) parser.InputReader {
+		return buffer.textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	}
+	updatedTokenTree, err := buffer.tokenizer.RetokenizeAfterEdit(buffer.tokenTree, edit, textLen, readerAtPos)
+	if err != nil {
+		return errors.Wrapf(err, "RetokenizeAfterEdit")
+	}
+
+	buffer.tokenTree = updatedTokenTree
+	return nil
 }
 
 // isCursorOnWhitepace returns whether the character under the cursor is whitespace.

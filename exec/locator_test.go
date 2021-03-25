@@ -1343,7 +1343,7 @@ func TestNextWordStartLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			state.SetSyntax(tc.syntaxLanguage)
+			setSyntaxAndRetokenize(&state, tc.syntaxLanguage)
 			loc := NewNextWordStartLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -1439,7 +1439,7 @@ func TestNextWordEndLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			state.SetSyntax(tc.syntaxLanguage)
+			setSyntaxAndRetokenize(&state, tc.syntaxLanguage)
 			loc := NewNextWordEndLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -1528,7 +1528,7 @@ func TestPrevWordStartLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			state.SetSyntax(tc.syntaxLanguage)
+			setSyntaxAndRetokenize(&state, tc.syntaxLanguage)
 			loc := NewPrevWordStartLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -1627,7 +1627,7 @@ func TestCurrentWordStartLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			state.SetSyntax(tc.syntaxLanguage)
+			setSyntaxAndRetokenize(&state, tc.syntaxLanguage)
 			loc := NewCurrentWordStartLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)
@@ -1726,7 +1726,7 @@ func TestCurrentWordEndLocator(t *testing.T) {
 				textTree: textTree,
 				cursor:   tc.initialCursor,
 			}
-			state.SetSyntax(tc.syntaxLanguage)
+			setSyntaxAndRetokenize(&state, tc.syntaxLanguage)
 			loc := NewCurrentWordEndLocator()
 			nextCursor := loc.Locate(&state)
 			assert.Equal(t, tc.expectedCursor, nextCursor)

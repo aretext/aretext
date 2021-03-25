@@ -138,12 +138,12 @@ func (ldm *loadDocumentMutator) updateAfterReload(state *EditorState) {
 func (ldm *loadDocumentMutator) initializeAfterLoad(state *EditorState, config config.Config) {
 	state.documentBuffer.cursor = cursorState{}
 	state.documentBuffer.view.textOrigin = 0
-	state.documentBuffer.SetSyntax(syntax.LanguageFromString(config.SyntaxLanguage))
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent
 	state.customMenuItems = ldm.customMenuItems(config)
 	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
+	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
 }
 
 func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []MenuItem {
@@ -388,7 +388,7 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 	}
 
 	edit := parser.Edit{Pos: startPos, NumInserted: 1}
-	if err := bufferState.retokenizeAfterEdit(edit); err != nil {
+	if err := retokenizeAfterEdit(bufferState, edit); err != nil {
 		log.Printf("Error retokenizing document: %v\n", err)
 	}
 
@@ -551,7 +551,7 @@ func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, 
 	}
 
 	edit := parser.Edit{Pos: pos, NumDeleted: count}
-	if err := bufferState.retokenizeAfterEdit(edit); err != nil {
+	if err := retokenizeAfterEdit(bufferState, edit); err != nil {
 		log.Printf("Error retokenizing document: %v\n", err)
 	}
 
@@ -610,7 +610,7 @@ func (dlm *deleteLinesMutator) deleteLine(state *EditorState, lineNum uint64) {
 	}
 
 	edit := parser.Edit{Pos: startOfLinePos, NumDeleted: numToDelete}
-	if err := buffer.retokenizeAfterEdit(edit); err != nil {
+	if err := retokenizeAfterEdit(buffer, edit); err != nil {
 		log.Printf("Error retokenizing doument: %v\n", err)
 	}
 
@@ -670,7 +670,7 @@ func NewSetSyntaxMutator(language syntax.Language) Mutator {
 
 func (ssm *setSyntaxMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
-	if err := buffer.SetSyntax(ssm.language); err != nil {
+	if err := setSyntaxAndRetokenize(buffer, ssm.language); err != nil {
 		log.Printf("Error setting syntax: %v\n", err)
 	}
 }

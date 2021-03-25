@@ -6,7 +6,6 @@ import (
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
-	"github.com/pkg/errors"
 )
 
 // EditorState represents the current state of the editor.
@@ -181,56 +180,23 @@ func (s *BufferState) SearchMatch() *SearchMatch {
 	return s.search.match
 }
 
-// Used for display testing.
-func (s *BufferState) SetSearchMatch(match *SearchMatch) {
-	s.search.match = match
-}
-
 func (s *BufferState) SetViewSize(width, height uint64) {
 	s.view.width = width
 	s.view.height = height
 }
 
-func (s *BufferState) SetSyntax(language syntax.Language) error {
-	s.syntaxLanguage = language
-	s.tokenizer = syntax.TokenizerForLanguage(language)
-
-	if s.tokenizer == nil {
-		s.tokenTree = nil
-		return nil
-	}
-
-	r := s.textTree.ReaderAtPosition(0, text.ReadDirectionForward)
-	textLen := s.textTree.NumChars()
-	tokenTree, err := s.tokenizer.TokenizeAll(r, textLen)
-	if err != nil {
-		return err
-	}
-
-	s.tokenTree = tokenTree
-	return nil
-}
-
-func (s *BufferState) retokenizeAfterEdit(edit parser.Edit) error {
-	if s.tokenizer == nil {
-		return nil
-	}
-
-	textLen := s.textTree.NumChars()
-	readerAtPos := func(pos uint64) parser.InputReader {
-		return s.textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
-	}
-	updatedTokenTree, err := s.tokenizer.RetokenizeAfterEdit(s.tokenTree, edit, textLen, readerAtPos)
-	if err != nil {
-		return errors.Wrapf(err, "RetokenizeAfterEdit")
-	}
-
-	s.tokenTree = updatedTokenTree
-	return nil
-}
-
 func (s *BufferState) TabSize() uint64 {
 	return s.tabSize
+}
+
+// Used for display testing.
+func (s *BufferState) SetSyntax(language syntax.Language) error {
+	return setSyntaxAndRetokenize(s, language)
+}
+
+// Used for display testing.
+func (s *BufferState) SetSearchMatch(match *SearchMatch) {
+	s.search.match = match
 }
 
 // cursorState is the current state of the cursor.

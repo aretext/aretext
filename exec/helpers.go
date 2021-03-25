@@ -55,6 +55,22 @@ func insertRuneAtPosition(state *EditorState, r rune, pos uint64) error {
 	return nil
 }
 
+// deleteRunes deletes text from the document.
+// It also updates the syntax token and unsaved changes flag.
+// It does NOT move the cursor.
+func deleteRunes(state *EditorState, pos uint64, count uint64) error {
+	buffer := state.documentBuffer
+	for i := uint64(0); i < count; i++ {
+		buffer.textTree.DeleteAtPosition(pos)
+	}
+	edit := parser.Edit{Pos: pos, NumDeleted: count}
+	if err := retokenizeAfterEdit(buffer, edit); err != nil {
+		return errors.Wrapf(err, "retokenizeAfterEdit")
+	}
+	state.hasUnsavedChanges = true
+	return nil
+}
+
 // setSyntaxAndRetokenize changes the syntax language of the buffer and updates the tokens.
 func setSyntaxAndRetokenize(buffer *BufferState, language syntax.Language) error {
 	buffer.syntaxLanguage = language

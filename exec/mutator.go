@@ -528,25 +528,12 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 	deleteToPos := dm.loc.Locate(bufferState).position
 
 	if startPos < deleteToPos {
-		dm.deleteCharacters(bufferState, startPos, deleteToPos-startPos)
-		state.hasUnsavedChanges = true
+		deleteRunes(state, startPos, deleteToPos-startPos)
+		bufferState.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		dm.deleteCharacters(bufferState, deleteToPos, startPos-deleteToPos)
-		state.hasUnsavedChanges = true
+		deleteRunes(state, deleteToPos, startPos-deleteToPos)
+		bufferState.cursor = cursorState{position: deleteToPos}
 	}
-}
-
-func (dm *deleteMutator) deleteCharacters(bufferState *BufferState, pos uint64, count uint64) {
-	for i := uint64(0); i < count; i++ {
-		bufferState.textTree.DeleteAtPosition(pos)
-	}
-
-	edit := parser.Edit{Pos: pos, NumDeleted: count}
-	if err := retokenizeAfterEdit(bufferState, edit); err != nil {
-		log.Printf("Error retokenizing document: %v\n", err)
-	}
-
-	bufferState.cursor = cursorState{position: pos}
 }
 
 func (dm *deleteMutator) String() string {

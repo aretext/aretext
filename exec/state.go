@@ -30,11 +30,31 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		// Leave one line for the status bar at the bottom.
 		documentBufferHeight = screenHeight - 1
 	}
+
+	buffer := &BufferState{
+		textTree: text.NewTree(),
+		cursor:   cursorState{},
+		view: viewState{
+			textOrigin: 0,
+			x:          0,
+			y:          0,
+			width:      screenWidth,
+			height:     documentBufferHeight,
+		},
+		search:         searchState{},
+		syntaxLanguage: syntax.LanguageUndefined,
+		tokenTree:      nil,
+		tokenizer:      nil,
+		tabSize:        uint64(config.DefaultTabSize),
+		tabExpand:      config.DefaultTabExpand,
+		autoIndent:     config.DefaultAutoIndent,
+	}
+
 	return &EditorState{
 		screenWidth:     screenWidth,
 		screenHeight:    screenHeight,
 		configRuleSet:   configRuleSet,
-		documentBuffer:  NewBufferState(text.NewTree(), 0, 0, 0, screenWidth, documentBufferHeight),
+		documentBuffer:  buffer,
 		fileWatcher:     file.NewEmptyWatcher(),
 		menu:            &MenuState{},
 		customMenuItems: nil,
@@ -127,27 +147,6 @@ type BufferState struct {
 	autoIndent     bool
 }
 
-func NewBufferState(textTree *text.Tree, cursorPosition, viewX, viewY, viewWidth, viewHeight uint64) *BufferState {
-	return &BufferState{
-		textTree: textTree,
-		cursor:   cursorState{position: cursorPosition},
-		view: viewState{
-			textOrigin: 0,
-			x:          viewX,
-			y:          viewY,
-			width:      viewWidth,
-			height:     viewHeight,
-		},
-		search:         searchState{},
-		syntaxLanguage: syntax.LanguageUndefined,
-		tokenTree:      nil,
-		tokenizer:      nil,
-		tabSize:        uint64(config.DefaultTabSize),
-		tabExpand:      config.DefaultTabExpand,
-		autoIndent:     config.DefaultAutoIndent,
-	}
-}
-
 func (s *BufferState) TextTree() *text.Tree {
 	return s.textTree
 }
@@ -187,16 +186,6 @@ func (s *BufferState) SetViewSize(width, height uint64) {
 
 func (s *BufferState) TabSize() uint64 {
 	return s.tabSize
-}
-
-// Used for display testing.
-func (s *BufferState) SetSyntax(language syntax.Language) error {
-	return setSyntaxAndRetokenize(s, language)
-}
-
-// Used for display testing.
-func (s *BufferState) SetSearchMatch(match *SearchMatch) {
-	s.search.match = match
 }
 
 // cursorState is the current state of the cursor.

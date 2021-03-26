@@ -33,6 +33,26 @@ func (loc *currentCursorLocator) String() string {
 	return "CurrentCursorLocator()"
 }
 
+// absoluteCursorLocator locates an exact cursor position, clipped to the end of the document.
+type absoluteCursorLocator struct {
+	pos uint64
+}
+
+func NewAbsoluteCursorLocator(pos uint64) CursorLocator {
+	return &absoluteCursorLocator{pos}
+}
+
+func (loc *absoluteCursorLocator) Locate(state *BufferState) cursorState {
+	if n := state.textTree.NumChars(); loc.pos > n {
+		return cursorState{position: n}
+	}
+	return cursorState{position: loc.pos}
+}
+
+func (loc *absoluteCursorLocator) String() string {
+	return fmt.Sprintf("AbsoluteCursorLocator(%d)", loc.pos)
+}
+
 // minPosLocator returns the cursor with the smallest position.
 type minPosLocator struct {
 	childLocators []CursorLocator

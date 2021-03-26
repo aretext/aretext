@@ -9,17 +9,27 @@ import (
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language, searchMatch *exec.SearchMatch) {
-	tree, err := text.NewTreeFromString(s)
-	require.NoError(t, err)
+func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language, searchQuery string) {
 	screenWidth, screenHeight := screen.Size()
-	buffer := exec.NewBufferState(tree, cursorPos, 0, 0, uint64(screenWidth), uint64(screenHeight))
-	err = buffer.SetSyntax(language)
-	require.NoError(t, err)
-	buffer.SetSearchMatch(searchMatch)
+	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil)
+
+	exec.NewSetSyntaxMutator(language).Mutate(state)
+	for _, r := range s {
+		exec.NewInsertRuneMutator(r).Mutate(state)
+	}
+
+	exec.NewCursorMutator(exec.NewAbsoluteCursorLocator(cursorPos)).Mutate(state)
+
+	if searchQuery != "" {
+		exec.NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)
+		for _, r := range searchQuery {
+			exec.NewAppendSearchQueryMutator(r).Mutate(state)
+		}
+	}
+
+	buffer := state.DocumentBuffer()
 	DrawBuffer(screen, buffer)
 	screen.Sync()
 }
@@ -164,7 +174,7 @@ func TestDrawBuffer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, nil)
+				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, "")
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -215,7 +225,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, nil)
+				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, "")
 
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
@@ -229,7 +239,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 func TestDrawBufferSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		drawBuffer(t, s, "ab界cd", 0, syntax.LanguageUndefined, nil)
+		drawBuffer(t, s, "ab界cd", 0, syntax.LanguageUndefined, "")
 
 		assertCellContents(t, s, [][]rune{
 			{'a'},
@@ -381,7 +391,7 @@ func TestDrawBufferCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.LanguageUndefined, nil)
+				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.LanguageUndefined, "")
 
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
@@ -397,7 +407,7 @@ func TestDrawBufferCursor(t *testing.T) {
 func TestSyntaxHighlighting(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
-		drawBuffer(t, s, `{"key": 123}`, 0, syntax.LanguageJson, nil)
+		drawBuffer(t, s, `{"key": 123}`, 0, syntax.LanguageJson, "")
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
 				// `"{"` has no highlighting
@@ -429,11 +439,8 @@ func TestSyntaxHighlighting(t *testing.T) {
 func TestSearchMatch(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
-		match := exec.SearchMatch{
-			StartPos: 3,
-			EndPos:   5,
-		}
-		drawBuffer(t, s, `abcd1234`, 0, syntax.LanguageUndefined, &match)
+		query := "d1"
+		drawBuffer(t, s, `abcd1234`, 0, syntax.LanguageUndefined, query)
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
 				tcell.StyleDefault,

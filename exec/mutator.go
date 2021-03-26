@@ -399,24 +399,32 @@ func NewInsertNewlineMutator() Mutator {
 }
 
 func (inm *insertNewlineMutator) Mutate(state *EditorState) {
-	NewInsertRuneMutator('\n').Mutate(state)
+	cursorPos := state.documentBuffer.cursor.position
+	if err := insertRuneAtPosition(state, '\n', cursorPos); err != nil {
+		panic(err) // should never happen because '\n' is a valid rune.
+	}
+	cursorPos++
 
 	buffer := state.documentBuffer
 	if buffer.autoIndent {
-		inm.deleteToNextNonWhitespace(state)
-		numCols := inm.numColsIndentedPrevLine(buffer)
-		inm.indentFromCursor(state, numCols)
+		inm.deleteToNextNonWhitespace(cursorPos, state)
+		numCols := inm.numColsIndentedPrevLine(cursorPos, buffer)
+		cursorPos = inm.indentFromPos(cursorPos, state, numCols)
 	}
+
+	buffer.cursor = cursorState{position: cursorPos}
 }
 
-func (inm *insertNewlineMutator) deleteToNextNonWhitespace(state *EditorState) {
-	loc := NewNonWhitespaceOrNewlineLocator(NewCurrentCursorLocator())
-	NewDeleteMutator(loc).Mutate(state)
+func (inm *insertNewlineMutator) deleteToNextNonWhitespace(startPos uint64, state *EditorState) {
+	loc := NewNonWhitespaceOrNewlineLocator(NewAbsoluteCursorLocator(startPos))
+	locPos := loc.Locate(state.documentBuffer).position
+	count := locPos - startPos
+	deleteRunes(state, startPos, count)
 }
 
-func (inm *insertNewlineMutator) numColsIndentedPrevLine(buffer *BufferState) uint64 {
+func (inm *insertNewlineMutator) numColsIndentedPrevLine(cursorPos uint64, buffer *BufferState) uint64 {
 	tabSize := buffer.tabSize
-	lineNum := buffer.textTree.LineNumForPosition(buffer.cursor.position)
+	lineNum := buffer.textTree.LineNumForPosition(cursorPos)
 	if lineNum == 0 {
 		return 0
 	}
@@ -442,22 +450,26 @@ func (inm *insertNewlineMutator) numColsIndentedPrevLine(buffer *BufferState) ui
 	return numCols
 }
 
-func (inm *insertNewlineMutator) indentFromCursor(state *EditorState, numCols uint64) {
+func (inm *insertNewlineMutator) indentFromPos(pos uint64, state *EditorState, numCols uint64) uint64 {
 	tabSize := state.documentBuffer.tabSize
 	tabExpand := state.documentBuffer.tabExpand
-	insertTabMutator := NewInsertRuneMutator('\t')
-	insertSpaceMutator := NewInsertRuneMutator(' ')
 
 	i := uint64(0)
 	for i < numCols {
 		if !tabExpand && numCols-i >= tabSize {
-			insertTabMutator.Mutate(state)
+			if err := insertRuneAtPosition(state, '\t', pos); err != nil {
+				panic(err)
+			}
 			i += tabSize
 		} else {
-			insertSpaceMutator.Mutate(state)
+			if err := insertRuneAtPosition(state, ' ', pos); err != nil {
+				panic(err)
+			}
 			i++
 		}
+		pos++
 	}
+	return pos
 }
 
 func (inm *insertNewlineMutator) String() string {

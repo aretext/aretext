@@ -31,7 +31,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		log.Printf("Writing default config to '%s'\n", path)
-		if err := os.WriteFile(path, DefaultConfigJson, 0644); err != nil {
+		if err := saveDefaultConfig(path); err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("Error writing default config to '%s'", path))
 		}
 		return unmarshalRuleSet(DefaultConfigJson)
@@ -58,4 +58,15 @@ func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 		return nil, errors.Wrapf(err, "json.Unmarshal")
 	}
 	return config.RuleSet(rules), nil
+}
+
+func saveDefaultConfig(path string) error {
+	dirPath := filepath.Dir(path)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		return errors.Wrapf(err, "os.MkdirAll")
+	}
+	if err := os.WriteFile(path, DefaultConfigJson, 0644); err != nil {
+		return errors.Wrapf(err, "os.WriteFile")
+	}
+	return nil
 }

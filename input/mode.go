@@ -58,6 +58,14 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
 		return m.insertNewline()
 	case tcell.KeyTab:
 		return m.insertTab()
+	case tcell.KeyLeft:
+		return CursorLeft(nil, nil, Config{})
+	case tcell.KeyRight:
+		return CursorRight(nil, nil, Config{})
+	case tcell.KeyUp:
+		return CursorUp(nil, nil, Config{})
+	case tcell.KeyDown:
+		return CursorDown(nil, nil, Config{})
 	default:
 		return m.returnToNormalMode()
 	}

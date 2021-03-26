@@ -649,13 +649,23 @@ func (rm *replaceCharMutator) Mutate(state *EditorState) {
 		return
 	}
 
-	NewDeleteMutator(nextCharLoc).Mutate(state)
+	numToDelete := nextCharPos - cursorPos
+	deleteRunes(state, cursorPos, numToDelete)
+
+	pos := cursorPos
 	for _, r := range rm.newText {
-		NewInsertRuneMutator(r).Mutate(state)
+		if err := insertRuneAtPosition(state, r, pos); err != nil {
+			// invalid UTF-8 rune; ignore it.
+			log.Printf("Error inserting rune '%q': %v\n", r, err)
+			continue
+		}
+		pos++
 	}
 
 	if rm.newText != "\n" {
 		state.documentBuffer.cursor.position = cursorPos
+	} else {
+		state.documentBuffer.cursor.position = pos
 	}
 }
 

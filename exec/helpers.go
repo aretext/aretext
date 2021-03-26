@@ -55,6 +55,13 @@ func insertRuneAtPosition(state *EditorState, r rune, pos uint64) error {
 	return nil
 }
 
+func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64) {
+	err := insertRuneAtPosition(state, r, pos)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // deleteRunes deletes text from the document.
 // It also updates the syntax token and unsaved changes flag.
 // It does NOT move the cursor.

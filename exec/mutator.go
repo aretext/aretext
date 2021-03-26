@@ -401,9 +401,7 @@ func NewInsertNewlineMutator() Mutator {
 
 func (inm *insertNewlineMutator) Mutate(state *EditorState) {
 	cursorPos := state.documentBuffer.cursor.position
-	if err := insertRuneAtPosition(state, '\n', cursorPos); err != nil {
-		panic(err) // should never happen because '\n' is a valid rune.
-	}
+	mustInsertRuneAtPosition(state, '\n', cursorPos)
 	cursorPos++
 
 	buffer := state.documentBuffer
@@ -458,14 +456,10 @@ func (inm *insertNewlineMutator) indentFromPos(pos uint64, state *EditorState, n
 	i := uint64(0)
 	for i < numCols {
 		if !tabExpand && numCols-i >= tabSize {
-			if err := insertRuneAtPosition(state, '\t', pos); err != nil {
-				panic(err)
-			}
+			mustInsertRuneAtPosition(state, '\t', pos)
 			i += tabSize
 		} else {
-			if err := insertRuneAtPosition(state, ' ', pos); err != nil {
-				panic(err)
-			}
+			mustInsertRuneAtPosition(state, ' ', pos)
 			i++
 		}
 		pos++
@@ -496,9 +490,7 @@ func (itm *insertTabMutator) Mutate(state *EditorState) {
 
 func (itm *insertTabMutator) insertTab(state *EditorState) uint64 {
 	cursorPos := state.documentBuffer.cursor.position
-	if err := insertRuneAtPosition(state, '\t', cursorPos); err != nil {
-		panic(err)
-	}
+	mustInsertRuneAtPosition(state, '\t', cursorPos)
 	return cursorPos + 1
 }
 
@@ -509,9 +501,7 @@ func (itm *insertTabMutator) insertSpaces(state *EditorState) uint64 {
 	numSpaces := tabSize - (offset % tabSize)
 	cursorPos := buffer.cursor.position
 	for i := uint64(0); i < numSpaces; i++ {
-		if err := insertRuneAtPosition(state, ' ', cursorPos); err != nil {
-			panic(err)
-		}
+		mustInsertRuneAtPosition(state, ' ', cursorPos)
 		cursorPos++
 	}
 	return cursorPos

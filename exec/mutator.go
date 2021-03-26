@@ -484,22 +484,36 @@ func NewInsertTabMutator() Mutator {
 }
 
 func (itm *insertTabMutator) Mutate(state *EditorState) {
+	var cursorPos uint64
 	if state.documentBuffer.tabExpand {
-		itm.insertSpaces(state)
-		return
+		cursorPos = itm.insertSpaces(state)
+	} else {
+		cursorPos = itm.insertTab(state)
 	}
-	NewInsertRuneMutator('\t').Mutate(state)
+	state.documentBuffer.cursor = cursorState{position: cursorPos}
 }
 
-func (itm *insertTabMutator) insertSpaces(state *EditorState) {
+func (itm *insertTabMutator) insertTab(state *EditorState) uint64 {
+	cursorPos := state.documentBuffer.cursor.position
+	if err := insertRuneAtPosition(state, '\t', cursorPos); err != nil {
+		panic(err)
+	}
+	return cursorPos + 1
+}
+
+func (itm *insertTabMutator) insertSpaces(state *EditorState) uint64 {
 	buffer := state.documentBuffer
 	tabSize := buffer.tabSize
 	offset := itm.offsetInLine(state.documentBuffer)
 	numSpaces := tabSize - (offset % tabSize)
-	insertSpaceMut := NewInsertRuneMutator(' ')
+	cursorPos := buffer.cursor.position
 	for i := uint64(0); i < numSpaces; i++ {
-		insertSpaceMut.Mutate(state)
+		if err := insertRuneAtPosition(state, ' ', cursorPos); err != nil {
+			panic(err)
+		}
+		cursorPos++
 	}
+	return cursorPos
 }
 
 func (itm *insertTabMutator) offsetInLine(buffer *BufferState) uint64 {

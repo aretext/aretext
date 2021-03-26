@@ -383,6 +383,7 @@ func (irm *insertRuneMutator) Mutate(state *EditorState) {
 	startPos := buffer.cursor.position
 	if err := insertRuneAtPosition(state, irm.r, startPos); err != nil {
 		log.Printf("Error inserting rune: %v\n", err)
+		return
 	}
 	buffer.cursor.position = startPos + 1
 }

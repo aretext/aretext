@@ -1,10 +1,10 @@
-package exec
+package cellwidth
 
 import (
 	"unicode"
 
 	"github.com/aretext/aretext/text/segment"
-	grw "github.com/mattn/go-runewidth"
+	runewidth "github.com/mattn/go-runewidth"
 )
 
 // RuneWidth returns the width in cells of an individual rune.
@@ -20,7 +20,7 @@ func RuneWidth(r rune) uint64 {
 	// tcell also uses this library internally to calculate the cell width,
 	// and it's important that we are consistent with tcell (otherwise strange
 	// display artifacts can occur).
-	return uint64(grw.RuneWidth(r))
+	return uint64(runewidth.RuneWidth(r))
 }
 
 // GraphemeClusterWidth returns the width in cells of a grapheme cluster.

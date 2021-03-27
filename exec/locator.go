@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -253,7 +254,7 @@ func (loc *prevAutoIndentLocator) findPrevTabAlignedPos(state *BufferState) uint
 			break
 		}
 
-		offset += GraphemeClusterWidth(seg.Runes(), offset, tabSize)
+		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, tabSize)
 		pos += seg.NumRunes()
 	}
 
@@ -497,7 +498,7 @@ func (loc *relativeLineLocator) findOffsetFromLineStart(state *BufferState, line
 			break
 		}
 
-		offset += GraphemeClusterWidth(seg.Runes(), offset, state.TabSize())
+		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, state.TabSize())
 		pos += seg.NumRunes()
 	}
 
@@ -522,7 +523,7 @@ func (loc *relativeLineLocator) advanceToOffset(tree *text.Tree, lineStartPos ui
 			break
 		}
 
-		gcWidth := GraphemeClusterWidth(seg.Runes(), cellOffset, tabSize)
+		gcWidth := cellwidth.GraphemeClusterWidth(seg.Runes(), cellOffset, tabSize)
 		if cellOffset+gcWidth > targetOffset {
 			break
 		}

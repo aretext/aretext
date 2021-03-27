@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -22,7 +23,7 @@ func DrawBuffer(screen tcell.Screen, buffer *exec.BufferState) {
 	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return exec.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
+		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)

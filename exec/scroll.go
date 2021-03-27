@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -22,7 +23,7 @@ const scrollMargin = 3
 // It attempts to display a few lines before/after the cursor to help the user navigate.
 func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight, tabSize uint64) uint64 {
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return GraphemeClusterWidth(gc, offsetInLine, tabSize)
+		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
 	}
 	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), gcWidthFunc)
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)

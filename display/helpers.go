@@ -4,8 +4,8 @@ import (
 	"io"
 	"log"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 	"github.com/gdamore/tcell/v2"
@@ -25,7 +25,7 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 		}
 
 		gcRunes := gc.Runes()
-		gcWidth := exec.GraphemeClusterWidth(gcRunes, uint64(col), config.DefaultTabSize)
+		gcWidth := cellwidth.GraphemeClusterWidth(gcRunes, uint64(col), config.DefaultTabSize)
 		if uint64(col)+gcWidth > uint64(maxLineWidth) {
 			break
 		}
@@ -55,13 +55,13 @@ func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, style tcell.
 		j := i + 1
 		for j < len(gc) {
 			r := gc[j]
-			if exec.RuneWidth(r) > 0 {
+			if cellwidth.RuneWidth(r) > 0 {
 				break
 			}
 			j++
 		}
 		sr.SetContent(col, row, gc[i], gc[i+1:j], style)
-		col += int(exec.RuneWidth(gc[i]))
+		col += int(cellwidth.RuneWidth(gc[i]))
 		i = j
 	}
 }

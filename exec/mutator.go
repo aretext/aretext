@@ -8,6 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
@@ -444,7 +445,7 @@ func (inm *insertNewlineMutator) numColsIndentedPrevLine(cursorPos uint64, buffe
 			break
 		}
 
-		numCols += GraphemeClusterWidth(gc, numCols, tabSize)
+		numCols += cellwidth.GraphemeClusterWidth(gc, numCols, tabSize)
 	}
 
 	return numCols
@@ -518,7 +519,7 @@ func (itm *insertTabMutator) offsetInLine(buffer *BufferState) uint64 {
 		if eof {
 			break
 		}
-		offset += GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
+		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
 		pos += seg.NumRunes()
 	}
 	return offset

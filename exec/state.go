@@ -3,6 +3,7 @@ package exec
 import (
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -16,7 +17,7 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
-	customMenuItems           []MenuItem
+	customMenuItems           []menu.Item
 	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
 	hasUnsavedChanges         bool
@@ -279,7 +280,7 @@ type MenuState struct {
 	prompt string
 
 	// search controls which items are visible based on the user's current search query.
-	search *MenuSearch
+	search *menu.Search
 
 	// selectedResultIdx is the index of the currently selected search result.
 	// If there are no results, this is set to zero.
@@ -302,7 +303,7 @@ func (m *MenuState) SearchQuery() string {
 	return m.search.Query()
 }
 
-func (m *MenuState) SearchResults() (results []MenuItem, selectedResultIdx int) {
+func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int) {
 	if m.search == nil {
 		return nil, 0
 	}

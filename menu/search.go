@@ -1,4 +1,4 @@
-package exec
+package menu
 
 import (
 	"sort"
@@ -17,24 +17,28 @@ type scoredItem struct {
 	words []string
 
 	// item is the menu item that has been scored.
-	item MenuItem
+	item Item
 }
 
-// MenuSearch performs approximate text searches for menu items matching a query string.
-type MenuSearch struct {
+// Search performs approximate text searches for menu items matching a query string.
+type Search struct {
 	scoredItems       []scoredItem
 	query             string
 	queryWords        []string
 	emptyQueryShowAll bool
 }
 
+func NewSearch(emptyQueryShowAll bool) *Search {
+	return &Search{emptyQueryShowAll: emptyQueryShowAll}
+}
+
 // Query returns the current query.
-func (s *MenuSearch) Query() string {
+func (s *Search) Query() string {
 	return s.query
 }
 
 // SetQuery updates the query for the search.
-func (s *MenuSearch) SetQuery(q string) {
+func (s *Search) SetQuery(q string) {
 	if s.query == q {
 		return
 	}
@@ -49,7 +53,7 @@ func (s *MenuSearch) SetQuery(q string) {
 }
 
 // AddItems adds more menu items to the search set.
-func (s *MenuSearch) AddItems(items []MenuItem) {
+func (s *Search) AddItems(items []Item) {
 	for _, item := range items {
 		words := s.splitWords(s.normalize(item.Name))
 		s.scoredItems = append(s.scoredItems, scoredItem{
@@ -64,8 +68,8 @@ func (s *MenuSearch) AddItems(items []MenuItem) {
 // Results returns the menu items matching the current query.
 // Items are sorted descending by similarity to the query,
 // with ties broken by lexicographic ordering.
-func (s *MenuSearch) Results() []MenuItem {
-	results := make([]MenuItem, 0, len(s.scoredItems))
+func (s *Search) Results() []Item {
+	results := make([]Item, 0, len(s.scoredItems))
 	for _, si := range s.scoredItems {
 		if si.score < 0 {
 			break
@@ -77,7 +81,7 @@ func (s *MenuSearch) Results() []MenuItem {
 
 // sortItemsByScore sorts the result items by their scores.
 // Ties are broken by lexicographic ordering.
-func (s *MenuSearch) sortItemsByScore() {
+func (s *Search) sortItemsByScore() {
 	sort.SliceStable(s.scoredItems, func(i, j int) bool {
 		s1, s2 := s.scoredItems[i].score, s.scoredItems[j].score
 		if s1 == s2 {
@@ -89,7 +93,7 @@ func (s *MenuSearch) sortItemsByScore() {
 }
 
 // normalize returns a canonical form of the string for case-insensitive comparison.
-func (s *MenuSearch) normalize(x string) string {
+func (s *Search) normalize(x string) string {
 	return strings.ToLower(norm.NFC.String(x))
 }
 
@@ -100,7 +104,7 @@ func (s *MenuSearch) normalize(x string) string {
 // always produce a negative score.
 // This isn't a perfect similarity measure, but it is fast to evaluate
 // and works fairly well for commands and file paths.
-func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string) int {
+func (s *Search) calculateScore(candidateWords []string, queryWords []string) int {
 	// Greedily match words from the query with words in the candidate.
 	// It's okay to be greedy because we've defined the similarity score in terms
 	// of the number of word matches, ignoring the exact location of those matches in the candidate.
@@ -137,7 +141,7 @@ func (s *MenuSearch) calculateScore(candidateWords []string, queryWords []string
 // splitWords separates a string into "words" at space and some punctuation boundaries.
 // The main use cases are spaces in commands (e.g. "save and quit" -> ["save", "and", "quit"])
 // and file paths (e.g. "foo/bar/baz_test.go" -> ["foo", "bar", "baz", "test", "go"])
-func (s *MenuSearch) splitWords(text string) []string {
+func (s *Search) splitWords(text string) []string {
 	wordBuffer := make([]string, 0, 5)
 	i := 0
 	for j, r := range text {

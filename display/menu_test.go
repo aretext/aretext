@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/menu"
 )
 
 func TestDrawMenu(t *testing.T) {
@@ -72,7 +73,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
+					exec.NewShowMenuMutatorWithItems("test", []menu.Item{
 						{Name: "test first"},
 						{Name: "test second"},
 						{Name: "test third"},
@@ -96,7 +97,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *exec.MenuState {
 				state := exec.NewEditorState(100, 100, nil)
 				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", []exec.MenuItem{
+					exec.NewShowMenuMutatorWithItems("test", []menu.Item{
 						{Name: "test 1"},
 						{Name: "test 2"},
 						{Name: "test 3"},

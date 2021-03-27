@@ -2,6 +2,7 @@ package display
 
 import (
 	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/menu"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -43,7 +44,7 @@ func DrawMenu(screen tcell.Screen, menu *exec.MenuState) {
 	}
 }
 
-func filterForVisibleItems(items []exec.MenuItem, selectedIdx int, height int) ([]exec.MenuItem, int) {
+func filterForVisibleItems(items []menu.Item, selectedIdx int, height int) ([]menu.Item, int) {
 	offset := 0
 	limit := maxNumVisibleItems(len(items), height)
 	if limit == 0 {
@@ -82,7 +83,7 @@ func drawSearchInput(sr *ScreenRegion, prompt string, query string) {
 	sr.ShowCursor(col, 0)
 }
 
-func drawMenuItem(sr *ScreenRegion, item exec.MenuItem, selected bool) {
+func drawMenuItem(sr *ScreenRegion, item menu.Item, selected bool) {
 	sr.Clear()
 
 	col := 2

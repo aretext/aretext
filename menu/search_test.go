@@ -1,4 +1,4 @@
-package exec
+package menu
 
 import (
 	"fmt"
@@ -7,53 +7,53 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMenuSearch(t *testing.T) {
+func TestSearch(t *testing.T) {
 	testCases := []struct {
 		name              string
 		query             string
-		items             []MenuItem
+		items             []Item
 		emptyQueryShowAll bool
-		expected          []MenuItem
+		expected          []Item
 	}{
 		{
 			name:     "no items, empty query",
 			query:    "",
-			items:    []MenuItem{},
-			expected: []MenuItem{},
+			items:    []Item{},
+			expected: []Item{},
 		},
 		{
 			name:              "no items, empty query with emptyQueryShowAll true",
 			query:             "",
 			emptyQueryShowAll: true,
-			items:             []MenuItem{},
-			expected:          []MenuItem{},
+			items:             []Item{},
+			expected:          []Item{},
 		},
 		{
 			name:     "no items, nonempty query",
 			query:    "a",
-			items:    []MenuItem{},
-			expected: []MenuItem{},
+			items:    []Item{},
+			expected: []Item{},
 		},
 		{
 			name:  "some items, empty query",
 			query: "",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "a"},
 				{Name: "b"},
 				{Name: "c"},
 			},
-			expected: []MenuItem{},
+			expected: []Item{},
 		},
 		{
 			name:              "some items, empty query with emptyQueryShowAll true",
 			query:             "",
 			emptyQueryShowAll: true,
-			items: []MenuItem{
+			items: []Item{
 				{Name: "a"},
 				{Name: "b"},
 				{Name: "c"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "a"},
 				{Name: "b"},
 				{Name: "c"},
@@ -62,7 +62,7 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "some items, prefix match first char",
 			query: "a",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "a"},
 				{Name: "ab"},
 				{Name: "ac"},
@@ -70,7 +70,7 @@ func TestMenuSearch(t *testing.T) {
 				{Name: "ba"},
 				{Name: "bc"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "a"},
 				{Name: "ab"},
 				{Name: "ac"},
@@ -79,7 +79,7 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "some items, prefix match two chars",
 			query: "ba",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "a"},
 				{Name: "ab"},
 				{Name: "ac"},
@@ -87,33 +87,33 @@ func TestMenuSearch(t *testing.T) {
 				{Name: "ba"},
 				{Name: "bc"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "ba"},
 			},
 		},
 		{
 			name:  "some items, prefix match two words",
 			query: "foo/se",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "foo/first.txt"},
 				{Name: "foo/second.txt"},
 				{Name: "bar/first.txt"},
 				{Name: "bar/second.txt"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "foo/second.txt"},
 			},
 		},
 		{
 			name:  "some items, prefix match last word",
 			query: "fir",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "foo/first.txt"},
 				{Name: "foo/second.txt"},
 				{Name: "bar/first.txt"},
 				{Name: "bar/second.txt"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "bar/first.txt"},
 				{Name: "foo/first.txt"},
 			},
@@ -121,14 +121,14 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "some items, case insensitive match",
 			query: "FoO",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "fOo/first.txt"},
 				{Name: "Foo/second.txt"},
 				{Name: "foo/third.txt"},
 				{Name: "bar/first.txt"},
 				{Name: "bar/second.txt"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "Foo/second.txt"},
 				{Name: "fOo/first.txt"},
 				{Name: "foo/third.txt"},
@@ -137,23 +137,23 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "some items, some partially match",
 			query: "bar baz tes",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "foo/bar/test.txt"},
 				{Name: "foo/bar/test.txt"},
 				{Name: "foo/bar/baz/test.txt"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "foo/bar/baz/test.txt"},
 			},
 		},
 		{
 			name:  "items with shared prefix words, select shorter",
 			query: "s",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "save"},
 				{Name: "force save"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "save"},
 				{Name: "force save"},
 			},
@@ -161,29 +161,29 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "items with shared prefix words, select longer",
 			query: "f s",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "save"},
 				{Name: "force save"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "force save"},
 			},
 		},
 		{
 			name:  "all separators",
 			query: "///",
-			items: []MenuItem{
+			items: []Item{
 				{Name: " / / - _"},
 				{Name: "///"},
 				{Name: "   "},
 				{Name: " / /"},
 			},
-			expected: []MenuItem{},
+			expected: []Item{},
 		},
 		{
 			name:  "empty query, all separators",
 			query: "",
-			items: []MenuItem{
+			items: []Item{
 				{Name: " / / - _"},
 				{Name: "///"},
 				{Name: "   "},
@@ -191,19 +191,19 @@ func TestMenuSearch(t *testing.T) {
 				{Name: "/"},
 				{Name: "  "},
 			},
-			expected: []MenuItem{},
+			expected: []Item{},
 		},
 		{
 			name:  "find file extension without dot prefix",
 			query: "go",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "foo/bar/test.txt"},
 				{Name: "foo/bar/test.go"},
 				{Name: "foo/baz/test.go"},
 				{Name: "doc.txt"},
 				{Name: "main.go"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "foo/bar/test.go"},
 				{Name: "foo/baz/test.go"},
 				{Name: "main.go"},
@@ -212,14 +212,14 @@ func TestMenuSearch(t *testing.T) {
 		{
 			name:  "find file extension with dot prefix",
 			query: ".go",
-			items: []MenuItem{
+			items: []Item{
 				{Name: "foo/bar/test.txt"},
 				{Name: "foo/bar/test.go"},
 				{Name: "foo/baz/test.go"},
 				{Name: "doc.txt"},
 				{Name: "main.go"},
 			},
-			expected: []MenuItem{
+			expected: []Item{
 				{Name: "foo/bar/test.go"},
 				{Name: "foo/baz/test.go"},
 				{Name: "main.go"},
@@ -229,7 +229,7 @@ func TestMenuSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &MenuSearch{emptyQueryShowAll: tc.emptyQueryShowAll}
+			s := &Search{emptyQueryShowAll: tc.emptyQueryShowAll}
 			s.SetQuery(tc.query)
 			s.AddItems(tc.items)
 			assert.Equal(t, tc.expected, s.Results())
@@ -237,26 +237,26 @@ func TestMenuSearch(t *testing.T) {
 	}
 }
 
-func BenchmarkMenuSearchAddItemsEmptyQuery(b *testing.B) {
-	items := fakeMenuItems(1000, "foo/bar/baz/bat/test")
+func BenchmarkSearchAddItemsEmptyQuery(b *testing.B) {
+	items := fakeItems(1000, "foo/bar/baz/bat/test")
 	for i := 0; i < b.N; i++ {
-		s := &MenuSearch{}
+		s := &Search{}
 		s.AddItems(items)
 	}
 }
 
-func BenchmarkMenuSearchAddItemsWithQuery(b *testing.B) {
-	items := fakeMenuItems(1000, "foo/bar/baz/bat/test")
+func BenchmarkSearchAddItemsWithQuery(b *testing.B) {
+	items := fakeItems(1000, "foo/bar/baz/bat/test")
 	for i := 0; i < b.N; i++ {
-		s := &MenuSearch{}
+		s := &Search{}
 		s.SetQuery("test.txt")
 		s.AddItems(items)
 	}
 }
 
-func BenchmarkMenuSearchSetQuery(b *testing.B) {
-	s := &MenuSearch{}
-	s.AddItems(fakeMenuItems(1000, "foo/bar/baz/bat/test"))
+func BenchmarkSearchSetQuery(b *testing.B) {
+	s := &Search{}
+	s.AddItems(fakeItems(1000, "foo/bar/baz/bat/test"))
 	for i := 0; i < b.N; i++ {
 		if i%2 == 0 {
 			s.SetQuery("foo")
@@ -266,11 +266,11 @@ func BenchmarkMenuSearchSetQuery(b *testing.B) {
 	}
 }
 
-func fakeMenuItems(n int, prefix string) []MenuItem {
-	items := make([]MenuItem, 0, n)
+func fakeItems(n int, prefix string) []Item {
+	items := make([]Item, 0, n)
 	for i := 0; i < n; i++ {
 		name := fmt.Sprintf("%s/%d.txt", prefix, i)
-		items = append(items, MenuItem{Name: name})
+		items = append(items, Item{Name: name})
 	}
 	return items
 }

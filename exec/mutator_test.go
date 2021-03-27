@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
@@ -747,7 +748,7 @@ func TestScrollLinesMutator(t *testing.T) {
 func TestShowMenuMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
 	prompt := "test prompt"
-	mutator := NewShowMenuMutatorWithItems(prompt, []MenuItem{
+	mutator := NewShowMenuMutatorWithItems(prompt, []menu.Item{
 		{Name: "test item 1"},
 		{Name: "test item 2"},
 	}, false, false)
@@ -764,7 +765,7 @@ func TestShowMenuMutator(t *testing.T) {
 func TestHideMenuMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutatorWithItems("test prompt", []MenuItem{{Name: "test item"}}, false, false),
+		NewShowMenuMutatorWithItems("test prompt", []menu.Item{{Name: "test item"}}, false, false),
 		NewHideMenuMutator(),
 	})
 	mutator.Mutate(state)
@@ -773,7 +774,7 @@ func TestHideMenuMutator(t *testing.T) {
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
-	items := []MenuItem{
+	items := []menu.Item{
 		{
 			Name:   "set syntax json",
 			Action: NewSetSyntaxMutator(syntax.LanguageJson),
@@ -797,28 +798,28 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 func TestMoveMenuSelectionMutator(t *testing.T) {
 	testCases := []struct {
 		name              string
-		items             []MenuItem
+		items             []menu.Item
 		searchRune        rune
 		moveDeltas        []int
 		expectSelectedIdx int
 	}{
 		{
 			name:              "empty results, move up",
-			items:             []MenuItem{},
+			items:             []menu.Item{},
 			searchRune:        't',
 			moveDeltas:        []int{-1},
 			expectSelectedIdx: 0,
 		},
 		{
 			name:              "empty results, move down",
-			items:             []MenuItem{},
+			items:             []menu.Item{},
 			searchRune:        't',
 			moveDeltas:        []int{1},
 			expectSelectedIdx: 0,
 		},
 		{
 			name: "single result, move up",
-			items: []MenuItem{
+			items: []menu.Item{
 				{Name: "test"},
 			},
 			searchRune:        't',
@@ -827,7 +828,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		},
 		{
 			name: "single result, move down",
-			items: []MenuItem{
+			items: []menu.Item{
 				{Name: "test"},
 			},
 			searchRune:        't',
@@ -836,7 +837,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		},
 		{
 			name: "multiple results, move down and up",
-			items: []MenuItem{
+			items: []menu.Item{
 				{Name: "test1"},
 				{Name: "test2"},
 				{Name: "test3"},
@@ -847,7 +848,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		},
 		{
 			name: "multiple results, move up and wraparound",
-			items: []MenuItem{
+			items: []menu.Item{
 				{Name: "test1"},
 				{Name: "test2"},
 				{Name: "test3"},
@@ -859,7 +860,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 		},
 		{
 			name: "multiple results, move down and wraparound",
-			items: []MenuItem{
+			items: []menu.Item{
 				{Name: "test1"},
 				{Name: "test2"},
 				{Name: "test3"},
@@ -891,7 +892,7 @@ func TestMoveMenuSelectionMutator(t *testing.T) {
 func TestAppendMenuSearchMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
 	mutator := NewCompositeMutator([]Mutator{
-		NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
+		NewShowMenuMutatorWithItems("test", []menu.Item{}, false, false),
 		NewAppendMenuSearchMutator('a'),
 		NewAppendMenuSearchMutator('b'),
 		NewAppendMenuSearchMutator('c'),
@@ -931,7 +932,7 @@ func TestDeleteMenuSearchMutator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil)
 			mutators := []Mutator{
-				NewShowMenuMutatorWithItems("test", []MenuItem{}, false, false),
+				NewShowMenuMutatorWithItems("test", []menu.Item{}, false, false),
 			}
 			for _, r := range tc.searchQuery {
 				mutators = append(mutators, NewAppendMenuSearchMutator(r))

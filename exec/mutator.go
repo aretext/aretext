@@ -10,6 +10,7 @@ import (
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -146,10 +147,10 @@ func (ldm *loadDocumentMutator) initializeAfterLoad(state *EditorState, config c
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
 }
 
-func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []MenuItem {
-	items := make([]MenuItem, 0, len(config.MenuCommands))
+func (ldm *loadDocumentMutator) customMenuItems(config config.Config) []menu.Item {
+	items := make([]menu.Item, 0, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
-		items = append(items, MenuItem{
+		items = append(items, menu.Item{
 			Name:   cmd.Name,
 			Action: NewScheduleShellCmdMutator(cmd.ShellCmd),
 		})
@@ -713,12 +714,12 @@ func (rm *resizeMutator) String() string {
 // showMenuMutator displays the menu with the specified prompt and items.
 type showMenuMutator struct {
 	prompt              string
-	loadItems           func() []MenuItem
+	loadItems           func() []menu.Item
 	emptyQueryShowAll   bool
 	showCustomMenuItems bool
 }
 
-func NewShowMenuMutator(prompt string, loadItems func() []MenuItem, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
+func NewShowMenuMutator(prompt string, loadItems func() []menu.Item, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
 	return &showMenuMutator{
 		prompt:              prompt,
 		loadItems:           loadItems,
@@ -727,13 +728,13 @@ func NewShowMenuMutator(prompt string, loadItems func() []MenuItem, emptyQuerySh
 	}
 }
 
-func NewShowMenuMutatorWithItems(prompt string, items []MenuItem, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
-	loadItems := func() []MenuItem { return items }
+func NewShowMenuMutatorWithItems(prompt string, items []menu.Item, emptyQueryShowAll bool, showCustomMenuItems bool) Mutator {
+	loadItems := func() []menu.Item { return items }
 	return NewShowMenuMutator(prompt, loadItems, emptyQueryShowAll, showCustomMenuItems)
 }
 
 func (smm *showMenuMutator) Mutate(state *EditorState) {
-	search := &MenuSearch{emptyQueryShowAll: smm.emptyQueryShowAll}
+	search := menu.NewSearch(smm.emptyQueryShowAll)
 	search.AddItems(smm.loadItems())
 
 	if smm.showCustomMenuItems {
@@ -797,7 +798,7 @@ func (esm *executeSelectedMenuItemMutator) Mutate(state *EditorState) {
 	NewCompositeMutator([]Mutator{
 		// Perform the action after hiding the menu in case the action wants to show another menu.
 		NewHideMenuMutator(),
-		selectedItem.Action,
+		selectedItem.Action.(Mutator),
 	}).Mutate(state)
 }
 

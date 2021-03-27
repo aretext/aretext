@@ -6,13 +6,14 @@ import (
 
 	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/pkg/errors"
 )
 
-func commandMenuItems(config Config) func() []exec.MenuItem {
-	return func() []exec.MenuItem {
-		return []exec.MenuItem{
+func commandMenuItems(config Config) func() []menu.Item {
+	return func() []menu.Item {
+		return []menu.Item{
 			{
 				Name:   "quit",
 				Action: exec.NewAbortIfUnsavedChangesMutator(exec.NewQuitMutator(), true),
@@ -54,16 +55,16 @@ func commandMenuItems(config Config) func() []exec.MenuItem {
 }
 
 func ShowFileMenuMutator(config Config) exec.Mutator {
-	findFileMenuItems := func() []exec.MenuItem {
+	findFileMenuItems := func() []menu.Item {
 		dir, err := os.Getwd()
 		if err != nil {
 			log.Printf("Error loading menu items: %v\n", errors.Wrapf(err, "os.GetCwd"))
 			return nil
 		}
 
-		items := make([]exec.MenuItem, 0, 0)
+		items := make([]menu.Item, 0, 0)
 		file.Walk(dir, config.DirNamesToHide, func(path string) {
-			items = append(items, exec.MenuItem{
+			items = append(items, menu.Item{
 				Name:   file.RelativePathCwd(path),
 				Action: exec.NewLoadDocumentMutator(path, true, true),
 			})

@@ -1,4 +1,4 @@
-package exec
+package locate
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ func stringWithLen(n int) string {
 	return string(s)
 }
 
-func TestScrollToCursor(t *testing.T) {
+func TestViewOriginAfterScroll(t *testing.T) {
 	testCases := []struct {
 		name         string
 		inputString  string
@@ -185,7 +185,7 @@ func TestScrollToCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			updatedViewStartPos := ScrollToCursor(tc.cursorPos, tree, tc.viewStartPos, tc.viewWidth, tc.viewHeight, 4)
+			updatedViewStartPos := ViewOriginAfterScroll(tc.cursorPos, tree, tc.viewStartPos, tc.viewWidth, tc.viewHeight, 4)
 			assert.Equal(t, tc.expectedPos, updatedViewStartPos)
 		})
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
@@ -315,7 +316,7 @@ func NewScrollToCursorMutator() Mutator {
 
 func (sm *scrollToCursorMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
-	buffer.view.textOrigin = ScrollToCursor(
+	buffer.view.textOrigin = locate.ViewOriginAfterScroll(
 		buffer.cursor.position,
 		buffer.textTree,
 		buffer.view.textOrigin,
@@ -357,8 +358,8 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 	// (the scroll margin) for consistency with ScrollToCursor.
 	lastLineNum := closestValidLineNum(buffer.textTree, buffer.textTree.NumLines())
 	if lastLineNum-lineNum < buffer.view.height {
-		if lastLineNum+scrollMargin+1 > buffer.view.height {
-			lineNum = lastLineNum + scrollMargin + 1 - buffer.view.height
+		if lastLineNum+locate.ScrollMargin+1 > buffer.view.height {
+			lineNum = lastLineNum + locate.ScrollMargin + 1 - buffer.view.height
 		} else {
 			lineNum = 0
 		}
@@ -1022,7 +1023,7 @@ func (usm *updateSearchQueryMutator) Mutate(state *EditorState) {
 		StartPos: matchStartPos,
 		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(q)),
 	}
-	buffer.view.textOrigin = ScrollToCursor(
+	buffer.view.textOrigin = locate.ViewOriginAfterScroll(
 		matchStartPos,
 		buffer.textTree,
 		buffer.view.textOrigin,

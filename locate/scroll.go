@@ -1,4 +1,4 @@
-package exec
+package locate
 
 import (
 	"io"
@@ -15,13 +15,13 @@ type posRange struct {
 	endPos   uint64 // exclusive
 }
 
-// scrollMargin is the number of lines at the beginning and end of the displayed text
+// ScrollMargin is the number of lines at the beginning and end of the displayed text
 // where a cursor movement would trigger a scroll.
-const scrollMargin = 3
+const ScrollMargin = 3
 
-// ScrollToCursor returns a new view origin such that the cursor is visible.
+// ViewOriginAfterScroll returns a new view origin such that the cursor is visible.
 // It attempts to display a few lines before/after the cursor to help the user navigate.
-func ScrollToCursor(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight, tabSize uint64) uint64 {
+func ViewOriginAfterScroll(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight, tabSize uint64) uint64 {
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
 	}
@@ -46,8 +46,8 @@ func maxLinesAboveCursorScrollBackward(viewHeight uint64) uint64 {
 	// |                 |
 	// |                 |
 	// ===================
-	if scrollMargin < viewHeight {
-		return scrollMargin
+	if ScrollMargin < viewHeight {
+		return ScrollMargin
 	} else if viewHeight > 0 {
 		return viewHeight - 1
 	} else {
@@ -63,8 +63,8 @@ func maxLinesAboveCursorScrollForward(viewHeight uint64) uint64 {
 	// -------------------
 	// |  scroll margin  |
 	// ===================
-	if viewHeight > scrollMargin {
-		return viewHeight - scrollMargin - 1
+	if viewHeight > ScrollMargin {
+		return viewHeight - ScrollMargin - 1
 	} else if viewHeight > 0 {
 		return viewHeight - 1
 	} else {
@@ -83,8 +83,8 @@ func visibleRangeWithinMargin(tree *text.Tree, viewOrigin uint64, wrapConfig seg
 	}
 
 	margin := 0
-	if len(lines) > scrollMargin*2 {
-		margin = scrollMargin
+	if len(lines) > ScrollMargin*2 {
+		margin = ScrollMargin
 	} else if len(lines) >= 3 {
 		margin = 1
 	}

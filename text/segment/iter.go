@@ -1,5 +1,10 @@
 package segment
 
+import (
+	"io"
+	"log"
+)
+
 // SegmentIter iterates through segments from a larger text.
 type SegmentIter interface {
 	// NextSegment finds the next segment in the text.
@@ -15,4 +20,19 @@ type CloneableSegmentIter interface {
 
 	// Clone returns an independent copy of the iterator.
 	Clone() CloneableSegmentIter
+}
+
+// NextSegmentOrEof finds the next segment and returns a flag indicating end of file.
+// If an error occurs (e.g. due to invalid UTF-8), it exits with an error.
+func NextSegmentOrEof(segmentIter SegmentIter, seg *Segment) (eof bool) {
+	err := segmentIter.NextSegment(seg)
+	if err == io.EOF {
+		return true
+	}
+
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+
+	return false
 }

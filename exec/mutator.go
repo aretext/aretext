@@ -19,6 +19,25 @@ import (
 	"github.com/aretext/aretext/text/segment"
 )
 
+// LocatorParams are inputs to a function that locates a position in the document.
+type LocatorParams struct {
+	TextTree          *text.Tree
+	TokenTree         *parser.TokenTree
+	CursorPos         uint64
+	AutoIndentEnabled bool
+	TabSize           uint64
+}
+
+func locatorParamsForBuffer(buffer *BufferState) LocatorParams {
+	return LocatorParams{
+		TextTree:          buffer.textTree,
+		TokenTree:         buffer.tokenTree,
+		CursorPos:         buffer.cursor.position,
+		AutoIndentEnabled: buffer.autoIndent,
+		TabSize:           buffer.tabSize,
+	}
+}
+
 // Mutator modifies the state of the editor.
 type Mutator interface {
 	fmt.Stringer
@@ -129,11 +148,24 @@ func (ldm *loadDocumentMutator) Mutate(state *EditorState) {
 }
 
 func (ldm *loadDocumentMutator) updateAfterReload(state *EditorState) {
+	closestPosInDocument := func(params LocatorParams) uint64 {
+		n := params.TextTree.NumChars()
+		if n == 0 {
+			return 0
+		}
+		lastValidPos := n - 1
+		if params.CursorPos > lastValidPos {
+			return lastValidPos
+		} else {
+			return params.CursorPos
+		}
+	}
+
 	// Make sure that the cursor is a valid position in the updated document
 	// and that the cursor is visible.  If not, adjust the cursor and scroll.
 	NewCompositeMutator([]Mutator{
 		NewSetSyntaxMutator(state.documentBuffer.syntaxLanguage),
-		NewCursorMutator(NewOntoDocumentLocator()),
+		NewCursorMutator(closestPosInDocument),
 		NewScrollToCursorMutator(),
 	}).Mutate(state)
 }
@@ -291,20 +323,142 @@ func (sim *setInputModeMutator) String() string {
 
 // cursorMutator returns a mutator that updates the cursor location.
 type cursorMutator struct {
-	loc CursorLocator
+	loc func(LocatorParams) uint64
 }
 
-func NewCursorMutator(loc CursorLocator) Mutator {
+func NewCursorMutator(loc func(LocatorParams) uint64) Mutator {
 	return &cursorMutator{loc}
 }
 
 func (cpm *cursorMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
-	buffer.cursor = cpm.loc.Locate(buffer)
+	cursorPos := buffer.cursor.position
+	newPos := cpm.loc(locatorParamsForBuffer(buffer))
+	var logicalOffset uint64
+	if newPos == cursorPos {
+		// This handles the case where the user is moving the cursor up to a shorter line,
+		// then tries to move the cursor to the right at the end of the line.
+		// The cursor doesn't actually move, so when the user moves up another line,
+		// it should use the offset from the longest line.
+		logicalOffset = buffer.cursor.logicalOffset
+	}
+	buffer.cursor = cursorState{
+		position:      newPos,
+		logicalOffset: logicalOffset,
+	}
 }
 
 func (cpm *cursorMutator) String() string {
-	return fmt.Sprintf("MutateCursor(%s)", cpm.loc)
+	return "MutateCursor()"
+}
+
+// cursorLineMutator moves the cursor up or down vertically, preserving the logical offset.
+type cursorLineMutator struct {
+	targetLineStartLoc func(LocatorParams) uint64
+}
+
+func NewCursorLineAboveMutator(count uint64) Mutator {
+	return &cursorLineMutator{
+		targetLineStartLoc: func(params LocatorParams) uint64 {
+			return locate.StartOfLineAbove(params.TextTree, count, params.CursorPos)
+		},
+	}
+}
+
+func NewCursorLineBelowMutator(count uint64) Mutator {
+	return &cursorLineMutator{
+		targetLineStartLoc: func(params LocatorParams) uint64 {
+			return locate.StartOfLineBelow(params.TextTree, count, params.CursorPos)
+		},
+	}
+}
+
+func (clm *cursorLineMutator) Mutate(state *EditorState) {
+	buffer := state.documentBuffer
+	lineStartPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
+	targetLineStartPos := clm.targetLineStartLoc(locatorParamsForBuffer(buffer))
+
+	if targetLineStartPos == lineStartPos {
+		return
+	}
+
+	targetOffset := clm.findOffsetFromLineStart(
+		buffer.textTree,
+		lineStartPos,
+		buffer.cursor,
+		buffer.tabSize)
+
+	newPos, actualOffset := clm.advanceToOffset(
+		buffer.textTree,
+		targetLineStartPos,
+		targetOffset,
+		buffer.tabSize)
+
+	buffer.cursor = cursorState{
+		position:      newPos,
+		logicalOffset: targetOffset - actualOffset,
+	}
+}
+
+func (clm *cursorLineMutator) findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cursorState, tabSize uint64) uint64 {
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, lineStartPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	pos, offset := lineStartPos, uint64(0)
+
+	for {
+		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		if eof || pos >= cursor.position {
+			break
+		}
+
+		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, tabSize)
+		pos += seg.NumRunes()
+	}
+
+	return offset + cursor.logicalOffset
+}
+
+func (clm *cursorLineMutator) advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint64, tabSize uint64) (uint64, uint64) {
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, lineStartPos, text.ReadDirectionForward)
+	seg := segment.NewSegment()
+	var endOfLineOrFile bool
+	var prevPosOffset, posOffset, cellOffset uint64
+
+	for {
+		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		if eof {
+			endOfLineOrFile = true
+			break
+		}
+
+		if seg.HasNewline() {
+			endOfLineOrFile = true
+			break
+		}
+
+		gcWidth := cellwidth.GraphemeClusterWidth(seg.Runes(), cellOffset, tabSize)
+		if cellOffset+gcWidth > targetOffset {
+			break
+		}
+
+		cellOffset += gcWidth
+		prevPosOffset = posOffset
+		posOffset += seg.NumRunes()
+	}
+
+	if endOfLineOrFile {
+		if cellOffset > 0 {
+			cellOffset--
+		}
+		return lineStartPos + prevPosOffset, cellOffset
+	}
+
+	return lineStartPos + posOffset, cellOffset
+
+}
+
+func (clm *cursorLineMutator) String() string {
+	return "CursorLine()"
 }
 
 // scrollToCursorMutator updates the view origin so that the cursor is visible.
@@ -350,13 +504,13 @@ func (sm *scrollLinesMutator) Mutate(state *EditorState) {
 		lineNum = 0
 	}
 
-	lineNum = closestValidLineNum(buffer.textTree, lineNum)
+	lineNum = locate.ClosestValidLineNum(buffer.textTree, lineNum)
 
 	// When scrolling to the end of the file, we want most of the last lines to remain visible.
 	// To achieve this, set the view origin (viewHeight - scrollMargin) lines above
 	// the last line.  This will leave a few blank lines past the end of the document
 	// (the scroll margin) for consistency with ScrollToCursor.
-	lastLineNum := closestValidLineNum(buffer.textTree, buffer.textTree.NumLines())
+	lastLineNum := locate.ClosestValidLineNum(buffer.textTree, buffer.textTree.NumLines())
 	if lastLineNum-lineNum < buffer.view.height {
 		if lastLineNum+locate.ScrollMargin+1 > buffer.view.height {
 			lineNum = lastLineNum + locate.ScrollMargin + 1 - buffer.view.height
@@ -418,9 +572,8 @@ func (inm *insertNewlineMutator) Mutate(state *EditorState) {
 }
 
 func (inm *insertNewlineMutator) deleteToNextNonWhitespace(startPos uint64, state *EditorState) {
-	loc := NewNonWhitespaceOrNewlineLocator(NewAbsoluteCursorLocator(startPos))
-	locPos := loc.Locate(state.documentBuffer).position
-	count := locPos - startPos
+	pos := locate.NextNonWhitespaceOrNewline(state.documentBuffer.textTree, startPos)
+	count := pos - startPos
 	deleteRunes(state, startPos, count)
 }
 
@@ -432,11 +585,11 @@ func (inm *insertNewlineMutator) numColsIndentedPrevLine(cursorPos uint64, buffe
 	}
 
 	prevLineStartPos := buffer.textTree.LineStartPosition(lineNum - 1)
-	iter := gcIterForTree(buffer.textTree, prevLineStartPos, text.ReadDirectionForward)
+	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, prevLineStartPos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	numCols := uint64(0)
 	for {
-		eof := nextSegmentOrEof(iter, seg)
+		eof := segment.NextSegmentOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -512,11 +665,11 @@ func (itm *insertTabMutator) insertSpaces(state *EditorState) uint64 {
 
 func (itm *insertTabMutator) offsetInLine(buffer *BufferState) uint64 {
 	var offset uint64
-	pos := lineStartPos(buffer.textTree, buffer.cursor.position)
-	iter := gcIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
+	pos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
+	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
 	seg := segment.NewSegment()
 	for pos < buffer.cursor.position {
-		eof := nextSegmentOrEof(iter, seg)
+		eof := segment.NextSegmentOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -535,17 +688,17 @@ func (itm *insertTabMutator) String() string {
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
 type deleteMutator struct {
-	loc CursorLocator
+	loc func(LocatorParams) uint64
 }
 
-func NewDeleteMutator(loc CursorLocator) Mutator {
+func NewDeleteMutator(loc func(LocatorParams) uint64) Mutator {
 	return &deleteMutator{loc}
 }
 
 func (dm *deleteMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
-	deleteToPos := dm.loc.Locate(buffer).position
+	deleteToPos := dm.loc(locatorParamsForBuffer(buffer))
 
 	if startPos < deleteToPos {
 		deleteRunes(state, startPos, deleteToPos-startPos)
@@ -557,25 +710,25 @@ func (dm *deleteMutator) Mutate(state *EditorState) {
 }
 
 func (dm *deleteMutator) String() string {
-	return fmt.Sprintf("Delete(%s)", dm.loc)
+	return "Delete()"
 }
 
 // deleteLinesMutator deletes lines from the cursor's current line to the line of a target cursor.
 // It moves the cursor to the start of the line following the last deleted line.
 type deleteLinesMutator struct {
-	targetLineLocator          CursorLocator
+	targetLineLocator          func(LocatorParams) uint64
 	abortIfTargetIsCurrentLine bool
 }
 
-func NewDeleteLinesMutator(targetLineLocator CursorLocator, abortIfTargetIsCurrentLine bool) Mutator {
+func NewDeleteLinesMutator(targetLineLocator func(LocatorParams) uint64, abortIfTargetIsCurrentLine bool) Mutator {
 	return &deleteLinesMutator{targetLineLocator, abortIfTargetIsCurrentLine}
 }
 
 func (dlm *deleteLinesMutator) Mutate(state *EditorState) {
 	buffer := state.documentBuffer
 	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
-	targetCursor := dlm.targetLineLocator.Locate(buffer)
-	targetLine := buffer.textTree.LineNumForPosition(targetCursor.position)
+	targetPos := dlm.targetLineLocator(locatorParamsForBuffer(buffer))
+	targetLine := buffer.textTree.LineNumForPosition(targetPos)
 
 	if targetLine == currentLine && dlm.abortIfTargetIsCurrentLine {
 		return
@@ -614,14 +767,16 @@ func (dlm *deleteLinesMutator) deleteLine(state *EditorState, lineNum uint64) {
 
 	buffer.cursor = cursorState{position: startOfLinePos}
 	if buffer.cursor.position >= buffer.textTree.NumChars() {
-		buffer.cursor = NewLastLineLocator().Locate(buffer)
+		buffer.cursor = cursorState{
+			position: locate.StartOfLastLine(buffer.textTree),
+		}
 	}
 
 	state.hasUnsavedChanges = state.hasUnsavedChanges || numToDelete > 0
 }
 
 func (dlm *deleteLinesMutator) String() string {
-	return fmt.Sprintf("DeleteLines(%s, abortIfTargetIsCurrentLine=%t)", dlm.targetLineLocator, dlm.abortIfTargetIsCurrentLine)
+	return fmt.Sprintf("DeleteLines(abortIfTargetIsCurrentLine=%t)", dlm.abortIfTargetIsCurrentLine)
 }
 
 // replaceCharMutator replaces the character under the cursor.
@@ -634,10 +789,10 @@ func NewReplaceCharMutator(newText string) Mutator {
 }
 
 func (rm *replaceCharMutator) Mutate(state *EditorState) {
-	nextCharLoc := NewCharInLineLocator(text.ReadDirectionForward, 1, true)
-	nextCharPos := nextCharLoc.Locate(state.documentBuffer).position
-
+	buffer := state.documentBuffer
 	cursorPos := state.documentBuffer.cursor.position
+	nextCharPos := locate.NextCharInLine(buffer.textTree, 1, true, cursorPos)
+
 	if nextCharPos == cursorPos {
 		// No character under the cursor on the current line, so abort.
 		return
@@ -657,9 +812,9 @@ func (rm *replaceCharMutator) Mutate(state *EditorState) {
 	}
 
 	if rm.newText != "\n" {
-		state.documentBuffer.cursor.position = cursorPos
+		buffer.cursor.position = cursorPos
 	} else {
-		state.documentBuffer.cursor.position = pos
+		buffer.cursor.position = pos
 	}
 }
 

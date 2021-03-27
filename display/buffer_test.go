@@ -20,7 +20,9 @@ func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, l
 		exec.NewInsertRuneMutator(r).Mutate(state)
 	}
 
-	exec.NewCursorMutator(exec.NewAbsoluteCursorLocator(cursorPos)).Mutate(state)
+	exec.NewCursorMutator(func(exec.LocatorParams) uint64 {
+		return cursorPos
+	}).Mutate(state)
 
 	if searchQuery != "" {
 		exec.NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)

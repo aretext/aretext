@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/exec"
-	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/locate"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -84,17 +84,26 @@ func (m *insertMode) insertTab() exec.Mutator {
 }
 
 func (m *insertMode) deletePrevChar() exec.Mutator {
-	loc := exec.NewMinPosLocator([]exec.CursorLocator{
-		exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true),
-		exec.NewPrevAutoIndentLocator(),
+	return exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+		prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
+		prevAutoIndentPos := locate.PrevAutoIndent(
+			params.TextTree,
+			params.AutoIndentEnabled,
+			params.TabSize,
+			params.CursorPos)
+		if prevInLinePos < prevAutoIndentPos {
+			return prevInLinePos
+		} else {
+			return prevAutoIndentPos
+		}
 	})
-	return exec.NewDeleteMutator(loc)
 }
 
 func (m *insertMode) returnToNormalMode() exec.Mutator {
-	loc := exec.NewOntoLineLocator()
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(loc),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		}),
 		exec.NewSetInputModeMutator(exec.InputModeNormal),
 	})
 }

@@ -32,6 +32,18 @@ func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIte
 	}
 }
 
+// NewGraphemeClusterIterForTree constructs a grapheme cluster iterator for a text tree.
+func NewGraphemeClusterIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) CloneableSegmentIter {
+	reader := tree.ReaderAtPosition(pos, direction)
+	if direction == text.ReadDirectionBackward {
+		runeIter := text.NewCloneableBackwardRuneIter(reader)
+		return NewReverseGraphemeClusterIter(runeIter)
+	} else {
+		runeIter := text.NewCloneableForwardRuneIter(reader)
+		return NewGraphemeClusterIter(runeIter)
+	}
+}
+
 // Clone implements CloneableSegmentIter#Clone()
 func (g *graphemeClusterIter) Clone() CloneableSegmentIter {
 	var clone graphemeClusterIter

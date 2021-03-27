@@ -4,63 +4,71 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
 )
 
 func CursorLeft(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
 func CursorBack(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewPrevCharLocator(1)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevChar(params.TextTree, 1, params.CursorPos)
+	})
 }
 
 func CursorRight(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, false)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
 func CursorRightIncludeEndOfLineOrFile(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+	})
 }
 
 func CursorUp(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewRelativeLineLocator(text.ReadDirectionBackward, 1)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorLineAboveMutator(1)
 }
 
 func CursorDown(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewRelativeLineLocator(text.ReadDirectionForward, 1)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorLineBelowMutator(1)
 }
 
 func CursorNextWordStart(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewNextWordStartLocator()
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
 func CursorPrevWordStart(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewPrevWordStartLocator()
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
 func CursorNextWordEnd(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewNextWordEndLocator()
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
 func CursorPrevParagraph(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewPrevParagraphLocator()
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevParagraph(params.TextTree, params.CursorPos)
+	})
 }
 
 func CursorNextParagraph(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewNextParagraphLocator()
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextParagraph(params.TextTree, params.CursorPos)
+	})
 }
 
 func ScrollUp(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
@@ -69,11 +77,13 @@ func ScrollUp(inputEvents []*tcell.EventKey, count *int64, config Config) exec.M
 		scrollLines = 1
 	}
 
-	// Move the cursor to the start of a line above.  We rely on ScrollToCursorMutator
-	// (appended later to every mutator) to reposition the view.
-	loc := exec.NewRelativeLineStartLocator(text.ReadDirectionBackward, scrollLines)
+	// Move the cursor to the start of a line above, then scroll up.
+	// We rely on ScrollToCursorMutator (appended later to every mutator)
+	// to reposition the view.
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(loc),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.StartOfLineAbove(params.TextTree, scrollLines, params.CursorPos)
+		}),
 		exec.NewScrollLinesMutator(text.ReadDirectionBackward, scrollLines),
 	})
 }
@@ -84,34 +94,40 @@ func ScrollDown(inputEvents []*tcell.EventKey, count *int64, config Config) exec
 		scrollLines = 1
 	}
 
-	// Move the cursor to the start of a line below.  We rely on ScrollToCursorMutator
-	// (appended later to every mutator) to reposition the view.
-	loc := exec.NewRelativeLineStartLocator(text.ReadDirectionForward, scrollLines)
+	// Move the cursor to the start of a line below, then scroll down.
+	// We rely on ScrollToCursorMutator (appended later to every mutator)
+	// to reposition the view.
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(loc),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.StartOfLineBelow(params.TextTree, scrollLines, params.CursorPos)
+		}),
 		exec.NewScrollLinesMutator(text.ReadDirectionForward, scrollLines),
 	})
 }
 
 func CursorLineStart(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+	})
 }
 
 func CursorLineStartNonWhitespace(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineStartLoc)
-	return exec.NewCursorMutator(firstNonWhitespaceLoc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
 func CursorLineEnd(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, false)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextLineBoundary(params.TextTree, false, params.CursorPos)
+	})
 }
 
 func CursorLineEndIncludeEndOfLineOrFile(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
-	return exec.NewCursorMutator(loc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+	})
 }
 
 func CursorStartOfLineNum(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
@@ -121,15 +137,17 @@ func CursorStartOfLineNum(inputEvents []*tcell.EventKey, count *int64, config Co
 		lineNum = uint64(*count - 1)
 	}
 
-	lineNumLoc := exec.NewLineNumLocator(lineNum)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineNumLoc)
-	return exec.NewCursorMutator(firstNonWhitespaceLoc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		lineStartPos := locate.StartOfLineNum(params.TextTree, lineNum)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
 func CursorStartOfLastLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	lastLineLoc := exec.NewLastLineLocator()
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lastLineLoc)
-	return exec.NewCursorMutator(firstNonWhitespaceLoc)
+	return exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+		lineStartPos := locate.StartOfLastLine(params.TextTree)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
 func EnterInsertMode(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
@@ -181,32 +199,36 @@ func BeginNewLineAbove(inputEvents []*tcell.EventKey, count *int64, config Confi
 }
 
 func DeleteLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
+	currentPos := func(params exec.LocatorParams) uint64 {
+		return params.CursorPos
+	}
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewDeleteLinesMutator(exec.NewCurrentCursorLocator(), false),
+		exec.NewDeleteLinesMutator(currentPos, false),
 		CursorLineStartNonWhitespace(nil, nil, config),
 	})
 }
 
-func DeletePrevChar(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, true)
-	return exec.NewDeleteMutator(loc)
-}
-
 func DeletePrevCharInLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionBackward, 1, false)
-	return exec.NewDeleteMutator(loc)
+	return exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
 func DeleteNextCharInLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewCharInLineLocator(text.ReadDirectionForward, 1, true)
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewDeleteMutator(loc),
-		exec.NewCursorMutator(exec.NewOntoLineLocator()),
+		exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+			return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+		}),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		}),
 	})
 }
 
 func DeleteDown(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	targetLineLoc := exec.NewRelativeLineStartLocator(text.ReadDirectionForward, 1)
+	targetLineLoc := func(params exec.LocatorParams) uint64 {
+		return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
+	}
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewDeleteLinesMutator(targetLineLoc, true),
 		CursorLineStartNonWhitespace(nil, nil, config),
@@ -214,7 +236,9 @@ func DeleteDown(inputEvents []*tcell.EventKey, count *int64, config Config) exec
 }
 
 func DeleteUp(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	targetLineLoc := exec.NewRelativeLineStartLocator(text.ReadDirectionBackward, 1)
+	targetLineLoc := func(params exec.LocatorParams) uint64 {
+		return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
+	}
 	return exec.NewCompositeMutator([]exec.Mutator{
 		exec.NewDeleteLinesMutator(targetLineLoc, true),
 		CursorLineStartNonWhitespace(nil, nil, config),
@@ -222,30 +246,37 @@ func DeleteUp(inputEvents []*tcell.EventKey, count *int64, config Config) exec.M
 }
 
 func DeleteToEndOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewLineBoundaryLocator(text.ReadDirectionForward, true)
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewDeleteMutator(loc),
-		exec.NewCursorMutator(exec.NewOntoLineLocator()),
+		exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+			return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+		}),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		}),
 	})
 }
 
 func DeleteToStartOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	loc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	return exec.NewDeleteMutator(loc)
+	return exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+		return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+	})
 }
 
 func DeleteToStartOfLineNonWhitespace(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	lineStartLoc := exec.NewLineBoundaryLocator(text.ReadDirectionBackward, false)
-	firstNonWhitespaceLoc := exec.NewNonWhitespaceOrNewlineLocator(lineStartLoc)
-	return exec.NewDeleteMutator(firstNonWhitespaceLoc)
+	return exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
 func DeleteInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator {
-	startLoc := exec.NewCurrentWordStartLocator()
-	endLoc := exec.NewCurrentWordEndLocator()
 	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(startLoc),
-		exec.NewDeleteMutator(endLoc),
+		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		}),
+		exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
+			return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+		}),
 	})
 }
 

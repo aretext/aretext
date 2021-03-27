@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
@@ -219,9 +220,269 @@ func TestCursorMutator(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
 	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 2
-	mutator := NewCursorMutator(NewCharInLineLocator(text.ReadDirectionForward, 1, false))
+	mutator := NewCursorMutator(func(params LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 	mutator.Mutate(state)
 	assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
+}
+
+func TestCursorLineAboveMutator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		count          uint64
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty string, move up one line",
+			inputString:    "",
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "single line, move up one line",
+			inputString:    "abcdefgh",
+			count:          1,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "single line, move up one line with logical offset",
+			inputString:    "abcdefgh",
+			count:          1,
+			initialCursor:  cursorState{position: 7, logicalOffset: 4},
+			expectedCursor: cursorState{position: 7, logicalOffset: 4},
+		},
+		{
+			name:           "two lines, move up one line at start of line",
+			inputString:    "abcdefgh\nijklm\nopqrs",
+			count:          1,
+			initialCursor:  cursorState{position: 15},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "two lines, move up at same offset",
+			inputString:    "abcdefgh\nijklmnop",
+			count:          1,
+			initialCursor:  cursorState{position: 11},
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "two lines, move up from shorter line to longer line",
+			inputString:    "abcdefgh\nijk",
+			count:          1,
+			initialCursor:  cursorState{position: 11},
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "two lines, move up from shorter line with logical offset to longer line",
+			inputString:    "abcdefgh\nijk",
+			count:          1,
+			initialCursor:  cursorState{position: 11, logicalOffset: 2},
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "two lines, move up from longer line to shorter line",
+			inputString:    "abc\nefghijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 9},
+			expectedCursor: cursorState{position: 2, logicalOffset: 3},
+		},
+		{
+			name:           "two lines, move up from longer line with logical offset to shorter line",
+			inputString:    "abc\nefghijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 11, logicalOffset: 5},
+			expectedCursor: cursorState{position: 2, logicalOffset: 10},
+		},
+		{
+			name:           "two lines, move up with multi-char grapheme cluster",
+			inputString:    "abcde\u0301fgh\nijklmnopqrstuv",
+			count:          1,
+			initialCursor:  cursorState{position: 15},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "three lines, move up from longer line to empty line",
+			inputString:    "abcd\n\nefghijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 8},
+			expectedCursor: cursorState{position: 5, logicalOffset: 2},
+		},
+		{
+			name:           "move up multiple lines",
+			inputString:    "abcd\nefgh\nijkl",
+			count:          2,
+			initialCursor:  cursorState{position: 12},
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "move up to tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 13},
+			expectedCursor: cursorState{position: 6, logicalOffset: 1},
+		},
+		{
+			name:           "move up from tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 6, logicalOffset: 2},
+			expectedCursor: cursorState{position: 3},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			state.documentBuffer.tabSize = 4
+			NewCursorLineAboveMutator(tc.count).Mutate(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+		})
+	}
+}
+
+func TestCursorLineBelowMutator(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		count          uint64
+		initialCursor  cursorState
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty string, move down one line",
+			inputString:    "",
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "single line, move down one line",
+			inputString:    "abcdefgh",
+			count:          1,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "single line, move down one line with logical offset",
+			inputString:    "abcdefgh",
+			count:          1,
+			initialCursor:  cursorState{position: 7, logicalOffset: 4},
+			expectedCursor: cursorState{position: 7, logicalOffset: 4},
+		},
+		{
+			name:           "two lines, move down one line at start of line",
+			inputString:    "abcdefgh\nijklm\nopqrs",
+			count:          1,
+			initialCursor:  cursorState{position: 9},
+			expectedCursor: cursorState{position: 15},
+		},
+		{
+			name:           "two lines, move down at same offset",
+			inputString:    "abcdefgh\nijklmnop",
+			count:          1,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 11},
+		},
+		{
+			name:           "two lines, move down from shorter line to longer line",
+			inputString:    "abc\nefghijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 6},
+		},
+		{
+			name:           "two lines, move down from shorter line with logical offset to longer line",
+			inputString:    "abc\nefghijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 2, logicalOffset: 3},
+			expectedCursor: cursorState{position: 9},
+		},
+		{
+			name:           "two lines, move down from longer line to shorter line",
+			inputString:    "abcdefgh\nijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 12, logicalOffset: 4},
+		},
+		{
+			name:           "two lines, move down from longer line with logical offset to shorter line",
+			inputString:    "abcdefgh\nijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 7, logicalOffset: 5},
+			expectedCursor: cursorState{position: 12, logicalOffset: 9},
+		},
+		{
+			name:           "two lines, move down with multi-char grapheme cluster",
+			inputString:    "abcdefgh\nijklmno\u0301pqrstuv",
+			count:          1,
+			initialCursor:  cursorState{position: 7},
+			expectedCursor: cursorState{position: 17},
+		},
+		{
+			name:           "three lines, move down from longer line to empty line",
+			inputString:    "abcdefgh\n\nijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 9, logicalOffset: 2},
+		},
+		{
+			name:           "move down multiple lines",
+			inputString:    "abcd\nefgh\nijkl",
+			count:          2,
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 12},
+		},
+		{
+			name:           "move down past newline at end of text",
+			inputString:    "abcd\nefgh\nijkl\n",
+			count:          1,
+			initialCursor:  cursorState{position: 12},
+			expectedCursor: cursorState{position: 15, logicalOffset: 2},
+		},
+		{
+			name:           "move down past single newline",
+			inputString:    "\n",
+			count:          1,
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 1},
+		},
+		{
+			name:           "move down to tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 6, logicalOffset: 2},
+		},
+		{
+			name:           "move down from tab",
+			inputString:    "abcd\ne\tefg\nhijkl",
+			count:          1,
+			initialCursor:  cursorState{position: 6, logicalOffset: 1},
+			expectedCursor: cursorState{position: 13},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			state.documentBuffer.tabSize = 4
+			NewCursorLineBelowMutator(tc.count).Mutate(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+		})
+	}
 }
 
 func TestInsertRuneMutator(t *testing.T) {
@@ -279,42 +540,50 @@ func TestDeleteMutator(t *testing.T) {
 		name                 string
 		inputString          string
 		initialCursor        cursorState
-		locator              CursorLocator
+		locator              func(LocatorParams) uint64
 		expectedCursor       cursorState
 		expectedText         string
 		expectUnsavedChanges bool
 	}{
 		{
-			name:           "delete from empty string",
-			inputString:    "",
-			initialCursor:  cursorState{position: 0},
-			locator:        NewCharInLineLocator(text.ReadDirectionForward, 1, true),
+			name:          "delete from empty string",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			locator: func(params LocatorParams) uint64 {
+				return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+			},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 		},
 		{
-			name:                 "delete next character at start of string",
-			inputString:          "abcd",
-			initialCursor:        cursorState{position: 0},
-			locator:              NewCharInLineLocator(text.ReadDirectionForward, 1, true),
+			name:          "delete next character at start of string",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 0},
+			locator: func(params LocatorParams) uint64 {
+				return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+			},
 			expectedCursor:       cursorState{position: 0},
 			expectedText:         "bcd",
 			expectUnsavedChanges: true,
 		},
 		{
-			name:                 "delete from end of text",
-			inputString:          "abcd",
-			initialCursor:        cursorState{position: 3},
-			locator:              NewCharInLineLocator(text.ReadDirectionForward, 1, true),
+			name:          "delete from end of text",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 3},
+			locator: func(params LocatorParams) uint64 {
+				return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+			},
 			expectedCursor:       cursorState{position: 3},
 			expectedText:         "abc",
 			expectUnsavedChanges: true,
 		},
 		{
-			name:                 "delete multiple characters",
-			inputString:          "abcd",
-			initialCursor:        cursorState{position: 1},
-			locator:              NewCharInLineLocator(text.ReadDirectionForward, 10, true),
+			name:          "delete multiple characters",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 1},
+			locator: func(params LocatorParams) uint64 {
+				return locate.NextCharInLine(params.TextTree, 10, true, params.CursorPos)
+			},
 			expectedCursor:       cursorState{position: 1},
 			expectedText:         "a",
 			expectUnsavedChanges: true,
@@ -510,90 +779,108 @@ func TestDeleteLinesMutator(t *testing.T) {
 		name                       string
 		inputString                string
 		initialCursor              cursorState
-		targetLineLocator          CursorLocator
+		targetLineLocator          func(LocatorParams) uint64
 		abortIfTargetIsCurrentLine bool
 		expectedCursor             cursorState
 		expectedText               string
 		expectedUnsavedChanges     bool
 	}{
 		{
-			name:                   "empty",
-			inputString:            "",
-			initialCursor:          cursorState{position: 0},
-			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionForward, 1),
+			name:          "empty",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
+			},
 			expectedCursor:         cursorState{position: 0},
 			expectedText:           "",
 			expectedUnsavedChanges: false,
 		},
 		{
-			name:                   "delete single line",
-			inputString:            "abcd",
-			initialCursor:          cursorState{position: 2},
-			targetLineLocator:      NewCurrentCursorLocator(),
+			name:          "delete single line",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			expectedCursor:         cursorState{position: 0},
 			expectedText:           "",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                       "delete single line, abort if same line",
-			inputString:                "abcd",
-			initialCursor:              cursorState{position: 2},
-			targetLineLocator:          NewCurrentCursorLocator(),
+			name:          "delete single line, abort if same line",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			abortIfTargetIsCurrentLine: true,
 			expectedCursor:             cursorState{position: 2},
 			expectedText:               "abcd",
 			expectedUnsavedChanges:     false,
 		},
 		{
-			name:                   "delete single line, first line",
-			inputString:            "abcd\nefgh\nijk",
-			initialCursor:          cursorState{position: 2},
-			targetLineLocator:      NewCurrentCursorLocator(),
+			name:          "delete single line, first line",
+			inputString:   "abcd\nefgh\nijk",
+			initialCursor: cursorState{position: 2},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			expectedCursor:         cursorState{position: 0},
 			expectedText:           "efgh\nijk",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                   "delete single line, interior line",
-			inputString:            "abcd\nefgh\nijk",
-			initialCursor:          cursorState{position: 6},
-			targetLineLocator:      NewCurrentCursorLocator(),
+			name:          "delete single line, interior line",
+			inputString:   "abcd\nefgh\nijk",
+			initialCursor: cursorState{position: 6},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			expectedCursor:         cursorState{position: 5},
 			expectedText:           "abcd\nijk",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                   "delete single line, last line",
-			inputString:            "abcd\nefgh\nijk",
-			initialCursor:          cursorState{position: 12},
-			targetLineLocator:      NewCurrentCursorLocator(),
+			name:          "delete single line, last line",
+			inputString:   "abcd\nefgh\nijk",
+			initialCursor: cursorState{position: 12},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			expectedCursor:         cursorState{position: 5},
 			expectedText:           "abcd\nefgh",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                   "delete empty line",
-			inputString:            "abcd\n\nefgh",
-			initialCursor:          cursorState{position: 5},
-			targetLineLocator:      NewCurrentCursorLocator(),
+			name:          "delete empty line",
+			inputString:   "abcd\n\nefgh",
+			initialCursor: cursorState{position: 5},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
 			expectedCursor:         cursorState{position: 5},
 			expectedText:           "abcd\nefgh",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                   "delete multiple lines down",
-			inputString:            "abcd\nefgh\nijk\nlmnop",
-			initialCursor:          cursorState{position: 0},
-			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionForward, 2),
+			name:          "delete multiple lines down",
+			inputString:   "abcd\nefgh\nijk\nlmnop",
+			initialCursor: cursorState{position: 0},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return locate.StartOfLineBelow(params.TextTree, 2, params.CursorPos)
+			},
 			expectedCursor:         cursorState{position: 0},
 			expectedText:           "lmnop",
 			expectedUnsavedChanges: true,
 		},
 		{
-			name:                   "delete multiple lines down",
-			inputString:            "abcd\nefgh\nijk\nlmnop",
-			initialCursor:          cursorState{position: 16},
-			targetLineLocator:      NewRelativeLineStartLocator(text.ReadDirectionBackward, 2),
+			name:          "delete multiple lines up",
+			inputString:   "abcd\nefgh\nijk\nlmnop",
+			initialCursor: cursorState{position: 16},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return locate.StartOfLineAbove(params.TextTree, 2, params.CursorPos)
+			},
 			expectedCursor:         cursorState{position: 0},
 			expectedText:           "abcd",
 			expectedUnsavedChanges: true,

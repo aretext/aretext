@@ -24,8 +24,8 @@ type CloneableIter interface {
 
 // NextOrEof finds the next segment and returns a flag indicating end of file.
 // If an error occurs (e.g. due to invalid UTF-8), it exits with an error.
-func NextOrEof(segmentIter Iter, seg *Segment) (eof bool) {
-	err := segmentIter.NextSegment(seg)
+func NextOrEof(iter Iter, seg *Segment) (eof bool) {
+	err := iter.NextSegment(seg)
 	if err == io.EOF {
 		return true
 	}

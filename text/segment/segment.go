@@ -9,8 +9,8 @@ type Segment struct {
 	runes []rune
 }
 
-// NewSegment returns a new, empty segment.
-func NewSegment() *Segment {
+// Empty returns a new, empty segment.
+func Empty() *Segment {
 	return &Segment{runes: make([]rune, 0, 1)}
 }
 

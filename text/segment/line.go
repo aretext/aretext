@@ -41,7 +41,7 @@ func NewWrappedLineIter(runeIter text.CloneableRuneIter, wrapConfig LineWrapConf
 	return &wrappedLineIter{
 		wrapConfig: wrapConfig,
 		gcIter:     NewGraphemeClusterIter(runeIter),
-		gcSegment:  NewSegment(),
+		gcSegment:  Empty(),
 		buffer:     make([]rune, 0, 256),
 	}
 }

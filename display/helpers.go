@@ -15,7 +15,7 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 	maxLineWidth, _ := sr.Size()
 	runeIter := text.NewRuneIterForSlice([]rune(s))
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	gc := segment.NewSegment()
+	gc := segment.Empty()
 	for {
 		err := gcIter.NextSegment(gc)
 		if err == io.EOF {

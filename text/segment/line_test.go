@@ -131,7 +131,7 @@ func TestWrappedLineIter(t *testing.T) {
 			runeIter := text.NewCloneableForwardRuneIter(reader)
 			wrappedLineIter := NewWrappedLineIter(runeIter, wrapConfig)
 			lines := make([]string, 0)
-			seg := NewSegment()
+			seg := Empty()
 			for {
 				err := wrappedLineIter.NextSegment(seg)
 				if err == io.EOF {

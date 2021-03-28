@@ -26,7 +26,7 @@ func reverseGraphemeClusterIterFromString(s string) SegmentIter {
 
 func TestGraphemeClusterIterEmptyString(t *testing.T) {
 	iter := graphemeClusterIterFromString("")
-	seg := NewSegment()
+	seg := Empty()
 	err := iter.NextSegment(seg)
 	assert.Equal(t, io.EOF, err)
 }
@@ -34,7 +34,7 @@ func TestGraphemeClusterIterEmptyString(t *testing.T) {
 func TestGraphemeClusterIterPastEOF(t *testing.T) {
 	iter := graphemeClusterIterFromString("abc")
 
-	seg := NewSegment()
+	seg := Empty()
 	err := iter.NextSegment(seg)
 	require.NoError(t, err)
 	assert.Equal(t, []rune{'a'}, seg.Runes())
@@ -53,7 +53,7 @@ func TestGraphemeClusterIterPastEOF(t *testing.T) {
 
 func collectSegments(t *testing.T, iter SegmentIter) ([][]rune, error) {
 	segments := make([][]rune, 0)
-	seg := NewSegment()
+	seg := Empty()
 	for {
 		err := iter.NextSegment(seg)
 		if err == io.EOF {
@@ -116,7 +116,7 @@ func (r *infiniteRuneIter) Clone() text.CloneableRuneIter {
 func BenchmarkGraphemeClusterIter(b *testing.B) {
 	runeIter := &infiniteRuneIter{c: 'a'}
 	iter := NewGraphemeClusterIter(runeIter)
-	seg := NewSegment()
+	seg := Empty()
 	for i := 0; i < b.N; i++ {
 		if err := iter.NextSegment(seg); err != nil {
 			b.Fatalf("error occurred: %v\n", err)

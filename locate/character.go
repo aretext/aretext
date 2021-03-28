@@ -9,7 +9,7 @@ import (
 // NextCharInLine locates the next grapheme cluster in the current line.
 func NextCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var endOfLineOrFile bool
 	var prevPrevOffset, prevOffset uint64
 	for i := uint64(0); i <= count; i++ {
@@ -34,7 +34,7 @@ func NextCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, 
 // PrevCharInLine locates the previous grapheme cluster in the current line.
 func PrevCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	for i := uint64(0); i < count; i++ {
 		eof := segment.NextSegmentOrEof(segmentIter, seg)
@@ -58,7 +58,7 @@ func PrevCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, 
 // PrevChar locates the grapheme cluster before a position, which may be on a previous line.
 func PrevChar(tree *text.Tree, count uint64, pos uint64) uint64 {
 	iter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	for i := uint64(0); i < count; i++ {
 		eof := segment.NextSegmentOrEof(iter, seg)
 		if eof {
@@ -88,7 +88,7 @@ func PrevAutoIndent(tree *text.Tree, autoIndentEnabled bool, tabSize uint64, pos
 func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, startPos uint64) uint64 {
 	pos := StartOfLineAtPos(tree, startPos)
 	iter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	lastAlignedPos := pos
 	for pos < startPos {
@@ -107,7 +107,7 @@ func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, startPos uint64) uin
 
 func findPrevWhitespaceStartPos(tree *text.Tree, tabSize uint64, pos uint64) uint64 {
 	iter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	for {
 		eof := segment.NextSegmentOrEof(iter, seg)
 		if eof {
@@ -125,7 +125,7 @@ func findPrevWhitespaceStartPos(tree *text.Tree, tabSize uint64, pos uint64) uin
 // NonWhitespaceOrNewline locates the next non-whitespace character or newline on or after a position.
 func NextNonWhitespaceOrNewline(tree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	for {
 		eof := segment.NextSegmentOrEof(segmentIter, seg)

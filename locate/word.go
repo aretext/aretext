@@ -24,7 +24,7 @@ func NextWordStart(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64)
 
 func findNextWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var whitespaceFlag, newlineFlag bool
 	var offset, prevOffset uint64
 	for {
@@ -82,7 +82,7 @@ func PrevWordStart(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64)
 
 func findPrevWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var nonwhitespaceFlag, newlineFlag bool
 	var offset uint64
 	for {
@@ -140,7 +140,7 @@ func NextWordEnd(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) u
 
 func findNextWordEndFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var prevWasNonwhitespace bool
 	var offset, prevOffset uint64
 	for {
@@ -206,7 +206,7 @@ func findEndOfWordBeforeWhitespace(textTree *text.Tree, tokenTree *parser.TokenT
 
 func findStartOfWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	for {
 		eof := segment.NextSegmentOrEof(segmentIter, seg)
@@ -244,7 +244,7 @@ func findStartOfCurrentWord(textTree *text.Tree, tokenTree *parser.TokenTree, po
 
 func findLastNonWhitspaceBeforePos(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	for {
 		eof := segment.NextSegmentOrEof(segmentIter, seg)
@@ -301,7 +301,7 @@ func findEndOfCurrentWord(textTree *text.Tree, tokenTree *parser.TokenTree, pos 
 
 func findFirstWhitespaceAfterPos(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var offset uint64
 	for {
 		eof := segment.NextSegmentOrEof(segmentIter, seg)
@@ -327,7 +327,7 @@ func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
 // isWhitespace returns whether the character at the position is whitespace.
 func isWhitespaceAtPos(tree *text.Tree, pos uint64) bool {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	eof := segment.NextSegmentOrEof(segmentIter, seg)
 	return !eof && seg.IsWhitespace()
 }

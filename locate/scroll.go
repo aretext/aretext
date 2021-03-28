@@ -111,7 +111,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 	reader := tree.ReaderAtPosition(viewOrigin, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
-	wrappedLine := segment.NewSegment()
+	wrappedLine := segment.Empty()
 	pos := viewOrigin
 	lineRanges := make([]posRange, 0, viewHeight)
 	var prevHadNewline bool
@@ -173,7 +173,7 @@ func softWrapLineUntil(lineStartPos uint64, tree *text.Tree, wrapConfig segment.
 	reader := tree.ReaderAtPosition(lineStartPos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
-	wrappedLine := segment.NewSegment()
+	wrappedLine := segment.Empty()
 	pos := lineStartPos
 	result := make([]posRange, 0, 1)
 	prevHadNewline := true // Assume we're at the start of a hard-wrapped line.

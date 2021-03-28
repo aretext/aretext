@@ -9,7 +9,7 @@ import (
 // Paragraph boundaries occur at empty lines.
 func NextParagraph(tree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset, prevOffset uint64
 	for {
@@ -41,7 +41,7 @@ func NextParagraph(tree *text.Tree, pos uint64) uint64 {
 // Paragraph boundaries occur at empty lines.
 func PrevParagraph(tree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
-	seg := segment.NewSegment()
+	seg := segment.Empty()
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset uint64
 	for {

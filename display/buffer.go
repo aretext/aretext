@@ -27,7 +27,7 @@ func DrawBuffer(screen tcell.Screen, buffer *exec.BufferState) {
 	}
 	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
-	wrappedLine := segment.NewSegment()
+	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
 	tokenIter := buffer.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
 
@@ -60,7 +60,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	gc := segment.NewSegment()
+	gc := segment.Empty()
 	totalWidth := uint64(0)
 	col := 0
 	var lastGcWasNewline bool

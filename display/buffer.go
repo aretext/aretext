@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/cellwidth"
-	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -13,7 +13,7 @@ import (
 )
 
 // DrawBuffer draws text buffer in the screen.
-func DrawBuffer(screen tcell.Screen, buffer *exec.BufferState) {
+func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 	x, y, width, height := viewDimensions(buffer)
 	sr := NewScreenRegion(screen, x, y, width, height)
 	textTree := buffer.TextTree()
@@ -50,13 +50,13 @@ func DrawBuffer(screen tcell.Screen, buffer *exec.BufferState) {
 	}
 }
 
-func viewDimensions(buffer *exec.BufferState) (int, int, int, int) {
+func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
 	x, y := buffer.ViewOrigin()
 	width, height := buffer.ViewSize()
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, searchMatch *exec.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
+func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, searchMatch *state.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -117,7 +117,7 @@ func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
 	}
 }
 
-func styleAtPosition(pos uint64, searchMatch *exec.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+func styleAtPosition(pos uint64, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
 	if searchMatch.ContainsPosition(pos) {
 		return tcell.StyleDefault.Reverse(true)
 	}

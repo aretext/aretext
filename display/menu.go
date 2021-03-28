@@ -1,13 +1,13 @@
 package display
 
 import (
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 )
 
 // DrawMenu draws the menu at the top of the screen.
-func DrawMenu(screen tcell.Screen, menu *exec.MenuState) {
+func DrawMenu(screen tcell.Screen, menu *state.MenuState) {
 	if !menu.Visible() {
 		return
 	}

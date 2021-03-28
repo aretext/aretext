@@ -268,7 +268,7 @@ func findStartOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
 
 // CurrentWordEnd locates the end of the word or whitespace under the cursor.
 // The returned position is one past the last character in the word or whitespace,
-// so this can be used in a DeleteMutator to delete all the characters in the word.
+// so this can be used to delete all the characters in the word.
 // Word boundaries are determined by whitespace and syntax tokens.
 func CurrentWordEnd(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {

@@ -1,13 +1,13 @@
 package display
 
 import (
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.
-func DrawStatusBar(screen tcell.Screen, statusMsg exec.StatusMsg, inputMode exec.InputMode, filePath string) {
+func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode state.InputMode, filePath string) {
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 {
 		return
@@ -20,13 +20,13 @@ func DrawStatusBar(screen tcell.Screen, statusMsg exec.StatusMsg, inputMode exec
 	drawStringNoWrap(sr, text, 0, 0, style)
 }
 
-func statusBarContent(statusMsg exec.StatusMsg, inputMode exec.InputMode, filePath string) (string, tcell.Style) {
+func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, filePath string) (string, tcell.Style) {
 	if len(statusMsg.Text) > 0 {
 		return statusMsg.Text, styleForStatusMsg(statusMsg)
 	}
 
 	switch inputMode {
-	case exec.InputModeInsert:
+	case state.InputModeInsert:
 		return "-- INSERT --", tcell.StyleDefault.Bold(true)
 	default:
 		relPath := file.RelativePathCwd(filePath)
@@ -34,12 +34,12 @@ func statusBarContent(statusMsg exec.StatusMsg, inputMode exec.InputMode, filePa
 	}
 }
 
-func styleForStatusMsg(statusMsg exec.StatusMsg) tcell.Style {
+func styleForStatusMsg(statusMsg state.StatusMsg) tcell.Style {
 	s := tcell.StyleDefault
 	switch statusMsg.Style {
-	case exec.StatusMsgStyleSuccess:
+	case state.StatusMsgStyleSuccess:
 		return s.Foreground(tcell.ColorGreen).Bold(true)
-	case exec.StatusMsgStyleError:
+	case state.StatusMsgStyleError:
 		return s.Background(tcell.ColorRed).Foreground(tcell.ColorWhite).Bold(true)
 	default:
 		return s

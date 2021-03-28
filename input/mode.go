@@ -3,16 +3,16 @@ package input
 import (
 	"log"
 
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.
 type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
-	// It will return any user-initiated mutator resulting from the keypress
-	ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator
+	// It will return any user-initiated action resulting from the keypress
+	ProcessKeyEvent(event *tcell.EventKey, config Config) Action
 }
 
 // normalMode is used for navigating text.
@@ -25,15 +25,15 @@ func newNormalMode() Mode {
 	return &normalMode{parser}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	result := m.parser.ProcessInput(event)
 	if !result.Accepted {
-		return nil
+		return EmptyAction
 	}
 
 	log.Printf("Parser accepted input for rule '%s'\n", result.Rule.Name)
-	mutator := result.Rule.Action(result.Input, result.Count, config)
-	return appendScrollToCursor(mutator)
+	action := result.Rule.ActionBuilder(result.Input, result.Count, config)
+	return thenScrollViewToCursor(action)
 }
 
 // insertMode is used for inserting characters into text.
@@ -43,12 +43,12 @@ func newInsertMode() Mode {
 	return &insertMode{}
 }
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
-	mutator := m.processKeyEvent(event)
-	return appendScrollToCursor(mutator)
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	action := m.processKeyEvent(event)
+	return thenScrollViewToCursor(action)
 }
 
-func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
+func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	switch event.Key() {
 	case tcell.KeyRune:
 		return m.insertRune(event.Rune())
@@ -71,41 +71,45 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) exec.Mutator {
 	}
 }
 
-func (m *insertMode) insertRune(r rune) exec.Mutator {
-	return exec.NewInsertRuneMutator(r)
+func (m *insertMode) insertRune(r rune) Action {
+	return func(s *state.EditorState) {
+		state.InsertRune(s, r)
+	}
 }
 
-func (m *insertMode) insertNewline() exec.Mutator {
-	return exec.NewInsertNewlineMutator()
+func (m *insertMode) insertNewline() Action {
+	return state.InsertNewline
 }
 
-func (m *insertMode) insertTab() exec.Mutator {
-	return exec.NewInsertTabMutator()
+func (m *insertMode) insertTab() Action {
+	return state.InsertTab
 }
 
-func (m *insertMode) deletePrevChar() exec.Mutator {
-	return exec.NewDeleteMutator(func(params exec.LocatorParams) uint64 {
-		prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
-		prevAutoIndentPos := locate.PrevAutoIndent(
-			params.TextTree,
-			params.AutoIndentEnabled,
-			params.TabSize,
-			params.CursorPos)
-		if prevInLinePos < prevAutoIndentPos {
-			return prevInLinePos
-		} else {
-			return prevAutoIndentPos
-		}
-	})
+func (m *insertMode) deletePrevChar() Action {
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
+			prevAutoIndentPos := locate.PrevAutoIndent(
+				params.TextTree,
+				params.AutoIndentEnabled,
+				params.TabSize,
+				params.CursorPos)
+			if prevInLinePos < prevAutoIndentPos {
+				return prevInLinePos
+			} else {
+				return prevAutoIndentPos
+			}
+		})
+	}
 }
 
-func (m *insertMode) returnToNormalMode() exec.Mutator {
-	return exec.NewCompositeMutator([]exec.Mutator{
-		exec.NewCursorMutator(func(params exec.LocatorParams) uint64 {
+func (m *insertMode) returnToNormalMode() Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-		}),
-		exec.NewSetInputModeMutator(exec.InputModeNormal),
-	})
+		})
+		state.SetInputMode(s, state.InputModeNormal)
+	}
 }
 
 // menuMode allows the user to search for and select items in a menu.
@@ -115,7 +119,7 @@ func newMenuMode() Mode {
 	return &menuMode{}
 }
 
-func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return m.closeMenu()
@@ -132,47 +136,49 @@ func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mu
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		return m.deleteMenuSearch()
 	default:
-		return nil
+		return EmptyAction
 	}
 }
 
-func (m *menuMode) closeMenu() exec.Mutator {
+func (m *menuMode) closeMenu() Action {
 	// Returns to normal mode.
-	return exec.NewHideMenuMutator()
+	return state.HideMenu
 }
 
-func (m *menuMode) executeSelectedMenuItem() exec.Mutator {
+func (m *menuMode) executeSelectedMenuItem() Action {
 	// Hides the menu, then executes the menu item action.
 	// This usually returns to normal mode, unless the menu item action sets a different mode.
-	return exec.NewExecuteSelectedMenuItemMutator()
+	return state.ExecuteSelectedMenuItem
 }
 
-func (m *menuMode) menuSelectionUp() exec.Mutator {
-	return exec.NewMoveMenuSelectionMutator(-1)
-}
-
-func (m *menuMode) menuSelectionDown() exec.Mutator {
-	return exec.NewMoveMenuSelectionMutator(1)
-}
-
-func (m *menuMode) appendMenuSearch(r rune) exec.Mutator {
-	return exec.NewAppendMenuSearchMutator(r)
-}
-
-func (m *menuMode) deleteMenuSearch() exec.Mutator {
-	return exec.NewDeleteMenuSearchMutator()
-}
-
-// appendScrollToCursor appends a mutator to scroll the view so the cursor is visible.
-func appendScrollToCursor(mutator exec.Mutator) exec.Mutator {
-	if mutator == nil {
-		return nil
+func (m *menuMode) menuSelectionUp() Action {
+	return func(s *state.EditorState) {
+		state.MoveMenuSelection(s, -1)
 	}
+}
 
-	return exec.NewCompositeMutator([]exec.Mutator{
-		mutator,
-		exec.NewScrollToCursorMutator(),
-	})
+func (m *menuMode) menuSelectionDown() Action {
+	return func(s *state.EditorState) {
+		state.MoveMenuSelection(s, 1)
+	}
+}
+
+func (m *menuMode) appendMenuSearch(r rune) Action {
+	return func(s *state.EditorState) {
+		state.AppendRuneToMenuSearch(s, r)
+	}
+}
+
+func (m *menuMode) deleteMenuSearch() Action {
+	return state.DeleteRuneFromMenuSearch
+}
+
+// thenScrollViewToCursor executes the action, then scrolls the view so the cursor is visible.
+func thenScrollViewToCursor(f Action) Action {
+	return func(s *state.EditorState) {
+		f(s)
+		state.ScrollViewToCursor(s)
+	}
 }
 
 // searchMode is used to search the text for a substring.
@@ -183,20 +189,29 @@ func newSearchMode() Mode {
 	return &searchMode{}
 }
 
-func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) exec.Mutator {
+func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		// This returns the input mode to normal.
-		return exec.NewCompleteSearchMutator(false)
+		return func(s *state.EditorState) {
+			commit := false
+			state.CompleteSearch(s, commit)
+		}
 	case tcell.KeyEnter:
 		// This returns the input mode to normal.
-		return exec.NewCompleteSearchMutator(true)
+		return func(s *state.EditorState) {
+			commit := true
+			state.CompleteSearch(s, commit)
+		}
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		// This returns the input mode to normal if the search query is empty.
-		return exec.NewDeleteSearchQueryMutator()
+		return state.DeleteRuneFromSearchQuery
 	case tcell.KeyRune:
-		return exec.NewAppendSearchQueryMutator(event.Rune())
+		r := event.Rune()
+		return func(s *state.EditorState) {
+			state.AppendRuneToSearchQuery(s, r)
+		}
 	default:
-		return nil
+		return EmptyAction
 	}
 }

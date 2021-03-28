@@ -1,4 +1,4 @@
-package exec
+package state
 
 import (
 	"github.com/aretext/aretext/config"
@@ -109,31 +109,6 @@ func (s *EditorState) QuitFlag() bool {
 	return s.quitFlag
 }
 
-// InputMode controls how the editor interprets input events.
-type InputMode int
-
-const (
-	InputModeNormal = InputMode(iota)
-	InputModeInsert
-	InputModeMenu
-	InputModeSearch
-)
-
-func (im InputMode) String() string {
-	switch im {
-	case InputModeNormal:
-		return "normal"
-	case InputModeInsert:
-		return "insert"
-	case InputModeMenu:
-		return "menu"
-	case InputModeSearch:
-		return "search"
-	default:
-		panic("invalid input mode")
-	}
-}
-
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
 	textTree       *text.Tree
@@ -189,32 +164,6 @@ func (s *BufferState) TabSize() uint64 {
 	return s.tabSize
 }
 
-// cursorState is the current state of the cursor.
-type cursorState struct {
-	// position is a position within the text tree where the cursor appears.
-	position uint64
-
-	// logicalOffset is the number of cells after the end of the line
-	// for the cursor's logical (not necessarily visible) position.
-	// This is used for navigating up/down.
-	// For example, consider this text, where [m] is the current cursor position.
-	//     1: the quick
-	//     2: brown
-	//     3: fox ju[m]ped over the lazy dog
-	// If the user then navigates up one line, then we'd see:
-	//     1: the quick
-	//     2: brow[n]  [*]
-	//     3: fox jumped over the lazy dog
-	// where [n] is the visible position and [*] is the logical position,
-	// with logicalOffset = 2.
-	// If the user then navigates up one line again, we'd see:
-	//     1: the qu[i]ck
-	//     2: brown
-	//     3: fox jumped over the lazy dog
-	// where [i] is the character directly above the logical position.
-	logicalOffset uint64
-}
-
 // viewState represents the current view of the document.
 type viewState struct {
 	// textOrigin is the location in the text tree of the first visible character.
@@ -225,97 +174,4 @@ type viewState struct {
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64
-}
-
-// searchState represents the state of a text search.
-type searchState struct {
-	query         string
-	direction     text.ReadDirection
-	prevQuery     string
-	prevDirection text.ReadDirection
-	match         *SearchMatch
-}
-
-// SearchMatch represents the successful result of a text search.
-type SearchMatch struct {
-	StartPos uint64
-	EndPos   uint64
-}
-
-func (sm *SearchMatch) ContainsPosition(pos uint64) bool {
-	return sm != nil && pos >= sm.StartPos && pos < sm.EndPos
-}
-
-// StatusMsgStyle controls how a status message will be displayed.
-type StatusMsgStyle int
-
-const (
-	StatusMsgStyleSuccess = StatusMsgStyle(iota)
-	StatusMsgStyleError
-)
-
-func (s StatusMsgStyle) String() string {
-	switch s {
-	case StatusMsgStyleSuccess:
-		return "success"
-	case StatusMsgStyleError:
-		return "error"
-	default:
-		panic("invalid style")
-	}
-}
-
-// StatusMsg is a message displayed in the status bar.
-type StatusMsg struct {
-	Style StatusMsgStyle
-	Text  string
-}
-
-// MenuState represents the menu for searching and selecting items.
-type MenuState struct {
-	// visible indicates whether the menu is currently displayed.
-	visible bool
-
-	// prompt is a user-facing description of the menu contents.
-	prompt string
-
-	// search controls which items are visible based on the user's current search query.
-	search *menu.Search
-
-	// selectedResultIdx is the index of the currently selected search result.
-	// If there are no results, this is set to zero.
-	// If there are results, this must be less than the number of results.
-	selectedResultIdx int
-}
-
-func (m *MenuState) Visible() bool {
-	return m.visible
-}
-
-func (m *MenuState) Prompt() string {
-	return m.prompt
-}
-
-func (m *MenuState) SearchQuery() string {
-	if m.search == nil {
-		return ""
-	}
-	return m.search.Query()
-}
-
-func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int) {
-	if m.search == nil {
-		return nil, 0
-	}
-	return m.search.Results(), m.selectedResultIdx
-}
-
-// MenuItem represents an item in the editor's menu.
-type MenuItem struct {
-	// Name is the displayed name of the item.
-	// This is also used when searching for menu items.
-	Name string
-
-	// Action is the action to perform when the user selects the menu item.
-	Action Mutator
 }

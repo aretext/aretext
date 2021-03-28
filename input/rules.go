@@ -1,19 +1,15 @@
 package input
 
 import (
-	"github.com/aretext/aretext/exec"
 	"github.com/gdamore/tcell/v2"
 )
-
-// ActionFunc is invoked when the input parser accepts a sequence of keypresses matching a rule.
-type ActionFunc func(inputEvents []*tcell.EventKey, count *int64, config Config) exec.Mutator
 
 // Rule defines a command that the input parser can recognize.
 // The pattern is a sequence of keypresses that trigger the rule.
 type Rule struct {
-	Name    string
-	Pattern []EventMatcher
-	Action  ActionFunc
+	Name          string
+	Pattern       []EventMatcher
+	ActionBuilder ActionBuilder
 }
 
 // These rules are used when the editor is in normal mode.
@@ -23,126 +19,126 @@ var normalModeRules = []Rule{
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyLeft},
 		},
-		Action: CursorLeft,
+		ActionBuilder: CursorLeft,
 	},
 	{
 		Name: "cursor left (h)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'h'},
 		},
-		Action: CursorLeft,
+		ActionBuilder: CursorLeft,
 	},
 	{
 		Name: "cursor right (arrow)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRight},
 		},
-		Action: CursorRight,
+		ActionBuilder: CursorRight,
 	},
 	{
 		Name: "cursor right (l)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'l'},
 		},
-		Action: CursorRight,
+		ActionBuilder: CursorRight,
 	},
 	{
 		Name: "cursor up (arrow)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyUp},
 		},
-		Action: CursorUp,
+		ActionBuilder: CursorUp,
 	},
 	{
 		Name: "cursor up (k)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'k'},
 		},
-		Action: CursorUp,
+		ActionBuilder: CursorUp,
 	},
 	{
 		Name: "cursor down (arrow)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyDown},
 		},
-		Action: CursorDown,
+		ActionBuilder: CursorDown,
 	},
 	{
 		Name: "cursor down (j)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'j'},
 		},
-		Action: CursorDown,
+		ActionBuilder: CursorDown,
 	},
 	{
 		Name: "cursor back (backspace)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyBackspace},
 		},
-		Action: CursorBack,
+		ActionBuilder: CursorBack,
 	},
 	{
 		Name: "cursor back (backspace2)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyBackspace2},
 		},
-		Action: CursorBack,
+		ActionBuilder: CursorBack,
 	},
 	{
 		Name: "cursor next word start (w)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
-		Action: CursorNextWordStart,
+		ActionBuilder: CursorNextWordStart,
 	},
 	{
 		Name: "cursor prev word start (b)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'b'},
 		},
-		Action: CursorPrevWordStart,
+		ActionBuilder: CursorPrevWordStart,
 	},
 	{
 		Name: "cursor next word end (e)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'e'},
 		},
-		Action: CursorNextWordEnd,
+		ActionBuilder: CursorNextWordEnd,
 	},
 	{
 		Name: "cursor prev paragraph ({)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '{'},
 		},
-		Action: CursorPrevParagraph,
+		ActionBuilder: CursorPrevParagraph,
 	},
 	{
 		Name: "cursor next paragraph (})",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '}'},
 		},
-		Action: CursorNextParagraph,
+		ActionBuilder: CursorNextParagraph,
 	},
 	{
 		Name: "cursor line start (0)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '0'},
 		},
-		Action: CursorLineStart,
+		ActionBuilder: CursorLineStart,
 	},
 	{
 		Name: "cursor line start non-whitespace (^)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '^'},
 		},
-		Action: CursorLineStartNonWhitespace,
+		ActionBuilder: CursorLineStartNonWhitespace,
 	},
 	{
 		Name: "cursor line end ($)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '$'},
 		},
-		Action: CursorLineEnd,
+		ActionBuilder: CursorLineEnd,
 	},
 	{
 		Name: "cursor start of line num (gg)",
@@ -150,63 +146,63 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'g'},
 			{Key: tcell.KeyRune, Rune: 'g'},
 		},
-		Action: CursorStartOfLineNum,
+		ActionBuilder: CursorStartOfLineNum,
 	},
 	{
 		Name: "cursor start of last line (G)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'G'},
 		},
-		Action: CursorStartOfLastLine,
+		ActionBuilder: CursorStartOfLastLine,
 	},
 	{
 		Name: "delete next char in line (x)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'x'},
 		},
-		Action: DeleteNextCharInLine,
+		ActionBuilder: DeleteNextCharInLine,
 	},
 	{
 		Name: "enter insert mode (i)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'i'},
 		},
-		Action: EnterInsertMode,
+		ActionBuilder: EnterInsertMode,
 	},
 	{
 		Name: "enter insert mode at start of line (I)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'I'},
 		},
-		Action: EnterInsertModeAtStartOfLine,
+		ActionBuilder: EnterInsertModeAtStartOfLine,
 	},
 	{
 		Name: "enter insert mode at next pos (a)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'a'},
 		},
-		Action: EnterInsertModeAtNextPos,
+		ActionBuilder: EnterInsertModeAtNextPos,
 	},
 	{
 		Name: "enter insert mode at end of line (A)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'A'},
 		},
-		Action: EnterInsertModeAtEndOfLine,
+		ActionBuilder: EnterInsertModeAtEndOfLine,
 	},
 	{
 		Name: "begin new line below (o)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'o'},
 		},
-		Action: BeginNewLineBelow,
+		ActionBuilder: BeginNewLineBelow,
 	},
 	{
 		Name: "begin new line above (O)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'O'},
 		},
-		Action: BeginNewLineAbove,
+		ActionBuilder: BeginNewLineAbove,
 	},
 	{
 		Name: "delete line (dd)",
@@ -214,7 +210,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'd'},
 		},
-		Action: DeleteLine,
+		ActionBuilder: DeleteLine,
 	},
 	{
 		Name: "delete prev char in line (dh)",
@@ -222,7 +218,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'h'},
 		},
-		Action: DeletePrevCharInLine,
+		ActionBuilder: DeletePrevCharInLine,
 	},
 	{
 		Name: "delete down (dj)",
@@ -230,7 +226,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'j'},
 		},
-		Action: DeleteDown,
+		ActionBuilder: DeleteDown,
 	},
 	{
 		Name: "delete up (dk)",
@@ -238,7 +234,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'k'},
 		},
-		Action: DeleteUp,
+		ActionBuilder: DeleteUp,
 	},
 	{
 		Name: "delete next char in line (dl)",
@@ -246,7 +242,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'l'},
 		},
-		Action: DeleteNextCharInLine,
+		ActionBuilder: DeleteNextCharInLine,
 	},
 	{
 		Name: "delete to end of line (d$)",
@@ -254,7 +250,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: '$'},
 		},
-		Action: DeleteToEndOfLine,
+		ActionBuilder: DeleteToEndOfLine,
 	},
 	{
 		Name: "delete to start of line (d0)",
@@ -262,7 +258,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: '0'},
 		},
-		Action: DeleteToStartOfLine,
+		ActionBuilder: DeleteToStartOfLine,
 	},
 	{
 		Name: "delete to start of line non-whitespace (d^)",
@@ -270,14 +266,14 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: '^'},
 		},
-		Action: DeleteToStartOfLineNonWhitespace,
+		ActionBuilder: DeleteToStartOfLineNonWhitespace,
 	},
 	{
 		Name: "delete to end of line (D)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'D'},
 		},
-		Action: DeleteToEndOfLine,
+		ActionBuilder: DeleteToEndOfLine,
 	},
 	{
 		Name: "delete inner word (diw)",
@@ -286,7 +282,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'i'},
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
-		Action: DeleteInnerWord,
+		ActionBuilder: DeleteInnerWord,
 	},
 	{
 		Name: "change inner word (ciw)",
@@ -295,7 +291,7 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'i'},
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
-		Action: ChangeInnerWord,
+		ActionBuilder: ChangeInnerWord,
 	},
 	{
 		Name: "replace character (r)",
@@ -303,55 +299,55 @@ var normalModeRules = []Rule{
 			{Key: tcell.KeyRune, Rune: 'r'},
 			{Wildcard: true},
 		},
-		Action: ReplaceCharacter,
+		ActionBuilder: ReplaceCharacter,
 	},
 	{
 		Name: "scroll up",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyCtrlU},
 		},
-		Action: ScrollUp,
+		ActionBuilder: ScrollUp,
 	},
 	{
 		Name: "scroll down",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyCtrlD},
 		},
-		Action: ScrollDown,
+		ActionBuilder: ScrollDown,
 	},
 	{
 		Name: "show command menu",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: ':'},
 		},
-		Action: ShowCommandMenu,
+		ActionBuilder: ShowCommandMenu,
 	},
 	{
 		Name: "start forward search",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '/'},
 		},
-		Action: StartSearchForward,
+		ActionBuilder: StartSearchForward,
 	},
 	{
 		Name: "start backward search",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '?'},
 		},
-		Action: StartSearchBackward,
+		ActionBuilder: StartSearchBackward,
 	},
 	{
 		Name: "find next match",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'n'},
 		},
-		Action: FindNextMatch,
+		ActionBuilder: FindNextMatch,
 	},
 	{
 		Name: "find previous match",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'N'},
 		},
-		Action: FindPrevMatch,
+		ActionBuilder: FindPrevMatch,
 	},
 }

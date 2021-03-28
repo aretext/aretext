@@ -3,21 +3,21 @@ package display
 import (
 	"testing"
 
-	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 )
 
 func TestDrawStatusBar(t *testing.T) {
 	testCases := []struct {
 		name             string
-		statusMsg        exec.StatusMsg
-		inputMode        exec.InputMode
+		statusMsg        state.StatusMsg
+		inputMode        state.InputMode
 		filePath         string
 		expectedContents [][]rune
 	}{
 		{
 			name:      "normal mode shows file path",
-			inputMode: exec.InputModeNormal,
+			inputMode: state.InputModeNormal,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -26,7 +26,7 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name:      "insert mode shows INSERT",
-			inputMode: exec.InputModeInsert,
+			inputMode: state.InputModeInsert,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -35,7 +35,7 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name:      "menu mode shows file path",
-			inputMode: exec.InputModeMenu,
+			inputMode: state.InputModeMenu,
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -44,9 +44,9 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name: "status message success",
-			statusMsg: exec.StatusMsg{
+			statusMsg: state.StatusMsg{
 				Text:  "success",
-				Style: exec.StatusMsgStyleSuccess,
+				Style: state.StatusMsgStyleSuccess,
 			},
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -55,9 +55,9 @@ func TestDrawStatusBar(t *testing.T) {
 		},
 		{
 			name: "status message error",
-			statusMsg: exec.StatusMsg{
+			statusMsg: state.StatusMsg{
 				Text:  "error",
-				Style: exec.StatusMsgStyleError,
+				Style: state.StatusMsgStyleError,
 			},
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},

@@ -1,15 +1,15 @@
 package display
 
 import (
-	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
 )
 
 // DrawSearchQuery draws the search query (if any) on the last line of the screen.
 // This overwrites the status bar.
-func DrawSearchQuery(screen tcell.Screen, inputMode exec.InputMode, query string, direction text.ReadDirection) {
-	if inputMode != exec.InputModeSearch {
+func DrawSearchQuery(screen tcell.Screen, inputMode state.InputMode, query string, direction text.ReadDirection) {
+	if inputMode != state.InputModeSearch {
 		return
 	}
 

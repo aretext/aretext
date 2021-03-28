@@ -5,20 +5,20 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/state"
 )
 
 func TestDrawMenu(t *testing.T) {
 	testCases := []struct {
 		name             string
-		buildMenu        func() *exec.MenuState
+		buildMenu        func() *state.MenuState
 		expectedContents [][]rune
 	}{
 		{
 			name: "not visible",
-			buildMenu: func() *exec.MenuState {
-				return &exec.MenuState{}
+			buildMenu: func() *state.MenuState {
+				return &state.MenuState{}
 			},
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -31,11 +31,11 @@ func TestDrawMenu(t *testing.T) {
 		},
 		{
 			name: "visible, initial state with prompt",
-			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, nil)
-				mutator := exec.NewShowMenuMutatorWithItems("test", nil, false, false)
-				mutator.Mutate(state)
-				return state.Menu()
+			buildMenu: func() *state.MenuState {
+				editorState := state.NewEditorState(100, 100, nil)
+				loadItems := func() []menu.Item { return nil }
+				state.ShowMenu(editorState, "test", loadItems, false, false)
+				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
 				{':', 't', 'e', 's', 't', ' ', ' ', ' ', ' ', ' '},
@@ -48,16 +48,14 @@ func TestDrawMenu(t *testing.T) {
 		},
 		{
 			name: "visible, query with no results",
-			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, nil)
-				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", nil, false, false),
-					exec.NewAppendMenuSearchMutator('a'),
-					exec.NewAppendMenuSearchMutator('b'),
-					exec.NewAppendMenuSearchMutator('c'),
-				})
-				mutator.Mutate(state)
-				return state.Menu()
+			buildMenu: func() *state.MenuState {
+				editorState := state.NewEditorState(100, 100, nil)
+				loadItems := func() []menu.Item { return nil }
+				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.AppendRuneToMenuSearch(editorState, 'a')
+				state.AppendRuneToMenuSearch(editorState, 'b')
+				state.AppendRuneToMenuSearch(editorState, 'c')
+				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
 				{':', 'a', 'b', 'c', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -70,18 +68,18 @@ func TestDrawMenu(t *testing.T) {
 		},
 		{
 			name: "visible, query with results, first selected",
-			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, nil)
-				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", []menu.Item{
+			buildMenu: func() *state.MenuState {
+				editorState := state.NewEditorState(100, 100, nil)
+				loadItems := func() []menu.Item {
+					return []menu.Item{
 						{Name: "test first"},
 						{Name: "test second"},
 						{Name: "test third"},
-					}, false, false),
-					exec.NewAppendMenuSearchMutator('t'),
-				})
-				mutator.Mutate(state)
-				return state.Menu()
+					}
+				}
+				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.AppendRuneToMenuSearch(editorState, 't')
+				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
 				{':', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -94,10 +92,10 @@ func TestDrawMenu(t *testing.T) {
 		},
 		{
 			name: "visible, query with many results, second-to-last selected",
-			buildMenu: func() *exec.MenuState {
-				state := exec.NewEditorState(100, 100, nil)
-				mutator := exec.NewCompositeMutator([]exec.Mutator{
-					exec.NewShowMenuMutatorWithItems("test", []menu.Item{
+			buildMenu: func() *state.MenuState {
+				editorState := state.NewEditorState(100, 100, nil)
+				loadItems := func() []menu.Item {
+					return []menu.Item{
 						{Name: "test 1"},
 						{Name: "test 2"},
 						{Name: "test 3"},
@@ -107,12 +105,12 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test 7"},
 						{Name: "test 8"},
 						{Name: "test 9"},
-					}, false, false),
-					exec.NewAppendMenuSearchMutator('t'),
-					exec.NewMoveMenuSelectionMutator(-2),
-				})
-				mutator.Mutate(state)
-				return state.Menu()
+					}
+				}
+				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.AppendRuneToMenuSearch(editorState, 't')
+				state.MoveMenuSelection(editorState, -2)
+				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
 				{':', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},

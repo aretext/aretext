@@ -7,6 +7,6 @@ type Item struct {
 	Name string
 
 	// Action is the action to perform when the user selects the menu item.
-	// TODO: replace this with the mutator function type.
+	// This should be a function that accepts a single *EditorState arg.
 	Action interface{}
 }

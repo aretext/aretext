@@ -3,7 +3,7 @@ package display
 import (
 	"testing"
 
-	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ import (
 func TestDrawSearchQuery(t *testing.T) {
 	testCases := []struct {
 		name                string
-		inputMode           exec.InputMode
+		inputMode           state.InputMode
 		query               string
 		direction           text.ReadDirection
 		expectContents      [][]rune
@@ -22,7 +22,7 @@ func TestDrawSearchQuery(t *testing.T) {
 	}{
 		{
 			name:      "normal mode hides search query",
-			inputMode: exec.InputModeNormal,
+			inputMode: state.InputModeNormal,
 			query:     "abcd1234",
 			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
@@ -32,7 +32,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		},
 		{
 			name:      "search mode with empty query",
-			inputMode: exec.InputModeSearch,
+			inputMode: state.InputModeSearch,
 			query:     "",
 			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
@@ -45,7 +45,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		},
 		{
 			name:      "search mode with non-empty query",
-			inputMode: exec.InputModeSearch,
+			inputMode: state.InputModeSearch,
 			query:     "abcd",
 			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
@@ -58,7 +58,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		},
 		{
 			name:      "search mode with clipped query",
-			inputMode: exec.InputModeSearch,
+			inputMode: state.InputModeSearch,
 			query:     "abcd1234",
 			direction: text.ReadDirectionForward,
 			expectContents: [][]rune{
@@ -68,7 +68,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		},
 		{
 			name:      "search mode for backward search",
-			inputMode: exec.InputModeSearch,
+			inputMode: state.InputModeSearch,
 			query:     "abcd",
 			direction: text.ReadDirectionBackward,
 			expectContents: [][]rune{

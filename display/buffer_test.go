@@ -5,7 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/exec"
+	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
@@ -13,25 +13,25 @@ import (
 
 func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language, searchQuery string) {
 	screenWidth, screenHeight := screen.Size()
-	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil)
+	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil)
 
-	exec.NewSetSyntaxMutator(language).Mutate(state)
+	state.SetSyntax(editorState, language)
 	for _, r := range s {
-		exec.NewInsertRuneMutator(r).Mutate(state)
+		state.InsertRune(editorState, r)
 	}
 
-	exec.NewCursorMutator(func(exec.LocatorParams) uint64 {
+	state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
 		return cursorPos
-	}).Mutate(state)
+	})
 
 	if searchQuery != "" {
-		exec.NewStartSearchMutator(text.ReadDirectionForward).Mutate(state)
+		state.StartSearch(editorState, text.ReadDirectionForward)
 		for _, r := range searchQuery {
-			exec.NewAppendSearchQueryMutator(r).Mutate(state)
+			state.AppendRuneToSearchQuery(editorState, r)
 		}
 	}
 
-	buffer := state.DocumentBuffer()
+	buffer := editorState.DocumentBuffer()
 	DrawBuffer(screen, buffer)
 	screen.Sync()
 }

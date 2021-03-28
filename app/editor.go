@@ -8,8 +8,8 @@ import (
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/display"
-	"github.com/aretext/aretext/exec"
 	"github.com/aretext/aretext/input"
+	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 	"github.com/pkg/errors"
 )
@@ -17,7 +17,7 @@ import (
 // Editor is a terminal-based text editing program.
 type Editor struct {
 	inputInterpreter *input.Interpreter
-	state            *exec.EditorState
+	editorState      *state.EditorState
 	screen           tcell.Screen
 	termEventChan    chan tcell.Event
 }
@@ -25,16 +25,15 @@ type Editor struct {
 // NewEditor instantiates a new editor that uses the provided screen.
 func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *Editor {
 	screenWidth, screenHeight := screen.Size()
-	state := exec.NewEditorState(uint64(screenWidth), uint64(screenHeight), configRuleSet)
+	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight), configRuleSet)
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
-	editor := &Editor{inputInterpreter, state, screen, termEventChan}
+	editor := &Editor{inputInterpreter, editorState, screen, termEventChan}
 
 	// Attempt to load the file.
 	// If it doesn't exist, this will start with an empty document
 	// that the user can edit and save to the specified path.
-	loadMutator := exec.NewLoadDocumentMutator(effectivePath(path), false, true)
-	editor.applyMutator(loadMutator)
+	state.LoadDocument(editorState, effectivePath(path), false, true)
 	return editor
 }
 
@@ -56,7 +55,7 @@ func effectivePath(path string) string {
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	display.DrawEditor(e.screen, e.state)
+	display.DrawEditor(e.screen, e.editorState)
 	e.screen.Sync()
 
 	go e.pollTermEvents()
@@ -78,11 +77,11 @@ func (e *Editor) runMainEventLoop() {
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
 
-		case <-e.state.FileWatcher().ChangedChan():
+		case <-e.editorState.FileWatcher().ChangedChan():
 			e.handleFileChanged()
 		}
 
-		if e.state.QuitFlag() {
+		if e.editorState.QuitFlag() {
 			log.Printf("Quit flag set, exiting event loop...\n")
 			return
 		}
@@ -94,27 +93,26 @@ func (e *Editor) runMainEventLoop() {
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
-	mutator := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
-	e.applyMutator(mutator)
+	actionFunc := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
+	actionFunc(e.editorState)
 }
 
 func (e *Editor) handleFileChanged() {
 	log.Printf("File change detected, reloading file...\n")
 	const showStatusFlag = false
-	mutator := exec.NewAbortIfUnsavedChangesMutator(
-		exec.NewReloadDocumentMutator(showStatusFlag),
-		showStatusFlag,
-	)
-	e.applyMutator(mutator)
+	reloadDocument := func(s *state.EditorState) {
+		state.ReloadDocument(s, showStatusFlag)
+	}
+	state.AbortIfUnsavedChanges(e.editorState, reloadDocument, showStatusFlag)
 }
 
 func (e *Editor) executeScheduledShellCmd() {
-	sc := e.state.ScheduledShellCmd()
+	sc := e.editorState.ScheduledShellCmd()
 	if sc == "" {
 		return
 	}
 
-	e.state.ClearScheduledShellCmd()
+	e.editorState.ClearScheduledShellCmd()
 
 	// Suspend input processing and reset the terminal to its original state
 	// while executing the shell command.
@@ -126,10 +124,10 @@ func (e *Editor) executeScheduledShellCmd() {
 	// Run the shell command and pipe the output to a pager.
 	err := RunShellCmd(sc)
 	if err != nil {
-		exec.NewSetStatusMsgMutator(exec.StatusMsg{
-			Style: exec.StatusMsgStyleError,
+		state.SetStatusMsg(e.editorState, state.StatusMsg{
+			Style: state.StatusMsgStyleError,
 			Text:  err.Error(),
-		}).Mutate(e.state)
+		})
 	}
 
 	if err := e.screen.Resume(); err != nil {
@@ -138,31 +136,21 @@ func (e *Editor) executeScheduledShellCmd() {
 }
 
 func (e *Editor) shutdown() {
-	e.state.FileWatcher().Stop()
+	e.editorState.FileWatcher().Stop()
 }
 
 func (e *Editor) inputConfig() input.Config {
 	_, screenHeight := e.screen.Size()
 	scrollLines := uint64(screenHeight) / 2
 	return input.Config{
-		InputMode:      e.state.InputMode(),
+		InputMode:      e.editorState.InputMode(),
 		ScrollLines:    scrollLines,
-		DirNamesToHide: e.state.DirNamesToHide(),
+		DirNamesToHide: e.editorState.DirNamesToHide(),
 	}
-}
-
-func (e *Editor) applyMutator(m exec.Mutator) {
-	if m == nil {
-		log.Printf("No mutator to apply\n")
-		return
-	}
-
-	log.Printf("Applying mutator '%s'\n", m.String())
-	m.Mutate(e.state)
 }
 
 func (e *Editor) redraw() {
-	display.DrawEditor(e.screen, e.state)
+	display.DrawEditor(e.screen, e.editorState)
 	e.screen.Show()
 }
 

@@ -13,7 +13,7 @@ func NextCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, 
 	var endOfLineOrFile bool
 	var prevPrevOffset, prevOffset uint64
 	for i := uint64(0); i <= count; i++ {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			endOfLineOrFile = true
 			break
@@ -37,7 +37,7 @@ func PrevCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, 
 	seg := segment.Empty()
 	var offset uint64
 	for i := uint64(0); i < count; i++ {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			break
 		}
@@ -60,7 +60,7 @@ func PrevChar(tree *text.Tree, count uint64, pos uint64) uint64 {
 	iter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	for i := uint64(0); i < count; i++ {
-		eof := segment.NextSegmentOrEof(iter, seg)
+		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -95,7 +95,7 @@ func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, startPos uint64) uin
 		if offset%tabSize == 0 {
 			lastAlignedPos = pos
 		}
-		eof := segment.NextSegmentOrEof(iter, seg)
+		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -109,7 +109,7 @@ func findPrevWhitespaceStartPos(tree *text.Tree, tabSize uint64, pos uint64) uin
 	iter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	for {
-		eof := segment.NextSegmentOrEof(iter, seg)
+		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -128,7 +128,7 @@ func NextNonWhitespaceOrNewline(tree *text.Tree, pos uint64) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof || !seg.IsWhitespace() || seg.HasNewline() {
 			break
 		}

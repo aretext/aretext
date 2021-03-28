@@ -28,7 +28,7 @@ func findNextWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	var whitespaceFlag, newlineFlag bool
 	var offset, prevOffset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			// Stop on (not after) the last character in the document.
 			return pos + prevOffset
@@ -86,7 +86,7 @@ func findPrevWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	var nonwhitespaceFlag, newlineFlag bool
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			// Start of the document.
 			return 0
@@ -144,7 +144,7 @@ func findNextWordEndFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	var prevWasNonwhitespace bool
 	var offset, prevOffset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			// Stop on (not after) the last character in the document.
 			return pos + prevOffset
@@ -209,7 +209,7 @@ func findStartOfWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			return 0
 		} else if seg.HasNewline() || !seg.IsWhitespace() {
@@ -247,7 +247,7 @@ func findLastNonWhitspaceBeforePos(textTree *text.Tree, pos uint64) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			return 0
 		} else if seg.HasNewline() || seg.IsWhitespace() {
@@ -304,7 +304,7 @@ func findFirstWhitespaceAfterPos(textTree *text.Tree, pos uint64) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			break
 		} else if seg.HasNewline() || seg.IsWhitespace() {
@@ -328,6 +328,6 @@ func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
 func isWhitespaceAtPos(tree *text.Tree, pos uint64) bool {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
-	eof := segment.NextSegmentOrEof(segmentIter, seg)
+	eof := segment.NextOrEof(segmentIter, seg)
 	return !eof && seg.IsWhitespace()
 }

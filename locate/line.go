@@ -28,7 +28,7 @@ func ClosestCharOnLine(tree *text.Tree, pos uint64) uint64 {
 func findNewlineAtPos(tree *text.Tree, pos uint64) (bool, uint64) {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
-	eof := segment.NextSegmentOrEof(segmentIter, seg)
+	eof := segment.NextOrEof(segmentIter, seg)
 	if eof {
 		return false, 0
 	}
@@ -47,7 +47,7 @@ func findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for i := 0; i < count-1; i++ {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			break
 		}
@@ -56,7 +56,7 @@ func findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
 	}
 
 	// Check the next grapheme cluster after (count - 1) grapheme clusters.
-	eof := segment.NextSegmentOrEof(segmentIter, seg)
+	eof := segment.NextOrEof(segmentIter, seg)
 	if eof {
 		return 0
 	}
@@ -127,7 +127,7 @@ func NextLineBoundary(tree *text.Tree, includeEndOfLineOrFile bool, pos uint64) 
 	var prevOffset, offset uint64
 
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof || seg.HasNewline() {
 			break
 		}
@@ -149,7 +149,7 @@ func PrevLineBoundary(tree *text.Tree, pos uint64) uint64 {
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof || seg.HasNewline() {
 			break
 		}

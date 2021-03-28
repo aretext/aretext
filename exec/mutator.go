@@ -406,7 +406,7 @@ func (clm *cursorLineMutator) findOffsetFromLineStart(textTree *text.Tree, lineS
 	pos, offset := lineStartPos, uint64(0)
 
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof || pos >= cursor.position {
 			break
 		}
@@ -425,7 +425,7 @@ func (clm *cursorLineMutator) advanceToOffset(textTree *text.Tree, lineStartPos 
 	var prevPosOffset, posOffset, cellOffset uint64
 
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			endOfLineOrFile = true
 			break
@@ -589,7 +589,7 @@ func (inm *insertNewlineMutator) numColsIndentedPrevLine(cursorPos uint64, buffe
 	seg := segment.Empty()
 	numCols := uint64(0)
 	for {
-		eof := segment.NextSegmentOrEof(iter, seg)
+		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
 		}
@@ -669,7 +669,7 @@ func (itm *insertTabMutator) offsetInLine(buffer *BufferState) uint64 {
 	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
 	for pos < buffer.cursor.position {
-		eof := segment.NextSegmentOrEof(iter, seg)
+		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
 		}

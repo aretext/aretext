@@ -13,7 +13,7 @@ func NextParagraph(tree *text.Tree, pos uint64) uint64 {
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset, prevOffset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			// End of document.
 			return pos + prevOffset
@@ -45,7 +45,7 @@ func PrevParagraph(tree *text.Tree, pos uint64) uint64 {
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset uint64
 	for {
-		eof := segment.NextSegmentOrEof(segmentIter, seg)
+		eof := segment.NextOrEof(segmentIter, seg)
 		if eof {
 			// Start of the document.
 			return 0

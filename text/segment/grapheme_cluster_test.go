@@ -12,13 +12,13 @@ import (
 
 //go:generate go run gen_test_cases.go --dataPath data/GraphemeBreakTest.txt --outputPath grapheme_cluster_test_cases.go
 
-func graphemeClusterIterFromString(s string) SegmentIter {
+func graphemeClusterIterFromString(s string) Iter {
 	reader := text.NewCloneableReaderFromString(s)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	return NewGraphemeClusterIter(runeIter)
 }
 
-func reverseGraphemeClusterIterFromString(s string) SegmentIter {
+func reverseGraphemeClusterIterFromString(s string) Iter {
 	reader := text.NewCloneableReaderFromString(text.Reverse(s))
 	runeIter := text.NewCloneableBackwardRuneIter(reader)
 	return NewReverseGraphemeClusterIter(runeIter)
@@ -51,7 +51,7 @@ func TestGraphemeClusterIterPastEOF(t *testing.T) {
 	assert.Equal(t, io.EOF, err)
 }
 
-func collectSegments(t *testing.T, iter SegmentIter) ([][]rune, error) {
+func collectSegments(t *testing.T, iter Iter) ([][]rune, error) {
 	segments := make([][]rune, 0)
 	seg := Empty()
 	for {

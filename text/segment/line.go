@@ -30,14 +30,14 @@ func NewLineWrapConfig(maxLineWidth uint64, widthFunc GraphemeClusterWidthFunc) 
 // wrappedLineIter iterates through soft- and hard-wrapped lines.
 type wrappedLineIter struct {
 	wrapConfig   LineWrapConfig
-	gcIter       CloneableSegmentIter
+	gcIter       CloneableIter
 	gcSegment    *Segment
 	buffer       []rune
 	currentWidth uint64
 }
 
 // NewWrappedLineIter constructs a segment iterator for soft- and hard-wrapped lines.
-func NewWrappedLineIter(runeIter text.CloneableRuneIter, wrapConfig LineWrapConfig) CloneableSegmentIter {
+func NewWrappedLineIter(runeIter text.CloneableRuneIter, wrapConfig LineWrapConfig) CloneableIter {
 	return &wrappedLineIter{
 		wrapConfig: wrapConfig,
 		gcIter:     NewGraphemeClusterIter(runeIter),
@@ -46,7 +46,7 @@ func NewWrappedLineIter(runeIter text.CloneableRuneIter, wrapConfig LineWrapConf
 	}
 }
 
-// NextSegment implements SegmentIter#NextSegment().
+// NextSegment implements Iter#NextSegment().
 // For hard-wrapped lines, the grapheme cluster containing the newline will be included at the end of the line.
 // If a segment is too long to fit on any line, put it in its own line.
 func (iter *wrappedLineIter) NextSegment(segment *Segment) error {
@@ -114,8 +114,8 @@ func (iter *wrappedLineIter) NextSegment(segment *Segment) error {
 	}
 }
 
-// Clone implements CloneableSegmentIter#Clone()
-func (iter *wrappedLineIter) Clone() CloneableSegmentIter {
+// Clone implements CloneableIter#Clone()
+func (iter *wrappedLineIter) Clone() CloneableIter {
 	buffer := make([]rune, len(iter.buffer))
 	copy(buffer, iter.buffer)
 	return &wrappedLineIter{

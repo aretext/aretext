@@ -25,7 +25,7 @@ type graphemeClusterIter struct {
 // The iterator assumes that the first character it receives is at a break point
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
-func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
+func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableIter {
 	return &graphemeClusterIter{
 		runeIter: runeIter,
 		buffer:   make([]rune, 0, 1),
@@ -33,7 +33,7 @@ func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIte
 }
 
 // NewGraphemeClusterIterForTree constructs a grapheme cluster iterator for a text tree.
-func NewGraphemeClusterIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) CloneableSegmentIter {
+func NewGraphemeClusterIterForTree(tree *text.Tree, pos uint64, direction text.ReadDirection) CloneableIter {
 	reader := tree.ReaderAtPosition(pos, direction)
 	if direction == text.ReadDirectionBackward {
 		runeIter := text.NewCloneableBackwardRuneIter(reader)
@@ -44,8 +44,8 @@ func NewGraphemeClusterIterForTree(tree *text.Tree, pos uint64, direction text.R
 	}
 }
 
-// Clone implements CloneableSegmentIter#Clone()
-func (g *graphemeClusterIter) Clone() CloneableSegmentIter {
+// Clone implements CloneableIter#Clone()
+func (g *graphemeClusterIter) Clone() CloneableIter {
 	var clone graphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
@@ -54,7 +54,7 @@ func (g *graphemeClusterIter) Clone() CloneableSegmentIter {
 	return &clone
 }
 
-// NextSegment implements SegmentIter#NextSegment()
+// NextSegment implements Iter#NextSegment()
 func (g *graphemeClusterIter) NextSegment(segment *Segment) error {
 	segment.Clear()
 	for {
@@ -151,15 +151,15 @@ type reverseGraphemeClusterIter struct {
 }
 
 // NewReverseGraphemeClusterIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
-func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableSegmentIter {
+func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) CloneableIter {
 	return &reverseGraphemeClusterIter{
 		runeIter: runeIter,
 		buffer:   make([]rune, 0, 1),
 	}
 }
 
-// Clone implements CloneableSegmentIter#Clone()
-func (g *reverseGraphemeClusterIter) Clone() CloneableSegmentIter {
+// Clone implements CloneableIter#Clone()
+func (g *reverseGraphemeClusterIter) Clone() CloneableIter {
 	var clone reverseGraphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
@@ -168,7 +168,7 @@ func (g *reverseGraphemeClusterIter) Clone() CloneableSegmentIter {
 	return &clone
 }
 
-// NextBreak implements SegmentIter#NextSegment()
+// NextBreak implements Iter#NextSegment()
 // The returned locations are relative to the end of the text.
 func (g *reverseGraphemeClusterIter) NextSegment(segment *Segment) error {
 	segment.Clear()

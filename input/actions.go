@@ -9,91 +9,75 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func CursorLeft(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
-		})
-	}
+// Action is a function that mutates the editor state.
+type Action func(*state.EditorState)
+
+// EmptyAction is an action that does nothing.
+func EmptyAction(s *state.EditorState) {}
+
+func CursorLeft(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
-func CursorBack(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevChar(params.TextTree, 1, params.CursorPos)
-		})
-	}
+func CursorBack(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevChar(params.TextTree, 1, params.CursorPos)
+	})
 }
 
-func CursorRight(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextCharInLine(params.TextTree, 1, false, params.CursorPos)
-		})
-	}
+func CursorRight(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
-func CursorRightIncludeEndOfLineOrFile(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
-		})
-	}
+func CursorRightIncludeEndOfLineOrFile(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+	})
 }
 
-func CursorUp(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursorToLineAbove(s, 1)
-	}
+func CursorUp(s *state.EditorState) {
+	state.MoveCursorToLineAbove(s, 1)
 }
 
-func CursorDown(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursorToLineBelow(s, 1)
-	}
+func CursorDown(s *state.EditorState) {
+	state.MoveCursorToLineBelow(s, 1)
 }
 
-func CursorNextWordStart(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordStart(params.TextTree, params.TokenTree, params.CursorPos)
-		})
-	}
+func CursorNextWordStart(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
-func CursorPrevWordStart(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevWordStart(params.TextTree, params.TokenTree, params.CursorPos)
-		})
-	}
+func CursorPrevWordStart(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
-func CursorNextWordEnd(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
-		})
-	}
+func CursorNextWordEnd(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
-func CursorPrevParagraph(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevParagraph(params.TextTree, params.CursorPos)
-		})
-	}
+func CursorPrevParagraph(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevParagraph(params.TextTree, params.CursorPos)
+	})
 }
 
-func CursorNextParagraph(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextParagraph(params.TextTree, params.CursorPos)
-		})
-	}
+func CursorNextParagraph(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextParagraph(params.TextTree, params.CursorPos)
+	})
 }
 
-func ScrollUp(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func ScrollUp(config Config) Action {
 	scrollLines := config.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
@@ -109,7 +93,7 @@ func ScrollUp(inputEvents []*tcell.EventKey, count *int64, config Config) Action
 	}
 }
 
-func ScrollDown(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func ScrollDown(config Config) Action {
 	scrollLines := config.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
@@ -125,40 +109,32 @@ func ScrollDown(inputEvents []*tcell.EventKey, count *int64, config Config) Acti
 	}
 }
 
-func CursorLineStart(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-		})
-	}
+func CursorLineStart(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+	})
 }
 
-func CursorLineStartNonWhitespace(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-			return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
-		})
-	}
+func CursorLineStartNonWhitespace(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
-func CursorLineEnd(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextLineBoundary(params.TextTree, false, params.CursorPos)
-		})
-	}
+func CursorLineEnd(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextLineBoundary(params.TextTree, false, params.CursorPos)
+	})
 }
 
-func CursorLineEndIncludeEndOfLineOrFile(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
-		})
-	}
+func CursorLineEndIncludeEndOfLineOrFile(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+	})
 }
 
-func CursorStartOfLineNum(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func CursorStartOfLineNum(count *int64) Action {
 	// Convert 1-indexed count to 0-indexed line num
 	var lineNum uint64
 	if count != nil && *count > 0 {
@@ -173,160 +149,162 @@ func CursorStartOfLineNum(inputEvents []*tcell.EventKey, count *int64, config Co
 	}
 }
 
-func CursorStartOfLastLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func CursorStartOfLastLine(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		lineStartPos := locate.StartOfLastLine(params.TextTree)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
+}
+
+func EnterInsertMode(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+	state.SetInputMode(s, state.InputModeInsert)
+}
+
+func EnterInsertModeAtStartOfLine(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+	state.SetInputMode(s, state.InputModeInsert)
+	CursorLineStartNonWhitespace(s)
+}
+
+func EnterInsertModeAtNextPos(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+	state.SetInputMode(s, state.InputModeInsert)
+	CursorRightIncludeEndOfLineOrFile(s)
+}
+
+func EnterInsertModeAtEndOfLine(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+	state.SetInputMode(s, state.InputModeInsert)
+	CursorLineEndIncludeEndOfLineOrFile(s)
+}
+
+func ReturnToNormalMode(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+	})
+	state.SetInputMode(s, state.InputModeNormal)
+}
+
+func InsertRune(r rune) Action {
 	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			lineStartPos := locate.StartOfLastLine(params.TextTree)
-			return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
-		})
+		state.InsertRune(s, r)
 	}
 }
 
-func EnterInsertMode(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
-		state.SetInputMode(s, state.InputModeInsert)
-	}
+func InsertNewline(s *state.EditorState) {
+	state.InsertNewline(s)
 }
 
-func EnterInsertModeAtStartOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
-		state.SetInputMode(s, state.InputModeInsert)
-		CursorLineStartNonWhitespace(nil, nil, config)(s)
-	}
+func InsertTab(s *state.EditorState) {
+	state.InsertTab(s)
 }
 
-func EnterInsertModeAtNextPos(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
-		state.SetInputMode(s, state.InputModeInsert)
-		CursorRightIncludeEndOfLineOrFile(nil, nil, config)(s)
-	}
+func DeletePrevChar(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
+		prevAutoIndentPos := locate.PrevAutoIndent(
+			params.TextTree,
+			params.AutoIndentEnabled,
+			params.TabSize,
+			params.CursorPos)
+		if prevInLinePos < prevAutoIndentPos {
+			return prevInLinePos
+		} else {
+			return prevAutoIndentPos
+		}
+	})
 }
 
-func EnterInsertModeAtEndOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
-		state.SetInputMode(s, state.InputModeInsert)
-		CursorLineEndIncludeEndOfLineOrFile(nil, nil, config)(s)
-	}
+func BeginNewLineBelow(s *state.EditorState) {
+	CursorLineEndIncludeEndOfLineOrFile(s)
+	state.InsertNewline(s)
+	state.SetInputMode(s, state.InputModeInsert)
 }
 
-func BeginNewLineBelow(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		CursorLineEndIncludeEndOfLineOrFile(nil, nil, config)(s)
-		state.InsertNewline(s)
-		state.SetInputMode(s, state.InputModeInsert)
-	}
+func BeginNewLineAbove(s *state.EditorState) {
+	CursorLineStart(s)
+	state.InsertNewline(s)
+	CursorUp(s)
+	state.SetInputMode(s, state.InputModeInsert)
 }
 
-func BeginNewLineAbove(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		CursorLineStart(nil, nil, config)(s)
-		state.InsertNewline(s)
-		CursorUp(nil, nil, config)(s)
-		state.SetInputMode(s, state.InputModeInsert)
-	}
-}
-
-func DeleteLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func DeleteLine(s *state.EditorState) {
 	currentPos := func(params state.LocatorParams) uint64 {
 		return params.CursorPos
 	}
-	return func(s *state.EditorState) {
-		state.DeleteLines(s, currentPos, false)
-		CursorLineStartNonWhitespace(nil, nil, config)(s)
-	}
+	state.DeleteLines(s, currentPos, false)
+	CursorLineStartNonWhitespace(s)
 }
 
-func DeletePrevCharInLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
-		})
-	}
+func DeletePrevCharInLine(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 }
 
-func DeleteNextCharInLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
-		})
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-		})
-	}
+func DeleteNextCharInLine(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
+	})
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+	})
 }
 
-func DeleteDown(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func DeleteDown(s *state.EditorState) {
 	targetLineLoc := func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
 	}
-	return func(s *state.EditorState) {
-		state.DeleteLines(s, targetLineLoc, true)
-		CursorLineStartNonWhitespace(nil, nil, config)(s)
-	}
+	state.DeleteLines(s, targetLineLoc, true)
+	CursorLineStartNonWhitespace(s)
 }
 
-func DeleteUp(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func DeleteUp(s *state.EditorState) {
 	targetLineLoc := func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
 	}
-
-	return func(s *state.EditorState) {
-		state.DeleteLines(s, targetLineLoc, true)
-		CursorLineStartNonWhitespace(nil, nil, config)(s)
-	}
+	state.DeleteLines(s, targetLineLoc, true)
+	CursorLineStartNonWhitespace(s)
 }
 
-func DeleteToEndOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
-		})
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-		})
-	}
+func DeleteToEndOfLine(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+	})
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+	})
 }
 
-func DeleteToStartOfLine(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-		})
-	}
+func DeleteToStartOfLine(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+	})
 }
 
-func DeleteToStartOfLineNonWhitespace(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-			return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
-		})
-	}
+func DeleteToStartOfLineNonWhitespace(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
 }
 
-func DeleteInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
-		})
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
-		})
-	}
+func DeleteInnerWord(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+	})
 }
 
-func ChangeInnerWord(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		DeleteInnerWord(nil, nil, config)(s)
-		EnterInsertMode(nil, nil, config)(s)
-	}
+func ChangeInnerWord(s *state.EditorState) {
+	DeleteInnerWord(s)
+	EnterInsertMode(s)
 }
 
-func ReplaceCharacter(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	if len(inputEvents) == 0 {
 		// This should never happen if the parser rule is configured correctly.
 		panic("Replace chars expects at least one input event")
@@ -344,7 +322,7 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey, count *int64, config Config
 	}
 }
 
-func ShowCommandMenu(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
+func ShowCommandMenu(config Config) Action {
 	return func(s *state.EditorState) {
 		state.SetStatusMsg(s, state.StatusMsg{})
 
@@ -353,33 +331,71 @@ func ShowCommandMenu(inputEvents []*tcell.EventKey, count *int64, config Config)
 	}
 }
 
-func StartSearchForward(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
+func HideMenuAndReturnToNormalMode(s *state.EditorState) {
+	state.HideMenu(s)
+}
 
-		// This sets the input mode to search.
-		state.StartSearch(s, text.ReadDirectionForward)
+func ExecuteSelectedMenuItem(s *state.EditorState) {
+	// Hides the menu, then executes the menu item action.
+	// This usually returns to normal mode, unless the menu item action sets a different mode.
+	state.ExecuteSelectedMenuItem(s)
+}
+
+func MenuSelectionUp(s *state.EditorState) {
+	state.MoveMenuSelection(s, -1)
+}
+
+func MenuSelectionDown(s *state.EditorState) {
+	state.MoveMenuSelection(s, 1)
+}
+
+func AppendRuneToMenuSearch(r rune) Action {
+	return func(s *state.EditorState) {
+		state.AppendRuneToMenuSearch(s, r)
 	}
 }
 
-func StartSearchBackward(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
+func DeleteRuneFromMenuSearch(s *state.EditorState) {
+	state.DeleteRuneFromMenuSearch(s)
+}
 
-		// This sets the input mode to search.
-		state.StartSearch(s, text.ReadDirectionBackward)
+func StartSearchForward(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+
+	// This sets the input mode to search.
+	state.StartSearch(s, text.ReadDirectionForward)
+}
+
+func StartSearchBackward(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{})
+
+	// This sets the input mode to search.
+	state.StartSearch(s, text.ReadDirectionBackward)
+}
+
+func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
+	state.CompleteSearch(s, false)
+}
+
+func CommitSearchAndReturnToNormalMode(s *state.EditorState) {
+	state.CompleteSearch(s, true)
+}
+
+func AppendRuneToSearchQuery(r rune) Action {
+	return func(s *state.EditorState) {
+		state.AppendRuneToSearchQuery(s, r)
 	}
 }
 
-func FindNextMatch(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		state.FindNextMatch(s, false)
-	}
+func DeleteRuneFromSearchQuery(s *state.EditorState) {
+	state.DeleteRuneFromSearchQuery(s)
 }
 
-func FindPrevMatch(inputEvents []*tcell.EventKey, count *int64, config Config) Action {
-	return func(s *state.EditorState) {
-		reverse := true
-		state.FindNextMatch(s, reverse)
-	}
+func FindNextMatch(s *state.EditorState) {
+	state.FindNextMatch(s, false)
+}
+
+func FindPrevMatch(s *state.EditorState) {
+	reverse := true
+	state.FindNextMatch(s, reverse)
 }

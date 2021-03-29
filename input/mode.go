@@ -3,7 +3,6 @@ package input
 import (
 	"log"
 
-	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
 )
@@ -32,7 +31,11 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	}
 
 	log.Printf("Parser accepted input for rule '%s'\n", result.Rule.Name)
-	action := result.Rule.ActionBuilder(result.Input, result.Count, config)
+	action := result.Rule.ActionBuilder(ActionBuilderParams{
+		InputEvents: result.Input,
+		CountArg:    result.Count,
+		Config:      config,
+	})
 	return thenScrollViewToCursor(action)
 }
 
@@ -51,64 +54,23 @@ func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	switch event.Key() {
 	case tcell.KeyRune:
-		return m.insertRune(event.Rune())
+		return InsertRune(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return m.deletePrevChar()
+		return DeletePrevChar
 	case tcell.KeyEnter:
-		return m.insertNewline()
+		return InsertNewline
 	case tcell.KeyTab:
-		return m.insertTab()
+		return InsertTab
 	case tcell.KeyLeft:
-		return CursorLeft(nil, nil, Config{})
+		return CursorLeft
 	case tcell.KeyRight:
-		return CursorRight(nil, nil, Config{})
+		return CursorRight
 	case tcell.KeyUp:
-		return CursorUp(nil, nil, Config{})
+		return CursorUp
 	case tcell.KeyDown:
-		return CursorDown(nil, nil, Config{})
+		return CursorDown
 	default:
-		return m.returnToNormalMode()
-	}
-}
-
-func (m *insertMode) insertRune(r rune) Action {
-	return func(s *state.EditorState) {
-		state.InsertRune(s, r)
-	}
-}
-
-func (m *insertMode) insertNewline() Action {
-	return state.InsertNewline
-}
-
-func (m *insertMode) insertTab() Action {
-	return state.InsertTab
-}
-
-func (m *insertMode) deletePrevChar() Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
-			prevAutoIndentPos := locate.PrevAutoIndent(
-				params.TextTree,
-				params.AutoIndentEnabled,
-				params.TabSize,
-				params.CursorPos)
-			if prevInLinePos < prevAutoIndentPos {
-				return prevInLinePos
-			} else {
-				return prevAutoIndentPos
-			}
-		})
-	}
-}
-
-func (m *insertMode) returnToNormalMode() Action {
-	return func(s *state.EditorState) {
-		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-		})
-		state.SetInputMode(s, state.InputModeNormal)
+		return ReturnToNormalMode
 	}
 }
 
@@ -122,55 +84,22 @@ func newMenuMode() Mode {
 func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
-		return m.closeMenu()
+		return HideMenuAndReturnToNormalMode
 	case tcell.KeyEnter:
-		return m.executeSelectedMenuItem()
+		return ExecuteSelectedMenuItem
 	case tcell.KeyUp:
-		return m.menuSelectionUp()
+		return MenuSelectionUp
 	case tcell.KeyDown:
-		return m.menuSelectionDown()
+		return MenuSelectionDown
 	case tcell.KeyTab:
-		return m.menuSelectionDown()
+		return MenuSelectionDown
 	case tcell.KeyRune:
-		return m.appendMenuSearch(event.Rune())
+		return AppendRuneToMenuSearch(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return m.deleteMenuSearch()
+		return DeleteRuneFromMenuSearch
 	default:
 		return EmptyAction
 	}
-}
-
-func (m *menuMode) closeMenu() Action {
-	// Returns to normal mode.
-	return state.HideMenu
-}
-
-func (m *menuMode) executeSelectedMenuItem() Action {
-	// Hides the menu, then executes the menu item action.
-	// This usually returns to normal mode, unless the menu item action sets a different mode.
-	return state.ExecuteSelectedMenuItem
-}
-
-func (m *menuMode) menuSelectionUp() Action {
-	return func(s *state.EditorState) {
-		state.MoveMenuSelection(s, -1)
-	}
-}
-
-func (m *menuMode) menuSelectionDown() Action {
-	return func(s *state.EditorState) {
-		state.MoveMenuSelection(s, 1)
-	}
-}
-
-func (m *menuMode) appendMenuSearch(r rune) Action {
-	return func(s *state.EditorState) {
-		state.AppendRuneToMenuSearch(s, r)
-	}
-}
-
-func (m *menuMode) deleteMenuSearch() Action {
-	return state.DeleteRuneFromMenuSearch
 }
 
 // thenScrollViewToCursor executes the action, then scrolls the view so the cursor is visible.
@@ -192,25 +121,14 @@ func newSearchMode() Mode {
 func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
-		// This returns the input mode to normal.
-		return func(s *state.EditorState) {
-			commit := false
-			state.CompleteSearch(s, commit)
-		}
+		return AbortSearchAndReturnToNormalMode
 	case tcell.KeyEnter:
-		// This returns the input mode to normal.
-		return func(s *state.EditorState) {
-			commit := true
-			state.CompleteSearch(s, commit)
-		}
+		return CommitSearchAndReturnToNormalMode
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		// This returns the input mode to normal if the search query is empty.
-		return state.DeleteRuneFromSearchQuery
+		return DeleteRuneFromSearchQuery
 	case tcell.KeyRune:
-		r := event.Rune()
-		return func(s *state.EditorState) {
-			state.AppendRuneToSearchQuery(s, r)
-		}
+		return AppendRuneToSearchQuery(event.Rune())
 	default:
 		return EmptyAction
 	}

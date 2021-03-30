@@ -19,7 +19,7 @@ type normalMode struct {
 	parser *Parser
 }
 
-func newNormalMode() Mode {
+func newNormalMode() *normalMode {
 	parser := NewParser(normalModeRules)
 	return &normalMode{parser}
 }
@@ -42,7 +42,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
-func newInsertMode() Mode {
+func newInsertMode() *insertMode {
 	return &insertMode{}
 }
 
@@ -77,7 +77,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
-func newMenuMode() Mode {
+func newMenuMode() *menuMode {
 	return &menuMode{}
 }
 
@@ -114,7 +114,7 @@ func thenScrollViewToCursor(f Action) Action {
 type searchMode struct {
 }
 
-func newSearchMode() Mode {
+func newSearchMode() *searchMode {
 	return &searchMode{}
 }
 

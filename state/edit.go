@@ -233,17 +233,17 @@ func deleteLine(state *EditorState, lineNum uint64) {
 // deleteRunes deletes text from the document.
 // It also updates the syntax token and unsaved changes flag.
 // It does NOT move the cursor.
-func deleteRunes(state *EditorState, pos uint64, count uint64) error {
+func deleteRunes(state *EditorState, pos uint64, count uint64) {
 	buffer := state.documentBuffer
 	for i := uint64(0); i < count; i++ {
 		buffer.textTree.DeleteAtPosition(pos)
 	}
 	edit := parser.Edit{Pos: pos, NumDeleted: count}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
-		return errors.Wrapf(err, "retokenizeAfterEdit")
+		// This should never happen when using a text tree reader.
+		log.Fatalf("error deleting runes: %v\n", errors.Wrapf(err, "retokenizeAfterEdit"))
 	}
 	state.hasUnsavedChanges = true
-	return nil
 }
 
 // ReplaceChar replaces the character under the cursor with the specified string.

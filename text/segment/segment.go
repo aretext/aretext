@@ -68,7 +68,7 @@ func (seg *Segment) HasNewline() bool {
 	return false
 }
 
-// SegmentIsWhitespace checks whether a segment contains all whitespace runes (spaces, tabs, etc).
+// IsWhitespace checks whether the segment contains only whitespace runes (spaces, tabs, etc).
 func (seg *Segment) IsWhitespace() bool {
 	for _, r := range seg.runes {
 		if !unicode.IsSpace(r) {

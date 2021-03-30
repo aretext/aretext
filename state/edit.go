@@ -276,3 +276,60 @@ func ReplaceChar(state *EditorState, newText string) {
 		buffer.cursor.position = pos
 	}
 }
+
+// JoinLines joins the next line with the current line.
+// This matches vim's behavior, which has some subtle edge cases
+// involving empty lines and indentation at the beginning of lines.
+func JoinLines(state *EditorState) {
+	buffer := state.documentBuffer
+	cursorPos := buffer.cursor.position
+
+	nextNewlinePos, newlineLen, foundNewline := locate.NextNewline(buffer.textTree, cursorPos)
+	if !foundNewline {
+		// If we're on the last line, do nothing.
+		return
+	}
+
+	// Delete newline and any indentation at start of next line.
+	startOfNextLinePos := nextNewlinePos + newlineLen
+	endOfIndentationPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfNextLinePos)
+	deleteRunes(state, nextNewlinePos, endOfIndentationPos-nextNewlinePos)
+
+	// Replace the newline with a space and move the cursor there.
+	mustInsertRuneAtPosition(state, ' ', nextNewlinePos)
+	MoveCursor(state, func(LocatorParams) uint64 { return nextNewlinePos })
+
+	// If the space is adjacent to a newline, delete it.
+	if isAdjacentToNewlineOrEof(buffer.textTree, nextNewlinePos) {
+		deleteRunes(state, nextNewlinePos, 1)
+	}
+
+	// Move the cursor onto the line if necessary.
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return locate.ClosestCharOnLine(p.TextTree, p.CursorPos)
+	})
+}
+
+func isAdjacentToNewlineOrEof(textTree *text.Tree, pos uint64) bool {
+	seg := segment.Empty()
+
+	forwardIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+
+	// Consume the grapheme cluster on the position.
+	segment.NextOrEof(forwardIter, seg)
+
+	// Check the next grapheme cluster after the position.
+	eof := segment.NextOrEof(forwardIter, seg)
+	if eof || seg.HasNewline() {
+		return true
+	}
+
+	// Check the grapheme cluster before the position.
+	backwardIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
+	eof = segment.NextOrEof(backwardIter, seg)
+	if eof || seg.HasNewline() {
+		return true
+	}
+
+	return false
+}

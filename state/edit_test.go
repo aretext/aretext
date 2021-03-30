@@ -478,3 +478,118 @@ func TestReplaceChar(t *testing.T) {
 		})
 	}
 }
+
+func TestJoinLines(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedText   string
+		expectedCursor cursorState
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedText:   "",
+			expectedCursor: cursorState{position: 0},
+		},
+		{
+			name:           "two lines, no indentation, cursor at start",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 0},
+			expectedText:   "abc def",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "two lines, no indentation, cursor before newline",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "abc def",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "two lines, no indentation, cursor on newline",
+			inputString:    "abc\ndef",
+			initialCursor:  cursorState{position: 3},
+			expectedText:   "abc def",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "two lines, second line indented with spaces",
+			inputString:    "abc\n    def",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "abc def",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "two lines, second line indented with tabs",
+			inputString:    "abc\n\t\tdef",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "abc def",
+			expectedCursor: cursorState{position: 3},
+		},
+		{
+			name:           "multiple lines, on last line",
+			inputString:    "abc\ndef\nghijk",
+			initialCursor:  cursorState{position: 10},
+			expectedText:   "abc\ndef\nghijk",
+			expectedCursor: cursorState{position: 10},
+		},
+		{
+			name:           "second-to-last line, last line is whitespace",
+			inputString:    "abc\n     ",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "abc",
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "before empty line",
+			inputString:    "abc\n\ndef",
+			initialCursor:  cursorState{position: 1},
+			expectedText:   "abc\ndef",
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "before multiple empty lines",
+			inputString:    "abc\n\n\n\ndef",
+			initialCursor:  cursorState{position: 1},
+			expectedText:   "abc\n\n\ndef",
+			expectedCursor: cursorState{position: 2},
+		},
+		{
+			name:           "on empty line before non-empty line",
+			inputString:    "abc\n\ndef\nxyz",
+			initialCursor:  cursorState{position: 4},
+			expectedText:   "abc\ndef\nxyz",
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "on empty line before empty line",
+			inputString:    "abc\n\n\n\ndef",
+			initialCursor:  cursorState{position: 4},
+			expectedText:   "abc\n\n\ndef",
+			expectedCursor: cursorState{position: 4},
+		},
+		{
+			name:           "before line all whitespace",
+			inputString:    "abc\n       \ndef",
+			initialCursor:  cursorState{position: 2},
+			expectedText:   "abc\ndef",
+			expectedCursor: cursorState{position: 2},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			JoinLines(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}

@@ -136,3 +136,21 @@ func NextNonWhitespaceOrNewline(tree *text.Tree, pos uint64) uint64 {
 	}
 	return pos + offset
 }
+
+// NextNewline locates the next newline on or after the specified position.
+// It returns both the positon of the newline as well as its length in runes,
+// since the grapheme cluster could be either '\n' or '\r\n'.
+func NextNewline(tree *text.Tree, pos uint64) (uint64, uint64, bool) {
+	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+	seg := segment.Empty()
+	var offset uint64
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof {
+			return 0, 0, false
+		} else if seg.HasNewline() {
+			return pos + offset, seg.NumRunes(), true
+		}
+		offset += seg.NumRunes()
+	}
+}

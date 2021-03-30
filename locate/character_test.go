@@ -455,3 +455,69 @@ func TestNextNonWhitespaceOrNewline(t *testing.T) {
 		})
 	}
 }
+
+func TestNextNewline(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		pos         uint64
+		expectedOk  bool
+		expectedPos uint64
+		expectedLen uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectedOk:  false,
+		},
+		{
+			name:        "last line",
+			inputString: "abcd",
+			pos:         2,
+			expectedOk:  false,
+		},
+		{
+			name:        "before LF",
+			inputString: "abc\ndef",
+			pos:         1,
+			expectedOk:  true,
+			expectedPos: 3,
+			expectedLen: 1,
+		},
+		{
+			name:        "on LF",
+			inputString: "abc\ndef",
+			pos:         3,
+			expectedOk:  true,
+			expectedPos: 3,
+			expectedLen: 1,
+		},
+		{
+			name:        "before CR LF",
+			inputString: "abc\r\ndef",
+			pos:         1,
+			expectedOk:  true,
+			expectedPos: 3,
+			expectedLen: 2,
+		},
+		{
+			name:        "on CR LF",
+			inputString: "abc\r\ndef",
+			pos:         3,
+			expectedOk:  true,
+			expectedPos: 3,
+			expectedLen: 2,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualPos, actualLen, actualOk := NextNewline(textTree, tc.pos)
+			assert.Equal(t, tc.expectedOk, actualOk)
+			assert.Equal(t, tc.expectedPos, actualPos)
+			assert.Equal(t, tc.expectedLen, actualLen)
+		})
+	}
+}

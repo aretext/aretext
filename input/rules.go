@@ -268,6 +268,15 @@ var normalModeRules = []Rule{
 		},
 	},
 	{
+		Name: "join lines (J)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'J'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return JoinLines
+		},
+	},
+	{
 		Name: "delete line (dd)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},

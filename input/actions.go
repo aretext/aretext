@@ -229,6 +229,10 @@ func BeginNewLineAbove(s *state.EditorState) {
 	state.SetInputMode(s, state.InputModeInsert)
 }
 
+func JoinLines(s *state.EditorState) {
+	state.JoinLines(s)
+}
+
 func DeleteLine(s *state.EditorState) {
 	currentPos := func(params state.LocatorParams) uint64 {
 		return params.CursorPos

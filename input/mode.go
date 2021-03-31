@@ -42,10 +42,6 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
-func newInsertMode() *insertMode {
-	return &insertMode{}
-}
-
 func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
 	return thenScrollViewToCursor(action)
@@ -77,10 +73,6 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
-func newMenuMode() *menuMode {
-	return &menuMode{}
-}
-
 func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
@@ -111,12 +103,7 @@ func thenScrollViewToCursor(f Action) Action {
 }
 
 // searchMode is used to search the text for a substring.
-type searchMode struct {
-}
-
-func newSearchMode() *searchMode {
-	return &searchMode{}
-}
+type searchMode struct{}
 
 func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {

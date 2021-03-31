@@ -119,7 +119,7 @@ func StartOfLineBelow(tree *text.Tree, count uint64, pos uint64) uint64 {
 	return tree.LineStartPosition(ClosestValidLineNum(tree, targetLineNum))
 }
 
-// NextLineBoundary locates the start of the current line.
+// NextLineBoundary locates the end of the current line.
 // This assumes that the start position is on a line (not a newline character); if not, the result is undefined.
 func NextLineBoundary(tree *text.Tree, includeEndOfLineOrFile bool, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)

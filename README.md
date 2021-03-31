@@ -29,7 +29,7 @@ See the [Version 1.0 board](https://github.com/aretext/aretext/projects/1) for m
 | Platform | Status             |
 |----------|--------------------|
 | Linux    | Fully supported    |
-| OpenBSD  | Will probably work |
+| \*BSD    | Will probably work |
 | macOS    | Will probably work |
 | Windows  | Not supported      |
 

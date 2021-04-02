@@ -952,58 +952,74 @@ func TestInsertInvalidUtf8(t *testing.T) {
 
 func TestDeleteAtPosition(t *testing.T) {
 	testCases := []struct {
-		name       string
-		inputText  string
-		deletePos  uint64
-		expectText string
+		name              string
+		inputText         string
+		deletePos         uint64
+		expectDidDelete   bool
+		expectDeletedRune rune
+		expectText        string
 	}{
 		{
-			name:       "empty",
-			inputText:  "",
-			deletePos:  0,
-			expectText: "",
+			name:            "empty",
+			inputText:       "",
+			deletePos:       0,
+			expectDidDelete: false,
+			expectText:      "",
 		},
 		{
-			name:       "single character",
-			inputText:  "A",
-			deletePos:  0,
-			expectText: "",
+			name:              "single character",
+			inputText:         "A",
+			deletePos:         0,
+			expectDidDelete:   true,
+			expectDeletedRune: 'A',
+			expectText:        "",
 		},
 		{
-			name:       "single character, delete past end",
-			inputText:  "A",
-			deletePos:  1,
-			expectText: "A",
+			name:            "single character, delete past end",
+			inputText:       "A",
+			deletePos:       1,
+			expectDidDelete: false,
+			expectText:      "A",
 		},
 		{
-			name:       "two characters, delete first",
-			inputText:  "AB",
-			deletePos:  0,
-			expectText: "B",
+			name:              "two characters, delete first",
+			inputText:         "AB",
+			deletePos:         0,
+			expectDidDelete:   true,
+			expectDeletedRune: 'A',
+			expectText:        "B",
 		},
 		{
-			name:       "two characters, delete second",
-			inputText:  "AB",
-			deletePos:  1,
-			expectText: "A",
+			name:              "two characters, delete second",
+			inputText:         "AB",
+			deletePos:         1,
+			expectDidDelete:   true,
+			expectDeletedRune: 'B',
+			expectText:        "A",
 		},
 		{
-			name:       "multi-byte character, delete before",
-			inputText:  "a£b",
-			deletePos:  0,
-			expectText: "£b",
+			name:              "multi-byte character, delete before",
+			inputText:         "a£b",
+			deletePos:         0,
+			expectDidDelete:   true,
+			expectDeletedRune: 'a',
+			expectText:        "£b",
 		},
 		{
-			name:       "multi-byte character, delete on",
-			inputText:  "a£b",
-			deletePos:  1,
-			expectText: "ab",
+			name:              "multi-byte character, delete on",
+			inputText:         "a£b",
+			deletePos:         1,
+			expectDidDelete:   true,
+			expectDeletedRune: '£',
+			expectText:        "ab",
 		},
 		{
-			name:       "multi-byte character, delete after",
-			inputText:  "a£b",
-			deletePos:  2,
-			expectText: "a£",
+			name:              "multi-byte character, delete after",
+			inputText:         "a£b",
+			deletePos:         2,
+			expectDidDelete:   true,
+			expectDeletedRune: 'b',
+			expectText:        "a£",
 		},
 	}
 
@@ -1011,7 +1027,9 @@ func TestDeleteAtPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.inputText)
 			require.NoError(t, err)
-			tree.DeleteAtPosition(tc.deletePos)
+			didDelete, r := tree.DeleteAtPosition(tc.deletePos)
+			assert.Equal(t, tc.expectDidDelete, didDelete)
+			assert.Equal(t, tc.expectDeletedRune, r)
 			assert.Equal(t, tc.expectText, tree.String())
 		})
 	}

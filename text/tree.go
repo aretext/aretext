@@ -166,8 +166,9 @@ func (t *Tree) InsertAtPosition(charPos uint64, c rune) error {
 
 // DeleteAtPosition removes the UTF-8 character at the specified position (0-indexed).
 // If charPos is past the end of the text, this has no effect.
-func (t *Tree) DeleteAtPosition(charPos uint64) {
-	t.root.deleteAtPosition(charPos)
+func (t *Tree) DeleteAtPosition(charPos uint64) (bool, rune) {
+	didDelete, _, r := t.root.deleteAtPosition(charPos)
+	return didDelete, r
 }
 
 // ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
@@ -210,7 +211,7 @@ const maxBytesPerLeaf = 63
 type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
-	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool)
+	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool, r rune)
 	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader
 	positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64
 	numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64
@@ -284,7 +285,7 @@ func (g *innerNodeGroup) split() *innerNodeGroup {
 	return &splitGroup
 }
 
-func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
+func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool, r rune) {
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
@@ -376,9 +377,9 @@ func (n *innerNode) insertAtPosition(charPos uint64, c rune) (invalidateKeys boo
 	return true, splitNode, nil
 }
 
-func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
+func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool, r rune) {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
-	didDelete, wasNewline = n.child.deleteAtPosition(nodeIdx, adjustedCharPos)
+	didDelete, wasNewline, r = n.child.deleteAtPosition(nodeIdx, adjustedCharPos)
 	if didDelete {
 		n.keys[nodeIdx].numChars--
 		if wasNewline {
@@ -497,7 +498,7 @@ func (g *leafNodeGroup) split() *leafNodeGroup {
 	return splitGroup
 }
 
-func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool) {
+func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool, r rune) {
 	// Don't bother rebalancing the tree.  This leaves extra space in the leaves,
 	// but that's okay because usually the user will want to insert more text anyway.
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
@@ -597,11 +598,12 @@ func (l *leafNode) splitIdx() (splitIdx, numCharsBeforeSplit byte) {
 	return l.numBytes, numCharsBeforeSplit
 }
 
-func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool) {
+func (l *leafNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool, r rune) {
 	offset := l.byteOffsetForPosition(charPos)
 	if offset < uint64(l.numBytes) {
 		startByte := l.textBytes[offset]
 		charWidth := textUtf8.CharWidth[startByte]
+		r, _ = utf8.DecodeRune(l.textBytes[offset : offset+uint64(charWidth)])
 		for i := offset; i < uint64(l.numBytes-charWidth); i++ {
 			l.textBytes[i] = l.textBytes[i+uint64(charWidth)]
 		}

@@ -35,7 +35,7 @@ func (l *Log) TrackOp(op Op) {
 
 	if l.numEntriesAtLastSave > l.numUndoEntries {
 		// Invalidate a save point in the future.
-		l.numEntriesAtLastSave = 0
+		l.numEntriesAtLastSave = -1
 	}
 
 	// Append a new undo entry.

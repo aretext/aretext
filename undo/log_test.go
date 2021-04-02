@@ -105,6 +105,12 @@ func TestAtLastSave(t *testing.T) {
 	log.UndoToLastCheckpoint()
 	log.TrackOp(DeleteOp(1, "b"))
 	assert.False(t, log.AtLastSave())
+
+	log.UndoToLastCheckpoint()
+	assert.False(t, log.AtLastSave())
+
+	log.TrackSave()
+	assert.True(t, log.AtLastSave())
 }
 
 func TestReset(t *testing.T) {

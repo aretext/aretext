@@ -43,6 +43,13 @@ func (l *Log) TrackOp(op Op) {
 	l.numUndoEntries++
 }
 
+// TrackLoad removes all changes and resets the savepoint.
+func (l *Log) TrackLoad() {
+	l.entries = l.entries[:0]
+	l.numUndoEntries = 0
+	l.numEntriesAtLastSave = 0
+}
+
 // TrackSave moves the savepoint to the current entry.
 func (l *Log) TrackSave() {
 	l.numEntriesAtLastSave = l.numUndoEntries
@@ -87,11 +94,4 @@ func (l *Log) RedoToNextCheckpoint() []Op {
 // AtLastSave returns whether the current position in the log is a savepoint.
 func (l *Log) AtLastSave() bool {
 	return l.numUndoEntries == l.numEntriesAtLastSave
-}
-
-// Reset removes all changes and savepoints from the log.
-func (l *Log) Reset() {
-	l.entries = l.entries[:0]
-	l.numUndoEntries = 0
-	l.numEntriesAtLastSave = 0
 }

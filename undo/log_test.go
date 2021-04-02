@@ -113,14 +113,17 @@ func TestAtLastSave(t *testing.T) {
 	assert.True(t, log.AtLastSave())
 }
 
-func TestReset(t *testing.T) {
+func TestTrackLoad(t *testing.T) {
 	log := NewLog()
 	log.TrackOp(InsertOp(0, "a"))
 	log.TrackOp(InsertOp(1, "b"))
 	log.Checkpoint()
 	log.TrackSave()
-	log.Reset()
 
+	log.TrackOp(InsertOp(2, "c"))
+	assert.False(t, log.AtLastSave())
+
+	log.TrackLoad()
 	assert.True(t, log.AtLastSave())
 	assert.Equal(t, 0, len(log.UndoToLastCheckpoint()))
 	assert.Equal(t, 0, len(log.RedoToNextCheckpoint()))

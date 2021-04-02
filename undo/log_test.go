@@ -86,31 +86,31 @@ func TestRedoToNextCheckpoint(t *testing.T) {
 	assert.Equal(t, 0, len(ops))
 }
 
-func TestAtLastSave(t *testing.T) {
+func TestHasUnsavedChanges(t *testing.T) {
 	log := NewLog()
-	assert.True(t, log.AtLastSave())
+	assert.False(t, log.HasUnsavedChanges())
 
 	log.TrackOp(InsertOp(0, "a"))
-	assert.False(t, log.AtLastSave())
+	assert.True(t, log.HasUnsavedChanges())
 
 	log.TrackSave()
-	assert.True(t, log.AtLastSave())
+	assert.False(t, log.HasUnsavedChanges())
 
 	log.UndoToLastCheckpoint()
-	assert.False(t, log.AtLastSave())
+	assert.True(t, log.HasUnsavedChanges())
 
 	log.RedoToNextCheckpoint()
-	assert.True(t, log.AtLastSave())
+	assert.False(t, log.HasUnsavedChanges())
 
 	log.UndoToLastCheckpoint()
 	log.TrackOp(DeleteOp(1, "b"))
-	assert.False(t, log.AtLastSave())
+	assert.True(t, log.HasUnsavedChanges())
 
 	log.UndoToLastCheckpoint()
-	assert.False(t, log.AtLastSave())
+	assert.True(t, log.HasUnsavedChanges())
 
 	log.TrackSave()
-	assert.True(t, log.AtLastSave())
+	assert.False(t, log.HasUnsavedChanges())
 }
 
 func TestTrackLoad(t *testing.T) {
@@ -121,10 +121,10 @@ func TestTrackLoad(t *testing.T) {
 	log.TrackSave()
 
 	log.TrackOp(InsertOp(2, "c"))
-	assert.False(t, log.AtLastSave())
+	assert.True(t, log.HasUnsavedChanges())
 
 	log.TrackLoad()
-	assert.True(t, log.AtLastSave())
+	assert.False(t, log.HasUnsavedChanges())
 	assert.Equal(t, 0, len(log.UndoToLastCheckpoint()))
 	assert.Equal(t, 0, len(log.RedoToNextCheckpoint()))
 }

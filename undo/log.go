@@ -91,7 +91,7 @@ func (l *Log) RedoToNextCheckpoint() []Op {
 	return ops
 }
 
-// AtLastSave returns whether the current position in the log is a savepoint.
-func (l *Log) AtLastSave() bool {
-	return l.numUndoEntries == l.numEntriesAtLastSave
+// HasUnsavedChanges returns whether the log has unsaved changes.
+func (l *Log) HasUnsavedChanges() bool {
+	return l.numUndoEntries != l.numEntriesAtLastSave
 }

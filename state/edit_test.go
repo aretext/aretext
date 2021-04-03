@@ -123,7 +123,7 @@ func TestDeleteRunes(t *testing.T) {
 			DeleteRunes(state, tc.locator)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectUnsavedChanges, state.hasUnsavedChanges)
+			assert.Equal(t, tc.expectUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
 }
@@ -417,7 +417,7 @@ func TestDeleteLines(t *testing.T) {
 			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedUnsavedChanges, state.hasUnsavedChanges)
+			assert.Equal(t, tc.expectedUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
 }

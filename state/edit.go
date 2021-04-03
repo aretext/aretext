@@ -44,8 +44,6 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLo
 		return errors.Wrapf(err, "retokenizeAfterEdit")
 	}
 
-	state.hasUnsavedChanges = true
-
 	if updateUndoLog && len(s) > 0 {
 		op := undo.InsertOp(pos, s)
 		buffer.undoLog.TrackOp(op)
@@ -226,8 +224,6 @@ func deleteLine(state *EditorState, lineNum uint64) {
 		startOfLinePos--
 	}
 
-	hadUnsavedChanges := state.hasUnsavedChanges
-
 	numToDelete := startOfNextLinePos - startOfLinePos
 	deleteRunes(state, startOfLinePos, numToDelete, true)
 
@@ -237,8 +233,6 @@ func deleteLine(state *EditorState, lineNum uint64) {
 			position: locate.StartOfLastLine(buffer.textTree),
 		}
 	}
-
-	state.hasUnsavedChanges = hadUnsavedChanges || numToDelete > 0
 }
 
 // deleteRunes deletes text from the document.
@@ -264,8 +258,6 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 		op := undo.DeleteOp(pos, string(deletedRunes))
 		buffer.undoLog.TrackOp(op)
 	}
-
-	state.hasUnsavedChanges = true
 }
 
 // ReplaceChar replaces the character under the cursor with the specified string.

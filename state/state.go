@@ -21,7 +21,6 @@ type EditorState struct {
 	customMenuItems           []menu.Item
 	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
-	hasUnsavedChanges         bool
 	scheduledShellCmd         string
 	quitFlag                  bool
 }

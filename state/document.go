@@ -31,7 +31,6 @@ func LoadDocument(state *EditorState, path string, requireExists bool, showStatu
 	state.documentBuffer.textTree = tree
 	state.fileWatcher.Stop()
 	state.fileWatcher = watcher
-	state.hasUnsavedChanges = false
 
 	if path == oldPath {
 		updateAfterReload(state)
@@ -159,7 +158,6 @@ func SaveDocument(state *EditorState, force bool) {
 	state.fileWatcher.Stop()
 	state.fileWatcher = newWatcher
 	state.documentBuffer.undoLog.TrackSave()
-	state.hasUnsavedChanges = false
 	reportSaveSuccess(state, path)
 }
 
@@ -181,7 +179,7 @@ func reportSaveSuccess(state *EditorState, path string) {
 
 // AbortIfUnsavedChanges executes a function only if the document does not have unsaved changes and shows an error status msg otherwise.
 func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus bool) {
-	if state.hasUnsavedChanges {
+	if state.documentBuffer.undoLog.HasUnsavedChanges() {
 		log.Printf("Aborting operation because document has unsaved changes\n")
 		if showStatus {
 			SetStatusMsg(state, StatusMsg{

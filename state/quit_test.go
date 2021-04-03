@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aretext/aretext/undo"
 )
 
 func TestQuit(t *testing.T) {
@@ -38,7 +40,10 @@ func TestQuit(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil)
-			state.hasUnsavedChanges = tc.hasUnsavedChanges
+
+			if tc.hasUnsavedChanges {
+				state.documentBuffer.undoLog.TrackOp(undo.InsertOp(0, "a"))
+			}
 
 			if tc.force {
 				Quit(state)

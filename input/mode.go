@@ -36,7 +36,20 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		CountArg:    result.Count,
 		Config:      config,
 	})
-	return thenScrollViewToCursor(action)
+
+	return firstCheckpointUndoLog(thenScrollViewToCursor(action))
+}
+
+// firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
+func firstCheckpointUndoLog(f Action) Action {
+	return func(s *state.EditorState) {
+		// This ensures that an undo after the action returns the document
+		// to the state BEFORE the action was executed.
+		// For example, if the user deletes a line (dd), then the next undo should
+		// restore the deleted line.
+		state.CheckpointUndoLog(s)
+		f(s)
+	}
 }
 
 // insertMode is used for inserting characters into text.

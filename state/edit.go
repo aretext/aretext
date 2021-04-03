@@ -2,6 +2,7 @@ package state
 
 import (
 	"log"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/locate"
@@ -15,31 +16,40 @@ import (
 func InsertRune(state *EditorState, r rune) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
-	if err := insertRuneAtPosition(state, r, startPos); err != nil {
+	if err := insertTextAtPosition(state, string(r), startPos); err != nil {
 		log.Printf("Error inserting rune: %v\n", err)
 		return
 	}
 	buffer.cursor.position = startPos + 1
 }
 
-// insertRuneAtPosition inserts a rune into the document.
+// insertTextAtPosition inserts text into the document.
 // It also updates the syntax tokens and unsaved changes flag.
 // It does NOT move the cursor.
-func insertRuneAtPosition(state *EditorState, r rune, pos uint64) error {
+func insertTextAtPosition(state *EditorState, s string, pos uint64) error {
 	buffer := state.documentBuffer
-	if err := buffer.textTree.InsertAtPosition(pos, r); err != nil {
-		return errors.Wrapf(err, "text.Tree.InsertAtPosition")
+
+	for i, r := range s {
+		if err := buffer.textTree.InsertAtPosition(pos+uint64(i), r); err != nil {
+			return errors.Wrapf(err, "text.Tree.InsertAtPosition")
+		}
 	}
-	edit := parser.Edit{Pos: pos, NumInserted: 1}
+
+	edit := parser.Edit{
+		Pos:         pos,
+		NumInserted: uint64(utf8.RuneCountInString(s)),
+	}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
 		return errors.Wrapf(err, "retokenizeAfterEdit")
 	}
+
 	state.hasUnsavedChanges = true
+
 	return nil
 }
 
 func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64) {
-	err := insertRuneAtPosition(state, r, pos)
+	err := insertTextAtPosition(state, string(r), pos)
 	if err != nil {
 		panic(err)
 	}
@@ -261,14 +271,11 @@ func ReplaceChar(state *EditorState, newText string) {
 	deleteRunes(state, cursorPos, numToDelete)
 
 	pos := cursorPos
-	for _, r := range newText {
-		if err := insertRuneAtPosition(state, r, pos); err != nil {
-			// invalid UTF-8 rune; ignore it.
-			log.Printf("Error inserting rune '%q': %v\n", r, err)
-			continue
-		}
-		pos++
+	if err := insertTextAtPosition(state, newText, pos); err != nil {
+		// invalid UTF-8 rune; ignore it.
+		log.Printf("Error inserting text '%s': %v\n", newText, err)
 	}
+	pos += uint64(utf8.RuneCountInString(newText))
 
 	if newText != "\n" {
 		buffer.cursor.position = cursorPos

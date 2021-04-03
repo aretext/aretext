@@ -80,7 +80,7 @@ func InsertNewline(state *EditorState) {
 func deleteToNextNonWhitespace(state *EditorState, startPos uint64) {
 	pos := locate.NextNonWhitespaceOrNewline(state.documentBuffer.textTree, startPos)
 	count := pos - startPos
-	deleteRunes(state, startPos, count)
+	deleteRunes(state, startPos, count, true)
 }
 
 func numColsIndentedPrevLine(buffer *BufferState, cursorPos uint64) uint64 {
@@ -185,10 +185,10 @@ func DeleteRunes(state *EditorState, loc Locator) {
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
 
 	if startPos < deleteToPos {
-		deleteRunes(state, startPos, deleteToPos-startPos)
+		deleteRunes(state, startPos, deleteToPos-startPos, true)
 		buffer.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		deleteRunes(state, deleteToPos, startPos-deleteToPos)
+		deleteRunes(state, deleteToPos, startPos-deleteToPos, true)
 		buffer.cursor = cursorState{position: deleteToPos}
 	}
 }
@@ -226,15 +226,10 @@ func deleteLine(state *EditorState, lineNum uint64) {
 		startOfLinePos--
 	}
 
-	numToDelete := startOfNextLinePos - startOfLinePos
-	for i := uint64(0); i < numToDelete; i++ {
-		buffer.textTree.DeleteAtPosition(startOfLinePos)
-	}
+	hadUnsavedChanges := state.hasUnsavedChanges
 
-	edit := parser.Edit{Pos: startOfLinePos, NumDeleted: numToDelete}
-	if err := retokenizeAfterEdit(buffer, edit); err != nil {
-		log.Printf("Error retokenizing doument: %v\n", err)
-	}
+	numToDelete := startOfNextLinePos - startOfLinePos
+	deleteRunes(state, startOfLinePos, numToDelete, true)
 
 	buffer.cursor = cursorState{position: startOfLinePos}
 	if buffer.cursor.position >= buffer.textTree.NumChars() {
@@ -243,22 +238,33 @@ func deleteLine(state *EditorState, lineNum uint64) {
 		}
 	}
 
-	state.hasUnsavedChanges = state.hasUnsavedChanges || numToDelete > 0
+	state.hasUnsavedChanges = hadUnsavedChanges || numToDelete > 0
 }
 
 // deleteRunes deletes text from the document.
 // It also updates the syntax token and unsaved changes flag.
 // It does NOT move the cursor.
-func deleteRunes(state *EditorState, pos uint64, count uint64) {
+func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog bool) {
+	deletedRunes := make([]rune, 0, count)
 	buffer := state.documentBuffer
 	for i := uint64(0); i < count; i++ {
-		buffer.textTree.DeleteAtPosition(pos)
+		didDelete, r := buffer.textTree.DeleteAtPosition(pos)
+		if didDelete {
+			deletedRunes = append(deletedRunes, r)
+		}
 	}
+
 	edit := parser.Edit{Pos: pos, NumDeleted: count}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
 		// This should never happen when using a text tree reader.
 		log.Fatalf("error deleting runes: %v\n", errors.Wrapf(err, "retokenizeAfterEdit"))
 	}
+
+	if updateUndoLog && len(deletedRunes) > 0 {
+		op := undo.DeleteOp(pos, string(deletedRunes))
+		buffer.undoLog.TrackOp(op)
+	}
+
 	state.hasUnsavedChanges = true
 }
 
@@ -274,7 +280,7 @@ func ReplaceChar(state *EditorState, newText string) {
 	}
 
 	numToDelete := nextCharPos - cursorPos
-	deleteRunes(state, cursorPos, numToDelete)
+	deleteRunes(state, cursorPos, numToDelete, true)
 
 	pos := cursorPos
 	if err := insertTextAtPosition(state, newText, pos, true); err != nil {
@@ -306,7 +312,7 @@ func JoinLines(state *EditorState) {
 	// Delete newline and any indentation at start of next line.
 	startOfNextLinePos := nextNewlinePos + newlineLen
 	endOfIndentationPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfNextLinePos)
-	deleteRunes(state, nextNewlinePos, endOfIndentationPos-nextNewlinePos)
+	deleteRunes(state, nextNewlinePos, endOfIndentationPos-nextNewlinePos, true)
 
 	// Replace the newline with a space and move the cursor there.
 	mustInsertRuneAtPosition(state, ' ', nextNewlinePos, true)
@@ -314,7 +320,7 @@ func JoinLines(state *EditorState) {
 
 	// If the space is adjacent to a newline, delete it.
 	if isAdjacentToNewlineOrEof(buffer.textTree, nextNewlinePos) {
-		deleteRunes(state, nextNewlinePos, 1)
+		deleteRunes(state, nextNewlinePos, 1, true)
 	}
 
 	// Move the cursor onto the line if necessary.

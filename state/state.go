@@ -7,6 +7,7 @@ import (
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/undo"
 )
 
 // EditorState represents the current state of the editor.
@@ -43,6 +44,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 			height:     documentBufferHeight,
 		},
 		search:         searchState{},
+		undoLog:        undo.NewLog(),
 		syntaxLanguage: syntax.LanguageUndefined,
 		tokenTree:      nil,
 		tokenizer:      nil,
@@ -115,6 +117,7 @@ type BufferState struct {
 	cursor         cursorState
 	view           viewState
 	search         searchState
+	undoLog        *undo.Log
 	syntaxLanguage syntax.Language
 	tokenTree      *parser.TokenTree
 	tokenizer      *parser.Tokenizer

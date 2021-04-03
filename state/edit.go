@@ -9,6 +9,7 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
+	"github.com/aretext/aretext/undo"
 	"github.com/pkg/errors"
 )
 
@@ -16,7 +17,7 @@ import (
 func InsertRune(state *EditorState, r rune) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
-	if err := insertTextAtPosition(state, string(r), startPos); err != nil {
+	if err := insertTextAtPosition(state, string(r), startPos, true); err != nil {
 		log.Printf("Error inserting rune: %v\n", err)
 		return
 	}
@@ -26,7 +27,7 @@ func InsertRune(state *EditorState, r rune) {
 // insertTextAtPosition inserts text into the document.
 // It also updates the syntax tokens and unsaved changes flag.
 // It does NOT move the cursor.
-func insertTextAtPosition(state *EditorState, s string, pos uint64) error {
+func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLog bool) error {
 	buffer := state.documentBuffer
 
 	for i, r := range s {
@@ -45,11 +46,16 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64) error {
 
 	state.hasUnsavedChanges = true
 
+	if updateUndoLog && len(s) > 0 {
+		op := undo.InsertOp(pos, s)
+		buffer.undoLog.TrackOp(op)
+	}
+
 	return nil
 }
 
-func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64) {
-	err := insertTextAtPosition(state, string(r), pos)
+func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64, updateUndoLog bool) {
+	err := insertTextAtPosition(state, string(r), pos, updateUndoLog)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +64,7 @@ func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64) {
 // InsertNewline inserts a newline at the current cursor position.
 func InsertNewline(state *EditorState) {
 	cursorPos := state.documentBuffer.cursor.position
-	mustInsertRuneAtPosition(state, '\n', cursorPos)
+	mustInsertRuneAtPosition(state, '\n', cursorPos, true)
 	cursorPos++
 
 	buffer := state.documentBuffer
@@ -112,10 +118,10 @@ func indentFromPos(state *EditorState, pos uint64, numCols uint64) uint64 {
 	i := uint64(0)
 	for i < numCols {
 		if !tabExpand && numCols-i >= tabSize {
-			mustInsertRuneAtPosition(state, '\t', pos)
+			mustInsertRuneAtPosition(state, '\t', pos, true)
 			i += tabSize
 		} else {
-			mustInsertRuneAtPosition(state, ' ', pos)
+			mustInsertRuneAtPosition(state, ' ', pos, true)
 			i++
 		}
 		pos++
@@ -136,7 +142,7 @@ func InsertTab(state *EditorState) {
 
 func insertTabRune(state *EditorState) uint64 {
 	cursorPos := state.documentBuffer.cursor.position
-	mustInsertRuneAtPosition(state, '\t', cursorPos)
+	mustInsertRuneAtPosition(state, '\t', cursorPos, true)
 	return cursorPos + 1
 }
 
@@ -147,7 +153,7 @@ func insertSpacesForTab(state *EditorState) uint64 {
 	numSpaces := tabSize - (offset % tabSize)
 	cursorPos := buffer.cursor.position
 	for i := uint64(0); i < numSpaces; i++ {
-		mustInsertRuneAtPosition(state, ' ', cursorPos)
+		mustInsertRuneAtPosition(state, ' ', cursorPos, true)
 		cursorPos++
 	}
 	return cursorPos
@@ -271,7 +277,7 @@ func ReplaceChar(state *EditorState, newText string) {
 	deleteRunes(state, cursorPos, numToDelete)
 
 	pos := cursorPos
-	if err := insertTextAtPosition(state, newText, pos); err != nil {
+	if err := insertTextAtPosition(state, newText, pos, true); err != nil {
 		// invalid UTF-8 rune; ignore it.
 		log.Printf("Error inserting text '%s': %v\n", newText, err)
 	}
@@ -303,7 +309,7 @@ func JoinLines(state *EditorState) {
 	deleteRunes(state, nextNewlinePos, endOfIndentationPos-nextNewlinePos)
 
 	// Replace the newline with a space and move the cursor there.
-	mustInsertRuneAtPosition(state, ' ', nextNewlinePos)
+	mustInsertRuneAtPosition(state, ' ', nextNewlinePos, true)
 	MoveCursor(state, func(LocatorParams) uint64 { return nextNewlinePos })
 
 	// If the space is adjacent to a newline, delete it.

@@ -403,3 +403,11 @@ func FindPrevMatch(s *state.EditorState) {
 	reverse := true
 	state.FindNextMatch(s, reverse)
 }
+
+func Undo(s *state.EditorState) {
+	state.Undo(s)
+}
+
+func Redo(s *state.EditorState) {
+	state.Redo(s)
+}

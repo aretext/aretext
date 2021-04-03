@@ -460,4 +460,22 @@ var normalModeRules = []Rule{
 			return FindPrevMatch
 		},
 	},
+	{
+		Name: "undo (u)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'u'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return Undo
+		},
+	},
+	{
+		Name: "redo (ctrl-r)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyCtrlR},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return Redo
+		},
+	},
 }

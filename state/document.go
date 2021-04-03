@@ -53,10 +53,8 @@ func updateAfterReload(state *EditorState) {
 	// Tokenize the document using the current syntax language.
 	SetSyntax(state, state.documentBuffer.syntaxLanguage)
 
-	// Ensure that the cursor position is within the document.
-	MoveCursor(state, func(params LocatorParams) uint64 { return params.CursorPos })
-
-	// Ensure that the cursor is within the current view.
+	// Ensure that the cursor position is within the document and within the current view.
+	MoveCursorOntoDocument(state)
 	ScrollViewToCursor(state)
 }
 

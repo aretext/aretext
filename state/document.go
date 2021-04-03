@@ -56,6 +56,9 @@ func updateAfterReload(state *EditorState) {
 	// Ensure that the cursor position is within the document and within the current view.
 	MoveCursorOntoDocument(state)
 	ScrollViewToCursor(state)
+
+	// Update the undo log.
+	state.documentBuffer.undoLog.TrackLoad()
 }
 
 func initializeAfterLoad(state *EditorState, config config.Config) {
@@ -64,6 +67,7 @@ func initializeAfterLoad(state *EditorState, config config.Config) {
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent
+	state.documentBuffer.undoLog.TrackLoad()
 	state.customMenuItems = customMenuItems(config)
 	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
@@ -154,6 +158,7 @@ func SaveDocument(state *EditorState, force bool) {
 
 	state.fileWatcher.Stop()
 	state.fileWatcher = newWatcher
+	state.documentBuffer.undoLog.TrackSave()
 	state.hasUnsavedChanges = false
 	reportSaveSuccess(state, path)
 }

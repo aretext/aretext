@@ -12,13 +12,12 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// The version is set automatically as part of the release process.
-// Please do NOT modify the following line.
-const version = "development"
-
-// The git sha is set automatically as part of the build process.
-// Please do NOT modify the following line.
-var GitSha string
+// These variables are set automatically as part of the release process.
+// Please do NOT modify the following lines
+var (
+	version = "dev"
+	commit  = ""
+)
 
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -69,7 +68,7 @@ func printUsage() {
 }
 
 func runEditor(path string) error {
-	log.Printf("aretext (version: %s, git sha: %s)\n", version, GitSha)
+	log.Printf("aretext (version: %s, commit: %s)\n", version, commit)
 	log.Printf("path arg: '%s'\n", path)
 	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))
 

@@ -83,10 +83,11 @@ func stringSliceToMap(ss []string) map[string]struct{} {
 func customMenuItems(config config.Config) []menu.Item {
 	items := make([]menu.Item, 0, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
+		sc := cmd.ShellCmd
 		items = append(items, menu.Item{
 			Name: cmd.Name,
 			Action: func(state *EditorState) {
-				ScheduleShellCmd(state, cmd.ShellCmd)
+				ScheduleShellCmd(state, sc)
 			},
 		})
 	}

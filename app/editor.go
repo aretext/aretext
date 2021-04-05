@@ -112,6 +112,7 @@ func (e *Editor) executeScheduledShellCmd() {
 		return
 	}
 
+	log.Printf("Executing scheduled shell cmd: '%s'\n", sc)
 	e.editorState.ClearScheduledShellCmd()
 
 	// Suspend input processing and reset the terminal to its original state

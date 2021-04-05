@@ -1,6 +1,11 @@
 package state
 
+import (
+	"log"
+)
+
 // ScheduleShellCmd schedules a shell command to be executed by the editor.
 func ScheduleShellCmd(state *EditorState, shellCmd string) {
+	log.Printf("Scheduled shell command: '%s'\n", shellCmd)
 	state.scheduledShellCmd = shellCmd
 }

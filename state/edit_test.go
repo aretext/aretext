@@ -3,6 +3,7 @@ package state
 import (
 	"testing"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
@@ -588,6 +589,166 @@ func TestJoinLines(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			JoinLines(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
+func TestCopyLine(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		initialCursor     cursorState
+		expectedClipboard clipboard.PageContent
+	}{
+		{
+			name:          "empty",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			expectedClipboard: clipboard.PageContent{
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "single line, cursor at start",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 0},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "single line, cursor in middle",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "single line, cursor at end",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 4},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "multiple lines, cursor on first line",
+			inputString:   "abcd\nefgh\nijkl",
+			initialCursor: cursorState{position: 2},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "multiple lines, cursor on middle line",
+			inputString:   "abcd\nefgh\nijkl",
+			initialCursor: cursorState{position: 5},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "efgh",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "multiple lines, cursor on last line",
+			inputString:   "abcd\nefgh\nijkl",
+			initialCursor: cursorState{position: 10},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "ijkl",
+				InsertOnNextLine: true,
+			},
+		},
+		{
+			name:          "cursor on empty line",
+			inputString:   "abcd\n\n\nefgh",
+			initialCursor: cursorState{position: 5},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "",
+				InsertOnNextLine: true,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			CopyLine(state)
+			assert.Equal(t, tc.initialCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+		})
+	}
+}
+
+func TestPasteAfterCursor(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		clipboard      clipboard.PageContent
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty document, empty clipboard",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			clipboard:      clipboard.PageContent{},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:          "empty document, empty clipboard insert on next line",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			clipboard: clipboard.PageContent{
+				InsertOnNextLine: true,
+			},
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "\n",
+		},
+		{
+			name:          "paste after cursor",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			clipboard: clipboard.PageContent{
+				Text:             "xyz",
+				InsertOnNextLine: false,
+			},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "abxyzcd",
+		},
+		{
+			name:          "paste after cursor insert on next line",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			clipboard: clipboard.PageContent{
+				Text:             "xyz",
+				InsertOnNextLine: true,
+			},
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abcd\nxyz",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)
+			PasteAfterCursor(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})

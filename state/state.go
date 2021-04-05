@@ -1,6 +1,7 @@
 package state
 
 import (
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
@@ -16,6 +17,7 @@ type EditorState struct {
 	configRuleSet             config.RuleSet
 	inputMode                 InputMode
 	documentBuffer            *BufferState
+	clipboard                 *clipboard.C
 	fileWatcher               *file.Watcher
 	menu                      *MenuState
 	customMenuItems           []menu.Item
@@ -57,6 +59,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		screenHeight:    screenHeight,
 		configRuleSet:   configRuleSet,
 		documentBuffer:  buffer,
+		clipboard:       clipboard.New(),
 		fileWatcher:     file.NewEmptyWatcher(),
 		menu:            &MenuState{},
 		customMenuItems: nil,

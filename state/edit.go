@@ -1,14 +1,17 @@
 package state
 
 import (
+	"io"
 	"log"
 	"unicode/utf8"
 
 	"github.com/aretext/aretext/cellwidth"
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
+	textUtf8 "github.com/aretext/aretext/text/utf8"
 	"github.com/aretext/aretext/undo"
 	"github.com/pkg/errors"
 )
@@ -343,4 +346,62 @@ func isAdjacentToNewlineOrEof(textTree *text.Tree, pos uint64) bool {
 	}
 
 	return false
+}
+
+// CopyLine copies the line under the cursor to the default page in the clipboard.
+func CopyLine(state *EditorState) {
+	buffer := state.documentBuffer
+	startPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
+	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
+	line := copyText(buffer.textTree, startPos, endPos-startPos)
+	content := clipboard.PageContent{
+		Text:             line,
+		InsertOnNextLine: true,
+	}
+	state.clipboard.Set(clipboard.PageDefault, content)
+}
+
+// copyText copies part of the document text to a string.
+func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
+	var offset uint64
+	var buf [256]byte
+	textBytes := make([]byte, 0, numRunes)
+	r := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	for offset < numRunes {
+		n, err := r.Read(buf[:])
+		if err == io.EOF {
+			if n == 0 {
+				break
+			}
+		} else if err != nil {
+			panic(err) // Should never happen for a text tree.
+		}
+
+		for i := 0; i < n && offset < numRunes; i++ {
+			b := buf[i]
+			textBytes = append(textBytes, b)
+			offset += uint64(textUtf8.StartByteIndicator[b])
+		}
+	}
+
+	return string(textBytes)
+}
+
+// PasteAfterCursor inserts the text from the default page in the clipboard at the cursor position.
+func PasteAfterCursor(state *EditorState) {
+	content := state.clipboard.Get(clipboard.PageDefault)
+	pos := state.documentBuffer.cursor.position
+	if content.InsertOnNextLine {
+		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)
+		mustInsertRuneAtPosition(state, '\n', pos, true)
+		pos++
+	}
+
+	err := insertTextAtPosition(state, content.Text, pos, true)
+	if err != nil {
+		log.Printf("Error pasting text: %v\n", err)
+		return
+	}
+
+	MoveCursor(state, func(LocatorParams) uint64 { return pos })
 }

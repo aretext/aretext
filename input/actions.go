@@ -326,6 +326,14 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	}
 }
 
+func CopyLines(s *state.EditorState) {
+	state.CopyLine(s)
+}
+
+func PasteAfterCursor(s *state.EditorState) {
+	state.PasteAfterCursor(s)
+}
+
 func ShowCommandMenu(config Config) Action {
 	return func(s *state.EditorState) {
 		state.SetStatusMsg(s, state.StatusMsg{})

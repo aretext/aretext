@@ -398,6 +398,25 @@ var normalModeRules = []Rule{
 		},
 	},
 	{
+		Name: "yank line (yy)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'y'},
+			{Key: tcell.KeyRune, Rune: 'y'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CopyLines
+		},
+	},
+	{
+		Name: "put (p)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'p'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return PasteAfterCursor
+		},
+	},
+	{
 		Name: "scroll up",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyCtrlU},

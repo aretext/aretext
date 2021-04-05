@@ -1,2 +1,4 @@
 /aretext
 tags
+dist/
+*.log

@@ -1,0 +1,19 @@
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+    - goimports -w .
+
+builds:
+  - main: main.go
+    binary: aretext
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+
+archives:
+  - files:
+      - README.md
+      - LICENSE

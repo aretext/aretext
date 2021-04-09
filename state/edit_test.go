@@ -724,8 +724,8 @@ func TestPasteAfterCursor(t *testing.T) {
 				Text:             "xyz",
 				InsertOnNextLine: false,
 			},
-			expectedCursor: cursorState{position: 2},
-			expectedText:   "abxyzcd",
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "abcxyzd",
 		},
 		{
 			name:          "paste after cursor insert on next line",

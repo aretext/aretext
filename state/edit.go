@@ -395,6 +395,8 @@ func PasteAfterCursor(state *EditorState) {
 		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)
 		mustInsertRuneAtPosition(state, '\n', pos, true)
 		pos++
+	} else {
+		pos = locate.NextCharInLine(state.documentBuffer.textTree, 1, true, pos)
 	}
 
 	err := insertTextAtPosition(state, content.Text, pos, true)

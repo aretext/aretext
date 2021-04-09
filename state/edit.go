@@ -3,6 +3,7 @@ package state
 import (
 	"io"
 	"log"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/aretext/aretext/cellwidth"
@@ -185,12 +186,20 @@ func DeleteRunes(state *EditorState, loc Locator) {
 	startPos := buffer.cursor.position
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
 
+	var deletedText string
 	if startPos < deleteToPos {
-		deleteRunes(state, startPos, deleteToPos-startPos, true)
+		deletedText = deleteRunes(state, startPos, deleteToPos-startPos, true)
 		buffer.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		deleteRunes(state, deleteToPos, startPos-deleteToPos, true)
+		deletedText = deleteRunes(state, deleteToPos, startPos-deleteToPos, true)
 		buffer.cursor = cursorState{position: deleteToPos}
+	}
+
+	if deletedText != "" {
+		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
+			Text:             deletedText,
+			InsertOnNextLine: false,
+		})
 	}
 }
 
@@ -211,12 +220,36 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 	}
 
 	numLinesToDelete := targetLine - currentLine + 1
+	deletedLines := make([]string, 0, numLinesToDelete)
 	for i := uint64(0); i < numLinesToDelete; i++ {
-		deleteLine(state, currentLine)
+		s := deleteLine(state, currentLine)
+		if s != "" {
+			deletedLines = append(deletedLines, stripStartingAndTrailingNewlines(s))
+		}
+	}
+
+	if len(deletedLines) > 0 {
+		deletedText := strings.Join(deletedLines, "\n")
+		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
+			Text:             deletedText,
+			InsertOnNextLine: true,
+		})
 	}
 }
 
-func deleteLine(state *EditorState, lineNum uint64) {
+func stripStartingAndTrailingNewlines(s string) string {
+	if len(s) > 0 && s[0] == '\n' {
+		s = s[1:]
+	}
+
+	if len(s) > 0 && s[len(s)-1] == '\n' {
+		s = s[0 : len(s)-1]
+	}
+
+	return s
+}
+
+func deleteLine(state *EditorState, lineNum uint64) string {
 	buffer := state.documentBuffer
 	startOfLinePos := buffer.textTree.LineStartPosition(lineNum)
 	startOfNextLinePos := buffer.textTree.LineStartPosition(lineNum + 1)
@@ -228,7 +261,7 @@ func deleteLine(state *EditorState, lineNum uint64) {
 	}
 
 	numToDelete := startOfNextLinePos - startOfLinePos
-	deleteRunes(state, startOfLinePos, numToDelete, true)
+	deletedText := deleteRunes(state, startOfLinePos, numToDelete, true)
 
 	buffer.cursor = cursorState{position: startOfLinePos}
 	if buffer.cursor.position >= buffer.textTree.NumChars() {
@@ -236,12 +269,14 @@ func deleteLine(state *EditorState, lineNum uint64) {
 			position: locate.StartOfLastLine(buffer.textTree),
 		}
 	}
+
+	return deletedText
 }
 
 // deleteRunes deletes text from the document.
-// It also updates the syntax token and unsaved changes flag.
+// It also updates the syntax token and undo log.
 // It does NOT move the cursor.
-func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog bool) {
+func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog bool) string {
 	deletedRunes := make([]rune, 0, count)
 	buffer := state.documentBuffer
 	for i := uint64(0); i < count; i++ {
@@ -257,10 +292,13 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 		log.Fatalf("error deleting runes: %v\n", errors.Wrapf(err, "retokenizeAfterEdit"))
 	}
 
-	if updateUndoLog && len(deletedRunes) > 0 {
-		op := undo.DeleteOp(pos, string(deletedRunes))
+	deletedText := string(deletedRunes)
+	if updateUndoLog && deletedText != "" {
+		op := undo.DeleteOp(pos, deletedText)
 		buffer.undoLog.TrackOp(op)
 	}
+
+	return deletedText
 }
 
 // ReplaceChar replaces the character under the cursor with the specified string.

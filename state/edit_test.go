@@ -67,6 +67,7 @@ func TestDeleteRunes(t *testing.T) {
 		locator              func(LocatorParams) uint64
 		expectedCursor       cursorState
 		expectedText         string
+		expectedClipboard    clipboard.PageContent
 		expectUnsavedChanges bool
 	}{
 		{
@@ -88,6 +89,7 @@ func TestDeleteRunes(t *testing.T) {
 			},
 			expectedCursor:       cursorState{position: 0},
 			expectedText:         "bcd",
+			expectedClipboard:    clipboard.PageContent{Text: "a"},
 			expectUnsavedChanges: true,
 		},
 		{
@@ -99,6 +101,7 @@ func TestDeleteRunes(t *testing.T) {
 			},
 			expectedCursor:       cursorState{position: 3},
 			expectedText:         "abc",
+			expectedClipboard:    clipboard.PageContent{Text: "d"},
 			expectUnsavedChanges: true,
 		},
 		{
@@ -110,6 +113,7 @@ func TestDeleteRunes(t *testing.T) {
 			},
 			expectedCursor:       cursorState{position: 1},
 			expectedText:         "a",
+			expectedClipboard:    clipboard.PageContent{Text: "bcd"},
 			expectUnsavedChanges: true,
 		},
 	}
@@ -124,6 +128,7 @@ func TestDeleteRunes(t *testing.T) {
 			DeleteRunes(state, tc.locator)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
 			assert.Equal(t, tc.expectUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
@@ -304,6 +309,7 @@ func TestDeleteLines(t *testing.T) {
 		abortIfTargetIsCurrentLine bool
 		expectedCursor             cursorState
 		expectedText               string
+		expectedClipboard          clipboard.PageContent
 		expectedUnsavedChanges     bool
 	}{
 		{
@@ -324,8 +330,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return params.CursorPos
 			},
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "",
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -347,8 +357,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return params.CursorPos
 			},
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "efgh\nijk",
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "efgh\nijk",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -358,8 +372,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return params.CursorPos
 			},
-			expectedCursor:         cursorState{position: 5},
-			expectedText:           "abcd\nijk",
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abcd\nijk",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "efgh",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -369,8 +387,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return params.CursorPos
 			},
-			expectedCursor:         cursorState{position: 5},
-			expectedText:           "abcd\nefgh",
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abcd\nefgh",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "ijk",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -380,8 +402,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return params.CursorPos
 			},
-			expectedCursor:         cursorState{position: 5},
-			expectedText:           "abcd\nefgh",
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abcd\nefgh",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -391,8 +417,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return locate.StartOfLineBelow(params.TextTree, 2, params.CursorPos)
 			},
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "lmnop",
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "lmnop",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abcd\nefgh\nijk",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 		{
@@ -402,8 +432,12 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return locate.StartOfLineAbove(params.TextTree, 2, params.CursorPos)
 			},
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "abcd",
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abcd",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "efgh\nijk\nlmnop",
+				InsertOnNextLine: true,
+			},
 			expectedUnsavedChanges: true,
 		},
 	}
@@ -418,6 +452,7 @@ func TestDeleteLines(t *testing.T) {
 			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
 			assert.Equal(t, tc.expectedUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}

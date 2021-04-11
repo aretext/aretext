@@ -10,7 +10,7 @@ Minimalist text editor that never slows you down.
 * Documentation has not yet been written.
 * The user interface may change in fundamental ways.
 
-See [open milestones](https://github.com/aretext/aretext/milestones) for the current roadmap.
+See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.
 
 
 ## Key Features

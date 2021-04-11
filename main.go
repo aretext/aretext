@@ -29,8 +29,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("version: %s\n", version)
-		fmt.Printf("commit:  %s\n", commit)
+		fmt.Printf("%s @ %s\n", version, commit)
 		return
 	}
 

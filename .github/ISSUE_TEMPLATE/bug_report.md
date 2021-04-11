@@ -28,7 +28,7 @@ Please reproduce the issue while running `aretext -log debug.log` and attach `de
 **System (please complete the following information):**
  - OS: [e.g. Linux]
  - Terminal: [e.g. xterm, alacritty]
- - Version [e.g. v0.1.2]
+ - Version: [output of `aretext -version`]
 
 **Additional context**
 Add any other context about the problem here.

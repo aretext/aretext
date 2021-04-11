@@ -291,8 +291,8 @@ func findStartOfWordAfterWhitespace(textTree *text.Tree, tokenTree *parser.Token
 func findEndOfCurrentWord(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
 	newPos := findFirstWhitespaceAfterPos(textTree, pos)
 	if tokenTree != nil {
-		tokenPos := findEndOfCurrentToken(tokenTree, pos)
-		if tokenPos < newPos {
+		tokenPos, foundToken := findEndOfCurrentToken(tokenTree, pos)
+		if foundToken && tokenPos < newPos {
 			newPos = tokenPos
 		}
 	}
@@ -315,13 +315,13 @@ func findFirstWhitespaceAfterPos(textTree *text.Tree, pos uint64) uint64 {
 	return pos + offset
 }
 
-func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
+func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) (uint64, bool) {
 	iter := tokenTree.IterFromPosition(pos, parser.IterDirectionBackward)
 	var tok parser.Token
 	if iter.Get(&tok) && tok.Role != parser.TokenRoleNone {
-		return tok.EndPos
+		return tok.EndPos, true
 	}
-	return pos
+	return 0, false
 }
 
 // isWhitespace returns whether the character at the position is whitespace.

@@ -447,6 +447,13 @@ func TestCurrentWordEnd(t *testing.T) {
 			pos:            1,
 			expectedPos:    3,
 		},
+		{
+			name:           "empty syntax token",
+			inputString:    `{ "ab }`,
+			syntaxLanguage: syntax.LanguageJson,
+			pos:            2,
+			expectedPos:    5,
+		},
 	}
 
 	for _, tc := range testCases {

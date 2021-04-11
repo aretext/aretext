@@ -15,6 +15,9 @@ build-debug:
 test:
 	go test ./...
 
+install:
+	go install $(shell ./ldflags.sh)
+
 vet:
 	go vet ./...
 

@@ -85,7 +85,7 @@ func ClosestValidLineNum(tree *text.Tree, targetLineNum uint64) uint64 {
 	return targetLineNum
 }
 
-// StartOfCurrentLine locates the start of the line for a given position.
+// StartOfLineAtPos locates the start of the line for a given position.
 func StartOfLineAtPos(tree *text.Tree, pos uint64) uint64 {
 	lineNum := tree.LineNumForPosition(pos)
 	return tree.LineStartPosition(lineNum)

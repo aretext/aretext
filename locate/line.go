@@ -142,7 +142,7 @@ func NextLineBoundary(tree *text.Tree, includeEndOfLineOrFile bool, pos uint64) 
 	}
 }
 
-// PrevLineBoundary locates the end of the current line.
+// PrevLineBoundary locates the start of the current line, reading backwards from the specified position.
 // This assumes that the start position is on a line (not a newline character); if not, the result is undefined.
 func PrevLineBoundary(tree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)

@@ -92,6 +92,6 @@ func ShowFileMenu(config Config) Action {
 	}
 
 	return func(s *state.EditorState) {
-		state.ShowMenu(s, "file path", findFileMenuItems, true, false)
+		state.ShowMenu(s, state.MenuStyleFile, findFileMenuItems)
 	}
 }

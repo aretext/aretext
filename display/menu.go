@@ -23,7 +23,7 @@ func DrawMenu(screen tcell.Screen, menu *state.MenuState) {
 	// Search input
 	row := 0
 	searchInputRegion := NewScreenRegion(screen, 0, row, screenWidth, 1)
-	drawSearchInput(searchInputRegion, menu.Prompt(), menu.SearchQuery())
+	drawSearchInput(searchInputRegion, menu.Style(), menu.SearchQuery())
 	row++
 
 	// Filtered menu items (search results)
@@ -69,18 +69,39 @@ func maxNumVisibleItems(numItems int, height int) int {
 	return numItems
 }
 
-func drawSearchInput(sr *ScreenRegion, prompt string, query string) {
+func drawSearchInput(sr *ScreenRegion, style state.MenuStyle, query string) {
 	sr.Clear()
-	sr.SetContent(0, 0, ':', nil, tcell.StyleDefault)
-	col := 1
+	col := drawStringNoWrap(sr, menuIconForStyle(style), 0, 0, tcell.StyleDefault)
 	if len(query) == 0 {
 		sr.ShowCursor(col, 0)
-		drawStringNoWrap(sr, prompt, col, 0, tcell.StyleDefault.Dim(true))
+		drawStringNoWrap(sr, menuPromptForStyle(style), col, 0, tcell.StyleDefault.Dim(true))
 		return
 	}
 
 	col = drawStringNoWrap(sr, query, col, 0, tcell.StyleDefault)
 	sr.ShowCursor(col, 0)
+}
+
+func menuIconForStyle(style state.MenuStyle) string {
+	switch style {
+	case state.MenuStyleCommand:
+		return ":"
+	case state.MenuStyleFile:
+		return "./"
+	default:
+		panic("Unrecognized menu style")
+	}
+}
+
+func menuPromptForStyle(style state.MenuStyle) string {
+	switch style {
+	case state.MenuStyleCommand:
+		return "command"
+	case state.MenuStyleFile:
+		return "file path"
+	default:
+		panic("Unrecognized menu style")
+	}
 }
 
 func drawMenuItem(sr *ScreenRegion, item menu.Item, selected bool) {

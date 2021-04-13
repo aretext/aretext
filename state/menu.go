@@ -6,13 +6,20 @@ import (
 	"github.com/aretext/aretext/menu"
 )
 
+type MenuStyle int
+
+const (
+	MenuStyleCommand = MenuStyle(iota)
+	MenuStyleFile
+)
+
 // MenuState represents the menu for searching and selecting items.
 type MenuState struct {
 	// visible indicates whether the menu is currently displayed.
 	visible bool
 
-	// prompt is a user-facing description of the menu contents.
-	prompt string
+	// style controls how the menu is displayed.
+	style MenuStyle
 
 	// search controls which items are visible based on the user's current search query.
 	search *menu.Search
@@ -27,8 +34,8 @@ func (m *MenuState) Visible() bool {
 	return m.visible
 }
 
-func (m *MenuState) Prompt() string {
-	return m.prompt
+func (m *MenuState) Style() MenuStyle {
+	return m.style
 }
 
 func (m *MenuState) SearchQuery() string {
@@ -45,18 +52,19 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 	return m.search.Results(), m.selectedResultIdx
 }
 
-// ShowMenu displays the menu with the specified prompt and items.
-func ShowMenu(state *EditorState, prompt string, loadItems func() []menu.Item, emptyQueryShowAll bool, showCustomMenuItems bool) {
+// ShowMenu displays the menu with the specified style and items.
+func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item) {
+	emptyQueryShowAll := bool(style == MenuStyleFile)
 	search := menu.NewSearch(emptyQueryShowAll)
 	search.AddItems(loadItems())
 
-	if showCustomMenuItems {
+	if style == MenuStyleCommand {
 		search.AddItems(state.customMenuItems)
 	}
 
 	state.menu = &MenuState{
 		visible:           true,
-		prompt:            prompt,
+		style:             style,
 		search:            search,
 		selectedResultIdx: 0,
 	}

@@ -34,11 +34,11 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil)
 				loadItems := func() []menu.Item { return nil }
-				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
-				{':', 't', 'e', 's', 't', ' ', ' ', ' ', ' ', ' '},
+				{':', 'c', 'o', 'm', 'm', 'a', 'n', 'd', ' ', ' '},
 				{'─', '─', '─', '─', '─', '─', '─', '─', '─', '─'},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -51,7 +51,7 @@ func TestDrawMenu(t *testing.T) {
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil)
 				loadItems := func() []menu.Item { return nil }
-				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				state.AppendRuneToMenuSearch(editorState, 'a')
 				state.AppendRuneToMenuSearch(editorState, 'b')
 				state.AppendRuneToMenuSearch(editorState, 'c')
@@ -77,7 +77,7 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test third"},
 					}
 				}
-				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				state.AppendRuneToMenuSearch(editorState, 't')
 				return editorState.Menu()
 			},
@@ -107,7 +107,7 @@ func TestDrawMenu(t *testing.T) {
 						{Name: "test 9"},
 					}
 				}
-				state.ShowMenu(editorState, "test", loadItems, false, false)
+				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				state.AppendRuneToMenuSearch(editorState, 't')
 				state.MoveMenuSelection(editorState, -2)
 				return editorState.Menu()

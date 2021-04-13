@@ -10,16 +10,15 @@ import (
 
 func TestShowMenu(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
-	prompt := "test prompt"
 	loadItems := func() []menu.Item {
 		return []menu.Item{
 			{Name: "test item 1"},
 			{Name: "test item 2"},
 		}
 	}
-	ShowMenu(state, prompt, loadItems, false, false)
+	ShowMenu(state, MenuStyleCommand, loadItems)
 	assert.True(t, state.Menu().Visible())
-	assert.Equal(t, prompt, state.Menu().Prompt())
+	assert.Equal(t, MenuStyleCommand, state.Menu().Style())
 	assert.Equal(t, "", state.Menu().SearchQuery())
 
 	results, selectedIdx := state.Menu().SearchResults()
@@ -34,7 +33,7 @@ func TestHideMenu(t *testing.T) {
 			{Name: "test item"},
 		}
 	}
-	ShowMenu(state, "test prompt", loadItems, false, false)
+	ShowMenu(state, MenuStyleCommand, loadItems)
 	HideMenu(state)
 	assert.False(t, state.Menu().Visible())
 }
@@ -55,7 +54,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 			},
 		}
 	}
-	ShowMenu(state, "test prompt", loadItems, false, false)
+	ShowMenu(state, MenuStyleCommand, loadItems)
 	AppendRuneToMenuSearch(state, 'q') // search for "q", should match "quit"
 	ExecuteSelectedMenuItem(state)
 	assert.False(t, state.Menu().Visible())
@@ -144,7 +143,7 @@ func TestMoveMenuSelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil)
 			loadItems := func() []menu.Item { return tc.items }
-			ShowMenu(state, "test", loadItems, false, false)
+			ShowMenu(state, MenuStyleCommand, loadItems)
 			AppendRuneToMenuSearch(state, tc.searchRune)
 			for _, delta := range tc.moveDeltas {
 				MoveMenuSelection(state, delta)
@@ -158,7 +157,7 @@ func TestMoveMenuSelection(t *testing.T) {
 func TestAppendRuneToMenuSearch(t *testing.T) {
 	state := NewEditorState(100, 100, nil)
 	loadItems := func() []menu.Item { return nil }
-	ShowMenu(state, "test", loadItems, false, false)
+	ShowMenu(state, MenuStyleCommand, loadItems)
 	AppendRuneToMenuSearch(state, 'a')
 	AppendRuneToMenuSearch(state, 'b')
 	AppendRuneToMenuSearch(state, 'c')
@@ -196,7 +195,7 @@ func TestDeleteRuneFromMenuSearch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := NewEditorState(100, 100, nil)
 			loadItems := func() []menu.Item { return nil }
-			ShowMenu(state, "test", loadItems, false, false)
+			ShowMenu(state, MenuStyleCommand, loadItems)
 			for _, r := range tc.searchQuery {
 				AppendRuneToMenuSearch(state, r)
 			}

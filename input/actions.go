@@ -345,7 +345,7 @@ func ShowCommandMenu(config Config) Action {
 		state.SetStatusMsg(s, state.StatusMsg{})
 
 		// This sets the input mode to menu.
-		state.ShowMenu(s, "command", commandMenuItems(config), false, true)
+		state.ShowMenu(s, state.MenuStyleCommand, commandMenuItems(config))
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -126,6 +127,84 @@ func TestDeleteRunes(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			DeleteRunes(state, tc.locator)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assert.Equal(t, tc.expectUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
+		})
+	}
+}
+
+func TestDeleteSelection(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		inputString          string
+		selectionMode        selection.Mode
+		cursorStartPos       uint64
+		cursorEndPos         uint64
+		expectedCursor       cursorState
+		expectedText         string
+		expectedClipboard    clipboard.PageContent
+		expectUnsavedChanges bool
+	}{
+		{
+			name:                 "empty document, select charwise",
+			inputString:          "",
+			selectionMode:        selection.ModeChar,
+			cursorStartPos:       0,
+			cursorEndPos:         0,
+			expectedCursor:       cursorState{position: 0},
+			expectedText:         "",
+			expectedClipboard:    clipboard.PageContent{Text: ""},
+			expectUnsavedChanges: false,
+		},
+		{
+			name:                 "empty document, select linewise",
+			inputString:          "",
+			selectionMode:        selection.ModeLine,
+			cursorStartPos:       0,
+			cursorEndPos:         0,
+			expectedCursor:       cursorState{position: 0},
+			expectedText:         "",
+			expectedClipboard:    clipboard.PageContent{Text: ""},
+			expectUnsavedChanges: false,
+		},
+		{
+			name:                 "nonempty charwise selection",
+			inputString:          "abcd1234",
+			selectionMode:        selection.ModeChar,
+			cursorStartPos:       1,
+			cursorEndPos:         3,
+			expectedCursor:       cursorState{position: 1},
+			expectedText:         "a1234",
+			expectedClipboard:    clipboard.PageContent{Text: "bcd"},
+			expectUnsavedChanges: true,
+		},
+		{
+			name:           "nonempty linewise selection",
+			inputString:    "ab\ncde\nfgh\n12\n34",
+			selectionMode:  selection.ModeLine,
+			cursorStartPos: 4,
+			cursorEndPos:   8,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\n12\n34",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "cde\nfgh",
+				InsertOnNextLine: true,
+			},
+			expectUnsavedChanges: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
+			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
+			DeleteSelection(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))

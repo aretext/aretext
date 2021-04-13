@@ -9,6 +9,7 @@ import (
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -200,6 +201,26 @@ func DeleteRunes(state *EditorState, loc Locator) {
 			Text:             deletedText,
 			InsertOnNextLine: false,
 		})
+	}
+}
+
+// DeleteSelection deletes the currently selected region, if any.
+func DeleteSelection(state *EditorState) {
+	buffer := state.documentBuffer
+	selectionMode := buffer.selector.Mode()
+	if selectionMode == selection.ModeNone {
+		return
+	}
+
+	r := buffer.SelectedRegion()
+	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
+
+	if selectionMode == selection.ModeChar {
+		DeleteRunes(state, func(LocatorParams) uint64 { return r.EndPos })
+	} else if selectionMode == selection.ModeLine {
+		DeleteLines(state, func(LocatorParams) uint64 { return r.EndPos }, false)
+	} else {
+		panic("Unsupported selection mode")
 	}
 }
 

@@ -1,5 +1,9 @@
 package state
 
+import (
+	"github.com/aretext/aretext/selection"
+)
+
 // InputMode controls how the editor interprets input events.
 type InputMode int
 
@@ -8,6 +12,7 @@ const (
 	InputModeInsert
 	InputModeMenu
 	InputModeSearch
+	InputModeVisual
 )
 
 func (im InputMode) String() string {
@@ -20,6 +25,8 @@ func (im InputMode) String() string {
 		return "menu"
 	case InputModeSearch:
 		return "search"
+	case InputModeVisual:
+		return "visual"
 	default:
 		panic("invalid input mode")
 	}
@@ -35,5 +42,34 @@ func SetInputMode(state *EditorState, mode InputMode) {
 		CheckpointUndoLog(state)
 	}
 
+	if state.inputMode == InputModeVisual && mode != InputModeVisual {
+		// Clear selection when exiting visual mode.
+		state.documentBuffer.selector.Clear()
+	}
+
 	state.inputMode = mode
+}
+
+// ToggleVisualMode transitions to/from visual selection mode.
+func ToggleVisualMode(state *EditorState, selectionMode selection.Mode) {
+	buffer := state.documentBuffer
+
+	// If we're not already in visual mode, enter visual mode and start a new selection.
+	if state.inputMode != InputModeVisual {
+		state.inputMode = InputModeVisual
+		buffer.selector.Start(selectionMode, buffer.cursor.position)
+		return
+	}
+
+	// If we're in visual mode but not in the same selection mode,
+	// stay in visual mode and change the selection mode
+	// (for example, switch from selecting charwise to selecting linewise)
+	if buffer.selector.Mode() != selectionMode {
+		buffer.selector.SetMode(selectionMode)
+		return
+	}
+
+	// If we're already in visual mode and the requested selection mode,
+	// toggle back to normal mode.  This will also clear the selection.
+	SetInputMode(state, InputModeNormal)
 }

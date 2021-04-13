@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
@@ -418,4 +419,27 @@ func Undo(s *state.EditorState) {
 
 func Redo(s *state.EditorState) {
 	state.Redo(s)
+}
+
+func ToggleVisualModeCharwise(s *state.EditorState) {
+	state.ToggleVisualMode(s, selection.ModeChar)
+}
+
+func ToggleVisualModeLinewise(s *state.EditorState) {
+	state.ToggleVisualMode(s, selection.ModeLine)
+}
+
+func DeleteSelectionAndReturnToNormalMode(s *state.EditorState) {
+	state.DeleteSelection(s)
+	ReturnToNormalMode(s)
+}
+
+func ChangeSelection(s *state.EditorState) {
+	DeleteSelectionAndReturnToNormalMode(s)
+	EnterInsertMode(s)
+}
+
+func CopySelectionAndReturnToNormalMode(s *state.EditorState) {
+	state.CopySelection(s)
+	ReturnToNormalMode(s)
 }

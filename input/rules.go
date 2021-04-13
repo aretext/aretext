@@ -21,8 +21,8 @@ type Rule struct {
 	ActionBuilder ActionBuilder
 }
 
-// These rules are used when the editor is in normal mode.
-var normalModeRules = []Rule{
+// These rules control cursor movement in normal and visual mode.
+var cursorRules = []Rule{
 	{
 		Name: "cursor left (arrow)",
 		Pattern: []EventMatcher{
@@ -204,6 +204,10 @@ var normalModeRules = []Rule{
 			return CursorStartOfLastLine
 		},
 	},
+}
+
+// These rules are used when the editor is in normal mode.
+var normalModeRules = append(cursorRules, []Rule{
 	{
 		Name: "delete next char in line (x)",
 		Pattern: []EventMatcher{
@@ -497,4 +501,89 @@ var normalModeRules = []Rule{
 			return Redo
 		},
 	},
-}
+	{
+		Name: "enter visual mode charwise (v)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'v'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleVisualModeCharwise
+		},
+	},
+	{
+		Name: "enter visual mode linewise (V)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'V'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleVisualModeLinewise
+		},
+	},
+}...)
+
+// These rules are used when the editor is in visual mode.
+var visualModeRules = append(cursorRules, []Rule{
+	{
+		Name: "toggle visual mode charwise (v)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'v'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleVisualModeCharwise
+		},
+	},
+	{
+		Name: "toggle visual mode linewise (V)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'V'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleVisualModeLinewise
+		},
+	},
+	{
+		Name: "return to normal mode (esc)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyEscape},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ReturnToNormalMode
+		},
+	},
+	{
+		Name: "delete selection (x)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'x'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteSelectionAndReturnToNormalMode
+		},
+	},
+	{
+		Name: "delete selection (d)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteSelectionAndReturnToNormalMode
+		},
+	},
+	{
+		Name: "change selection (c)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeSelection
+		},
+	},
+	{
+		Name: "yank selection (y)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'y'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CopySelectionAndReturnToNormalMode
+		},
+	},
+}...)

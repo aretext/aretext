@@ -20,6 +20,7 @@ func NewInterpreter() *Interpreter {
 			state.InputModeInsert: &insertMode{},
 			state.InputModeMenu:   &menuMode{},
 			state.InputModeSearch: &searchMode{},
+			state.InputModeVisual: newVisualMode(),
 		},
 	}
 }

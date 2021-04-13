@@ -30,7 +30,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		return EmptyAction
 	}
 
-	log.Printf("Parser accepted input for rule '%s'\n", result.Rule.Name)
+	log.Printf("Normal mode parser accepted input for rule '%s'\n", result.Rule.Name)
 	action := result.Rule.ActionBuilder(ActionBuilderParams{
 		InputEvents: result.Input,
 		CountArg:    result.Count,
@@ -132,4 +132,30 @@ func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	default:
 		return EmptyAction
 	}
+}
+
+// visualMode is used to visually select a region of the document.
+type visualMode struct {
+	parser *Parser
+}
+
+func newVisualMode() *visualMode {
+	parser := NewParser(visualModeRules)
+	return &visualMode{parser}
+}
+
+func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	result := m.parser.ProcessInput(event)
+	if !result.Accepted {
+		return EmptyAction
+	}
+
+	log.Printf("Visual mode parser accepted input for rule '%s'\n", result.Rule.Name)
+	action := result.Rule.ActionBuilder(ActionBuilderParams{
+		InputEvents: result.Input,
+		CountArg:    result.Count,
+		Config:      config,
+	})
+
+	return thenScrollViewToCursor(action)
 }

@@ -420,6 +420,29 @@ func CopyLine(state *EditorState) {
 	state.clipboard.Set(clipboard.PageDefault, content)
 }
 
+// CopySelection copies the current selection to the clipboard.
+func CopySelection(state *EditorState) {
+	buffer := state.documentBuffer
+	if buffer.selector.Mode() == selection.ModeNone {
+		return
+	}
+
+	r := buffer.SelectedRegion()
+
+	text := copyText(buffer.textTree, r.StartPos, r.EndPos-r.StartPos)
+	if len(text) == 0 {
+		return
+	}
+
+	content := clipboard.PageContent{Text: text}
+	if buffer.selector.Mode() == selection.ModeLine {
+		content.InsertOnNextLine = true
+	}
+	state.clipboard.Set(clipboard.PageDefault, content)
+
+	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
+}
+
 // copyText copies part of the document text to a string.
 func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
 	var offset uint64

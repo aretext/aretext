@@ -5,6 +5,7 @@ import (
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -37,6 +38,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 	buffer := &BufferState{
 		textTree: text.NewTree(),
 		cursor:   cursorState{},
+		selector: &selection.Selector{},
 		view: viewState{
 			textOrigin: 0,
 			x:          0,
@@ -117,6 +119,7 @@ func (s *EditorState) QuitFlag() bool {
 type BufferState struct {
 	textTree       *text.Tree
 	cursor         cursorState
+	selector       *selection.Selector
 	view           viewState
 	search         searchState
 	undoLog        *undo.Log
@@ -138,6 +141,10 @@ func (s *BufferState) TokenTree() *parser.TokenTree {
 
 func (s *BufferState) CursorPosition() uint64 {
 	return s.cursor.position
+}
+
+func (s *BufferState) SelectedRegion() selection.Region {
+	return s.selector.Region(s.textTree, s.cursor.position)
 }
 
 func (s *BufferState) ViewTextOrigin() uint64 {

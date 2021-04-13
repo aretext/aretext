@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
@@ -474,4 +475,123 @@ func TestSearchMatch(t *testing.T) {
 			},
 		})
 	})
+}
+
+func TestSelection(t *testing.T) {
+	testCases := []struct {
+		name              string
+		width, height     int
+		inputString       string
+		selectionStartPos uint64
+		selectionEndPos   uint64
+		expectedStyles    [][]tcell.Style
+	}{
+		{
+			name:              "selection within line",
+			width:             5,
+			height:            1,
+			inputString:       "abcd",
+			selectionStartPos: 1,
+			selectionEndPos:   2,
+			expectedStyles: [][]tcell.Style{
+				{
+					tcell.StyleDefault,
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+			},
+		},
+		{
+			name:              "selection with line ending",
+			width:             5,
+			height:            2,
+			inputString:       "abc\nefg",
+			selectionStartPos: 1,
+			selectionEndPos:   5,
+			expectedStyles: [][]tcell.Style{
+				{
+					tcell.StyleDefault,
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault,
+				},
+				{
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+			},
+		},
+		{
+			name:              "selection on empty line",
+			width:             3,
+			height:            3,
+			inputString:       "a\n\nb",
+			selectionStartPos: 2,
+			selectionEndPos:   2,
+			expectedStyles: [][]tcell.Style{
+				{
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+				{
+					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+				{
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+			},
+		},
+		{
+			name:              "selection with tab",
+			width:             8,
+			height:            1,
+			inputString:       "ab\tbc",
+			selectionStartPos: 1,
+			selectionEndPos:   3,
+			expectedStyles: [][]tcell.Style{
+				{
+					tcell.StyleDefault,
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+					tcell.StyleDefault,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+						return tc.selectionStartPos
+					})
+					state.ToggleVisualMode(editorState, selection.ModeChar)
+					state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+						return tc.selectionEndPos
+					})
+				})
+				assertCellStyles(t, s, tc.expectedStyles)
+			})
+		})
+	}
 }

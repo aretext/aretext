@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aretext/aretext/cellwidth"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -18,6 +19,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 	sr := NewScreenRegion(screen, x, y, width, height)
 	textTree := buffer.TextTree()
 	cursorPos := buffer.CursorPosition()
+	selectedRegion := buffer.SelectedRegion()
 	viewTextOrigin := buffer.ViewTextOrigin()
 	pos := viewTextOrigin
 	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
@@ -40,7 +42,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, searchMatch, gcWidthFunc)
+		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, selectedRegion, searchMatch, gcWidthFunc)
 		pos += wrappedLine.NumRunes()
 	}
 
@@ -56,7 +58,7 @@ func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, searchMatch *state.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
+func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -83,8 +85,8 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 			return
 		}
 
-		style := styleAtPosition(pos, searchMatch, tokenIter)
-		drawGraphemeCluster(sr, col, row, gcRunes, style)
+		style := styleAtPosition(cursorPos, pos, selectedRegion, searchMatch, tokenIter)
+		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style)
 
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.
@@ -117,7 +119,15 @@ func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
 	}
 }
 
-func styleAtPosition(pos uint64, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+func styleAtPosition(cursorPos, pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+	if selectedRegion.ContainsPosition(pos) {
+		if pos == cursorPos {
+			return tcell.StyleDefault.Underline(true)
+		} else {
+			return tcell.StyleDefault.Reverse(true)
+		}
+	}
+
 	if searchMatch.ContainsPosition(pos) {
 		return tcell.StyleDefault.Reverse(true)
 	}

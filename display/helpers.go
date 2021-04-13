@@ -30,14 +30,16 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 			break
 		}
 
-		drawGraphemeCluster(sr, col, row, gc.Runes(), style)
+		drawGraphemeCluster(sr, col, row, gc.Runes(), int(gcWidth), style)
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
 	}
 
 	return col
 }
 
-func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, style tcell.Style) {
+func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, gcWidth int, style tcell.Style) {
+	startCol := col
+
 	// Emoji and regional indicator sequences are usually rendered using the
 	// width of the first rune.  This won't support every terminal, but it's probably
 	// the best we can do without knowing how the terminal will render the glyphs.
@@ -63,5 +65,11 @@ func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, style tcell.
 		sr.SetContent(col, row, gc[i], gc[i+1:j], style)
 		col += int(cellwidth.RuneWidth(gc[i]))
 		i = j
+	}
+
+	// Style empty cells from tab characters.
+	for col < startCol+gcWidth {
+		sr.SetContent(col, row, ' ', nil, style)
+		col++
 	}
 }

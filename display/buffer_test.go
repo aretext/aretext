@@ -4,33 +4,17 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
-	"github.com/stretchr/testify/assert"
 )
 
-func drawBuffer(t *testing.T, screen tcell.Screen, s string, cursorPos uint64, language syntax.Language, searchQuery string) {
+func drawBuffer(t *testing.T, screen tcell.Screen, setupState func(*state.EditorState)) {
 	screenWidth, screenHeight := screen.Size()
 	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil)
-
-	state.SetSyntax(editorState, language)
-	for _, r := range s {
-		state.InsertRune(editorState, r)
-	}
-
-	state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
-		return cursorPos
-	})
-
-	if searchQuery != "" {
-		state.StartSearch(editorState, text.ReadDirectionForward)
-		for _, r := range searchQuery {
-			state.AppendRuneToSearchQuery(editorState, r)
-		}
-	}
-
+	setupState(editorState)
 	buffer := editorState.DocumentBuffer()
 	DrawBuffer(screen, buffer)
 	screen.Sync()
@@ -176,7 +160,11 @@ func TestDrawBuffer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 10)
-				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, "")
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+				})
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})
@@ -227,8 +215,11 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
-				drawBuffer(t, s, tc.inputString, 0, syntax.LanguageUndefined, "")
-
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+				})
 				contents, _, _ := s.GetContents()
 				for i, expectedRunes := range tc.expectedCellRunes {
 					assert.Equal(t, expectedRunes, contents[i].Runes)
@@ -241,8 +232,11 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 func TestDrawBufferSizeTooSmall(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
-		drawBuffer(t, s, "ab界cd", 0, syntax.LanguageUndefined, "")
-
+		drawBuffer(t, s, func(editorState *state.EditorState) {
+			for _, r := range "ab界cd" {
+				state.InsertRune(editorState, r)
+			}
+		})
 		assertCellContents(t, s, [][]rune{
 			{'a'},
 			{'b'},
@@ -393,8 +387,14 @@ func TestDrawBufferCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
-				drawBuffer(t, s, tc.inputString, tc.cursorPosition, syntax.LanguageUndefined, "")
-
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+						return tc.cursorPosition
+					})
+				})
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
 				if tc.expectedCursorVisible {
@@ -409,7 +409,12 @@ func TestDrawBufferCursor(t *testing.T) {
 func TestSyntaxHighlighting(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
-		drawBuffer(t, s, `{"key": 123}`, 0, syntax.LanguageJson, "")
+		drawBuffer(t, s, func(editorState *state.EditorState) {
+			state.SetSyntax(editorState, syntax.LanguageJson)
+			for _, r := range `{"key": 123}` {
+				state.InsertRune(editorState, r)
+			}
+		})
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
 				// `"{"` has no highlighting
@@ -442,7 +447,16 @@ func TestSearchMatch(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
 		query := "d1"
-		drawBuffer(t, s, `abcd1234`, 0, syntax.LanguageUndefined, query)
+		drawBuffer(t, s, func(editorState *state.EditorState) {
+			for _, r := range `abcd1234` {
+				state.InsertRune(editorState, r)
+			}
+			state.MoveCursor(editorState, func(state.LocatorParams) uint64 { return 0 })
+			state.StartSearch(editorState, text.ReadDirectionForward)
+			for _, r := range query {
+				state.AppendRuneToSearchQuery(editorState, r)
+			}
+		})
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
 				tcell.StyleDefault,

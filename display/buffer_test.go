@@ -496,8 +496,8 @@ func TestSelection(t *testing.T) {
 			expectedStyles: [][]tcell.Style{
 				{
 					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
 					tcell.StyleDefault,
 					tcell.StyleDefault,
 				},
@@ -513,14 +513,14 @@ func TestSelection(t *testing.T) {
 			expectedStyles: [][]tcell.Style{
 				{
 					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Reverse(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
 					tcell.StyleDefault,
 				},
 				{
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
 					tcell.StyleDefault,
 					tcell.StyleDefault,
 					tcell.StyleDefault,
@@ -541,7 +541,7 @@ func TestSelection(t *testing.T) {
 					tcell.StyleDefault,
 				},
 				{
-					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
 					tcell.StyleDefault,
 					tcell.StyleDefault,
 				},
@@ -562,10 +562,10 @@ func TestSelection(t *testing.T) {
 			expectedStyles: [][]tcell.Style{
 				{
 					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Reverse(true),
-					tcell.StyleDefault.Underline(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
+					tcell.StyleDefault.Reverse(true).Dim(true),
 					tcell.StyleDefault,
 					tcell.StyleDefault,
 					tcell.StyleDefault,

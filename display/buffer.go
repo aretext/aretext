@@ -85,7 +85,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 			return
 		}
 
-		style := styleAtPosition(cursorPos, pos, selectedRegion, searchMatch, tokenIter)
+		style := styleAtPosition(pos, selectedRegion, searchMatch, tokenIter)
 		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style)
 
 		if pos-startPos == uint64(maxLineWidth) {
@@ -119,13 +119,9 @@ func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
 	}
 }
 
-func styleAtPosition(cursorPos, pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+func styleAtPosition(pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
 	if selectedRegion.ContainsPosition(pos) {
-		if pos == cursorPos {
-			return tcell.StyleDefault.Underline(true)
-		} else {
-			return tcell.StyleDefault.Reverse(true)
-		}
+		return tcell.StyleDefault.Reverse(true).Dim(true)
 	}
 
 	if searchMatch.ContainsPosition(pos) {

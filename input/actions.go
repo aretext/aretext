@@ -318,7 +318,7 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	lastInput := inputEvents[len(inputEvents)-1]
 	if lastInput.Key() != tcell.KeyRune {
 		log.Printf("Unsupported input for replace character command\n")
-		return nil
+		return EmptyAction
 	}
 
 	newChar := string([]rune{lastInput.Rune()})

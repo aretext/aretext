@@ -594,6 +594,133 @@ func TestReplaceChar(t *testing.T) {
 	}
 }
 
+func TestToggleCaseAtCursor(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "toggle lowercase to uppercase",
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "aBcd",
+		},
+		{
+			name:           "toggle uppercase to lowercase",
+			inputString:    "ABCD",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "AbCD",
+		},
+		{
+			name:           "toggle number",
+			inputString:    "1234",
+			initialCursor:  cursorState{position: 1},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "1234",
+		},
+		{
+			name:           "empty line",
+			inputString:    "ab\n\ncd",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\n\ncd",
+		},
+		{
+			name:           "toggle at end of line",
+			inputString:    "abcd\nefgh",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "abcD\nefgh",
+		},
+		{
+			name:           "toggle at end of document",
+			inputString:    "abcd",
+			initialCursor:  cursorState{position: 3},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "abcD",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			ToggleCaseAtCursor(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
+func TestToggleCaseInSelection(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		selectionMode  selection.Mode
+		cursorStartPos uint64
+		cursorEndPos   uint64
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			selectionMode:  selection.ModeChar,
+			cursorStartPos: 0,
+			cursorEndPos:   0,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "charwise selection",
+			inputString:    "abcdefgh",
+			selectionMode:  selection.ModeChar,
+			cursorStartPos: 2,
+			cursorEndPos:   4,
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "abCDEfgh",
+		},
+		{
+			name:           "linewise selection",
+			inputString:    "ab\ncd\nef\ngh",
+			selectionMode:  selection.ModeLine,
+			cursorStartPos: 4,
+			cursorEndPos:   6,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\nCD\nEF\ngh",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
+			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
+			ToggleCaseInSelection(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestJoinLines(t *testing.T) {
 	testCases := []struct {
 		name           string

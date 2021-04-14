@@ -57,11 +57,15 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLo
 	return nil
 }
 
-func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64, updateUndoLog bool) {
-	err := insertTextAtPosition(state, string(r), pos, updateUndoLog)
+func mustInsertTextAtPosition(state *EditorState, text string, pos uint64, updateUndoLog bool) {
+	err := insertTextAtPosition(state, text, pos, updateUndoLog)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func mustInsertRuneAtPosition(state *EditorState, r rune, pos uint64, updateUndoLog bool) {
+	mustInsertTextAtPosition(state, string(r), pos, updateUndoLog)
 }
 
 // InsertNewline inserts a newline at the current cursor position.
@@ -405,6 +409,49 @@ func isAdjacentToNewlineOrEof(textTree *text.Tree, pos uint64) bool {
 	}
 
 	return false
+}
+
+// ToggleCaseAtCursor changes the character under the cursor from upper-to-lowercase or vice-versa.
+func ToggleCaseAtCursor(state *EditorState) {
+	buffer := state.documentBuffer
+	startPos := buffer.cursor.position
+	endPos := locate.NextCharInLine(buffer.textTree, 1, true, startPos)
+	toggleCaseForRange(state, startPos, endPos)
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return locate.NextCharInLine(buffer.textTree, 1, false, p.CursorPos)
+	})
+}
+
+// ToggleCaseInSelection toggles the case of all characters in the current selection.
+func ToggleCaseInSelection(state *EditorState) {
+	buffer := state.documentBuffer
+	selectionMode := buffer.selector.Mode()
+	if selectionMode == selection.ModeNone {
+		return
+	}
+	region := buffer.SelectedRegion()
+	toggleCaseForRange(state, region.StartPos, region.EndPos)
+	MoveCursor(state, func(p LocatorParams) uint64 { return region.StartPos })
+}
+
+// toggleCaseForRange changes the case of all characters in the range [startPos, endPos)
+// It does NOT move the cursor.
+func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
+	tree := state.documentBuffer.textTree
+	newRunes := make([]rune, 0, 1)
+	reader := tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(reader)
+	for pos := startPos; pos < endPos; pos++ {
+		r, err := runeIter.NextRune()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err) // Should never happen because the document is valid UTF-8.
+		}
+		newRunes = append(newRunes, text.ToggleRuneCase(r))
+	}
+	deleteRunes(state, startPos, uint64(len(newRunes)), true)
+	mustInsertTextAtPosition(state, string(newRunes), startPos, true)
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.

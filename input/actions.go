@@ -346,6 +346,10 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	}
 }
 
+func ToggleCaseAtCursor(s *state.EditorState) {
+	state.ToggleCaseAtCursor(s)
+}
+
 func CopyLines(s *state.EditorState) {
 	state.CopyLine(s)
 }
@@ -450,6 +454,11 @@ func ToggleVisualModeLinewise(s *state.EditorState) {
 
 func DeleteSelectionAndReturnToNormalMode(s *state.EditorState) {
 	state.DeleteSelection(s)
+	ReturnToNormalMode(s)
+}
+
+func ToggleCaseInSelectionAndReturnToNormalMode(s *state.EditorState) {
+	state.ToggleCaseInSelection(s)
 	ReturnToNormalMode(s)
 }
 

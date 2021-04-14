@@ -424,6 +424,15 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "toggle case (~)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '~'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleCaseAtCursor
+		},
+	},
+	{
 		Name: "yank line (yy)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},
@@ -597,6 +606,15 @@ var visualModeRules = append(cursorRules, []Rule{
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeSelection
+		},
+	},
+	{
+		Name: "toggle case for selection (~)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '~'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ToggleCaseInSelectionAndReturnToNormalMode
 		},
 	},
 	{

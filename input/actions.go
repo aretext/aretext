@@ -295,6 +295,15 @@ func DeleteToStartOfLineNonWhitespace(s *state.EditorState) {
 	})
 }
 
+func DeleteAWord(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	})
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
+	})
+}
+
 func DeleteInnerWord(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)

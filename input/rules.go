@@ -370,6 +370,17 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "delete a word (daw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'a'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteAWord
+		},
+	},
+	{
 		Name: "delete inner word (diw)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},

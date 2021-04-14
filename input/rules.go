@@ -392,6 +392,17 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "change a word (caw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 'a'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeAWord
+		},
+	},
+	{
 		Name: "change inner word (ciw)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'c'},

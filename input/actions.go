@@ -313,6 +313,11 @@ func DeleteInnerWord(s *state.EditorState) {
 	})
 }
 
+func ChangeAWord(s *state.EditorState) {
+	DeleteAWord(s)
+	EnterInsertMode(s)
+}
+
 func ChangeInnerWord(s *state.EditorState) {
 	DeleteInnerWord(s)
 	EnterInsertMode(s)

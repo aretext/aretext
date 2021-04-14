@@ -118,12 +118,17 @@ func (e *Editor) executeScheduledShellCmd() {
 		return
 	}
 
-	// Run the shell command and pipe the output to a pager.
+	// Run the shell command, wait for completion, then show a status message.
 	err := RunShellCmd(sc)
 	if err != nil {
 		state.SetStatusMsg(e.editorState, state.StatusMsg{
 			Style: state.StatusMsgStyleError,
 			Text:  err.Error(),
+		})
+	} else {
+		state.SetStatusMsg(e.editorState, state.StatusMsg{
+			Style: state.StatusMsgStyleSuccess,
+			Text:  "Shell command completed successfully",
 		})
 	}
 

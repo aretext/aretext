@@ -37,8 +37,6 @@ type MenuCommandConfig struct {
 	Name string
 
 	// ShellCmd is the shell command to execute when the menu item is selected.
-	// The command's output will be piped to a pager (usually `less`),
-	// so it should be non-interactive.
 	ShellCmd string
 }
 

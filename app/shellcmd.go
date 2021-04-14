@@ -1,7 +1,6 @@
 package app
 
 import (
-	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -10,25 +9,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// RunShellCmd executes a command in a shell and pipes the output to a pager (like `less`).
+// RunShellCmd executes a command in a shell.
 // If the command exits with non-zero status, an error is returned.
+// This assumes that the tcell screen has been suspended.
 func RunShellCmd(shellCmd string) error {
 	runClearCommand()
-
-	// Start a pager process, which will receive the shell command's output.
-	// The pager process will take control of the terminal so the user can scroll through the output.
-	// We assume that on exit the pager process will return the terminal to its previous configuration.
-	pagerStdin, pagerCleanup, err := startPager()
-	if err != nil {
-		return err
-	}
-	defer pagerCleanup()
-
-	// Run the command in a shell, piping the output to the pager.
-	if err := runCmdInShell(shellCmd, pagerStdin); err != nil {
-		return err
-	}
-	return nil
+	return runCmdInShell(shellCmd)
 }
 
 func runClearCommand() {
@@ -40,40 +26,7 @@ func runClearCommand() {
 	}
 }
 
-func startPager() (io.Writer, func(), error) {
-	pager, err := findPagerCmd()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pagerCmd := exec.Command(pager[0], pager[1:]...)
-	pagerStdin, err := pagerCmd.StdinPipe()
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Cmd.StdinPipe")
-	}
-
-	pagerCmd.Stdout = os.Stdout
-	pagerCmd.Stderr = os.Stderr
-	if err := pagerCmd.Start(); err != nil {
-		return nil, nil, errors.Wrapf(err, "Cmd.Start")
-	}
-
-	cleanupFunc := func() {
-		// Close pager stdin so the pager process exits.
-		if err := pagerStdin.Close(); err != nil {
-			log.Printf("Error closing pager stdin: %v\n", err)
-		}
-
-		// Wait for the pager process to exit.
-		if err := pagerCmd.Wait(); err != nil {
-			log.Printf("Error exiting pager: %v\n", err)
-		}
-	}
-
-	return pagerStdin, cleanupFunc, nil
-}
-
-func runCmdInShell(shellCmd string, pagerStdin io.Writer) error {
+func runCmdInShell(shellCmd string) error {
 	s, err := findShellCmd()
 	if err != nil {
 		return err
@@ -82,31 +35,29 @@ func runCmdInShell(shellCmd string, pagerStdin io.Writer) error {
 	s = append(s, "-c", shellCmd)
 	c := exec.Command(s[0], s[1:]...)
 	c.Env = os.Environ()
-	c.Stdout = pagerStdin
-	c.Stderr = pagerStdin
+
+	// Allow the shell to take over stdin/stdout/stderr.
+	// This assumes that the tcell screen has been suspended.
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+
 	if err := c.Run(); err != nil {
 		return errors.Wrapf(err, "Cmd.Run")
 	}
 	return nil
 }
 
+const defaultShell = "sh"
+
 func findShellCmd() ([]string, error) {
-	const defaultShell = "sh"
-	return cmdFromEnvVar("SHELL", defaultShell)
-}
-
-func findPagerCmd() ([]string, error) {
-	const defaultPager = "less -R"
-	return cmdFromEnvVar("PAGER", defaultPager)
-}
-
-func cmdFromEnvVar(envVar string, defaultCmd string) ([]string, error) {
-	s := os.Getenv(envVar)
+	s := os.Getenv("SHELL")
 	if s == "" {
-		s = defaultCmd
+		s = defaultShell
 	}
 
-	// If defaultCmd != "", then the input string will always have at least one char, so len(parts) > 0.
+	// The $SHELL env var might include command line args for the shell command.
+	// These args need to be passed separately to exec.Command, so split them here.
 	parts, err := shlex.Split(s)
 	if err != nil {
 		return nil, errors.Wrapf(err, "shlex.Split")

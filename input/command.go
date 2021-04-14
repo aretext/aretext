@@ -37,10 +37,8 @@ func commandMenuItems(config Config) func() []menu.Item {
 				},
 			},
 			{
-				Name: "force reload",
-				Action: func(s *state.EditorState) {
-					state.ReloadDocument(s, true)
-				},
+				Name:   "force reload",
+				Action: state.ReloadDocument,
 			},
 			{
 				Name: "find and open",
@@ -83,7 +81,7 @@ func ShowFileMenu(config Config) Action {
 			items = append(items, menu.Item{
 				Name: file.RelativePathCwd(path),
 				Action: func(s *state.EditorState) {
-					state.LoadDocument(s, path, true, true)
+					state.LoadDocument(s, path, true)
 				},
 			})
 		})

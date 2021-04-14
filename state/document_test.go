@@ -24,21 +24,33 @@ func createTestFile(t *testing.T, contents string) (path string, cleanup func())
 	return f.Name(), cleanup
 }
 
-func TestLoadDocument(t *testing.T) {
+func TestLoadDocumentShowStatus(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil)
 	assert.Equal(t, "", state.documentBuffer.textTree.String())
 	assert.Equal(t, "", state.FileWatcher().Path())
 
-	// Load a new document.
+	// Load a document.
 	path, cleanup := createTestFile(t, "abcd")
-	defer cleanup()
-	LoadDocument(state, path, true, false)
-	defer state.FileWatcher().Stop()
+	LoadDocument(state, path, true)
+	defer state.fileWatcher.Stop()
 
 	// Expect that the text and watcher are installed.
 	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
 	assert.Equal(t, path, state.FileWatcher().Path())
+
+	// Expect success message.
+	assert.Contains(t, state.statusMsg.Text, "Opened")
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+
+	// Delete the test file.
+	cleanup()
+
+	// Load a non-existent path, expect error msg.
+	LoadDocument(state, path, true)
+	defer state.fileWatcher.Stop()
+	assert.Contains(t, state.statusMsg.Text, "Could not open")
+	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 }
 
 func TestLoadDocumentSameFile(t *testing.T) {
@@ -46,7 +58,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil)
-	LoadDocument(state, path, true, false)
+	LoadDocument(state, path, true)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -60,7 +72,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	// Update the file with shorter text and reload.
 	err := ioutil.WriteFile(path, []byte("ab"), 0644)
 	require.NoError(t, err)
-	ReloadDocument(state, false)
+	ReloadDocument(state)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor moved back to the end of the text,
@@ -77,7 +89,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil)
-	LoadDocument(state, path, true, false)
+	LoadDocument(state, path, true)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -91,7 +103,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	// Load a new document with a shorter text.
 	path2, cleanup2 := createTestFile(t, "ab")
 	defer cleanup2()
-	LoadDocument(state, path2, true, false)
+	LoadDocument(state, path2, true)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor, view, and syntax are reset.
@@ -101,27 +113,6 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	assert.Equal(t, syntax.LanguageUndefined, state.documentBuffer.syntaxLanguage)
 }
 
-func TestLoadDocumentShowStatus(t *testing.T) {
-	// Start with an empty document.
-	state := NewEditorState(100, 100, nil)
-
-	// Load a document, expect success msg.
-	path, cleanup := createTestFile(t, "")
-	LoadDocument(state, path, true, true)
-	defer state.fileWatcher.Stop()
-	assert.Contains(t, state.statusMsg.Text, "Opened")
-	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
-
-	// Delete the test file.
-	cleanup()
-
-	// Load a non-existent path, expect error msg.
-	LoadDocument(state, path, true, true)
-	defer state.fileWatcher.Stop()
-	assert.Contains(t, state.statusMsg.Text, "Could not open")
-	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
-}
-
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil)
@@ -129,7 +120,7 @@ func TestSaveDocument(t *testing.T) {
 	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
 	defer cleanup()
-	LoadDocument(state, path, true, true)
+	LoadDocument(state, path, true)
 	defer state.fileWatcher.Stop()
 
 	// Modify and save the document
@@ -171,7 +162,7 @@ func TestSaveDocumentFileChanged(t *testing.T) {
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
 			state := NewEditorState(100, 100, nil)
-			LoadDocument(state, path, true, true)
+			LoadDocument(state, path, true)
 
 			// Modify the file.
 			f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

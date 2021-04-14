@@ -14,14 +14,14 @@ import (
 )
 
 // LoadDocument loads a file into the editor.
-func LoadDocument(state *EditorState, path string, requireExists bool, showStatus bool) {
+func LoadDocument(state *EditorState, path string, requireExists bool) {
 	var fileExists bool
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if os.IsNotExist(err) && !requireExists {
 		tree = text.NewTree()
 		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
 	} else if err != nil {
-		reportLoadError(state, err, path, showStatus)
+		reportLoadError(state, err, path)
 		return
 	} else {
 		fileExists = true
@@ -34,18 +34,22 @@ func LoadDocument(state *EditorState, path string, requireExists bool, showStatu
 
 	if path == oldPath {
 		updateAfterReload(state)
-		reportLoadSuccess(state, fileExists, path, showStatus)
+		reportReloadSuccess(state, path)
 		return
 	}
 
 	config := state.configRuleSet.ConfigForPath(path)
 	if err := config.Validate(); err != nil {
-		reportConfigError(state, err, path, showStatus)
+		reportConfigError(state, err, path)
 		return
 	}
 
 	initializeAfterLoad(state, config)
-	reportLoadSuccess(state, fileExists, path, showStatus)
+	if fileExists {
+		reportOpenSuccess(state, path)
+	} else {
+		reportCreateSuccess(state, path)
+	}
 }
 
 func updateAfterReload(state *EditorState) {
@@ -94,48 +98,53 @@ func customMenuItems(config config.Config) []menu.Item {
 	return items
 }
 
-func reportLoadError(state *EditorState, err error, path string, showStatus bool) {
+func reportOpenSuccess(state *EditorState, path string) {
+	log.Printf("Successfully opened file from '%s'", path)
+	msg := fmt.Sprintf("Opened %s", file.RelativePathCwd(path))
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  msg,
+	})
+}
+
+func reportCreateSuccess(state *EditorState, path string) {
+	log.Printf("Successfully created file at '%s'", path)
+	msg := fmt.Sprintf("New file %s", file.RelativePathCwd(path))
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  msg,
+	})
+}
+
+func reportReloadSuccess(state *EditorState, path string) {
+	log.Printf("Successfully reloaded file from '%s'", path)
+	msg := fmt.Sprintf("Reloaded %s", file.RelativePathCwd(path))
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  msg,
+	})
+}
+
+func reportLoadError(state *EditorState, err error, path string) {
 	log.Printf("Error loading file at '%s': %v\n", path, err)
-	if showStatus {
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(path)),
-		})
-	}
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(path)),
+	})
 }
 
-func reportLoadSuccess(state *EditorState, fileExists bool, path string, showStatus bool) {
-	log.Printf("Successfully loaded file from '%s'", path)
-	if showStatus {
-		var msg string
-		relPath := file.RelativePathCwd(path)
-		if fileExists {
-			msg = fmt.Sprintf("Opened %s", relPath)
-		} else {
-			msg = fmt.Sprintf("New file %s", relPath)
-		}
-
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleSuccess,
-			Text:  msg,
-		})
-	}
-}
-
-func reportConfigError(state *EditorState, err error, path string, showStatus bool) {
+func reportConfigError(state *EditorState, err error, path string) {
 	log.Printf("Invalid configuration for file at '%s': %v\n", path, err)
-	if showStatus {
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Invalid configuration for file at %s: %v", file.RelativePathCwd(path), err),
-		})
-	}
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  fmt.Sprintf("Invalid configuration for file at %s: %v", file.RelativePathCwd(path), err),
+	})
 }
 
 // ReloadDocument reloads the current document.
-func ReloadDocument(state *EditorState, showStatus bool) {
+func ReloadDocument(state *EditorState) {
 	path := state.fileWatcher.Path()
-	LoadDocument(state, path, false, showStatus)
+	LoadDocument(state, path, false)
 }
 
 // SaveDocument saves the currently loaded document to disk.

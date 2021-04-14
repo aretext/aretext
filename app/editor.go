@@ -33,7 +33,7 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 	// Attempt to load the file.
 	// If it doesn't exist, this will start with an empty document
 	// that the user can edit and save to the specified path.
-	state.LoadDocument(editorState, effectivePath(path), false, true)
+	state.LoadDocument(editorState, effectivePath(path), false)
 	return editor
 }
 
@@ -99,11 +99,7 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 
 func (e *Editor) handleFileChanged() {
 	log.Printf("File change detected, reloading file...\n")
-	const showStatusFlag = false
-	reloadDocument := func(s *state.EditorState) {
-		state.ReloadDocument(s, showStatusFlag)
-	}
-	state.AbortIfUnsavedChanges(e.editorState, reloadDocument, showStatusFlag)
+	state.AbortIfUnsavedChanges(e.editorState, state.ReloadDocument, false)
 }
 
 func (e *Editor) executeScheduledShellCmd() {

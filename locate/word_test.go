@@ -467,3 +467,97 @@ func TestCurrentWordEnd(t *testing.T) {
 		})
 	}
 }
+
+func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		syntaxLanguage syntax.Language
+		pos            uint64
+		expectedPos    uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "start of word at end of document",
+			inputString: "abcd",
+			pos:         0,
+			expectedPos: 4,
+		},
+		{
+			name:        "middle of word at end of document",
+			inputString: "abcd",
+			pos:         2,
+			expectedPos: 4,
+		},
+		{
+			name:        "end of word at end of document",
+			inputString: "abcd",
+			pos:         3,
+			expectedPos: 4,
+		},
+		{
+			name:        "on word before whitespace at end of document",
+			inputString: "abc    ",
+			pos:         2,
+			expectedPos: 7,
+		},
+		{
+			name:        "on whitespace at end of document",
+			inputString: "abc    ",
+			pos:         4,
+			expectedPos: 7,
+		},
+		{
+			name:        "on word with trailing whitespace before next word",
+			inputString: "abc    def",
+			pos:         2,
+			expectedPos: 7,
+		},
+		{
+			name:        "on word at end of line",
+			inputString: "abc\ndef",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "on word before whitespace at end of line",
+			inputString: "abc   \ndef",
+			pos:         1,
+			expectedPos: 6,
+		},
+		{
+			name:        "on word with trailing whitespace before word at end of line",
+			inputString: "abc   def\nghi",
+			pos:         1,
+			expectedPos: 6,
+		},
+		{
+			name:        "on whitespace at end of line",
+			inputString: "abc   \nghi",
+			pos:         4,
+			expectedPos: 6,
+		},
+		{
+			name:        "on empty line",
+			inputString: "ab\n\ncd",
+			pos:         2,
+			expectedPos: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
+			require.NoError(t, err)
+			actualPos := CurrentWordEndWithTrailingWhitespace(textTree, tokenTree, tc.pos)
+			assert.Equal(t, tc.expectedPos, actualPos)
+		})
+	}
+}

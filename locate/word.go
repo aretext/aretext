@@ -324,6 +324,19 @@ func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) (uint64, boo
 	return 0, false
 }
 
+// CurrentWordEndWithTrailingWhitespace returns the end of the whitespace after current word.
+// It uses the same word break rules as NextWordStart.
+func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
+	nextWordPos := NextWordStart(textTree, tokenTree, pos)
+	endOfLinePos := NextLineBoundary(textTree, true, pos)
+	onLastWordInDocument := bool(nextWordPos+1 == textTree.NumChars())
+	if onLastWordInDocument || endOfLinePos < nextWordPos {
+		return endOfLinePos
+	} else {
+		return nextWordPos
+	}
+}
+
 // isWhitespace returns whether the character at the position is whitespace.
 func isWhitespaceAtPos(tree *text.Tree, pos uint64) bool {
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)

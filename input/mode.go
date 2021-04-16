@@ -11,7 +11,7 @@ import (
 type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
 	// It will return any user-initiated action resulting from the keypress
-	ProcessKeyEvent(event *tcell.EventKey, config Config) Action
+	ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action
 }
 
 // normalMode is used for navigating text.
@@ -24,7 +24,7 @@ func newNormalMode() *normalMode {
 	return &normalMode{parser}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
 	result := m.parser.ProcessInput(event)
 	if !result.Accepted {
 		return EmptyAction
@@ -32,12 +32,22 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 
 	log.Printf("Normal mode parser accepted input for rule '%s'\n", result.Rule.Name)
 	action := result.Rule.ActionBuilder(ActionBuilderParams{
-		InputEvents: result.Input,
-		CountArg:    result.Count,
-		Config:      config,
+		InputEvents:   result.Input,
+		CountArg:      result.Count,
+		MacroRecorder: macroRecorder,
+		Config:        config,
 	})
+	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
 
-	return firstCheckpointUndoLog(thenScrollViewToCursor(action))
+	// Record the action so we can replay it later.
+	// We ignore cursor movements, searches, and undo/redo, since the user
+	// may want to replay the last action before these operations.
+	if !result.Rule.SkipMacroInNormalMode {
+		macroRecorder.ClearLastAction()
+		macroRecorder.RecordAction(action)
+	}
+
+	return action
 }
 
 // firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
@@ -55,9 +65,11 @@ func firstCheckpointUndoLog(f Action) Action {
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
 	action := m.processKeyEvent(event)
-	return thenScrollViewToCursor(action)
+	action = thenScrollViewToCursor(action)
+	macroRecorder.RecordAction(action)
+	return action
 }
 
 func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
@@ -86,7 +98,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
-func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return HideMenuAndReturnToNormalMode
@@ -118,7 +130,7 @@ func thenScrollViewToCursor(f Action) Action {
 // searchMode is used to search the text for a substring.
 type searchMode struct{}
 
-func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return AbortSearchAndReturnToNormalMode
@@ -144,7 +156,7 @@ func newVisualMode() *visualMode {
 	return &visualMode{parser}
 }
 
-func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
 	result := m.parser.ProcessInput(event)
 	if !result.Accepted {
 		return EmptyAction
@@ -152,10 +164,12 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 
 	log.Printf("Visual mode parser accepted input for rule '%s'\n", result.Rule.Name)
 	action := result.Rule.ActionBuilder(ActionBuilderParams{
-		InputEvents: result.Input,
-		CountArg:    result.Count,
-		Config:      config,
+		InputEvents:   result.Input,
+		CountArg:      result.Count,
+		MacroRecorder: macroRecorder,
+		Config:        config,
 	})
-
-	return thenScrollViewToCursor(action)
+	action = thenScrollViewToCursor(action)
+	macroRecorder.RecordAction(action)
+	return action
 }

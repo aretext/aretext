@@ -8,17 +8,19 @@ import (
 type ActionBuilder func(p ActionBuilderParams) Action
 
 type ActionBuilderParams struct {
-	InputEvents []*tcell.EventKey
-	CountArg    *int64
-	Config      Config
+	InputEvents   []*tcell.EventKey
+	CountArg      *int64
+	MacroRecorder *MacroRecorder
+	Config        Config
 }
 
 // Rule defines a command that the input parser can recognize.
 // The pattern is a sequence of keypresses that trigger the rule.
 type Rule struct {
-	Name          string
-	Pattern       []EventMatcher
-	ActionBuilder ActionBuilder
+	Name                  string
+	Pattern               []EventMatcher
+	ActionBuilder         ActionBuilder
+	SkipMacroInNormalMode bool
 }
 
 // These rules control cursor movement in normal and visual mode.
@@ -31,6 +33,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor left (h)",
@@ -40,6 +43,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor right (arrow)",
@@ -49,6 +53,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor right (l)",
@@ -58,6 +63,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor up (arrow)",
@@ -67,6 +73,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor up (k)",
@@ -76,6 +83,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor down (arrow)",
@@ -85,6 +93,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor down (j)",
@@ -94,6 +103,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor back (backspace)",
@@ -103,6 +113,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor back (backspace2)",
@@ -112,6 +123,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor next word start (w)",
@@ -121,6 +133,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordStart
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor prev word start (b)",
@@ -130,6 +143,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevWordStart
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor next word end (e)",
@@ -139,6 +153,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordEnd
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor prev paragraph ({)",
@@ -148,6 +163,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevParagraph
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor next paragraph (})",
@@ -157,6 +173,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextParagraph
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor line start (0)",
@@ -166,6 +183,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStart
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor line start non-whitespace (^)",
@@ -175,6 +193,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStartNonWhitespace
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor line end ($)",
@@ -184,6 +203,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineEnd
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor start of line num (gg)",
@@ -194,6 +214,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLineNum(p.CountArg)
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "cursor start of last line (G)",
@@ -203,6 +224,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLastLine
 		},
+		SkipMacroInNormalMode: true,
 	},
 }
 
@@ -486,6 +508,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchForward
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "start backward search",
@@ -495,6 +518,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchBackward
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "find next match",
@@ -504,6 +528,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindNextMatch
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "find previous match",
@@ -513,6 +538,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindPrevMatch
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "undo (u)",
@@ -522,6 +548,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Undo
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "redo (ctrl-r)",
@@ -531,6 +558,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Redo
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "enter visual mode charwise (v)",
@@ -548,6 +576,15 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeLinewise
+		},
+	},
+	{
+		Name: "repeat last action (.)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '.'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return p.MacroRecorder.LastAction()
 		},
 	},
 }...)

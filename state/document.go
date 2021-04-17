@@ -58,6 +58,7 @@ func updateAfterReload(state *EditorState) {
 
 	// Ensure that the cursor position is within the document and within the current view.
 	MoveCursorOntoDocument(state)
+	state.documentBuffer.view.textOrigin = 0
 	ScrollViewToCursor(state)
 
 	// Update the undo log.

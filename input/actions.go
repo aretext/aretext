@@ -181,9 +181,9 @@ func EnterInsertModeAtEndOfLine(s *state.EditorState) {
 }
 
 func ReturnToNormalMode(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-	})
+	if s.InputMode() == state.InputModeInsert {
+		CursorLeft(s)
+	}
 	state.SetInputMode(s, state.InputModeNormal)
 }
 

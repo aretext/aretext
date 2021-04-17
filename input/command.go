@@ -74,7 +74,7 @@ func ShowFileMenu(config Config) Action {
 		items := make([]menu.Item, 0, 0)
 		file.Walk(dir, config.DirNamesToHide, func(path string) {
 			items = append(items, menu.Item{
-				Name: file.RelativePathCwd(path),
+				Name: file.RelativePath(path, dir),
 				Action: func(s *state.EditorState) {
 					state.LoadDocument(s, path, true)
 				},

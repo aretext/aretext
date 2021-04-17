@@ -137,15 +137,16 @@ func TestDeleteRunes(t *testing.T) {
 
 func TestDeleteSelection(t *testing.T) {
 	testCases := []struct {
-		name                 string
-		inputString          string
-		selectionMode        selection.Mode
-		cursorStartPos       uint64
-		cursorEndPos         uint64
-		expectedCursor       cursorState
-		expectedText         string
-		expectedClipboard    clipboard.PageContent
-		expectUnsavedChanges bool
+		name                      string
+		inputString               string
+		selectionMode             selection.Mode
+		replaceLinesWithEmptyLine bool
+		cursorStartPos            uint64
+		cursorEndPos              uint64
+		expectedCursor            cursorState
+		expectedText              string
+		expectedClipboard         clipboard.PageContent
+		expectUnsavedChanges      bool
 	}{
 		{
 			name:                 "empty document, select charwise",
@@ -194,6 +195,21 @@ func TestDeleteSelection(t *testing.T) {
 			},
 			expectUnsavedChanges: true,
 		},
+		{
+			name:                      "replace lines with empty line",
+			inputString:               "ab\ncd\nef\ngh",
+			selectionMode:             selection.ModeLine,
+			replaceLinesWithEmptyLine: true,
+			cursorStartPos:            3,
+			cursorEndPos:              4,
+			expectedCursor:            cursorState{position: 3},
+			expectedText:              "ab\n\nef\ngh",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "cd",
+				InsertOnNextLine: true,
+			},
+			expectUnsavedChanges: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -204,7 +220,7 @@ func TestDeleteSelection(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			DeleteSelection(state)
+			DeleteSelection(state, tc.replaceLinesWithEmptyLine)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
@@ -386,6 +402,7 @@ func TestDeleteLines(t *testing.T) {
 		initialCursor              cursorState
 		targetLineLocator          func(LocatorParams) uint64
 		abortIfTargetIsCurrentLine bool
+		replaceWithEmptyLine       bool
 		expectedCursor             cursorState
 		expectedText               string
 		expectedClipboard          clipboard.PageContent
@@ -519,6 +536,96 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedUnsavedChanges: true,
 		},
+		{
+			name:          "replace with empty line, empty document",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
+			},
+			replaceWithEmptyLine:   true,
+			expectedCursor:         cursorState{position: 0},
+			expectedText:           "",
+			expectedUnsavedChanges: false,
+		},
+		{
+			name:          "replace with empty line, on first line",
+			inputString:   "abc\nefgh",
+			initialCursor: cursorState{position: 0},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 0},
+			expectedText:         "\nefgh",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "abc",
+				InsertOnNextLine: true,
+			},
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:          "replace with empty line, on middle line",
+			inputString:   "abc\nefg\nhij",
+			initialCursor: cursorState{position: 5},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 4},
+			expectedText:         "abc\n\nhij",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "efg",
+				InsertOnNextLine: true,
+			},
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:          "replace with empty line, on empty line",
+			inputString:   "abc\n\n\nhij",
+			initialCursor: cursorState{position: 4},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 4},
+			expectedText:         "abc\n\n\nhij",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "",
+				InsertOnNextLine: true,
+			},
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:          "replace with empty line, on last line",
+			inputString:   "abc\nefg\nhij",
+			initialCursor: cursorState{position: 8},
+			targetLineLocator: func(params LocatorParams) uint64 {
+				return params.CursorPos
+			},
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 8},
+			expectedText:         "abc\nefg\n",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "hij",
+				InsertOnNextLine: true,
+			},
+			expectedUnsavedChanges: true,
+		},
+		{
+			name:                 "replace with empty line, multiple lines selected",
+			inputString:          "abc\nefg\nhij\nlmnop",
+			initialCursor:        cursorState{position: 5},
+			targetLineLocator:    func(params LocatorParams) uint64 { return 9 },
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 4},
+			expectedText:         "abc\n\nlmnop",
+			expectedClipboard: clipboard.PageContent{
+				Text:             "efg\nhij",
+				InsertOnNextLine: true,
+			},
+			expectedUnsavedChanges: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -528,7 +635,7 @@ func TestDeleteLines(t *testing.T) {
 			state := NewEditorState(100, 100, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine)
+			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))

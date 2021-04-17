@@ -69,7 +69,7 @@ func TestUndoDeleteLinesWithIndentation(t *testing.T) {
 
 	// Delete second-to-last line, which is indented.
 	MoveCursor(state, func(p LocatorParams) uint64 { return locate.StartOfLineNum(p.TextTree, 1) })
-	DeleteLines(state, func(p LocatorParams) uint64 { return p.CursorPos }, false)
+	DeleteLines(state, func(p LocatorParams) uint64 { return p.CursorPos }, false, false)
 	CheckpointUndoLog(state)
 
 	// Verify state before undo.

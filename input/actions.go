@@ -238,7 +238,7 @@ func DeleteLine(s *state.EditorState) {
 	currentPos := func(params state.LocatorParams) uint64 {
 		return params.CursorPos
 	}
-	state.DeleteLines(s, currentPos, false)
+	state.DeleteLines(s, currentPos, false, false)
 	CursorLineStartNonWhitespace(s)
 }
 
@@ -261,7 +261,7 @@ func DeleteDown(s *state.EditorState) {
 	targetLineLoc := func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
 	}
-	state.DeleteLines(s, targetLineLoc, true)
+	state.DeleteLines(s, targetLineLoc, true, false)
 	CursorLineStartNonWhitespace(s)
 }
 
@@ -269,7 +269,7 @@ func DeleteUp(s *state.EditorState) {
 	targetLineLoc := func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
 	}
-	state.DeleteLines(s, targetLineLoc, true)
+	state.DeleteLines(s, targetLineLoc, true, false)
 	CursorLineStartNonWhitespace(s)
 }
 
@@ -453,7 +453,7 @@ func ToggleVisualModeLinewise(s *state.EditorState) {
 }
 
 func DeleteSelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.DeleteSelection(s)
+	state.DeleteSelection(s, false)
 	ReturnToNormalMode(s)
 }
 
@@ -463,7 +463,7 @@ func ToggleCaseInSelectionAndReturnToNormalMode(s *state.EditorState) {
 }
 
 func ChangeSelection(s *state.EditorState) {
-	DeleteSelectionAndReturnToNormalMode(s)
+	state.DeleteSelection(s, true)
 	EnterInsertMode(s)
 }
 

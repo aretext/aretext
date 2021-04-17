@@ -209,7 +209,7 @@ func DeleteRunes(state *EditorState, loc Locator) {
 }
 
 // DeleteSelection deletes the currently selected region, if any.
-func DeleteSelection(state *EditorState) {
+func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool) {
 	buffer := state.documentBuffer
 	selectionMode := buffer.selector.Mode()
 	if selectionMode == selection.ModeNone {
@@ -218,11 +218,11 @@ func DeleteSelection(state *EditorState) {
 
 	r := buffer.SelectedRegion()
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
-
+	targetLineLoc := func(LocatorParams) uint64 { return r.EndPos }
 	if selectionMode == selection.ModeChar {
-		DeleteRunes(state, func(LocatorParams) uint64 { return r.EndPos })
+		DeleteRunes(state, targetLineLoc)
 	} else if selectionMode == selection.ModeLine {
-		DeleteLines(state, func(LocatorParams) uint64 { return r.EndPos }, false)
+		DeleteLines(state, targetLineLoc, false, replaceLinesWithEmptyLine)
 	} else {
 		panic("Unsupported selection mode")
 	}
@@ -230,7 +230,7 @@ func DeleteSelection(state *EditorState) {
 
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.
 // It moves the cursor to the start of the line following the last deleted line.
-func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool) {
+func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool) {
 	buffer := state.documentBuffer
 	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
 	targetPos := targetLineLoc(locatorParamsForBuffer(buffer))
@@ -246,10 +246,28 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 
 	numLinesToDelete := targetLine - currentLine + 1
 	deletedLines := make([]string, 0, numLinesToDelete)
+	var deletedLastLine bool
 	for i := uint64(0); i < numLinesToDelete; i++ {
-		s := deleteLine(state, currentLine)
+		s, isLastLine := deleteLine(state, currentLine)
+		deletedLastLine = deletedLastLine || isLastLine
 		if s != "" {
 			deletedLines = append(deletedLines, stripStartingAndTrailingNewlines(s))
+		}
+	}
+
+	if replaceWithEmptyLine {
+		if deletedLastLine {
+			// Cursor is at start of the new last line.
+			// Insert an empty line below.
+			pos := locate.NextLineBoundary(buffer.textTree, true, buffer.cursor.position)
+			if pos > 0 {
+				mustInsertRuneAtPosition(state, '\n', pos, true)
+				MoveCursor(state, func(LocatorParams) uint64 { return pos + 1 })
+			}
+		} else {
+			// Cursor is at the start of the next line.
+			// Insert an empty line above.
+			mustInsertRuneAtPosition(state, '\n', buffer.cursor.position, true)
 		}
 	}
 
@@ -274,7 +292,7 @@ func stripStartingAndTrailingNewlines(s string) string {
 	return s
 }
 
-func deleteLine(state *EditorState, lineNum uint64) string {
+func deleteLine(state *EditorState, lineNum uint64) (string, bool) {
 	buffer := state.documentBuffer
 	startOfLinePos := buffer.textTree.LineStartPosition(lineNum)
 	startOfNextLinePos := buffer.textTree.LineStartPosition(lineNum + 1)
@@ -295,7 +313,7 @@ func deleteLine(state *EditorState, lineNum uint64) string {
 		}
 	}
 
-	return deletedText
+	return deletedText, isLastLine
 }
 
 // deleteRunes deletes text from the document.

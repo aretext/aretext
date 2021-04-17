@@ -1,6 +1,7 @@
 package input
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -13,7 +14,7 @@ import (
 
 func commandMenuItems(config Config) func() []menu.Item {
 	return func() []menu.Item {
-		return []menu.Item{
+		items := []menu.Item{
 			{
 				Name: "quit",
 				Action: func(s *state.EditorState) {
@@ -46,25 +47,19 @@ func commandMenuItems(config Config) func() []menu.Item {
 					state.AbortIfUnsavedChanges(s, ShowFileMenu(config), true)
 				},
 			},
-			{
-				Name: "set syntax json",
-				Action: func(s *state.EditorState) {
-					state.SetSyntax(s, syntax.LanguageJson)
-				},
-			},
-			{
-				Name: "set syntax go",
-				Action: func(s *state.EditorState) {
-					state.SetSyntax(s, syntax.LanguageGo)
-				},
-			},
-			{
-				Name: "set syntax none",
-				Action: func(s *state.EditorState) {
-					state.SetSyntax(s, syntax.LanguageUndefined)
-				},
-			},
 		}
+
+		for _, language := range syntax.AllLanguages {
+			l := language // ensure each item refers to a different language
+			items = append(items, menu.Item{
+				Name: fmt.Sprintf("set syntax %s", language),
+				Action: func(s *state.EditorState) {
+					state.SetSyntax(s, l)
+				},
+			})
+		}
+
+		return items
 	}
 }
 

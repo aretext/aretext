@@ -19,6 +19,12 @@ const (
 	LanguageGo
 )
 
+var AllLanguages = []Language{
+	LanguageUndefined,
+	LanguageJson,
+	LanguageGo,
+}
+
 func (language Language) String() string {
 	switch language {
 	case LanguageUndefined:

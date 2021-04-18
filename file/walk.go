@@ -8,7 +8,7 @@ import (
 
 // Walk walks the file tree at root, evaluating the function for every file path.
 // Symlinks are skipped.
-// The file paths are absolute.
+// The file paths are relative to the root directory.
 func Walk(root string, dirNamesToHide map[string]struct{}, walkFn func(path string)) {
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {

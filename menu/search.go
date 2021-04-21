@@ -7,6 +7,8 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+const maxScore = 999999
+
 // scoredItem is a menu item assigned a similarity score for a given query.
 type scoredItem struct {
 	// score is a similarity score for a given query
@@ -46,8 +48,9 @@ func (s *Search) SetQuery(q string) {
 	s.query = q
 	s.queryWords = s.splitWords(s.normalize(q))
 	for i := 0; i < len(s.scoredItems); i++ {
+		alias := s.scoredItems[i].item.Alias
 		candidateWords := s.scoredItems[i].words
-		s.scoredItems[i].score = s.calculateScore(candidateWords, s.queryWords)
+		s.scoredItems[i].score = s.calculateScore(alias, candidateWords, s.queryWords)
 	}
 	s.sortItemsByScore()
 }
@@ -56,10 +59,11 @@ func (s *Search) SetQuery(q string) {
 func (s *Search) AddItems(items []Item) {
 	for _, item := range items {
 		words := s.splitWords(s.normalize(item.Name))
+		score := s.calculateScore(item.Alias, words, s.queryWords)
 		s.scoredItems = append(s.scoredItems, scoredItem{
 			item:  item,
 			words: words,
-			score: s.calculateScore(words, s.queryWords),
+			score: score,
 		})
 	}
 	s.sortItemsByScore()
@@ -104,7 +108,12 @@ func (s *Search) normalize(x string) string {
 // always produce a negative score.
 // This isn't a perfect similarity measure, but it is fast to evaluate
 // and works fairly well for commands and file paths.
-func (s *Search) calculateScore(candidateWords []string, queryWords []string) int {
+func (s *Search) calculateScore(alias string, candidateWords []string, queryWords []string) int {
+	if alias != "" && alias == s.query {
+		// If the query exactly matches the alias, rank this item first.
+		return maxScore
+	}
+
 	// Greedily match words from the query with words in the candidate.
 	// It's okay to be greedy because we've defined the similarity score in terms
 	// of the number of word matches, ignoring the exact location of those matches in the candidate.
@@ -133,6 +142,11 @@ func (s *Search) calculateScore(candidateWords []string, queryWords []string) in
 	// If there are query words that didn't match the candidate, classify as a mismatch.
 	if j < len(queryWords) {
 		return -1
+	}
+
+	if score >= maxScore {
+		// Ensure that this item ranks below an exact match with the item's alias.
+		score = maxScore - 1
 	}
 
 	return score

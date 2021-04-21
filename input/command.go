@@ -16,33 +16,39 @@ func commandMenuItems(config Config) func() []menu.Item {
 	return func() []menu.Item {
 		items := []menu.Item{
 			{
-				Name: "quit",
+				Name:  "quit",
+				Alias: "q",
 				Action: func(s *state.EditorState) {
 					state.AbortIfUnsavedChanges(s, state.Quit, true)
 				},
 			},
 			{
 				Name:   "force quit",
+				Alias:  "q!",
 				Action: state.Quit,
 			},
 			{
-				Name: "save",
+				Name:  "write",
+				Alias: "w",
 				Action: func(s *state.EditorState) {
 					state.SaveDocument(s, false)
 				},
 			},
 			{
-				Name: "force save",
+				Name:  "force write",
+				Alias: "w!",
 				Action: func(s *state.EditorState) {
 					state.SaveDocument(s, true)
 				},
 			},
 			{
 				Name:   "force reload",
+				Alias:  "r!",
 				Action: state.ReloadDocument,
 			},
 			{
-				Name: "find and open",
+				Name:  "find and open",
+				Alias: "f",
 				Action: func(s *state.EditorState) {
 					state.AbortIfUnsavedChanges(s, ShowFileMenu(config), true)
 				},

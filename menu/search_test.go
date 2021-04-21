@@ -225,6 +225,20 @@ func TestSearch(t *testing.T) {
 				{Name: "main.go"},
 			},
 		},
+		{
+			name:  "rank exact match for alias first",
+			query: "w",
+			items: []Item{
+				{Name: "write one"},
+				{Name: "write two", Alias: "w"},
+				{Name: "write three"},
+			},
+			expected: []Item{
+				{Name: "write two", Alias: "w"},
+				{Name: "write one"},
+				{Name: "write three"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -828,6 +828,97 @@ func TestToggleCaseInSelection(t *testing.T) {
 	}
 }
 
+func TestIndentLineAtCursor(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		cursorPos      uint64
+		tabExpand      bool
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			cursorPos:      0,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "empty line",
+			inputString:    "abc\n\ndef",
+			cursorPos:      4,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "abc\n\ndef",
+		},
+		{
+			name:           "first line, cursor at start",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      0,
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "\tabc\ndef\nghi",
+		},
+		{
+			name:           "first line, cursor past start",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      1,
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "\tabc\ndef\nghi",
+		},
+		{
+			name:           "second line, cursor at start",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      4,
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abc\n\tdef\nghi",
+		},
+		{
+			name:           "second line, cursor past start",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      6,
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abc\n\tdef\nghi",
+		},
+		{
+			name:           "last line, cursor at end",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      11,
+			expectedCursor: cursorState{position: 9},
+			expectedText:   "abc\ndef\n\tghi",
+		},
+		{
+			name:           "tab expand, aligned",
+			inputString:    "abc\ndef\nghi",
+			cursorPos:      6,
+			tabExpand:      true,
+			expectedCursor: cursorState{position: 8},
+			expectedText:   "abc\n    def\nghi",
+		},
+		{
+			name:           "tab expand, line with whitespace at start",
+			inputString:    "abc\n  def\nghi",
+			cursorPos:      7,
+			tabExpand:      true,
+			expectedCursor: cursorState{position: 10},
+			expectedText:   "abc\n      def\nghi",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
+			state.documentBuffer.tabExpand = tc.tabExpand
+			IndentLineAtCursor(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestJoinLines(t *testing.T) {
 	testCases := []struct {
 		name           string

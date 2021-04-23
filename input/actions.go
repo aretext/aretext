@@ -350,6 +350,10 @@ func ToggleCaseAtCursor(s *state.EditorState) {
 	state.ToggleCaseAtCursor(s)
 }
 
+func IndentLine(s *state.EditorState) {
+	state.IndentLineAtCursor(s)
+}
+
 func CopyLines(s *state.EditorState) {
 	state.CopyLine(s)
 }

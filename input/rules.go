@@ -455,6 +455,16 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "indent (>>)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '>'},
+			{Key: tcell.KeyRune, Rune: '>'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return IndentLine
+		},
+	},
+	{
 		Name: "yank line (yy)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},

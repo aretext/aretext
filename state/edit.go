@@ -138,40 +138,43 @@ func indentFromPos(state *EditorState, pos uint64, numCols uint64) uint64 {
 
 // InsertTab inserts a tab at the current cursor position.
 func InsertTab(state *EditorState) {
-	var cursorPos uint64
-	if state.documentBuffer.tabExpand {
-		cursorPos = insertSpacesForTab(state)
-	} else {
-		cursorPos = insertTabRune(state)
-	}
-	state.documentBuffer.cursor = cursorState{position: cursorPos}
-}
-
-func insertTabRune(state *EditorState) uint64 {
 	cursorPos := state.documentBuffer.cursor.position
-	mustInsertRuneAtPosition(state, '\t', cursorPos, true)
-	return cursorPos + 1
+	newCursorPos := insertTabAtPos(state, cursorPos)
+	state.documentBuffer.cursor = cursorState{position: newCursorPos}
 }
 
-func insertSpacesForTab(state *EditorState) uint64 {
+func insertTabAtPos(state *EditorState, pos uint64) uint64 {
+	if state.documentBuffer.tabExpand {
+		return insertSpacesForTabAtPos(state, pos)
+	} else {
+		return insertTabRuneAtPos(state, pos)
+	}
+}
+
+func insertTabRuneAtPos(state *EditorState, pos uint64) uint64 {
+	mustInsertRuneAtPosition(state, '\t', pos, true)
+	return pos + 1
+}
+
+func insertSpacesForTabAtPos(state *EditorState, pos uint64) uint64 {
 	buffer := state.documentBuffer
 	tabSize := buffer.tabSize
-	offset := cursorOffsetInLine(state.documentBuffer)
+	offset := offsetInLine(buffer, pos)
 	numSpaces := tabSize - (offset % tabSize)
-	cursorPos := buffer.cursor.position
 	for i := uint64(0); i < numSpaces; i++ {
-		mustInsertRuneAtPosition(state, ' ', cursorPos, true)
-		cursorPos++
+		mustInsertRuneAtPosition(state, ' ', pos, true)
+		pos++
 	}
-	return cursorPos
+	return pos
 }
 
-func cursorOffsetInLine(buffer *BufferState) uint64 {
+func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 	var offset uint64
-	pos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
-	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
+	textTree := buffer.textTree
+	pos := locate.StartOfLineAtPos(textTree, startPos)
+	iter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
-	for pos < buffer.cursor.position {
+	for pos < startPos {
 		eof := segment.NextOrEof(iter, seg)
 		if eof {
 			break
@@ -470,6 +473,24 @@ func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 	}
 	deleteRunes(state, startPos, uint64(len(newRunes)), true)
 	mustInsertTextAtPosition(state, string(newRunes), startPos, true)
+}
+
+// IndentLineAtCursor indents the line under the cursor.
+// If the line is empty, this does nothing.
+// After indenting the line, it moves the cursor to the first nonwhitespace char in the line.
+func IndentLineAtCursor(state *EditorState) {
+	buffer := state.documentBuffer
+	cursorPos := buffer.cursor.position
+	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, cursorPos)
+	endOfLinePos := locate.NextLineBoundary(buffer.textTree, false, startOfLinePos)
+	if startOfLinePos == endOfLinePos {
+		// Do nothing if the line is empty.
+		return
+	}
+
+	afterTabPos := insertTabAtPos(state, startOfLinePos)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, afterTabPos)
+	buffer.cursor = cursorState{position: newCursorPos}
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.

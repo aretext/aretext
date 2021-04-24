@@ -481,16 +481,41 @@ func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 func IndentLineAtCursor(state *EditorState) {
 	buffer := state.documentBuffer
 	cursorPos := buffer.cursor.position
-	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, cursorPos)
-	endOfLinePos := locate.NextLineBoundary(buffer.textTree, false, startOfLinePos)
-	if startOfLinePos == endOfLinePos {
-		// Do nothing if the line is empty.
+	startOfLinePos := indentLineAtPosition(state, cursorPos)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
+	buffer.cursor = cursorState{position: newCursorPos}
+}
+
+// IndentSelection indents all the lines in the current selection.
+// It moves the cursor to the first nonwhitespace char on the first line in the selection.
+func IndentSelection(state *EditorState) {
+	buffer := state.documentBuffer
+	selectionMode := buffer.selector.Mode()
+	if selectionMode == selection.ModeNone {
 		return
 	}
 
-	afterTabPos := insertTabAtPos(state, startOfLinePos)
-	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, afterTabPos)
+	r := buffer.SelectedRegion()
+	startLineNum := buffer.textTree.LineNumForPosition(r.StartPos)
+	endLineNum := buffer.textTree.LineNumForPosition(r.EndPos)
+	for i := startLineNum; i <= endLineNum; i++ {
+		indentLineAtPosition(state, locate.StartOfLineNum(buffer.textTree, i))
+	}
+
+	startOfFirstLinePos := locate.StartOfLineAtPos(buffer.textTree, r.StartPos)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfFirstLinePos)
 	buffer.cursor = cursorState{position: newCursorPos}
+}
+
+func indentLineAtPosition(state *EditorState, pos uint64) uint64 {
+	buffer := state.documentBuffer
+	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
+	endOfLinePos := locate.NextLineBoundary(buffer.textTree, false, startOfLinePos)
+	if startOfLinePos < endOfLinePos {
+		// Indent if line is non-empty.
+		insertTabAtPos(state, startOfLinePos)
+	}
+	return startOfLinePos
 }
 
 // OutdentLineAtCursor outdents the line under the cursor.

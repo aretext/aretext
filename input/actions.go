@@ -470,6 +470,11 @@ func ToggleCaseInSelectionAndReturnToNormalMode(s *state.EditorState) {
 	ReturnToNormalMode(s)
 }
 
+func IndentSelectionAndReturnToNormalMode(s *state.EditorState) {
+	state.IndentSelection(s)
+	ReturnToNormalMode(s)
+}
+
 func ChangeSelection(s *state.EditorState) {
 	state.DeleteSelection(s, true)
 	EnterInsertMode(s)

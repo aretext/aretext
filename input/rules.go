@@ -675,6 +675,15 @@ var visualModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "indent selection (>)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '>'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return IndentSelectionAndReturnToNormalMode
+		},
+	},
+	{
 		Name: "yank selection (y)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},

@@ -354,6 +354,10 @@ func IndentLine(s *state.EditorState) {
 	state.IndentLineAtCursor(s)
 }
 
+func OutdentLine(s *state.EditorState) {
+	state.OutdentLineAtCursor(s)
+}
+
 func CopyLines(s *state.EditorState) {
 	state.CopyLine(s)
 }

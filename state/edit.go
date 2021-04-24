@@ -493,6 +493,36 @@ func IndentLineAtCursor(state *EditorState) {
 	buffer.cursor = cursorState{position: newCursorPos}
 }
 
+// OutdentLineAtCursor outdents the line under the cursor.
+// After outdenting, it moves the cursor to the first nonwhitespace char in the line.
+func OutdentLineAtCursor(state *EditorState) {
+	buffer := state.documentBuffer
+	cursorPos := buffer.cursor.position
+	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, cursorPos)
+	numToDelete := numRunesInFirstIndent(buffer, startOfLinePos)
+	deleteRunes(state, startOfLinePos, numToDelete, true)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
+	buffer.cursor = cursorState{position: newCursorPos}
+}
+
+func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
+	var offset uint64
+	pos := startOfLinePos
+	endOfIndentPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
+	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
+	seg := segment.Empty()
+	for pos < endOfIndentPos && offset < buffer.tabSize {
+		eof := segment.NextOrEof(iter, seg)
+		if eof {
+			break
+		}
+		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
+		pos += seg.NumRunes()
+	}
+
+	return pos - startOfLinePos
+}
+
 // CopyLine copies the line under the cursor to the default page in the clipboard.
 func CopyLine(state *EditorState) {
 	buffer := state.documentBuffer

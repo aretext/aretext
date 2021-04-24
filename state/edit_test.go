@@ -919,6 +919,128 @@ func TestIndentLineAtCursor(t *testing.T) {
 	}
 }
 
+func TestOutdentLineAtCursor(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		cursorPos      uint64
+		tabSize        uint64
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			cursorPos:      0,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "outdent first line starting with a single tab, on tab",
+			inputString:    "\tabc",
+			cursorPos:      0,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abc",
+		},
+		{
+			name:           "outdent first line starting with a single tab, on start of text",
+			inputString:    "\tabc",
+			cursorPos:      1,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abc",
+		},
+		{
+			name:           "outdent first line starting with a single tab, on end of text",
+			inputString:    "\tabc",
+			cursorPos:      3,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abc",
+		},
+		{
+			name:           "outdent first line starting with multiple tabs",
+			inputString:    "\t\t\tabc",
+			cursorPos:      4,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "\t\tabc",
+		},
+		{
+			name:           "outdent first line starting with spaces less than tabsize",
+			inputString:    "  abc",
+			cursorPos:      2,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abc",
+		},
+		{
+			name:           "outdent first line starting with spaces equal to tabsize",
+			inputString:    "    abc",
+			cursorPos:      2,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "abc",
+		},
+		{
+			name:           "outdent first line starting with spaces greater than tabsize",
+			inputString:    "    abc",
+			cursorPos:      2,
+			tabSize:        2,
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "  abc",
+		},
+		{
+			name:           "outdent empty line",
+			inputString:    "abc\n\ndef",
+			cursorPos:      5,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abc\n\ndef",
+		},
+		{
+			name:           "outdent line with only space",
+			inputString:    "abc\n      \ndef",
+			cursorPos:      5,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 6},
+			expectedText:   "abc\n  \ndef",
+		},
+		{
+			name:           "outdent middle line",
+			inputString:    "abc\n\t\tdef\nghi",
+			cursorPos:      7,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abc\n\tdef\nghi",
+		},
+		{
+			name:           "outdent mix of tabs and spaces",
+			inputString:    "  \t abc",
+			cursorPos:      5,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 1},
+			expectedText:   " abc",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
+			state.documentBuffer.tabSize = tc.tabSize
+			OutdentLineAtCursor(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestJoinLines(t *testing.T) {
 	testCases := []struct {
 		name           string

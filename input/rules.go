@@ -465,6 +465,16 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "outdent (<<)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '<'},
+			{Key: tcell.KeyRune, Rune: '<'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return OutdentLine
+		},
+	},
+	{
 		Name: "yank line (yy)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},

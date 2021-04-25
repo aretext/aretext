@@ -50,6 +50,14 @@ func commandMenuItems(config Config) func() []menu.Item {
 				Action: state.SaveDocument,
 			},
 			{
+				Name:  "force write and quit",
+				Alias: "wq!",
+				Action: func(s *state.EditorState) {
+					state.SaveDocument(s)
+					state.Quit(s)
+				},
+			},
+			{
 				Name:   "force reload",
 				Alias:  "r!",
 				Action: state.ReloadDocument,

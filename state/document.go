@@ -202,3 +202,17 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 		f(state)
 	}
 }
+
+// AbortIfFileChanged executes a function only if the file has not changed on disk; otherwise, it aborts and shows an error message.
+func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
+	path := state.fileWatcher.Path()
+	if state.fileWatcher.ChangedFlag() {
+		log.Printf("Aborting operation because file changed on disk\n")
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
+		})
+	} else {
+		f(state)
+	}
+}

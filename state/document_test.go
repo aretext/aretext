@@ -138,21 +138,21 @@ func TestSaveDocument(t *testing.T) {
 	assert.Equal(t, "x\n", string(contents))
 }
 
-func TestSaveDocumentFileChanged(t *testing.T) {
+func TestAbortIfFileChanged(t *testing.T) {
 	testCases := []struct {
 		name        string
-		force       bool
-		expectSaved bool
+		didChange   bool
+		expectAbort bool
 	}{
 		{
-			name:        "force should save",
-			force:       true,
-			expectSaved: true,
+			name:        "no changes should commit",
+			didChange:   false,
+			expectAbort: false,
 		},
 		{
-			name:        "no force should error",
-			force:       false,
-			expectSaved: false,
+			name:        "changes should abort",
+			didChange:   true,
+			expectAbort: true,
 		},
 	}
 
@@ -165,36 +165,37 @@ func TestSaveDocumentFileChanged(t *testing.T) {
 			LoadDocument(state, path, true)
 
 			// Modify the file.
-			f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			require.NoError(t, err)
-			defer f.Close()
-			_, err = io.WriteString(f, "test")
-			require.NoError(t, err)
+			if tc.didChange {
+				f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+				require.NoError(t, err)
+				defer f.Close()
+				_, err = io.WriteString(f, "test")
+				require.NoError(t, err)
 
-			// Wait for the watcher to detect the change.
-			select {
-			case <-state.fileWatcher.ChangedChan():
-				break
-			case <-time.After(time.Second * 10):
-				assert.Fail(t, "Timed out waiting for change")
-				return
+				// Wait for the watcher to detect the change.
+				select {
+				case <-state.fileWatcher.ChangedChan():
+					break
+				case <-time.After(time.Second * 10):
+					assert.Fail(t, "Timed out waiting for change")
+					return
+				}
 			}
 
-			// Attempt to save the document.
-			SaveDocument(state, tc.force)
+			// Attempt an operation, but abort if the file changed.
+			AbortIfFileChanged(state, func(state *EditorState) {
+				SetStatusMsg(state, StatusMsg{
+					Style: StatusMsgStyleSuccess,
+					Text:  "Operation executed",
+				})
+			})
 
-			// Retrieve the file contents
-			contents, err := ioutil.ReadFile(path)
-			require.NoError(t, err)
-
-			if tc.expectSaved {
-				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
-				assert.Contains(t, state.statusMsg.Text, "Saved")
-				assert.Equal(t, "\n", string(contents))
-			} else {
+			if tc.expectAbort {
 				assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
 				assert.Contains(t, state.statusMsg.Text, "changed since last save")
-				assert.Equal(t, "test", string(contents))
+			} else {
+				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+				assert.Equal(t, state.statusMsg.Text, "Operation executed")
 			}
 		})
 	}

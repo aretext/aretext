@@ -35,6 +35,16 @@ func commandMenuItems(config Config) func() []menu.Item {
 				},
 			},
 			{
+				Name:  "write and quit",
+				Alias: "wq",
+				Action: func(s *state.EditorState) {
+					state.AbortIfFileChanged(s, func(s *state.EditorState) {
+						state.SaveDocument(s)
+						state.Quit(s)
+					})
+				},
+			},
+			{
 				Name:   "force write",
 				Alias:  "w!",
 				Action: state.SaveDocument,

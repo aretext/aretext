@@ -149,16 +149,8 @@ func ReloadDocument(state *EditorState) {
 }
 
 // SaveDocument saves the currently loaded document to disk.
-func SaveDocument(state *EditorState, force bool) {
+func SaveDocument(state *EditorState) {
 	path := state.fileWatcher.Path()
-	if state.fileWatcher.ChangedFlag() && !force {
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
-		})
-		return
-	}
-
 	tree := state.documentBuffer.textTree
 	newWatcher, err := file.Save(path, tree, file.DefaultPollInterval)
 	if err != nil {

@@ -31,15 +31,13 @@ func commandMenuItems(config Config) func() []menu.Item {
 				Name:  "write",
 				Alias: "w",
 				Action: func(s *state.EditorState) {
-					state.SaveDocument(s, false)
+					state.AbortIfFileChanged(s, state.SaveDocument)
 				},
 			},
 			{
-				Name:  "force write",
-				Alias: "w!",
-				Action: func(s *state.EditorState) {
-					state.SaveDocument(s, true)
-				},
+				Name:   "force write",
+				Alias:  "w!",
+				Action: state.SaveDocument,
 			},
 			{
 				Name:   "force reload",

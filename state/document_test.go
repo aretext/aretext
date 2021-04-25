@@ -125,7 +125,7 @@ func TestSaveDocument(t *testing.T) {
 
 	// Modify and save the document
 	InsertRune(state, 'x')
-	SaveDocument(state, true)
+	SaveDocument(state)
 	defer state.fileWatcher.Stop()
 
 	// Expect a success message.

@@ -1095,6 +1095,60 @@ func TestOutdentLineAtCursor(t *testing.T) {
 	}
 }
 
+func TestOutdentSelection(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		cursorStartPos uint64
+		cursorEndPos   uint64
+		selectionMode  selection.Mode
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			cursorStartPos: 0,
+			cursorEndPos:   0,
+			selectionMode:  selection.ModeLine,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "linewise selection",
+			inputString:    "ab\n\tcd\n\t\tef\ngh",
+			cursorStartPos: 5,
+			cursorEndPos:   8,
+			selectionMode:  selection.ModeLine,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\ncd\n\tef\ngh",
+		},
+		{
+			name:           "charwise selection",
+			inputString:    "ab\n\tcd\n\t\tef\ngh",
+			cursorStartPos: 5,
+			cursorEndPos:   6,
+			selectionMode:  selection.ModeChar,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\ncd\n\tef\ngh",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
+			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
+			OutdentSelection(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestJoinLines(t *testing.T) {
 	testCases := []struct {
 		name           string

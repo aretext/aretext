@@ -475,6 +475,11 @@ func IndentSelectionAndReturnToNormalMode(s *state.EditorState) {
 	ReturnToNormalMode(s)
 }
 
+func OutdentSelectionAndReturnToNormalMode(s *state.EditorState) {
+	state.OutdentSelection(s)
+	ReturnToNormalMode(s)
+}
+
 func ChangeSelection(s *state.EditorState) {
 	state.DeleteSelection(s, true)
 	EnterInsertMode(s)

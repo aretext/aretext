@@ -486,27 +486,6 @@ func IndentLineAtCursor(state *EditorState) {
 	buffer.cursor = cursorState{position: newCursorPos}
 }
 
-// IndentSelection indents all the lines in the current selection.
-// It moves the cursor to the first nonwhitespace char on the first line in the selection.
-func IndentSelection(state *EditorState) {
-	buffer := state.documentBuffer
-	selectionMode := buffer.selector.Mode()
-	if selectionMode == selection.ModeNone {
-		return
-	}
-
-	r := buffer.SelectedRegion()
-	startLineNum := buffer.textTree.LineNumForPosition(r.StartPos)
-	endLineNum := buffer.textTree.LineNumForPosition(r.EndPos)
-	for i := startLineNum; i <= endLineNum; i++ {
-		indentLineAtPosition(state, locate.StartOfLineNum(buffer.textTree, i))
-	}
-
-	startOfFirstLinePos := locate.StartOfLineAtPos(buffer.textTree, r.StartPos)
-	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfFirstLinePos)
-	buffer.cursor = cursorState{position: newCursorPos}
-}
-
 func indentLineAtPosition(state *EditorState, pos uint64) uint64 {
 	buffer := state.documentBuffer
 	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
@@ -523,11 +502,17 @@ func indentLineAtPosition(state *EditorState, pos uint64) uint64 {
 func OutdentLineAtCursor(state *EditorState) {
 	buffer := state.documentBuffer
 	cursorPos := buffer.cursor.position
-	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, cursorPos)
-	numToDelete := numRunesInFirstIndent(buffer, startOfLinePos)
-	deleteRunes(state, startOfLinePos, numToDelete, true)
+	startOfLinePos := outdentLineAtPosition(state, cursorPos)
 	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
 	buffer.cursor = cursorState{position: newCursorPos}
+}
+
+func outdentLineAtPosition(state *EditorState, pos uint64) uint64 {
+	buffer := state.documentBuffer
+	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
+	numToDelete := numRunesInFirstIndent(buffer, startOfLinePos)
+	deleteRunes(state, startOfLinePos, numToDelete, true)
+	return startOfLinePos
 }
 
 func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
@@ -546,6 +531,41 @@ func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
 	}
 
 	return pos - startOfLinePos
+}
+
+// IndentSelection indents all the lines in the current selection.
+// It moves the cursor to the first nonwhitespace char on the first line in the selection.
+func IndentSelection(state *EditorState) {
+	changeIndentationForSelection(state, func(state *EditorState, pos uint64) {
+		indentLineAtPosition(state, pos)
+	})
+}
+
+// OutdentSelection outdents all the lines in the current selection.
+// It moves the cursor to the first nonwhitespace char on the first line in the selection.
+func OutdentSelection(state *EditorState) {
+	changeIndentationForSelection(state, func(state *EditorState, pos uint64) {
+		outdentLineAtPosition(state, pos)
+	})
+}
+
+func changeIndentationForSelection(state *EditorState, f func(*EditorState, uint64)) {
+	buffer := state.documentBuffer
+	selectionMode := buffer.selector.Mode()
+	if selectionMode == selection.ModeNone {
+		return
+	}
+
+	r := buffer.SelectedRegion()
+	startLineNum := buffer.textTree.LineNumForPosition(r.StartPos)
+	endLineNum := buffer.textTree.LineNumForPosition(r.EndPos)
+	for i := startLineNum; i <= endLineNum; i++ {
+		f(state, locate.StartOfLineNum(buffer.textTree, i))
+	}
+
+	startOfFirstLinePos := locate.StartOfLineAtPos(buffer.textTree, r.StartPos)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfFirstLinePos)
+	buffer.cursor = cursorState{position: newCursorPos}
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.

@@ -684,6 +684,15 @@ var visualModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "outdent selection (<)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: '<'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return OutdentSelectionAndReturnToNormalMode
+		},
+	},
+	{
 		Name: "yank selection (y)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},

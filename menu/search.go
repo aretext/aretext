@@ -30,8 +30,28 @@ type Search struct {
 	emptyQueryShowAll bool
 }
 
-func NewSearch(emptyQueryShowAll bool) *Search {
-	return &Search{emptyQueryShowAll: emptyQueryShowAll}
+func NewSearch(items []Item, emptyQueryShowAll bool) *Search {
+	initialScore := -1
+	if emptyQueryShowAll {
+		// We want the empty query to show every item, so set the default score to zero.
+		// This ensures that every item will be assigned a score of zero,
+		// and will be displayed in lexicographic order.
+		initialScore = 0
+	}
+	scoredItems := make([]scoredItem, 0, len(items))
+	s := &Search{
+		scoredItems:       scoredItems,
+		emptyQueryShowAll: emptyQueryShowAll,
+	}
+	for _, item := range items {
+		s.scoredItems = append(s.scoredItems, scoredItem{
+			item:  item,
+			words: s.splitWords(s.normalize(item.Name)),
+			score: initialScore,
+		})
+	}
+	s.sortItemsByScore()
+	return s
 }
 
 // Query returns the current query.
@@ -51,20 +71,6 @@ func (s *Search) SetQuery(q string) {
 		alias := s.scoredItems[i].item.Alias
 		candidateWords := s.scoredItems[i].words
 		s.scoredItems[i].score = s.calculateScore(alias, candidateWords, s.queryWords)
-	}
-	s.sortItemsByScore()
-}
-
-// AddItems adds more menu items to the search set.
-func (s *Search) AddItems(items []Item) {
-	for _, item := range items {
-		words := s.splitWords(s.normalize(item.Name))
-		score := s.calculateScore(item.Alias, words, s.queryWords)
-		s.scoredItems = append(s.scoredItems, scoredItem{
-			item:  item,
-			words: words,
-			score: score,
-		})
 	}
 	s.sortItemsByScore()
 }
@@ -119,12 +125,8 @@ func (s *Search) calculateScore(alias string, candidateWords []string, queryWord
 	// of the number of word matches, ignoring the exact location of those matches in the candidate.
 	i, j, score := 0, 0, -1
 	if s.emptyQueryShowAll {
-		// We want the empty query to show every item, so set the default score to zero.
-		// This ensures that every item will be assigned a score of zero,
-		// and will be displayed in lexicographic order.
 		score = 0
 	}
-
 	for i < len(candidateWords) && j < len(queryWords) {
 		cw, qw := candidateWords[i], queryWords[j]
 		if strings.HasPrefix(cw, qw) {

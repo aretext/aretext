@@ -243,34 +243,15 @@ func TestSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &Search{emptyQueryShowAll: tc.emptyQueryShowAll}
+			s := NewSearch(tc.items, tc.emptyQueryShowAll)
 			s.SetQuery(tc.query)
-			s.AddItems(tc.items)
 			assert.Equal(t, tc.expected, s.Results())
 		})
 	}
 }
 
-func BenchmarkSearchAddItemsEmptyQuery(b *testing.B) {
-	items := fakeItems(1000, "foo/bar/baz/bat/test")
-	for i := 0; i < b.N; i++ {
-		s := &Search{}
-		s.AddItems(items)
-	}
-}
-
-func BenchmarkSearchAddItemsWithQuery(b *testing.B) {
-	items := fakeItems(1000, "foo/bar/baz/bat/test")
-	for i := 0; i < b.N; i++ {
-		s := &Search{}
-		s.SetQuery("test.txt")
-		s.AddItems(items)
-	}
-}
-
 func BenchmarkSearchSetQuery(b *testing.B) {
-	s := &Search{}
-	s.AddItems(fakeItems(1000, "foo/bar/baz/bat/test"))
+	s := NewSearch(fakeItems(1000, "foo/bar/baz/bat/test"), false)
 	for i := 0; i < b.N; i++ {
 		if i%2 == 0 {
 			s.SetQuery("foo")

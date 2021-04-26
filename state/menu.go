@@ -55,13 +55,11 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 // ShowMenu displays the menu with the specified style and items.
 func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item) {
 	emptyQueryShowAll := bool(style == MenuStyleFile)
-	search := menu.NewSearch(emptyQueryShowAll)
-	search.AddItems(loadItems())
-
+	items := loadItems()
 	if style == MenuStyleCommand {
-		search.AddItems(state.customMenuItems)
+		items = append(items, state.customMenuItems...)
 	}
-
+	search := menu.NewSearch(items, emptyQueryShowAll)
 	state.menu = &MenuState{
 		visible:           true,
 		style:             style,

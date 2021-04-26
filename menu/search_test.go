@@ -244,7 +244,7 @@ func TestSearch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := NewSearch(tc.items, tc.emptyQueryShowAll)
-			s.SetQuery(tc.query)
+			setQuery(s, tc.query)
 			assert.Equal(t, tc.expected, s.Results())
 		})
 	}
@@ -254,9 +254,9 @@ func BenchmarkSearchSetQuery(b *testing.B) {
 	s := NewSearch(fakeItems(1000, "foo/bar/baz/bat/test"), false)
 	for i := 0; i < b.N; i++ {
 		if i%2 == 0 {
-			s.SetQuery("foo")
+			setQuery(s, "foo")
 		} else {
-			s.SetQuery("bar")
+			setQuery(s, "bar")
 		}
 	}
 }
@@ -268,4 +268,10 @@ func fakeItems(n int, prefix string) []Item {
 		items = append(items, Item{Name: name})
 	}
 	return items
+}
+
+func setQuery(s *Search, q string) {
+	for _, r := range q {
+		s.AppendRuneToQuery(r)
+	}
 }

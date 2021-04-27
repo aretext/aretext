@@ -59,26 +59,12 @@ func (s *Search) Query() string {
 	return s.query
 }
 
-// AppendRuneToQuery appends a rune to the end of the current search query.
-func (s *Search) AppendRuneToQuery(r rune) {
-	newQuery := s.query + string(r)
-	s.setQuery(newQuery)
-}
-
-// DeleteRuneFromQuery deletes a rune from the end of the current search query.
-// If the query is empty, this does nothing.
-func (s *Search) DeleteRuneFromQuery() {
-	if len(s.query) == 0 {
+// SetQuery updates the query for the search.
+func (s *Search) SetQuery(q string) {
+	if s.query == q {
 		return
 	}
-	queryRunes := []rune(s.query)
-	newQueryRunes := queryRunes[0 : len(queryRunes)-1]
-	newQuery := string(newQueryRunes)
-	s.setQuery(newQuery)
-}
 
-// setQuery updates the query for the search.
-func (s *Search) setQuery(q string) {
 	s.query = q
 	s.queryWords = s.splitWords(s.normalize(q))
 	for i := 0; i < len(s.scoredItems); i++ {

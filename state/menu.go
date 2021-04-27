@@ -117,16 +117,22 @@ func MoveMenuSelection(state *EditorState, delta int) {
 	state.menu.selectedResultIdx = newIdx
 }
 
-// AppendRuneToMenuSearch appends a rune to the menu search query.
+// AppendMenuSearch appends a rune to the menu search query.
 func AppendRuneToMenuSearch(state *EditorState, r rune) {
 	menu := state.menu
-	menu.search.AppendRuneToQuery(r)
+	newQuery := menu.search.Query() + string(r)
+	menu.search.SetQuery(newQuery)
 	menu.selectedResultIdx = 0
 }
 
-// DeleteRuneFromMenuSearch deletes a rune from the menu search query.
+// DeleteMenuSearch deletes a rune from the menu search query.
 func DeleteRuneFromMenuSearch(state *EditorState) {
 	menu := state.menu
-	menu.search.DeleteRuneFromQuery()
-	menu.selectedResultIdx = 0
+	query := menu.search.Query()
+	if len(query) > 0 {
+		queryRunes := []rune(query)
+		newQueryRunes := queryRunes[0 : len(queryRunes)-1]
+		menu.search.SetQuery(string(newQueryRunes))
+		menu.selectedResultIdx = 0
+	}
 }

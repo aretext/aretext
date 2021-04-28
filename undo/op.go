@@ -1,5 +1,9 @@
 package undo
 
+import (
+	"unicode/utf8"
+)
+
 // Op represents an insert or delete operation on a document.
 type Op struct {
 	pos        uint64
@@ -46,5 +50,5 @@ func (op Op) TextToInsert() string {
 // NumRunesToDelete returns the number of runes deleted at the position.
 // This will be zero if TextToInsert is a non-empty string.
 func (op Op) NumRunesToDelete() int {
-	return len(op.deleteText)
+	return utf8.RuneCountInString(op.deleteText)
 }

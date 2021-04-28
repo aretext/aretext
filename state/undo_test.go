@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/syntax"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,4 +82,23 @@ func TestUndoDeleteLinesWithIndentation(t *testing.T) {
 	Undo(state)
 	assert.Equal(t, uint64(5), state.documentBuffer.cursor.position)
 	assert.Equal(t, "\tab\n\tc\nd", state.documentBuffer.textTree.String())
+}
+
+func TestUndoMultiByteUnicodeWithSyntaxHighlighting(t *testing.T) {
+	state := NewEditorState(100, 100, nil)
+	SetSyntax(state, syntax.LanguageGo)
+
+	// Insert multi-byte UTF-8 runes.
+	for _, r := range "丂丄丅丆丏 ¢ह€한" {
+		InsertRune(state, r)
+	}
+	CheckpointUndoLog(state)
+
+	// This used to trigger a panic when retokenizing because the
+	// deleted rune count was incorrect.
+	Undo(state)
+	assert.Equal(t, "", state.documentBuffer.textTree.String())
+
+	Redo(state)
+	assert.Equal(t, "丂丄丅丆丏 ¢ह€한", state.documentBuffer.textTree.String())
 }

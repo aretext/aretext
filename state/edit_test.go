@@ -1342,6 +1342,15 @@ func TestCopyLine(t *testing.T) {
 				InsertOnNextLine: true,
 			},
 		},
+		{
+			name:          "multi-byte unicode",
+			inputString:   "丂丄丅丆丏 ¢ह€한",
+			initialCursor: cursorState{position: 2},
+			expectedClipboard: clipboard.PageContent{
+				Text:             "丂丄丅丆丏 ¢ह€한",
+				InsertOnNextLine: true,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1479,6 +1488,17 @@ func TestPasteAfterCursor(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nxyz",
+		},
+		{
+			name:          "multi-byte unicode",
+			inputString:   "abc",
+			initialCursor: cursorState{position: 1},
+			clipboard: clipboard.PageContent{
+				Text:             "丂丄丅丆丏 ¢ह€한",
+				InsertOnNextLine: false,
+			},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "ab丂丄丅丆丏 ¢ह€한c",
 		},
 	}
 

@@ -13,7 +13,6 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
-	textUtf8 "github.com/aretext/aretext/text/utf8"
 	"github.com/aretext/aretext/undo"
 	"github.com/pkg/errors"
 )
@@ -35,15 +34,17 @@ func InsertRune(state *EditorState, r rune) {
 func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLog bool) error {
 	buffer := state.documentBuffer
 
-	for i, r := range s {
-		if err := buffer.textTree.InsertAtPosition(pos+uint64(i), r); err != nil {
+	var n uint64
+	for _, r := range s {
+		if err := buffer.textTree.InsertAtPosition(pos+n, r); err != nil {
 			return errors.Wrapf(err, "text.Tree.InsertAtPosition")
 		}
+		n++
 	}
 
 	edit := parser.Edit{
 		Pos:         pos,
-		NumInserted: uint64(utf8.RuneCountInString(s)),
+		NumInserted: n,
 	}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
 		return errors.Wrapf(err, "retokenizeAfterEdit")
@@ -606,28 +607,21 @@ func CopySelection(state *EditorState) {
 
 // copyText copies part of the document text to a string.
 func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
+	var sb strings.Builder
 	var offset uint64
-	var buf [256]byte
-	textBytes := make([]byte, 0, numRunes)
-	r := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	textReader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
+	runeIter := text.NewCloneableForwardRuneIter(textReader)
 	for offset < numRunes {
-		n, err := r.Read(buf[:])
+		r, err := runeIter.NextRune()
 		if err == io.EOF {
-			if n == 0 {
-				break
-			}
+			break
 		} else if err != nil {
-			panic(err) // Should never happen for a text tree.
+			panic(err) // should never happen because text should be valid UTF-8
 		}
-
-		for i := 0; i < n && offset < numRunes; i++ {
-			b := buf[i]
-			textBytes = append(textBytes, b)
-			offset += uint64(textUtf8.StartByteIndicator[b])
-		}
+		sb.WriteRune(r)
+		offset++
 	}
-
-	return string(textBytes)
+	return sb.String()
 }
 
 // PasteAfterCursor inserts the text from the default page in the clipboard at the cursor position.

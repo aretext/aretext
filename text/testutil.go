@@ -13,8 +13,10 @@ func NewSingleByteReader(s string) CloneableReader {
 }
 
 func (r *SingleByteReader) Read(p []byte) (n int, err error) {
-	n = copy(p, r.s[r.i:r.i+1])
-	r.i++
+	if r.i < len(r.s) {
+		n = copy(p, r.s[r.i:r.i+1])
+		r.i++
+	}
 	if r.i >= len(r.s) {
 		err = io.EOF
 	}

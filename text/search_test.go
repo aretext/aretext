@@ -49,90 +49,90 @@ func TestBuildPrefixTable(t *testing.T) {
 	}
 }
 
-func TestSearch(t *testing.T) {
-	testCases := []struct {
-		name         string
-		q            string
-		s            string
-		expectFound  bool
-		expectOffset uint64
-	}{
-		{
-			name:        "empty string, empty query",
-			q:           "",
-			s:           "",
-			expectFound: false,
-		},
-		{
-			name:        "empty string, non-empty query",
-			q:           "abc",
-			s:           "",
-			expectFound: false,
-		},
-		{
-			name:        "non-empty string, empty query",
-			q:           "",
-			s:           "abc",
-			expectFound: false,
-		},
-		{
-			name:        "find single char in short string, not found",
-			q:           "x",
-			s:           "abcd",
-			expectFound: false,
-		},
-		{
-			name:         "find single char at beginning of short string",
-			q:            "x",
-			s:            "xabcd",
-			expectFound:  true,
-			expectOffset: 0,
-		},
-		{
-			name:         "find single char in middle of short string",
-			q:            "a",
-			s:            "xyzabc",
-			expectFound:  true,
-			expectOffset: 3,
-		},
-		{
-			name:         "find single char at beginning of short string",
-			q:            "x",
-			s:            "abcdx",
-			expectFound:  true,
-			expectOffset: 4,
-		},
-		{
-			name:         "exact match short string",
-			q:            "abcd1234",
-			s:            "abcd1234",
-			expectFound:  true,
-			expectOffset: 0,
-		},
-		{
-			name:         "repeating prefix",
-			q:            "ababababa",
-			s:            "xxxxxxxxabcababcababababayyyyyyy",
-			expectFound:  true,
-			expectOffset: 16,
-		},
-		{
-			name:         "long string",
-			q:            "abcabba",
-			s:            Repeat('x', 512) + "abcabba" + Repeat('y', 1024),
-			expectFound:  true,
-			expectOffset: 512,
-		},
-		{
-			name:         "multi-byte unicode",
-			q:            "丅丆",
-			s:            "丂丄丅丆丏 ¢ह€한",
-			expectFound:  true,
-			expectOffset: 2,
-		},
-	}
+var searchTestCases = []struct {
+	name         string
+	q            string
+	s            string
+	expectFound  bool
+	expectOffset uint64
+}{
+	{
+		name:        "empty string, empty query",
+		q:           "",
+		s:           "",
+		expectFound: false,
+	},
+	{
+		name:        "empty string, non-empty query",
+		q:           "abc",
+		s:           "",
+		expectFound: false,
+	},
+	{
+		name:        "non-empty string, empty query",
+		q:           "",
+		s:           "abc",
+		expectFound: false,
+	},
+	{
+		name:        "find single char in short string, not found",
+		q:           "x",
+		s:           "abcd",
+		expectFound: false,
+	},
+	{
+		name:         "find single char at beginning of short string",
+		q:            "x",
+		s:            "xabcd",
+		expectFound:  true,
+		expectOffset: 0,
+	},
+	{
+		name:         "find single char in middle of short string",
+		q:            "a",
+		s:            "xyzabc",
+		expectFound:  true,
+		expectOffset: 3,
+	},
+	{
+		name:         "find single char at beginning of short string",
+		q:            "x",
+		s:            "abcdx",
+		expectFound:  true,
+		expectOffset: 4,
+	},
+	{
+		name:         "exact match short string",
+		q:            "abcd1234",
+		s:            "abcd1234",
+		expectFound:  true,
+		expectOffset: 0,
+	},
+	{
+		name:         "repeating prefix",
+		q:            "ababababa",
+		s:            "xxxxxxxxabcababcababababayyyyyyy",
+		expectFound:  true,
+		expectOffset: 16,
+	},
+	{
+		name:         "long string",
+		q:            "abcabba",
+		s:            Repeat('x', 512) + "abcabba" + Repeat('y', 1024),
+		expectFound:  true,
+		expectOffset: 512,
+	},
+	{
+		name:         "multi-byte unicode",
+		q:            "丅丆",
+		s:            "丂丄丅丆丏 ¢ह€한",
+		expectFound:  true,
+		expectOffset: 2,
+	},
+}
 
-	for _, tc := range testCases {
+func TestSearch(t *testing.T) {
+	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ok, offset, err := Search(tc.q, strings.NewReader(tc.s))
 			assert.Equal(t, tc.expectFound, ok)
@@ -143,44 +143,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestSearchWithSingleByteReader(t *testing.T) {
-	testCases := []struct {
-		name         string
-		q            string
-		s            string
-		expectFound  bool
-		expectOffset uint64
-	}{
-		{
-			name:         "short string, exact match",
-			q:            "abc",
-			s:            "abc",
-			expectFound:  true,
-			expectOffset: 0,
-		},
-		{
-			name:         "match at end of string",
-			q:            "abcdxyz1234",
-			s:            "          abcdxyz1234",
-			expectFound:  true,
-			expectOffset: 10,
-		},
-		{
-			name:         "long string",
-			q:            "abcabba",
-			s:            Repeat('x', 512) + "abcabba" + Repeat('y', 1024),
-			expectFound:  true,
-			expectOffset: 512,
-		},
-		{
-			name:         "multi-byte unicode",
-			q:            "丅丆",
-			s:            "丂丄丅丆丏 ¢ह€한",
-			expectFound:  true,
-			expectOffset: 2,
-		},
-	}
-
-	for _, tc := range testCases {
+	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := NewSingleByteReader(tc.s)
 			ok, offset, err := Search(tc.q, r)

@@ -7,19 +7,35 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Search finds the first occurrence of a query in a text.
-// If it finds a match, it returns the offset (in rune positions) from the start of the reader.
-// This uses the Knuth-Morris-Pratt algorithm, which runs in O(n+m) time, where n is the length
+func SearchNextInReader(q string, r io.Reader) (bool, uint64, error) {
+	return NewSearcher(q).NextInReader(r)
+}
+
+// Searcher searches for an exact match of a query.
+// It uses the Knuth-Morris-Pratt algorithm, which runs in O(n+m) time, where n is the length
 // of the text and m is the length of the query.
-func Search(q string, r io.Reader) (bool, uint64, error) {
-	if len(q) == 0 {
+type Searcher struct {
+	query       string
+	prefixTable []int
+}
+
+func NewSearcher(query string) Searcher {
+	return Searcher{
+		query:       query,
+		prefixTable: buildPrefixTable(query),
+	}
+}
+
+// NextInReader finds the next occurrence of a query in the text produced by an io.Reader.
+// If it finds a match, it returns the offset (in rune positions) from the start of the reader.
+func (s Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
+	if len(s.query) == 0 {
 		return false, 0, nil
 	}
 
 	var i int
 	var offsetToEnd uint64
 	var buf [256]byte
-	prefixTable := buildPrefixTable(q)
 	for {
 		n, err := r.Read(buf[:])
 		if err == io.EOF {
@@ -32,10 +48,10 @@ func Search(q string, r io.Reader) (bool, uint64, error) {
 
 		var j int
 		for j < n {
-			if q[i] != buf[j] {
+			if s.query[i] != buf[j] {
 				if i > 0 {
 					// Backtrack to the next-longest prefix and retry.
-					i = prefixTable[i-1]
+					i = s.prefixTable[i-1]
 				} else {
 					// No possible match at this index, so continue searching at the next character.
 					offsetToEnd += uint64(utf8.StartByteIndicator[buf[j]])
@@ -48,11 +64,11 @@ func Search(q string, r io.Reader) (bool, uint64, error) {
 				j++
 			}
 
-			if i == len(q) {
+			if i == len(s.query) {
 				// Found a substring match, so calculate the offset (in rune positions) and return.
 				offset := offsetToEnd
-				for k := 0; k < len(q); k++ {
-					offset -= uint64(utf8.StartByteIndicator[q[k]])
+				for k := 0; k < len(s.query); k++ {
+					offset -= uint64(utf8.StartByteIndicator[s.query[k]])
 				}
 				return true, offset, nil
 			}

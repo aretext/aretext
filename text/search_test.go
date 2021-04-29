@@ -131,10 +131,10 @@ var searchTestCases = []struct {
 	},
 }
 
-func TestSearch(t *testing.T) {
+func TestSearchNextInReader(t *testing.T) {
 	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ok, offset, err := Search(tc.q, strings.NewReader(tc.s))
+			ok, offset, err := SearchNextInReader(tc.q, strings.NewReader(tc.s))
 			assert.Equal(t, tc.expectFound, ok)
 			assert.Equal(t, tc.expectOffset, offset)
 			assert.NoError(t, err)
@@ -142,11 +142,11 @@ func TestSearch(t *testing.T) {
 	}
 }
 
-func TestSearchWithSingleByteReader(t *testing.T) {
+func TestSearchNextInReaderWithSingleByteReader(t *testing.T) {
 	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := NewSingleByteReader(tc.s)
-			ok, offset, err := Search(tc.q, r)
+			ok, offset, err := SearchNextInReader(tc.q, r)
 			assert.Equal(t, tc.expectFound, ok)
 			assert.Equal(t, tc.expectOffset, offset)
 			assert.NoError(t, err)
@@ -188,7 +188,7 @@ func BenchmarkFindAtEnd(b *testing.B) {
 			n: 100000,
 			q: "abcdxyz1234",
 		}
-		ok, _, err := Search(r.q, r)
+		ok, _, err := SearchNextInReader(r.q, r)
 		assert.True(b, ok)
 		assert.NoError(b, err)
 	}

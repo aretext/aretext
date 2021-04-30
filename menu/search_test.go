@@ -250,7 +250,7 @@ func TestSearch(t *testing.T) {
 	}
 }
 
-func BenchmarkSearchSetQuery(b *testing.B) {
+func BenchmarkSearch(b *testing.B) {
 	s := NewSearch(fakeItems(1000, "foo/bar/baz/bat/test"), false)
 	for i := 0; i < b.N; i++ {
 		if i%2 == 0 {
@@ -258,6 +258,7 @@ func BenchmarkSearchSetQuery(b *testing.B) {
 		} else {
 			s.SetQuery("bar")
 		}
+		s.Results()
 	}
 }
 

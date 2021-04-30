@@ -74,6 +74,7 @@ func TestSearch(t *testing.T) {
 				{Name: "a"},
 				{Name: "ab"},
 				{Name: "ac"},
+				{Name: "ba"},
 			},
 		},
 		{
@@ -135,19 +136,7 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
-			name:  "some items, some partially match",
-			query: "bar baz tes",
-			items: []Item{
-				{Name: "foo/bar/test.txt"},
-				{Name: "foo/bar/test.txt"},
-				{Name: "foo/bar/baz/test.txt"},
-			},
-			expected: []Item{
-				{Name: "foo/bar/baz/test.txt"},
-			},
-		},
-		{
-			name:  "items with shared prefix words, select shorter",
+			name:  "items with shared prefix, select shorter",
 			query: "s",
 			items: []Item{
 				{Name: "save"},
@@ -157,41 +146,6 @@ func TestSearch(t *testing.T) {
 				{Name: "save"},
 				{Name: "force save"},
 			},
-		},
-		{
-			name:  "items with shared prefix words, select longer",
-			query: "f s",
-			items: []Item{
-				{Name: "save"},
-				{Name: "force save"},
-			},
-			expected: []Item{
-				{Name: "force save"},
-			},
-		},
-		{
-			name:  "all separators",
-			query: "///",
-			items: []Item{
-				{Name: " / / - _"},
-				{Name: "///"},
-				{Name: "   "},
-				{Name: " / /"},
-			},
-			expected: []Item{},
-		},
-		{
-			name:  "empty query, all separators",
-			query: "",
-			items: []Item{
-				{Name: " / / - _"},
-				{Name: "///"},
-				{Name: "   "},
-				{Name: " / /"},
-				{Name: "/"},
-				{Name: "  "},
-			},
-			expected: []Item{},
 		},
 		{
 			name:  "find file extension without dot prefix",
@@ -237,6 +191,50 @@ func TestSearch(t *testing.T) {
 				{Name: "write two", Alias: "w"},
 				{Name: "write one"},
 				{Name: "write three"},
+			},
+		},
+		{
+			name:  "rank match at boundary after punctuation",
+			query: "foo",
+			items: []Item{
+				{Name: "baz/bar"},
+				{Name: "baz/boofoo"},
+				{Name: "baz/foobar"},
+				{Name: "baz/barfoo"},
+			},
+			expected: []Item{
+				{Name: "baz/foobar"},
+				{Name: "baz/barfoo"},
+				{Name: "baz/boofoo"},
+			},
+		},
+		{
+			name:  "rank match at boundary after whitespace",
+			query: "foo",
+			items: []Item{
+				{Name: "baz bar"},
+				{Name: "baz boofoo"},
+				{Name: "baz foobar"},
+				{Name: "baz barfoo"},
+			},
+			expected: []Item{
+				{Name: "baz foobar"},
+				{Name: "baz barfoo"},
+				{Name: "baz boofoo"},
+			},
+		},
+		{
+			name:  "rank match at start",
+			query: "foo",
+			items: []Item{
+				{Name: "baz foo"},
+				{Name: "foo bar"},
+				{Name: "bar foo"},
+			},
+			expected: []Item{
+				{Name: "foo bar"},
+				{Name: "bar foo"},
+				{Name: "baz foo"},
 			},
 		},
 	}

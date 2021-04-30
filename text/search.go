@@ -11,24 +11,39 @@ func SearchNextInReader(q string, r io.Reader) (bool, uint64, error) {
 	return NewSearcher(q).NextInReader(r)
 }
 
+func SearchAllInString(q string, text string) []uint64 {
+	return NewSearcher(q).AllInString(text, nil)
+}
+
 // Searcher searches for an exact match of a query.
 // It uses the Knuth-Morris-Pratt algorithm, which runs in O(n+m) time, where n is the length
 // of the text and m is the length of the query.
 type Searcher struct {
-	query       string
-	prefixTable []int
+	query               string
+	queryStartByteCount uint64
+	prefixTable         []int
 }
 
-func NewSearcher(query string) Searcher {
-	return Searcher{
-		query:       query,
-		prefixTable: buildPrefixTable(query),
+func NewSearcher(query string) *Searcher {
+	// Count the number of UTF8 start bytes in the query.
+	// For forward search, this is equivalent to the rune length;
+	// for backward search, however, the query bytes are reversed
+	// so the query won't necessarily be valid UTF-8.
+	var queryStartByteCount uint64
+	for i := 0; i < len(query); i++ {
+		queryStartByteCount += uint64(utf8.StartByteIndicator[query[i]])
+	}
+
+	return &Searcher{
+		query:               query,
+		queryStartByteCount: queryStartByteCount,
+		prefixTable:         buildPrefixTable(query),
 	}
 }
 
 // NextInReader finds the next occurrence of a query in the text produced by an io.Reader.
 // If it finds a match, it returns the offset (in rune positions) from the start of the reader.
-func (s Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
+func (s *Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
 	if len(s.query) == 0 {
 		return false, 0, nil
 	}
@@ -48,32 +63,63 @@ func (s Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
 
 		var j int
 		for j < n {
-			if s.query[i] != buf[j] {
-				if i > 0 {
-					// Backtrack to the next-longest prefix and retry.
-					i = s.prefixTable[i-1]
-				} else {
-					// No possible match at this index, so continue searching at the next character.
-					offsetToEnd += uint64(utf8.StartByteIndicator[buf[j]])
-					j++
-				}
-			} else {
-				// This character matches the query, so check the next character.
-				offsetToEnd += uint64(utf8.StartByteIndicator[buf[j]])
-				i++
-				j++
-			}
-
+			i, j, offsetToEnd = s.advance(i, j, offsetToEnd, buf[j])
 			if i == len(s.query) {
 				// Found a substring match, so calculate the offset (in rune positions) and return.
-				offset := offsetToEnd
-				for k := 0; k < len(s.query); k++ {
-					offset -= uint64(utf8.StartByteIndicator[s.query[k]])
-				}
-				return true, offset, nil
+				offsetToStart := offsetToEnd - s.queryStartByteCount
+				return true, offsetToStart, nil
 			}
 		}
 	}
+}
+
+// AllInString finds all (possibly overlapping) matches of the query in a string.
+// It returns the rune positions for the start of each match.
+// If not nil, the matchPositions slice will be used to store the results
+// (avoids allocating a new slice for each call).
+func (s *Searcher) AllInString(text string, matchPositions []uint64) []uint64 {
+	if len(s.query) == 0 {
+		return nil
+	}
+
+	if matchPositions != nil {
+		matchPositions = matchPositions[:0]
+	}
+
+	var i, j int
+	var offsetToEnd uint64
+	for j < len(text) {
+		i, j, offsetToEnd = s.advance(i, j, offsetToEnd, text[j])
+		if i == len(s.query) {
+			// Found a substring match, so calculate the offset (in rune positions) and add it to the result set.
+			offsetToStart := offsetToEnd - s.queryStartByteCount
+			matchPositions = append(matchPositions, offsetToStart)
+			offsetToEnd = offsetToStart + uint64(utf8.StartByteIndicator[text[j-i]])
+			j = j - i + 1
+			i = 0
+		}
+	}
+	return matchPositions
+}
+
+func (s *Searcher) advance(i int, j int, offsetToEnd uint64, textByte byte) (int, int, uint64) {
+	if s.query[i] != textByte {
+		if i > 0 {
+			// Backtrack to the next-longest prefix and retry.
+			i = s.prefixTable[i-1]
+		} else {
+			// No possible match at this index, so continue searching at the next character.
+			offsetToEnd += uint64(utf8.StartByteIndicator[textByte])
+			j++
+		}
+	} else {
+		// This character matches the query, so check the next character.
+		offsetToEnd += uint64(utf8.StartByteIndicator[textByte])
+		i++
+		j++
+	}
+
+	return i, j, offsetToEnd
 }
 
 func buildPrefixTable(q string) []int {

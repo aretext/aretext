@@ -642,5 +642,12 @@ func PasteAfterCursor(state *EditorState) {
 		return
 	}
 
-	MoveCursor(state, func(LocatorParams) uint64 { return pos })
+	if content.InsertOnNextLine {
+		MoveCursor(state, func(LocatorParams) uint64 { return pos })
+	} else {
+		MoveCursor(state, func(params LocatorParams) uint64 {
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			return locate.PrevChar(params.TextTree, 1, posAfterInsert)
+		})
+	}
 }

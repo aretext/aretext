@@ -1475,7 +1475,7 @@ func TestPasteAfterCursor(t *testing.T) {
 				Text:             "xyz",
 				InsertOnNextLine: false,
 			},
-			expectedCursor: cursorState{position: 3},
+			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcxyzd",
 		},
 		{
@@ -1497,7 +1497,7 @@ func TestPasteAfterCursor(t *testing.T) {
 				Text:             "丂丄丅丆丏 ¢ह€한",
 				InsertOnNextLine: false,
 			},
-			expectedCursor: cursorState{position: 2},
+			expectedCursor: cursorState{position: 11},
 			expectedText:   "ab丂丄丅丆丏 ¢ह€한c",
 		},
 	}

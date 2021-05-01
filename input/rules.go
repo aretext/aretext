@@ -519,6 +519,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ShowCommandMenu(p.Config)
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "start forward search",

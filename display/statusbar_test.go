@@ -34,6 +34,15 @@ func TestDrawStatusBar(t *testing.T) {
 			},
 		},
 		{
+			name:      "visual mode shows VISUAL",
+			inputMode: state.InputModeVisual,
+			filePath:  "./foo/bar",
+			expectedContents: [][]rune{
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'-', '-', ' ', 'V', 'I', 'S', 'U', 'A', 'L', ' ', '-', '-', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
 			name:      "menu mode shows file path",
 			inputMode: state.InputModeMenu,
 			filePath:  "./foo/bar",

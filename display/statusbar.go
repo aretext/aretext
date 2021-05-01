@@ -28,6 +28,8 @@ func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, file
 	switch inputMode {
 	case state.InputModeInsert:
 		return "-- INSERT --", tcell.StyleDefault.Bold(true)
+	case state.InputModeVisual:
+		return "-- VISUAL --", tcell.StyleDefault.Bold(true)
 	default:
 		relPath := file.RelativePathCwd(filePath)
 		return relPath, tcell.StyleDefault

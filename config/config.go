@@ -9,6 +9,7 @@ const DefaultSyntaxLanguage = "undefined"
 const DefaultTabSize = 4
 const DefaultTabExpand = false
 const DefaultAutoIndent = false
+const DefaultShowLineNumbers = false
 
 // Config is a configuration for the editor.
 type Config struct {
@@ -23,6 +24,9 @@ type Config struct {
 
 	// If enabled, indent a new line to match indentation of the previous line.
 	AutoIndent bool
+
+	// If enabled, show line numbers in the left margin.
+	ShowLineNumbers bool
 
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
@@ -48,6 +52,7 @@ func ConfigFromUntypedMap(m map[string]interface{}) Config {
 		TabSize:         intOrDefault(m, "tabSize", DefaultTabSize),
 		TabExpand:       boolOrDefault(m, "tabExpand", DefaultTabExpand),
 		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
+		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
 	}

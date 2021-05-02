@@ -9,7 +9,8 @@
       ],
       "syntaxLanguage": "undefined",
       "tabExpand": false,
-      "tabSize": 4
+      "tabSize": 4,
+      "showLineNumbers": false
     }
   },
   {
@@ -19,7 +20,8 @@
       "autoIndent": true,
       "syntaxLanguage": "json",
       "tabExpand": true,
-      "tabSize": 2
+      "tabSize": 2,
+      "showLineNumbers": true
     }
   },
   {
@@ -29,7 +31,8 @@
       "autoIndent": true,
       "syntaxLanguage": "go",
       "tabExpand": false,
-      "tabSize": 4
+      "tabSize": 4,
+      "showLineNumbers": true
     }
   }
 ]

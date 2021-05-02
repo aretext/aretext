@@ -71,6 +71,7 @@ func initializeAfterLoad(state *EditorState, config config.Config) {
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent
+	state.documentBuffer.showLineNum = config.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()
 	state.customMenuItems = customMenuItems(config)
 	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)

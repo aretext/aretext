@@ -241,7 +241,7 @@ func TestDrawBufferSizeTooSmall(t *testing.T) {
 		assertCellContents(t, s, [][]rune{
 			{'a'},
 			{'b'},
-			{'~'},
+			{' '},
 			{'c'},
 		})
 	})

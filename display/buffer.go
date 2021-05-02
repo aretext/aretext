@@ -80,8 +80,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {
-			// If there isn't enough space to show the line, fill it with a placeholder.
-			drawLineTooLong(sr, row, maxLineWidth)
+			// If there isn't enough space to show the line, skip it.
 			return
 		}
 
@@ -110,12 +109,6 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 			// Otherwise, show the cursor at the end of the current line.
 			sr.ShowCursor(col, row)
 		}
-	}
-}
-
-func drawLineTooLong(sr *ScreenRegion, row int, maxLineWidth int) {
-	for col := 0; col < maxLineWidth; col++ {
-		sr.SetContent(col, row, '~', nil, tcell.StyleDefault.Dim(true))
 	}
 }
 

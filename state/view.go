@@ -26,7 +26,7 @@ func ScrollViewToCursor(state *EditorState) {
 		buffer.cursor.position,
 		buffer.textTree,
 		buffer.view.textOrigin,
-		buffer.view.width,
+		buffer.view.width-buffer.LineNumMarginWidth(),
 		buffer.view.height,
 		buffer.tabSize)
 }

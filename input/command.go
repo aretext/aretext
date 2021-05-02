@@ -69,6 +69,11 @@ func commandMenuItems(config Config) func() []menu.Item {
 					state.AbortIfUnsavedChanges(s, ShowFileMenu(config), true)
 				},
 			},
+			{
+				Name:   "toggle line numbers",
+				Alias:  "nu",
+				Action: state.ToggleShowLineNumbers,
+			},
 		}
 
 		for _, language := range syntax.AllLanguages {

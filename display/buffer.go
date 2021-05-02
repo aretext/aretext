@@ -3,6 +3,7 @@ package display
 import (
 	"io"
 	"log"
+	"strconv"
 
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/selection"
@@ -27,7 +28,9 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
-	wrapConfig := segment.NewLineWrapConfig(uint64(width), gcWidthFunc)
+	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
+	wrapWidth := uint64(width) - lineNumMargin
+	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
@@ -42,13 +45,30 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
-		drawLineAndSetCursor(sr, pos, row, width, wrappedLine, tokenIter, cursorPos, selectedRegion, searchMatch, gcWidthFunc)
+		lineNum := textTree.LineNumForPosition(pos)
+		lineStartPos := textTree.LineStartPosition(lineNum)
+		drawLineAndSetCursor(
+			sr,
+			pos,
+			row,
+			int(wrapWidth),
+			lineNum,
+			lineNumMargin,
+			lineStartPos,
+			wrappedLine,
+			tokenIter,
+			cursorPos,
+			selectedRegion,
+			searchMatch,
+			gcWidthFunc,
+		)
 		pos += wrappedLine.NumRunes()
 	}
 
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
-		sr.ShowCursor(0, 0)
+		sr.ShowCursor(int(lineNumMargin), 0)
+		drawLineNumIfNecessary(sr, 0, 0, lineNumMargin)
 	}
 }
 
@@ -58,7 +78,21 @@ func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
 	return int(x), int(y), int(width), int(height)
 }
 
-func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth int, wrappedLine *segment.Segment, tokenIter *parser.TokenIter, cursorPos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, gcWidthFunc segment.GraphemeClusterWidthFunc) {
+func drawLineAndSetCursor(
+	sr *ScreenRegion,
+	pos uint64,
+	row int,
+	maxLineWidth int,
+	lineNum uint64,
+	lineNumMargin uint64,
+	lineStartPos uint64,
+	wrappedLine *segment.Segment,
+	tokenIter *parser.TokenIter,
+	cursorPos uint64,
+	selectedRegion selection.Region,
+	searchMatch *state.SearchMatch,
+	gcWidthFunc segment.GraphemeClusterWidthFunc,
+) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
 	gcIter := segment.NewGraphemeClusterIter(runeIter)
@@ -66,6 +100,11 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 	totalWidth := uint64(0)
 	col := 0
 	var lastGcWasNewline bool
+
+	if startPos == lineStartPos {
+		drawLineNumIfNecessary(sr, row, lineNum, lineNumMargin)
+	}
+	col += int(lineNumMargin)
 
 	for {
 		err := gcIter.NextSegment(gc)
@@ -76,6 +115,7 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 		}
 
 		gcRunes := gc.Runes()
+		lastGcWasNewline = gc.HasNewline()
 		gcWidth := gcWidthFunc(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
@@ -98,17 +138,37 @@ func drawLineAndSetCursor(sr *ScreenRegion, pos uint64, row int, maxLineWidth in
 
 		pos += gc.NumRunes()
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
-		lastGcWasNewline = gc.HasNewline()
+	}
+
+	if gc != nil && lastGcWasNewline {
+		// Draw line number for an empty final line.
+		drawLineNumIfNecessary(sr, row+1, lineNum+1, lineNumMargin)
 	}
 
 	if pos == cursorPos {
 		if gc != nil && (lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth)) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
-			sr.ShowCursor(0, row+1)
-		} else {
+			sr.ShowCursor(int(lineNumMargin), row+1)
+		} else if pos == cursorPos {
 			// Otherwise, show the cursor at the end of the current line.
 			sr.ShowCursor(col, row)
 		}
+	}
+}
+
+func drawLineNumIfNecessary(sr *ScreenRegion, row int, lineNum uint64, lineNumMargin uint64) {
+	if lineNumMargin == 0 {
+		return
+	}
+
+	style := tcell.StyleDefault.Foreground(tcell.ColorOrange)
+	lineNumStr := strconv.FormatUint(lineNum+1, 10)
+
+	// Right-aligned in the margin, with one space of padding on the right.
+	col := int(lineNumMargin) - 1 - len(lineNumStr)
+	for _, r := range lineNumStr {
+		sr.SetContent(col, row, r, nil, style)
+		col++
 	}
 }
 

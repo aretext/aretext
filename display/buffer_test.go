@@ -595,3 +595,119 @@ func TestSelection(t *testing.T) {
 		})
 	}
 }
+
+func TestShowLineNumbers(t *testing.T) {
+	testCases := []struct {
+		name             string
+		width, height    int
+		inputString      string
+		expectedContents [][]rune
+	}{
+		{
+			name:        "empty",
+			width:       5,
+			height:      5,
+			inputString: "",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "single line",
+			width:       5,
+			height:      5,
+			inputString: "ab",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "single line, soft-wrapped",
+			width:       5,
+			height:      5,
+			inputString: "abcde",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', ' ', ' ', 'c', 'd'},
+				{' ', ' ', ' ', 'e', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "multiple lines",
+			width:       5,
+			height:      5,
+			inputString: "ab\nc\nde",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '2', ' ', 'c', ' '},
+				{' ', '3', ' ', 'd', 'e'},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "multiple lines, last line empty",
+			width:       5,
+			height:      5,
+			inputString: "ab\nc\nd\n",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '2', ' ', 'c', ' '},
+				{' ', '3', ' ', 'd', ' '},
+				{' ', '4', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "multiple lines, last line empty with newline at view width",
+			width:       5,
+			height:      5,
+			inputString: "ab\nc\nde\n",
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '2', ' ', 'c', ' '},
+				{' ', '3', ' ', 'd', 'e'},
+				{' ', '4', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "collapsed margin",
+			width:       3,
+			height:      5,
+			inputString: "ab\ncd",
+			expectedContents: [][]rune{
+				{'a', 'b', ' '},
+				{'c', 'd', ' '},
+				{' ', ' ', ' '},
+				{' ', ' ', ' '},
+				{' ', ' ', ' '},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					state.ToggleShowLineNumbers(editorState)
+				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}

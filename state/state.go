@@ -129,6 +129,7 @@ type BufferState struct {
 	tabSize        uint64
 	tabExpand      bool
 	autoIndent     bool
+	showLineNum    bool
 }
 
 func (s *BufferState) TextTree() *text.Tree {
@@ -174,6 +175,32 @@ func (s *BufferState) SetViewSize(width, height uint64) {
 
 func (s *BufferState) TabSize() uint64 {
 	return s.tabSize
+}
+
+func (s *BufferState) LineNumMarginWidth() uint64 {
+	if !s.showLineNum {
+		return 0
+	}
+
+	// One column for each digit in the last line number,
+	// plus one space, with a minimum of three cols.
+	width := uint64(1)
+	n := s.textTree.NumLines()
+	for n > 0 {
+		width++
+		n /= 10
+	}
+	if width < 3 {
+		width = 3
+	}
+
+	// Collapse the line margin column if there isn't enough
+	// space for at least one column of document text.
+	if width >= s.view.width {
+		return 0
+	}
+
+	return width
 }
 
 // viewState represents the current view of the document.

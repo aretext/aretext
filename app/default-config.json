@@ -7,7 +7,7 @@
       "hideDirectories": [
         ".git"
       ],
-      "syntaxLanguage": "undefined",
+      "syntaxLanguage": "plaintext",
       "tabExpand": false,
       "tabSize": 4,
       "showLineNumbers": false

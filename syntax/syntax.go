@@ -15,12 +15,14 @@ type Language int
 
 const (
 	LanguageUndefined = Language(iota)
+	LanguagePlaintext
 	LanguageJson
 	LanguageGo
 )
 
 var AllLanguages = []Language{
 	LanguageUndefined,
+	LanguagePlaintext,
 	LanguageJson,
 	LanguageGo,
 }
@@ -29,6 +31,8 @@ func (language Language) String() string {
 	switch language {
 	case LanguageUndefined:
 		return "undefined"
+	case LanguagePlaintext:
+		return "plaintext"
 	case LanguageJson:
 		return "json"
 	case LanguageGo:
@@ -42,6 +46,8 @@ func LanguageFromString(s string) Language {
 	switch s {
 	case "undefined":
 		return LanguageUndefined
+	case "plaintext":
+		return LanguagePlaintext
 	case "json":
 		return LanguageJson
 	case "go":
@@ -56,6 +62,8 @@ func LanguageFromString(s string) Language {
 // If no tokenizer is available (e.g. for LanguageUndefined), this returns nil.
 func TokenizerForLanguage(language Language) *parser.Tokenizer {
 	switch language {
+	case LanguagePlaintext:
+		return PlaintextTokenizer
 	case LanguageJson:
 		return JsonTokenizer
 	case LanguageGo:

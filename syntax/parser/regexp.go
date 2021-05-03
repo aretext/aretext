@@ -383,6 +383,7 @@ func init() {
 	unicodeClassMap = map[string]*unicode.RangeTable{
 		"L":  unicode.L,
 		"Nd": unicode.Nd,
+		"P":  unicode.Punct,
 	}
 }
 

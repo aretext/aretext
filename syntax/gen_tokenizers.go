@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	generateTokenizer("PlaintextTokenizer", rules.PlaintextRules, "plaintext_tokenizer.go")
 	generateTokenizer("JsonTokenizer", rules.JsonRules, "json_tokenizer.go")
 	generateTokenizer("GolangTokenizer", rules.GolangRules, "golang_tokenizer.go")
 }

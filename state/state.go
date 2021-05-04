@@ -6,6 +6,7 @@ import (
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
+	"github.com/aretext/aretext/shell"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -24,7 +25,7 @@ type EditorState struct {
 	customMenuItems           []menu.Item
 	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
-	scheduledShellCmd         string
+	scheduledShellCmd         *shell.Cmd
 	quitFlag                  bool
 }
 
@@ -103,12 +104,12 @@ func (s *EditorState) FileWatcher() *file.Watcher {
 	return s.fileWatcher
 }
 
-func (s *EditorState) ScheduledShellCmd() string {
+func (s *EditorState) ScheduledShellCmd() *shell.Cmd {
 	return s.scheduledShellCmd
 }
 
 func (s *EditorState) ClearScheduledShellCmd() {
-	s.scheduledShellCmd = ""
+	s.scheduledShellCmd = nil
 }
 
 func (s *EditorState) QuitFlag() bool {

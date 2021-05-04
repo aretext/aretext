@@ -104,7 +104,7 @@ func (e *Editor) handleFileChanged() {
 
 func (e *Editor) executeScheduledShellCmd() {
 	sc := e.editorState.ScheduledShellCmd()
-	if sc == "" {
+	if sc == nil {
 		return
 	}
 
@@ -119,8 +119,7 @@ func (e *Editor) executeScheduledShellCmd() {
 	}
 
 	// Run the shell command, wait for completion, then show a status message.
-	err := RunShellCmd(sc)
-	if err != nil {
+	if err := sc.Run(); err != nil {
 		state.SetStatusMsg(e.editorState, state.StatusMsg{
 			Style: state.StatusMsgStyleError,
 			Text:  err.Error(),

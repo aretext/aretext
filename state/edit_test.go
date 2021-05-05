@@ -50,7 +50,7 @@ func TestInsertRune(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			InsertRune(state, tc.insertRune)
@@ -123,7 +123,7 @@ func TestDeleteRunes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			DeleteRunes(state, tc.locator)
@@ -216,7 +216,7 @@ func TestDeleteSelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
@@ -324,7 +324,7 @@ func TestInsertNewline(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.autoIndent = tc.autoIndent
@@ -383,7 +383,7 @@ func TestInsertTab(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.tabSize = 4
@@ -632,7 +632,7 @@ func TestDeleteLines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine)
@@ -691,7 +691,7 @@ func TestReplaceChar(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			ReplaceChar(state, tc.newText)
@@ -764,7 +764,7 @@ func TestToggleCaseAtCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			ToggleCaseAtCursor(state)
@@ -817,7 +817,7 @@ func TestToggleCaseInSelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
@@ -908,7 +908,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabExpand = tc.tabExpand
@@ -962,7 +962,7 @@ func TestIndentSelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
@@ -1084,7 +1084,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabSize = tc.tabSize
@@ -1138,7 +1138,7 @@ func TestOutdentSelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
@@ -1254,7 +1254,7 @@ func TestJoinLines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			JoinLines(state)
@@ -1357,7 +1357,7 @@ func TestCopyLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			CopyLine(state)
@@ -1427,7 +1427,7 @@ func TestCopySelection(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
@@ -1506,7 +1506,7 @@ func TestPasteAfterCursor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)

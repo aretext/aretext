@@ -9,7 +9,7 @@ import (
 )
 
 func TestUndoAndRedo(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 
 	// Make some edits with undo checkpoints.
 	InsertRune(state, 'a')
@@ -55,7 +55,7 @@ func TestUndoAndRedo(t *testing.T) {
 }
 
 func TestUndoDeleteLinesWithIndentation(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 
 	// Insert some lines with indentation.
 	InsertTab(state)
@@ -85,7 +85,7 @@ func TestUndoDeleteLinesWithIndentation(t *testing.T) {
 }
 
 func TestUndoMultiByteUnicodeWithSyntaxHighlighting(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	SetSyntax(state, syntax.LanguageGo)
 
 	// Insert multi-byte UTF-8 runes.

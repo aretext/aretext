@@ -6,7 +6,6 @@ import (
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
-	"github.com/aretext/aretext/shell"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
@@ -25,11 +24,11 @@ type EditorState struct {
 	customMenuItems           []menu.Item
 	dirNamesToHide            map[string]struct{}
 	statusMsg                 StatusMsg
-	scheduledShellCmd         *shell.Cmd
+	suspendScreenFunc         SuspendScreenFunc
 	quitFlag                  bool
 }
 
-func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleSet) *EditorState {
+func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleSet, suspendScreenFunc SuspendScreenFunc) *EditorState {
 	var documentBufferHeight uint64
 	if screenHeight > 0 {
 		// Leave one line for the status bar at the bottom.
@@ -58,16 +57,17 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 	}
 
 	return &EditorState{
-		screenWidth:     screenWidth,
-		screenHeight:    screenHeight,
-		configRuleSet:   configRuleSet,
-		documentBuffer:  buffer,
-		clipboard:       clipboard.New(),
-		fileWatcher:     file.NewEmptyWatcher(),
-		menu:            &MenuState{},
-		customMenuItems: nil,
-		dirNamesToHide:  nil,
-		statusMsg:       StatusMsg{},
+		screenWidth:       screenWidth,
+		screenHeight:      screenHeight,
+		configRuleSet:     configRuleSet,
+		documentBuffer:    buffer,
+		clipboard:         clipboard.New(),
+		fileWatcher:       file.NewEmptyWatcher(),
+		menu:              &MenuState{},
+		customMenuItems:   nil,
+		dirNamesToHide:    nil,
+		statusMsg:         StatusMsg{},
+		suspendScreenFunc: suspendScreenFunc,
 	}
 }
 
@@ -102,14 +102,6 @@ func (s *EditorState) StatusMsg() StatusMsg {
 
 func (s *EditorState) FileWatcher() *file.Watcher {
 	return s.fileWatcher
-}
-
-func (s *EditorState) ScheduledShellCmd() *shell.Cmd {
-	return s.scheduledShellCmd
-}
-
-func (s *EditorState) ClearScheduledShellCmd() {
-	s.scheduledShellCmd = nil
 }
 
 func (s *EditorState) QuitFlag() bool {

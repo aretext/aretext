@@ -130,7 +130,7 @@ func TestToggleShowLineNumbers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(tc.screenWidth, 100, nil)
+			state := NewEditorState(tc.screenWidth, 100, nil, nil)
 			for i := 0; i < tc.numLines-1; i++ {
 				InsertNewline(state)
 			}

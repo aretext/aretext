@@ -93,7 +93,7 @@ func customMenuItems(config config.Config) []menu.Item {
 		items = append(items, menu.Item{
 			Name: cmd.Name,
 			Action: func(state *EditorState) {
-				ScheduleShellCmd(state, sc)
+				RunShellCmd(state, sc)
 			},
 		})
 	}

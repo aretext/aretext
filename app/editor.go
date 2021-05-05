@@ -25,7 +25,12 @@ type Editor struct {
 // NewEditor instantiates a new editor that uses the provided screen.
 func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *Editor {
 	screenWidth, screenHeight := screen.Size()
-	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight), configRuleSet)
+	editorState := state.NewEditorState(
+		uint64(screenWidth),
+		uint64(screenHeight),
+		configRuleSet,
+		suspendScreenFunc(screen),
+	)
 	inputInterpreter := input.NewInterpreter()
 	termEventChan := make(chan tcell.Event, 1)
 	editor := &Editor{inputInterpreter, editorState, screen, termEventChan}
@@ -86,7 +91,6 @@ func (e *Editor) runMainEventLoop() {
 			return
 		}
 
-		e.executeScheduledShellCmd()
 		e.redraw()
 	}
 }
@@ -100,40 +104,6 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 func (e *Editor) handleFileChanged() {
 	log.Printf("File change detected, reloading file...\n")
 	state.AbortIfUnsavedChanges(e.editorState, state.ReloadDocument, false)
-}
-
-func (e *Editor) executeScheduledShellCmd() {
-	sc := e.editorState.ScheduledShellCmd()
-	if sc == nil {
-		return
-	}
-
-	log.Printf("Executing scheduled shell cmd: '%s'\n", sc)
-	e.editorState.ClearScheduledShellCmd()
-
-	// Suspend input processing and reset the terminal to its original state
-	// while executing the shell command.
-	if err := e.screen.Suspend(); err != nil {
-		log.Printf("Error suspending the screen: %v\n", errors.Wrapf(err, "Screen.Suspend()"))
-		return
-	}
-
-	// Run the shell command, wait for completion, then show a status message.
-	if err := sc.Run(); err != nil {
-		state.SetStatusMsg(e.editorState, state.StatusMsg{
-			Style: state.StatusMsgStyleError,
-			Text:  err.Error(),
-		})
-	} else {
-		state.SetStatusMsg(e.editorState, state.StatusMsg{
-			Style: state.StatusMsgStyleSuccess,
-			Text:  "Shell command completed successfully",
-		})
-	}
-
-	if err := e.screen.Resume(); err != nil {
-		log.Printf("Error resuming the screen: %v\n", errors.Wrapf(err, "Screen.Resume()"))
-	}
 }
 
 func (e *Editor) shutdown() {
@@ -153,6 +123,25 @@ func (e *Editor) inputConfig() input.Config {
 func (e *Editor) redraw() {
 	display.DrawEditor(e.screen, e.editorState)
 	e.screen.Show()
+}
+
+func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
+	return func(f func()) error {
+		// Suspend input processing and reset the terminal to its original state.
+		if err := screen.Suspend(); err != nil {
+			return errors.Wrapf(err, "screen.Suspend()")
+		}
+
+		// Execute the function.
+		f()
+
+		// Take control of the screen again.
+		if err := screen.Resume(); err != nil {
+			return errors.Wrapf(err, "screen.Resume()")
+		}
+
+		return nil
+	}
 }
 
 func describeTermEvent(event tcell.Event) string {

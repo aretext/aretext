@@ -14,7 +14,7 @@ import (
 
 func drawBuffer(t *testing.T, screen tcell.Screen, setupState func(*state.EditorState)) {
 	screenWidth, screenHeight := screen.Size()
-	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil)
+	editorState := state.NewEditorState(uint64(screenWidth), uint64(screenHeight+1), nil, nil)
 	setupState(editorState)
 	buffer := editorState.DocumentBuffer()
 	DrawBuffer(screen, buffer)

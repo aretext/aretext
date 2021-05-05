@@ -12,7 +12,7 @@ import (
 func TestMoveCursor(t *testing.T) {
 	textTree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	state.documentBuffer.textTree = textTree
 	state.documentBuffer.cursor.position = 2
 	MoveCursor(state, func(params LocatorParams) uint64 {
@@ -133,7 +133,7 @@ func TestMoveCursorToLineAbove(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.tabSize = 4
@@ -269,7 +269,7 @@ func TestMoveCursorToLineBelow(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.tabSize = 4

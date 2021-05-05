@@ -32,7 +32,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, initial state with prompt",
 			buildMenu: func() *state.MenuState {
-				editorState := state.NewEditorState(100, 100, nil)
+				editorState := state.NewEditorState(100, 100, nil, nil)
 				loadItems := func() []menu.Item { return nil }
 				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				return editorState.Menu()
@@ -49,7 +49,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with no results",
 			buildMenu: func() *state.MenuState {
-				editorState := state.NewEditorState(100, 100, nil)
+				editorState := state.NewEditorState(100, 100, nil, nil)
 				loadItems := func() []menu.Item { return nil }
 				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
 				state.AppendRuneToMenuSearch(editorState, 'a')
@@ -69,7 +69,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with results, first selected",
 			buildMenu: func() *state.MenuState {
-				editorState := state.NewEditorState(100, 100, nil)
+				editorState := state.NewEditorState(100, 100, nil, nil)
 				loadItems := func() []menu.Item {
 					return []menu.Item{
 						{Name: "test first"},
@@ -93,7 +93,7 @@ func TestDrawMenu(t *testing.T) {
 		{
 			name: "visible, query with many results, second-to-last selected",
 			buildMenu: func() *state.MenuState {
-				editorState := state.NewEditorState(100, 100, nil)
+				editorState := state.NewEditorState(100, 100, nil, nil)
 				loadItems := func() []menu.Item {
 					return []menu.Item{
 						{Name: "test 1"},

@@ -39,7 +39,7 @@ func TestQuit(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 
 			if tc.hasUnsavedChanges {
 				state.documentBuffer.undoLog.TrackOp(undo.InsertOp(0, "a"))

@@ -9,7 +9,7 @@ import (
 )
 
 func TestNormalToVisualMode(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	SetInputMode(state, InputModeNormal)
 	ToggleVisualMode(state, selection.ModeChar)
 	assert.Equal(t, InputModeVisual, state.inputMode)
@@ -17,7 +17,7 @@ func TestNormalToVisualMode(t *testing.T) {
 }
 
 func TestVisualModeToNormalMode(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	ToggleVisualMode(state, selection.ModeChar)
 	SetInputMode(state, InputModeNormal)
 	assert.Equal(t, InputModeNormal, state.inputMode)
@@ -41,7 +41,7 @@ func TestToggleVisualModeSameSelectionMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			ToggleVisualMode(state, tc.selectionMode)
 			ToggleVisualMode(state, tc.selectionMode)
 			assert.Equal(t, InputModeNormal, state.inputMode)
@@ -70,7 +70,7 @@ func TestToggleVisualModeDifferentSelectionMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			ToggleVisualMode(state, tc.firstSelectionMode)
 			ToggleVisualMode(state, tc.secondSelectionMode)
 			assert.Equal(t, InputModeVisual, state.inputMode)

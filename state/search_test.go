@@ -11,7 +11,7 @@ import (
 func TestSearchAndCommit(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 
@@ -52,7 +52,7 @@ func TestSearchAndCommit(t *testing.T) {
 func TestSearchAndAbort(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 	buffer.search.query = "xyz"
@@ -80,7 +80,7 @@ func TestSearchAndAbort(t *testing.T) {
 func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	textTree, err := text.NewTreeFromString("foo bar baz")
 	require.NoError(t, err)
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
 	buffer.textTree = textTree
 
@@ -225,7 +225,7 @@ func TestFindNextMatch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			buffer := state.documentBuffer
 			buffer.textTree = textTree
 			buffer.cursor = cursorState{position: tc.cursorPos}

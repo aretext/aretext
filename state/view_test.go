@@ -69,7 +69,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.view = tc.initialView
 			ScrollViewByNumLines(state, tc.direction, tc.numLines)

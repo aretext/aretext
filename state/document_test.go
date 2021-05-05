@@ -26,7 +26,7 @@ func createTestFile(t *testing.T, contents string) (path string, cleanup func())
 
 func TestLoadDocumentShowStatus(t *testing.T) {
 	// Start with an empty document.
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	assert.Equal(t, "", state.documentBuffer.textTree.String())
 	assert.Equal(t, "", state.FileWatcher().Path())
 
@@ -57,7 +57,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	state := NewEditorState(5, 3, nil)
+	state := NewEditorState(5, 3, nil, nil)
 	LoadDocument(state, path, true)
 	state.documentBuffer.cursor.position = 22
 
@@ -88,7 +88,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
-	state := NewEditorState(5, 3, nil)
+	state := NewEditorState(5, 3, nil, nil)
 	LoadDocument(state, path, true)
 	state.documentBuffer.cursor.position = 22
 
@@ -115,7 +115,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 
 	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
@@ -161,7 +161,7 @@ func TestAbortIfFileChanged(t *testing.T) {
 			// Load the initial document.
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			LoadDocument(state, path, true)
 
 			// Modify the file.

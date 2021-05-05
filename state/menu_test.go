@@ -9,7 +9,7 @@ import (
 )
 
 func TestShowMenu(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	loadItems := func() []menu.Item {
 		return []menu.Item{
 			{Name: "test item 1"},
@@ -27,7 +27,7 @@ func TestShowMenu(t *testing.T) {
 }
 
 func TestHideMenu(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	loadItems := func() []menu.Item {
 		return []menu.Item{
 			{Name: "test item"},
@@ -39,7 +39,7 @@ func TestHideMenu(t *testing.T) {
 }
 
 func TestSelectAndExecuteMenuItem(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	loadItems := func() []menu.Item {
 		return []menu.Item{
 			{
@@ -141,7 +141,7 @@ func TestMoveMenuSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			loadItems := func() []menu.Item { return tc.items }
 			ShowMenu(state, MenuStyleCommand, loadItems)
 			AppendRuneToMenuSearch(state, tc.searchRune)
@@ -155,7 +155,7 @@ func TestMoveMenuSelection(t *testing.T) {
 }
 
 func TestAppendRuneToMenuSearch(t *testing.T) {
-	state := NewEditorState(100, 100, nil)
+	state := NewEditorState(100, 100, nil, nil)
 	loadItems := func() []menu.Item { return nil }
 	ShowMenu(state, MenuStyleCommand, loadItems)
 	AppendRuneToMenuSearch(state, 'a')
@@ -193,7 +193,7 @@ func TestDeleteRuneFromMenuSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			state := NewEditorState(100, 100, nil)
+			state := NewEditorState(100, 100, nil, nil)
 			loadItems := func() []menu.Item { return nil }
 			ShowMenu(state, MenuStyleCommand, loadItems)
 			for _, r := range tc.searchQuery {

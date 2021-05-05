@@ -33,6 +33,15 @@ See [open milestones](https://github.com/aretext/aretext/milestones?direction=as
 | macOS    | Will probably work |
 | Windows  | Not supported      |
 
+## Installation
+
+### via the ArchLinux AUR
+aretext-git is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-git/)
+If you use [yay](https://github.com/Jguer/yay) just run this to install it:
+
+```shell
+yay -S aretext-git
+```
 
 ## Getting Started
 

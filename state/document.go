@@ -53,6 +53,12 @@ func LoadDocument(state *EditorState, path string, requireExists bool) {
 }
 
 func updateAfterReload(state *EditorState) {
+	// Set the mode to normal and clear any selections or searches.
+	state.inputMode = InputModeNormal
+	state.prevInputMode = InputModeNormal
+	state.documentBuffer.selector.Clear()
+	state.documentBuffer.search = searchState{}
+
 	// Tokenize the document using the current syntax language.
 	SetSyntax(state, state.documentBuffer.syntaxLanguage)
 
@@ -66,8 +72,12 @@ func updateAfterReload(state *EditorState) {
 }
 
 func initializeAfterLoad(state *EditorState, config config.Config) {
+	state.inputMode = InputModeNormal
+	state.prevInputMode = InputModeNormal
 	state.documentBuffer.cursor = cursorState{}
 	state.documentBuffer.view.textOrigin = 0
+	state.documentBuffer.selector.Clear()
+	state.documentBuffer.search = searchState{}
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.autoIndent = config.AutoIndent

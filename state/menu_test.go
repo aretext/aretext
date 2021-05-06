@@ -73,36 +73,6 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 	assert.True(t, state.QuitFlag())
 }
 
-func TestExecuteMenuItemWithVisualModeSelection(t *testing.T) {
-	state := NewEditorState(100, 100, nil, nil)
-
-	// Enter visual mode.
-	ToggleVisualMode(state, selection.ModeLine)
-	assert.Equal(t, state.inputMode, InputModeVisual)
-	assert.Equal(t, state.documentBuffer.selector.Mode(), selection.ModeLine)
-
-	// Enter menu mode and execute an item.
-	loadItems := func() []menu.Item {
-		return []menu.Item{
-			{
-				Name: "set syntax json",
-				Action: func(s *EditorState) {
-					SetSyntax(s, syntax.LanguageJson)
-				},
-			},
-		}
-	}
-	ShowMenu(state, MenuStyleCommand, loadItems)
-	AppendRuneToMenuSearch(state, 's')
-	ExecuteSelectedMenuItem(state)
-
-	// Expect that the input mode returns to normal and the selection is cleared.
-	assert.False(t, state.Menu().Visible())
-	assert.Equal(t, "", state.Menu().SearchQuery())
-	assert.Equal(t, state.inputMode, InputModeNormal)
-	assert.Equal(t, state.documentBuffer.selector.Mode(), selection.ModeNone)
-}
-
 func TestMoveMenuSelection(t *testing.T) {
 	testCases := []struct {
 		name              string

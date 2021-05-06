@@ -234,6 +234,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollUp(p.Config)
 		},
+		SkipMacroInNormalMode: true,
 	},
 	{
 		Name: "scroll down (ctrl-d)",
@@ -243,6 +244,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollDown(p.Config)
 		},
+		SkipMacroInNormalMode: true,
 	},
 }
 

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/syntax"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,6 +39,16 @@ func TestHideMenu(t *testing.T) {
 	assert.False(t, state.Menu().Visible())
 }
 
+func TestShowMenuFromVisualMode(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+	loadItems := func() []menu.Item { return nil }
+	ToggleVisualMode(state, selection.ModeChar)
+	ShowMenu(state, MenuStyleCommand, loadItems)
+	assert.Equal(t, InputModeMenu, state.inputMode)
+	HideMenu(state)
+	assert.Equal(t, InputModeVisual, state.inputMode)
+}
+
 func TestSelectAndExecuteMenuItem(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	loadItems := func() []menu.Item {
@@ -60,6 +71,36 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 	assert.False(t, state.Menu().Visible())
 	assert.Equal(t, "", state.Menu().SearchQuery())
 	assert.True(t, state.QuitFlag())
+}
+
+func TestExecuteMenuItemWithVisualModeSelection(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+
+	// Enter visual mode.
+	ToggleVisualMode(state, selection.ModeLine)
+	assert.Equal(t, state.inputMode, InputModeVisual)
+	assert.Equal(t, state.documentBuffer.selector.Mode(), selection.ModeLine)
+
+	// Enter menu mode and execute an item.
+	loadItems := func() []menu.Item {
+		return []menu.Item{
+			{
+				Name: "set syntax json",
+				Action: func(s *EditorState) {
+					SetSyntax(s, syntax.LanguageJson)
+				},
+			},
+		}
+	}
+	ShowMenu(state, MenuStyleCommand, loadItems)
+	AppendRuneToMenuSearch(state, 's')
+	ExecuteSelectedMenuItem(state)
+
+	// Expect that the input mode returns to normal and the selection is cleared.
+	assert.False(t, state.Menu().Visible())
+	assert.Equal(t, "", state.Menu().SearchQuery())
+	assert.Equal(t, state.inputMode, InputModeNormal)
+	assert.Equal(t, state.documentBuffer.selector.Mode(), selection.ModeNone)
 }
 
 func TestMoveMenuSelection(t *testing.T) {

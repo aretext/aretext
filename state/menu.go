@@ -66,13 +66,13 @@ func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item)
 		search:            search,
 		selectedResultIdx: 0,
 	}
-	state.inputMode = InputModeMenu
+	SetInputMode(state, InputModeMenu)
 }
 
 // HideMenu hides the menu.
 func HideMenu(state *EditorState) {
 	state.menu = &MenuState{}
-	state.inputMode = InputModeNormal
+	SetInputMode(state, state.prevInputMode)
 }
 
 // ExecuteSelectedMenuItem executes the action of the selected menu item and closes the menu.
@@ -93,6 +93,12 @@ func ExecuteSelectedMenuItem(state *EditorState) {
 	selectedItem := results[idx]
 	log.Printf("Executing menu item '%s' at result index %d\n", selectedItem.Name, idx)
 	HideMenu(state)
+
+	// The action could invalidate the current selection
+	// (for example, by inserting text or opening a new document)
+	// so clear the current selection (if any) and return to normal mode.
+	state.documentBuffer.selector.Clear()
+	SetInputMode(state, InputModeNormal)
 
 	actionFunc, ok := selectedItem.Action.(func(*EditorState))
 	if !ok {

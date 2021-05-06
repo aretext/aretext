@@ -642,6 +642,15 @@ var visualModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "show command menu",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: ':'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ShowCommandMenu(p.Config)
+		},
+	},
+	{
 		Name: "delete selection (x)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'x'},

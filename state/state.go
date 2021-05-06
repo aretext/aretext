@@ -17,6 +17,7 @@ type EditorState struct {
 	screenWidth, screenHeight uint64
 	configRuleSet             config.RuleSet
 	inputMode                 InputMode
+	prevInputMode             InputMode
 	documentBuffer            *BufferState
 	clipboard                 *clipboard.C
 	fileWatcher               *file.Watcher

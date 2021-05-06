@@ -35,7 +35,7 @@ func StartSearch(state *EditorState, direction text.ReadDirection) {
 		prevQuery:     prevQuery,
 		prevDirection: prevDirection,
 	}
-	state.inputMode = InputModeSearch
+	SetInputMode(state, InputModeSearch)
 }
 
 // CompleteSearch terminates a text search and returns to normal mode.
@@ -55,7 +55,7 @@ func CompleteSearch(state *EditorState, commit bool) {
 		}
 	}
 	buffer.search.match = nil
-	state.inputMode = InputModeNormal
+	SetInputMode(state, InputModeNormal)
 	ScrollViewToCursor(state)
 }
 

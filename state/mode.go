@@ -42,11 +42,12 @@ func SetInputMode(state *EditorState, mode InputMode) {
 		CheckpointUndoLog(state)
 	}
 
-	if state.inputMode == InputModeVisual && mode != InputModeVisual {
+	if state.inputMode == InputModeVisual && mode == InputModeNormal {
 		// Clear selection when exiting visual mode.
 		state.documentBuffer.selector.Clear()
 	}
 
+	state.prevInputMode = state.inputMode
 	state.inputMode = mode
 }
 
@@ -56,7 +57,7 @@ func ToggleVisualMode(state *EditorState, selectionMode selection.Mode) {
 
 	// If we're not already in visual mode, enter visual mode and start a new selection.
 	if state.inputMode != InputModeVisual {
-		state.inputMode = InputModeVisual
+		SetInputMode(state, InputModeVisual)
 		buffer.selector.Start(selectionMode, buffer.cursor.position)
 		return
 	}

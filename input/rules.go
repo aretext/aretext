@@ -226,6 +226,24 @@ var cursorRules = []Rule{
 		},
 		SkipMacroInNormalMode: true,
 	},
+	{
+		Name: "scroll up (ctrl-u)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyCtrlU},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ScrollUp(p.Config)
+		},
+	},
+	{
+		Name: "scroll down (ctrl-d)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyCtrlD},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ScrollDown(p.Config)
+		},
+	},
 }
 
 // These rules are used when the editor is in normal mode.
@@ -491,24 +509,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return PasteAfterCursor
-		},
-	},
-	{
-		Name: "scroll up",
-		Pattern: []EventMatcher{
-			{Key: tcell.KeyCtrlU},
-		},
-		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ScrollUp(p.Config)
-		},
-	},
-	{
-		Name: "scroll down",
-		Pattern: []EventMatcher{
-			{Key: tcell.KeyCtrlD},
-		},
-		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ScrollDown(p.Config)
 		},
 	},
 	{

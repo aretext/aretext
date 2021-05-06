@@ -94,18 +94,18 @@ func ExecuteSelectedMenuItem(state *EditorState) {
 	log.Printf("Executing menu item '%s' at result index %d\n", selectedItem.Name, idx)
 	HideMenu(state)
 
+	// The action could invalidate the current selection
+	// (for example, by inserting text or opening a new document)
+	// so clear the current selection (if any) and return to normal mode.
+	state.documentBuffer.selector.Clear()
+	SetInputMode(state, InputModeNormal)
+
 	actionFunc, ok := selectedItem.Action.(func(*EditorState))
 	if !ok {
 		log.Printf("Invalid action for menu item '%s'\n", selectedItem.Name)
 		return
 	}
 	actionFunc(state)
-
-	// The action could have invalidated the current selection
-	// (for example, by inserting text or opening a new document)
-	// so clear the current selection (if any) and return to normal mode.
-	state.documentBuffer.selector.Clear()
-	SetInputMode(state, InputModeNormal)
 }
 
 // MoveMenuSelection moves the menu selection up or down with wraparound.

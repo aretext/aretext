@@ -585,13 +585,7 @@ func CopyLine(state *EditorState) {
 // CopySelection copies the current selection to the clipboard.
 func CopySelection(state *EditorState) {
 	buffer := state.documentBuffer
-	if buffer.selector.Mode() == selection.ModeNone {
-		return
-	}
-
-	r := buffer.SelectedRegion()
-
-	text := copyText(buffer.textTree, r.StartPos, r.EndPos-r.StartPos)
+	text, r := copySelectionText(buffer)
 	if len(text) == 0 {
 		return
 	}
@@ -622,6 +616,17 @@ func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
 		offset++
 	}
 	return sb.String()
+}
+
+// copySelectionText copies the currently selected text.
+// If no text is selected, it returns an empty string.
+func copySelectionText(buffer *BufferState) (string, selection.Region) {
+	if buffer.selector.Mode() == selection.ModeNone {
+		return "", selection.EmptyRegion
+	}
+	r := buffer.SelectedRegion()
+	text := copyText(buffer.textTree, r.StartPos, r.EndPos-r.StartPos)
+	return text, r
 }
 
 // PasteAfterCursor inserts the text from the default page in the clipboard at the cursor position.

@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -18,9 +19,10 @@ type SuspendScreenFunc func(func()) error
 // then resumes once the command completes.
 func RunShellCmd(state *EditorState, shellCmd string) {
 	log.Printf("Running shell command: '%s'\n", shellCmd)
+	env := envVars(state)
 	err := state.suspendScreenFunc(func() {
 		clearTerminal()
-		err := runInShell(shellCmd)
+		err := runInShell(shellCmd, env)
 		if err != nil {
 			SetStatusMsg(state, StatusMsg{
 				Style: StatusMsgStyleError,
@@ -38,6 +40,17 @@ func RunShellCmd(state *EditorState, shellCmd string) {
 	}
 }
 
+func envVars(state *EditorState) []string {
+	env := os.Environ()
+
+	selection, _ := copySelectionText(state.documentBuffer)
+	if len(selection) > 0 {
+		env = append(env, fmt.Sprintf("SELECTION=%s", selection))
+	}
+
+	return env
+}
+
 func clearTerminal() {
 	clearCmd := exec.Command("clear")
 	clearCmd.Stdout = os.Stdout
@@ -47,7 +60,7 @@ func clearTerminal() {
 	}
 }
 
-func runInShell(shellCmd string) error {
+func runInShell(shellCmd string, env []string) error {
 	s, err := shellProgAndArgs()
 	if err != nil {
 		return err
@@ -55,7 +68,7 @@ func runInShell(shellCmd string) error {
 
 	s = append(s, "-c", shellCmd)
 	cmd := exec.Command(s[0], s[1:]...)
-	cmd.Env = os.Environ()
+	cmd.Env = env
 
 	// Allow the shell to take over stdin/stdout/stderr.
 	// This assumes that the tcell screen has been suspended.

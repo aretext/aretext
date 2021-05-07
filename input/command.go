@@ -28,15 +28,15 @@ func commandMenuItems(config Config) func() []menu.Item {
 				Action:  state.Quit,
 			},
 			{
-				Name:    "write document",
-				Aliases: []string{"w"},
+				Name:    "save document",
+				Aliases: []string{"s", "w"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfFileChanged(s, state.SaveDocument)
 				},
 			},
 			{
-				Name:    "write document and quit",
-				Aliases: []string{"wq"},
+				Name:    "save document and quit",
+				Aliases: []string{"sq", "wq"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfFileChanged(s, func(s *state.EditorState) {
 						state.SaveDocument(s)
@@ -45,13 +45,13 @@ func commandMenuItems(config Config) func() []menu.Item {
 				},
 			},
 			{
-				Name:    "force write document",
-				Aliases: []string{"w!"},
+				Name:    "force save document",
+				Aliases: []string{"s!", "w!"},
 				Action:  state.SaveDocument,
 			},
 			{
-				Name:    "force write document and quit",
-				Aliases: []string{"wq!"},
+				Name:    "force save document and quit",
+				Aliases: []string{"sq!", "wq!"},
 				Action: func(s *state.EditorState) {
 					state.SaveDocument(s)
 					state.Quit(s)

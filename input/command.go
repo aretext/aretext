@@ -16,27 +16,27 @@ func commandMenuItems(config Config) func() []menu.Item {
 	return func() []menu.Item {
 		items := []menu.Item{
 			{
-				Name:  "quit",
-				Alias: "q",
+				Name:    "quit",
+				Aliases: []string{"q"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfUnsavedChanges(s, state.Quit, true)
 				},
 			},
 			{
-				Name:   "force quit",
-				Alias:  "q!",
-				Action: state.Quit,
+				Name:    "force quit",
+				Aliases: []string{"q!"},
+				Action:  state.Quit,
 			},
 			{
-				Name:  "write document",
-				Alias: "w",
+				Name:    "write document",
+				Aliases: []string{"w"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfFileChanged(s, state.SaveDocument)
 				},
 			},
 			{
-				Name:  "write document and quit",
-				Alias: "wq",
+				Name:    "write document and quit",
+				Aliases: []string{"wq"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfFileChanged(s, func(s *state.EditorState) {
 						state.SaveDocument(s)
@@ -45,34 +45,34 @@ func commandMenuItems(config Config) func() []menu.Item {
 				},
 			},
 			{
-				Name:   "force write document",
-				Alias:  "w!",
-				Action: state.SaveDocument,
+				Name:    "force write document",
+				Aliases: []string{"w!"},
+				Action:  state.SaveDocument,
 			},
 			{
-				Name:  "force write document and quit",
-				Alias: "wq!",
+				Name:    "force write document and quit",
+				Aliases: []string{"wq!"},
 				Action: func(s *state.EditorState) {
 					state.SaveDocument(s)
 					state.Quit(s)
 				},
 			},
 			{
-				Name:   "force reload",
-				Alias:  "r!",
-				Action: state.ReloadDocument,
+				Name:    "force reload",
+				Aliases: []string{"r!"},
+				Action:  state.ReloadDocument,
 			},
 			{
-				Name:  "find and open",
-				Alias: "f",
+				Name:    "find and open",
+				Aliases: []string{"f"},
 				Action: func(s *state.EditorState) {
 					state.AbortIfUnsavedChanges(s, ShowFileMenu(config), true)
 				},
 			},
 			{
-				Name:   "toggle line numbers",
-				Alias:  "nu",
-				Action: state.ToggleShowLineNumbers,
+				Name:    "toggle line numbers",
+				Aliases: []string{"nu"},
+				Action:  state.ToggleShowLineNumbers,
 			},
 		}
 

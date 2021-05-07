@@ -75,7 +75,7 @@ func (s *Search) SetQuery(q string) {
 	for i := 0; i < len(s.items); i++ {
 		score := s.scoreItemForQuery(
 			s.normalizedNames[i],
-			s.items[i].Alias,
+			s.items[i].Aliases,
 			s.query,
 			querySearcher,
 		)
@@ -99,9 +99,11 @@ func (s *Search) Results() []Item {
 	return s.results
 }
 
-func (s *Search) scoreItemForQuery(itemName string, itemAlias string, query string, querySearcher *text.Searcher) int {
-	if itemAlias != "" && itemAlias == query {
-		return scoreExactMatchAlias
+func (s *Search) scoreItemForQuery(itemName string, itemAliases []string, query string, querySearcher *text.Searcher) int {
+	for _, alias := range itemAliases {
+		if alias == query {
+			return scoreExactMatchAlias
+		}
 	}
 
 	s.matchPositions = querySearcher.AllInString(itemName, s.matchPositions)

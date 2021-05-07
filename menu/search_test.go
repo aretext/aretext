@@ -184,11 +184,11 @@ func TestSearch(t *testing.T) {
 			query: "w",
 			items: []Item{
 				{Name: "write one"},
-				{Name: "write two", Alias: "w"},
+				{Name: "write two", Aliases: []string{"w"}},
 				{Name: "write three"},
 			},
 			expected: []Item{
-				{Name: "write two", Alias: "w"},
+				{Name: "write two", Aliases: []string{"w"}},
 				{Name: "write one"},
 				{Name: "write three"},
 			},

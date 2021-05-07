@@ -58,11 +58,6 @@ func ConfigFromUntypedMap(m map[string]interface{}) Config {
 	}
 }
 
-// DefaultConfig is a configuration with all keys set to default values.
-func DefaultConfig() Config {
-	return ConfigFromUntypedMap(nil)
-}
-
 // Validate checks that the values in the configuration are valid.
 func (c Config) Validate() error {
 	if c.TabSize < 1 {

@@ -1516,6 +1516,17 @@ func TestPasteAfterCursor(t *testing.T) {
 			expectedText:   "abcd\nxyz",
 		},
 		{
+			name:          "paste newline after cursor",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 1},
+			clipboard: clipboard.PageContent{
+				Text:             "\n",
+				InsertOnNextLine: false,
+			},
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\ncd",
+		},
+		{
 			name:          "multi-byte unicode",
 			inputString:   "abc",
 			initialCursor: cursorState{position: 1},

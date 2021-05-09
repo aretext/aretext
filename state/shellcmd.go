@@ -12,7 +12,7 @@ import (
 
 // SuspendScreenFunc suspends the screen, executes a function, then resumes the screen.
 // This is allows the shell command to take control of the terminal.
-type SuspendScreenFunc func(func()) error
+type SuspendScreenFunc func(func() error) error
 
 // RunShellCmd executes the command in a shell.
 // It suspends the screen to give the command control of the terminal
@@ -20,24 +20,23 @@ type SuspendScreenFunc func(func()) error
 func RunShellCmd(state *EditorState, shellCmd string) {
 	log.Printf("Running shell command: '%s'\n", shellCmd)
 	env := envVars(state)
-	err := state.suspendScreenFunc(func() {
+	err := state.suspendScreenFunc(func() error {
 		clearTerminal()
-		err := runInShell(shellCmd, env)
-		if err != nil {
-			SetStatusMsg(state, StatusMsg{
-				Style: StatusMsgStyleError,
-				Text:  err.Error(),
-			})
-			return
-		}
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleSuccess,
-			Text:  "Shell command completed successfully",
-		})
+		return runInShell(shellCmd, env)
 	})
+
 	if err != nil {
-		log.Printf("Error suspending the screen: %v\n", err)
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  err.Error(),
+		})
+		return
 	}
+
+	SetStatusMsg(state, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  "Shell command completed successfully",
+	})
 }
 
 func envVars(state *EditorState) []string {

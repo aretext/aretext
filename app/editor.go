@@ -126,21 +126,21 @@ func (e *Editor) redraw() {
 }
 
 func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
-	return func(f func()) error {
+	return func(f func() error) error {
 		// Suspend input processing and reset the terminal to its original state.
 		if err := screen.Suspend(); err != nil {
 			return errors.Wrapf(err, "screen.Suspend()")
 		}
 
+		// Ensure screen is resumed after executing the function.
+		defer func() {
+			if err := screen.Resume(); err != nil {
+				log.Printf("Error resuming screen: %v\n", err)
+			}
+		}()
+
 		// Execute the function.
-		f()
-
-		// Take control of the screen again.
-		if err := screen.Resume(); err != nil {
-			return errors.Wrapf(err, "screen.Resume()")
-		}
-
-		return nil
+		return f()
 	}
 }
 

@@ -505,12 +505,21 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
-		Name: "put (p)",
+		Name: "put after cursor (p)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'p'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return PasteAfterCursor
+		},
+	},
+	{
+		Name: "put before cursor (P)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'P'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return PasteBeforeCursor
 		},
 	},
 	{

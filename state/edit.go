@@ -652,3 +652,29 @@ func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
 		})
 	}
 }
+
+// PasteBeforeCursor inserts the text from the clipboard before the cursor position.
+func PasteBeforeCursor(state *EditorState, page clipboard.PageId) {
+	content := state.clipboard.Get(page)
+	pos := state.documentBuffer.cursor.position
+	if content.Linewise {
+		pos = locate.StartOfLineAtPos(state.documentBuffer.textTree, pos)
+		mustInsertRuneAtPosition(state, '\n', pos, true)
+	}
+
+	err := insertTextAtPosition(state, content.Text, pos, true)
+	if err != nil {
+		log.Printf("Error pasting text: %v\n", err)
+		return
+	}
+
+	if content.Linewise {
+		MoveCursor(state, func(LocatorParams) uint64 { return pos })
+	} else {
+		MoveCursor(state, func(params LocatorParams) uint64 {
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			newPos := locate.PrevChar(params.TextTree, 1, posAfterInsert)
+			return locate.ClosestCharOnLine(params.TextTree, newPos)
+		})
+	}
+}

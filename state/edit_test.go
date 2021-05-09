@@ -1553,3 +1553,91 @@ func TestPasteAfterCursor(t *testing.T) {
 		})
 	}
 }
+
+func TestPasteBeforeCursor(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		clipboard      clipboard.PageContent
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty document, empty clipboard",
+			inputString:    "",
+			initialCursor:  cursorState{position: 0},
+			clipboard:      clipboard.PageContent{},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:          "empty document, empty clipboard insert on next line",
+			inputString:   "",
+			initialCursor: cursorState{position: 0},
+			clipboard: clipboard.PageContent{
+				Linewise: true,
+			},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "\n",
+		},
+		{
+			name:          "paste before cursor",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			clipboard: clipboard.PageContent{
+				Text:     "xyz",
+				Linewise: false,
+			},
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "abxyzcd",
+		},
+		{
+			name:          "paste before cursor insert on next line",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			clipboard: clipboard.PageContent{
+				Text:     "xyz",
+				Linewise: true,
+			},
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "xyz\nabcd",
+		},
+		{
+			name:          "paste newline before cursor",
+			inputString:   "abcd",
+			initialCursor: cursorState{position: 2},
+			clipboard: clipboard.PageContent{
+				Text:     "\n",
+				Linewise: false,
+			},
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "ab\ncd",
+		},
+		{
+			name:          "multi-byte unicode",
+			inputString:   "abc",
+			initialCursor: cursorState{position: 1},
+			clipboard: clipboard.PageContent{
+				Text:     "丂丄丅丆丏 ¢ह€한",
+				Linewise: false,
+			},
+			expectedCursor: cursorState{position: 10},
+			expectedText:   "a丂丄丅丆丏 ¢ह€한bc",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)
+			PasteBeforeCursor(state, clipboard.PageDefault)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}

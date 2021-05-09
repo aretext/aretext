@@ -625,9 +625,9 @@ func copySelectionText(buffer *BufferState) (string, selection.Region) {
 	return text, r
 }
 
-// PasteAfterCursor inserts the text from the default page in the clipboard at the cursor position.
-func PasteAfterCursor(state *EditorState) {
-	content := state.clipboard.Get(clipboard.PageDefault)
+// PasteAfterCursor inserts the text from the clipboard after the cursor position.
+func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
+	content := state.clipboard.Get(page)
 	pos := state.documentBuffer.cursor.position
 	if content.Linewise {
 		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)

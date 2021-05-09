@@ -3,6 +3,7 @@ package input
 import (
 	"log"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
@@ -359,7 +360,7 @@ func CopyLines(s *state.EditorState) {
 }
 
 func PasteAfterCursor(s *state.EditorState) {
-	state.PasteAfterCursor(s)
+	state.PasteAfterCursor(s, clipboard.PageDefault)
 }
 
 func ShowCommandMenu(config Config) Action {

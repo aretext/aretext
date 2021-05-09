@@ -1547,7 +1547,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)
-			PasteAfterCursor(state)
+			PasteAfterCursor(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})

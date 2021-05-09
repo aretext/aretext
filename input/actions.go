@@ -158,24 +158,20 @@ func CursorStartOfLastLine(s *state.EditorState) {
 }
 
 func EnterInsertMode(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
 	state.SetInputMode(s, state.InputModeInsert)
 }
 
 func EnterInsertModeAtStartOfLine(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
 	state.SetInputMode(s, state.InputModeInsert)
 	CursorLineStartNonWhitespace(s)
 }
 
 func EnterInsertModeAtNextPos(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
 	state.SetInputMode(s, state.InputModeInsert)
 	CursorRightIncludeEndOfLineOrFile(s)
 }
 
 func EnterInsertModeAtEndOfLine(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
 	state.SetInputMode(s, state.InputModeInsert)
 	CursorLineEndIncludeEndOfLineOrFile(s)
 }
@@ -368,8 +364,6 @@ func PasteAfterCursor(s *state.EditorState) {
 
 func ShowCommandMenu(config Config) Action {
 	return func(s *state.EditorState) {
-		state.SetStatusMsg(s, state.StatusMsg{})
-
 		// This sets the input mode to menu.
 		state.ShowMenu(s, state.MenuStyleCommand, commandMenuItems(config))
 	}
@@ -404,15 +398,11 @@ func DeleteRuneFromMenuSearch(s *state.EditorState) {
 }
 
 func StartSearchForward(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
-
 	// This sets the input mode to search.
 	state.StartSearch(s, text.ReadDirectionForward)
 }
 
 func StartSearchBackward(s *state.EditorState) {
-	state.SetStatusMsg(s, state.StatusMsg{})
-
 	// This sets the input mode to search.
 	state.StartSearch(s, text.ReadDirectionBackward)
 }

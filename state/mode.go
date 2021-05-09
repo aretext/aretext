@@ -40,11 +40,18 @@ func SetInputMode(state *EditorState, mode InputMode) {
 		// then deletes a line.  The next undo should restore the deleted line, returning to
 		// the checkpoint AFTER the user changed from insert->normal mode.
 		CheckpointUndoLog(state)
+
 	}
 
 	if state.inputMode == InputModeVisual && mode == InputModeNormal {
 		// Clear selection when exiting visual mode.
 		state.documentBuffer.selector.Clear()
+	}
+
+	if state.inputMode == InputModeNormal && mode != InputModeNormal {
+		// Transitioning from normal mode to other modes should clear the status msg.
+		// This allows the status bar to display "--INSERT--", "--VISUAL--", or the search query.
+		SetStatusMsg(state, StatusMsg{})
 	}
 
 	state.prevInputMode = state.inputMode

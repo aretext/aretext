@@ -206,8 +206,8 @@ func DeleteRunes(state *EditorState, loc Locator) {
 
 	if deletedText != "" {
 		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
-			Text:             deletedText,
-			InsertOnNextLine: false,
+			Text:     deletedText,
+			Linewise: false,
 		})
 	}
 }
@@ -278,8 +278,8 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 	if len(deletedLines) > 0 {
 		deletedText := strings.Join(deletedLines, "\n")
 		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
-			Text:             deletedText,
-			InsertOnNextLine: true,
+			Text:     deletedText,
+			Linewise: true,
 		})
 	}
 }
@@ -576,8 +576,8 @@ func CopyLine(state *EditorState) {
 	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
 	line := copyText(buffer.textTree, startPos, endPos-startPos)
 	content := clipboard.PageContent{
-		Text:             line,
-		InsertOnNextLine: true,
+		Text:     line,
+		Linewise: true,
 	}
 	state.clipboard.Set(clipboard.PageDefault, content)
 }
@@ -588,7 +588,7 @@ func CopySelection(state *EditorState) {
 	text, r := copySelectionText(buffer)
 	content := clipboard.PageContent{Text: text}
 	if buffer.selector.Mode() == selection.ModeLine {
-		content.InsertOnNextLine = true
+		content.Linewise = true
 	}
 	state.clipboard.Set(clipboard.PageDefault, content)
 
@@ -629,7 +629,7 @@ func copySelectionText(buffer *BufferState) (string, selection.Region) {
 func PasteAfterCursor(state *EditorState) {
 	content := state.clipboard.Get(clipboard.PageDefault)
 	pos := state.documentBuffer.cursor.position
-	if content.InsertOnNextLine {
+	if content.Linewise {
 		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)
 		mustInsertRuneAtPosition(state, '\n', pos, true)
 		pos++
@@ -643,7 +643,7 @@ func PasteAfterCursor(state *EditorState) {
 		return
 	}
 
-	if content.InsertOnNextLine {
+	if content.Linewise {
 		MoveCursor(state, func(LocatorParams) uint64 { return pos })
 	} else {
 		MoveCursor(state, func(params LocatorParams) uint64 {

@@ -190,8 +190,8 @@ func TestDeleteSelection(t *testing.T) {
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\n12\n34",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "cde\nfgh",
-				InsertOnNextLine: true,
+				Text:     "cde\nfgh",
+				Linewise: true,
 			},
 			expectUnsavedChanges: true,
 		},
@@ -205,8 +205,8 @@ func TestDeleteSelection(t *testing.T) {
 			expectedCursor:            cursorState{position: 3},
 			expectedText:              "ab\n\nef\ngh",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "cd",
-				InsertOnNextLine: true,
+				Text:     "cd",
+				Linewise: true,
 			},
 			expectUnsavedChanges: true,
 		},
@@ -429,8 +429,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -456,8 +456,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "efgh\nijk",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -471,8 +471,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nijk",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "efgh",
-				InsertOnNextLine: true,
+				Text:     "efgh",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -486,8 +486,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nefgh",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "ijk",
-				InsertOnNextLine: true,
+				Text:     "ijk",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -501,8 +501,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nefgh",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "",
-				InsertOnNextLine: true,
+				Text:     "",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -516,8 +516,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "lmnop",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd\nefgh\nijk",
-				InsertOnNextLine: true,
+				Text:     "abcd\nefgh\nijk",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -531,8 +531,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abcd",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "efgh\nijk\nlmnop",
-				InsertOnNextLine: true,
+				Text:     "efgh\nijk\nlmnop",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -559,8 +559,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor:       cursorState{position: 0},
 			expectedText:         "\nefgh",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abc",
-				InsertOnNextLine: true,
+				Text:     "abc",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -575,8 +575,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\nhij",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "efg",
-				InsertOnNextLine: true,
+				Text:     "efg",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -591,8 +591,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\n\nhij",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "",
-				InsertOnNextLine: true,
+				Text:     "",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -607,8 +607,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor:       cursorState{position: 8},
 			expectedText:         "abc\nefg\n",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "hij",
-				InsertOnNextLine: true,
+				Text:     "hij",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -621,8 +621,8 @@ func TestDeleteLines(t *testing.T) {
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\nlmnop",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "efg\nhij",
-				InsertOnNextLine: true,
+				Text:     "efg\nhij",
+				Linewise: true,
 			},
 			expectedUnsavedChanges: true,
 		},
@@ -1276,7 +1276,7 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "",
 			initialCursor: cursorState{position: 0},
 			expectedClipboard: clipboard.PageContent{
-				InsertOnNextLine: true,
+				Linewise: true,
 			},
 		},
 		{
@@ -1284,8 +1284,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 0},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 		},
 		{
@@ -1293,8 +1293,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 		},
 		{
@@ -1302,8 +1302,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 4},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 		},
 		{
@@ -1311,8 +1311,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 2},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "abcd",
-				InsertOnNextLine: true,
+				Text:     "abcd",
+				Linewise: true,
 			},
 		},
 		{
@@ -1320,8 +1320,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 5},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "efgh",
-				InsertOnNextLine: true,
+				Text:     "efgh",
+				Linewise: true,
 			},
 		},
 		{
@@ -1329,8 +1329,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 10},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "ijkl",
-				InsertOnNextLine: true,
+				Text:     "ijkl",
+				Linewise: true,
 			},
 		},
 		{
@@ -1338,8 +1338,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "abcd\n\n\nefgh",
 			initialCursor: cursorState{position: 5},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "",
-				InsertOnNextLine: true,
+				Text:     "",
+				Linewise: true,
 			},
 		},
 		{
@@ -1347,8 +1347,8 @@ func TestCopyLine(t *testing.T) {
 			inputString:   "丂丄丅丆丏 ¢ह€한",
 			initialCursor: cursorState{position: 2},
 			expectedClipboard: clipboard.PageContent{
-				Text:             "丂丄丅丆丏 ¢ह€한",
-				InsertOnNextLine: true,
+				Text:     "丂丄丅丆丏 ¢ह€한",
+				Linewise: true,
 			},
 		},
 	}
@@ -1397,8 +1397,8 @@ func TestCopySelection(t *testing.T) {
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "",
-				InsertOnNextLine: true,
+				Text:     "",
+				Linewise: true,
 			},
 		},
 		{
@@ -1420,8 +1420,8 @@ func TestCopySelection(t *testing.T) {
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\ncde\nfgh\n12\n34",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "cde\nfgh",
-				InsertOnNextLine: true,
+				Text:     "cde\nfgh",
+				Linewise: true,
 			},
 		},
 		{
@@ -1443,8 +1443,8 @@ func TestCopySelection(t *testing.T) {
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "abc\n\ndef",
 			expectedClipboard: clipboard.PageContent{
-				Text:             "",
-				InsertOnNextLine: true,
+				Text:     "",
+				Linewise: true,
 			},
 		},
 	}
@@ -1488,7 +1488,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			inputString:   "",
 			initialCursor: cursorState{position: 0},
 			clipboard: clipboard.PageContent{
-				InsertOnNextLine: true,
+				Linewise: true,
 			},
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\n",
@@ -1498,8 +1498,8 @@ func TestPasteAfterCursor(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
 			clipboard: clipboard.PageContent{
-				Text:             "xyz",
-				InsertOnNextLine: false,
+				Text:     "xyz",
+				Linewise: false,
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcxyzd",
@@ -1509,8 +1509,8 @@ func TestPasteAfterCursor(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
 			clipboard: clipboard.PageContent{
-				Text:             "xyz",
-				InsertOnNextLine: true,
+				Text:     "xyz",
+				Linewise: true,
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nxyz",
@@ -1520,8 +1520,8 @@ func TestPasteAfterCursor(t *testing.T) {
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 1},
 			clipboard: clipboard.PageContent{
-				Text:             "\n",
-				InsertOnNextLine: false,
+				Text:     "\n",
+				Linewise: false,
 			},
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\ncd",
@@ -1531,8 +1531,8 @@ func TestPasteAfterCursor(t *testing.T) {
 			inputString:   "abc",
 			initialCursor: cursorState{position: 1},
 			clipboard: clipboard.PageContent{
-				Text:             "丂丄丅丆丏 ¢ह€한",
-				InsertOnNextLine: false,
+				Text:     "丂丄丅丆丏 ¢ह€한",
+				Linewise: false,
 			},
 			expectedCursor: cursorState{position: 11},
 			expectedText:   "ab丂丄丅丆丏 ¢ह€한c",

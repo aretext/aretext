@@ -11,8 +11,8 @@ const (
 
 // PageContent represents the content of a page in the clipboard.
 type PageContent struct {
-	Text             string
-	InsertOnNextLine bool
+	Text     string
+	Linewise bool
 }
 
 // C represents a clipboard.

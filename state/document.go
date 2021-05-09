@@ -99,15 +99,27 @@ func stringSliceToMap(ss []string) map[string]struct{} {
 func customMenuItems(config config.Config) []menu.Item {
 	items := make([]menu.Item, 0, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
-		sc := cmd.ShellCmd
+		shellCmd := cmd.ShellCmd
+		output := shellCmdOutputFromString(cmd.Output)
 		items = append(items, menu.Item{
 			Name: cmd.Name,
 			Action: func(state *EditorState) {
-				RunShellCmd(state, sc)
+				RunShellCmd(state, shellCmd, output)
 			},
 		})
 	}
 	return items
+}
+
+func shellCmdOutputFromString(s string) ShellCmdOutput {
+	switch s {
+	case "none":
+		return ShellCmdOutputNone
+	case "terminal":
+		return ShellCmdOutputTerminal
+	default:
+		panic("Unrecognized shell cmd output")
+	}
 }
 
 func reportOpenSuccess(state *EditorState, path string) {

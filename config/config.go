@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -35,6 +36,11 @@ type Config struct {
 	HideDirectories []string
 }
 
+const (
+	OutputNone     = "none"
+	OutputTerminal = "terminal"
+)
+
 // MenuCommandConfig is a configuration for a user-defined menu item.
 type MenuCommandConfig struct {
 	// Name is the displayed name of the menu.
@@ -42,6 +48,9 @@ type MenuCommandConfig struct {
 
 	// ShellCmd is the shell command to execute when the menu item is selected.
 	ShellCmd string
+
+	// Output determines the destination of the command's output (stdout/stderr)
+	Output string
 }
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
@@ -62,6 +71,13 @@ func ConfigFromUntypedMap(m map[string]interface{}) Config {
 func (c Config) Validate() error {
 	if c.TabSize < 1 {
 		return errors.New("TabSize must be greater than zero")
+	}
+
+	for _, cmd := range c.MenuCommands {
+		if cmd.Output != OutputNone && cmd.Output != OutputTerminal {
+			msg := fmt.Sprintf("Menu command '%s' must have output set to either '%s' or '%s'", cmd.Name, OutputNone, OutputTerminal)
+			return errors.New(msg)
+		}
 	}
 
 	return nil
@@ -159,6 +175,7 @@ func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 		result = append(result, MenuCommandConfig{
 			Name:     stringOrDefault(menuMap, "name", "[nil]"),
 			ShellCmd: stringOrDefault(menuMap, "shellCmd", ""),
+			Output:   stringOrDefault(menuMap, "output", OutputTerminal),
 		})
 	}
 	return result

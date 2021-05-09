@@ -13,14 +13,32 @@ import (
 )
 
 func TestRunShellCmd(t *testing.T) {
-	withStateAndTmpDir(t, func(state *EditorState, dir string) {
-		p := path.Join(dir, "test-output.txt")
-		cmd := fmt.Sprintf(`printf "hello" > %s`, p)
-		RunShellCmd(state, cmd)
-		data, err := os.ReadFile(p)
-		require.NoError(t, err)
-		assert.Equal(t, "hello", string(data))
-	})
+	testCases := []struct {
+		name   string
+		output ShellCmdOutput
+	}{
+		{
+			name:   "output none",
+			output: ShellCmdOutputNone,
+		},
+		{
+			name:   "output terminal",
+			output: ShellCmdOutputTerminal,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withStateAndTmpDir(t, func(state *EditorState, dir string) {
+				p := path.Join(dir, "test-output.txt")
+				cmd := fmt.Sprintf(`printf "hello" > %s`, p)
+				RunShellCmd(state, cmd, tc.output)
+				data, err := os.ReadFile(p)
+				require.NoError(t, err)
+				assert.Equal(t, "hello", string(data))
+			})
+		})
+	}
 }
 
 func TestRunShellCmdWithSelection(t *testing.T) {
@@ -32,7 +50,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printf "$SELECTION" > %s`, p)
-		RunShellCmd(state, cmd)
+		RunShellCmd(state, cmd, ShellCmdOutputNone)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, "foobar", string(data))

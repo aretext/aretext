@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -14,16 +15,30 @@ import (
 // This is allows the shell command to take control of the terminal.
 type SuspendScreenFunc func(func() error) error
 
+// ShellCmdOutput controls the destination of the shell command's output.
+type ShellCmdOutput int
+
+const (
+	ShellCmdOutputNone = ShellCmdOutput(iota)
+	ShellCmdOutputTerminal
+)
+
 // RunShellCmd executes the command in a shell.
 // It suspends the screen to give the command control of the terminal
 // then resumes once the command completes.
-func RunShellCmd(state *EditorState, shellCmd string) {
+func RunShellCmd(state *EditorState, shellCmd string, output ShellCmdOutput) {
 	log.Printf("Running shell command: '%s'\n", shellCmd)
 	env := envVars(state)
-	err := state.suspendScreenFunc(func() error {
-		clearTerminal()
-		return runInShell(shellCmd, env)
-	})
+
+	var err error
+	switch output {
+	case ShellCmdOutputNone:
+		err = runInShellWithOutputNone(shellCmd, env)
+	case ShellCmdOutputTerminal:
+		err = runInShellWithOutputTerminal(state, shellCmd, env)
+	default:
+		panic("Unrecognized shell cmd output")
+	}
 
 	if err != nil {
 		SetStatusMsg(state, StatusMsg{
@@ -50,6 +65,17 @@ func envVars(state *EditorState) []string {
 	return env
 }
 
+func runInShellWithOutputNone(shellCmd string, env []string) error {
+	return runInShell(shellCmd, env, nil, nil, nil)
+}
+
+func runInShellWithOutputTerminal(state *EditorState, shellCmd string, env []string) error {
+	return state.suspendScreenFunc(func() error {
+		clearTerminal()
+		return runInShell(shellCmd, env, os.Stdin, os.Stdout, os.Stderr)
+	})
+}
+
 func clearTerminal() {
 	clearCmd := exec.Command("clear")
 	clearCmd.Stdout = os.Stdout
@@ -59,7 +85,7 @@ func clearTerminal() {
 	}
 }
 
-func runInShell(shellCmd string, env []string) error {
+func runInShell(shellCmd string, env []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	s, err := shellProgAndArgs()
 	if err != nil {
 		return err
@@ -68,12 +94,9 @@ func runInShell(shellCmd string, env []string) error {
 	s = append(s, "-c", shellCmd)
 	cmd := exec.Command(s[0], s[1:]...)
 	cmd.Env = env
-
-	// Allow the shell to take over stdin/stdout/stderr.
-	// This assumes that the tcell screen has been suspended.
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = stdin
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	if err := cmd.Run(); err != nil {
 		return errors.Wrapf(err, "Cmd.Run")

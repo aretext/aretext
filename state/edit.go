@@ -586,10 +586,6 @@ func CopyLine(state *EditorState) {
 func CopySelection(state *EditorState) {
 	buffer := state.documentBuffer
 	text, r := copySelectionText(buffer)
-	if len(text) == 0 {
-		return
-	}
-
 	content := clipboard.PageContent{Text: text}
 	if buffer.selector.Mode() == selection.ModeLine {
 		content.InsertOnNextLine = true

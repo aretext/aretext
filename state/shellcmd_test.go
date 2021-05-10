@@ -49,11 +49,11 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 		ToggleVisualMode(state, selection.ModeLine)
 
 		p := path.Join(dir, "test-output.txt")
-		cmd := fmt.Sprintf(`printf "$SELECTION" > %s`, p)
+		cmd := fmt.Sprintf(`printenv SELECTION > %s`, p)
 		RunShellCmd(state, cmd, ShellCmdOutputNone)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
-		assert.Equal(t, "foobar", string(data))
+		assert.Equal(t, "foobar\n", string(data))
 	})
 }
 

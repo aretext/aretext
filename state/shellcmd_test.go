@@ -57,6 +57,43 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 	})
 }
 
+func TestRunShellCmdInsertIntoDocument(t *testing.T) {
+	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+		p := path.Join(dir, "test-output.txt")
+		err := os.WriteFile(p, []byte("hello world"), 0644)
+		require.NoError(t, err)
+		cmd := fmt.Sprintf("cat %s", p)
+		RunShellCmd(state, cmd, ShellCmdOutputDocumentInsert)
+		s := state.documentBuffer.textTree.String()
+		cursorPos := state.documentBuffer.cursor.position
+		assert.Equal(t, "hello world", s)
+		assert.Equal(t, uint64(10), cursorPos)
+		assert.Equal(t, InputModeNormal, state.InputMode())
+	})
+}
+
+func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
+	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+		for _, r := range "foobar" {
+			InsertRune(state, r)
+		}
+		MoveCursor(state, func(p LocatorParams) uint64 { return 3 })
+		ToggleVisualMode(state, selection.ModeChar)
+		MoveCursor(state, func(p LocatorParams) uint64 { return 4 })
+
+		p := path.Join(dir, "test-output.txt")
+		err := os.WriteFile(p, []byte("hello world"), 0644)
+		require.NoError(t, err)
+		cmd := fmt.Sprintf("cat %s", p)
+		RunShellCmd(state, cmd, ShellCmdOutputDocumentInsert)
+		s := state.documentBuffer.textTree.String()
+		cursorPos := state.documentBuffer.cursor.position
+		assert.Equal(t, "foohello worldr", s)
+		assert.Equal(t, uint64(13), cursorPos)
+		assert.Equal(t, InputModeNormal, state.InputMode())
+	})
+}
+
 func withStateAndTmpDir(t *testing.T, f func(*EditorState, string)) {
 	suspendScreenFunc := func(f func() error) error { return f() }
 	state := NewEditorState(100, 100, nil, suspendScreenFunc)

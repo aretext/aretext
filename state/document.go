@@ -117,6 +117,8 @@ func shellCmdOutputFromString(s string) ShellCmdOutput {
 		return ShellCmdOutputNone
 	case "terminal":
 		return ShellCmdOutputTerminal
+	case "documentInsert":
+		return ShellCmdOutputDocumentInsert
 	default:
 		panic("Unrecognized shell cmd output")
 	}

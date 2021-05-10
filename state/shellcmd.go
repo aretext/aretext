@@ -1,12 +1,15 @@
 package state
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 
+	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/text/utf8"
 	"github.com/google/shlex"
 	"github.com/pkg/errors"
 )
@@ -21,6 +24,7 @@ type ShellCmdOutput int
 const (
 	ShellCmdOutputNone = ShellCmdOutput(iota)
 	ShellCmdOutputTerminal
+	ShellCmdOutputDocumentInsert
 )
 
 // RunShellCmd executes the command in a shell.
@@ -36,6 +40,8 @@ func RunShellCmd(state *EditorState, shellCmd string, output ShellCmdOutput) {
 		err = runInShellWithOutputNone(shellCmd, env)
 	case ShellCmdOutputTerminal:
 		err = runInShellWithOutputTerminal(state, shellCmd, env)
+	case ShellCmdOutputDocumentInsert:
+		err = runInShellWithOutputDocumentInsert(state, shellCmd, env)
 	default:
 		panic("Unrecognized shell cmd output")
 	}
@@ -74,6 +80,29 @@ func runInShellWithOutputTerminal(state *EditorState, shellCmd string, env []str
 		clearTerminal()
 		return runInShell(shellCmd, env, os.Stdin, os.Stdout, os.Stderr)
 	})
+}
+
+func runInShellWithOutputDocumentInsert(state *EditorState, shellCmd string, env []string) error {
+	var buf bytes.Buffer
+	stdin, stdout, stderr := io.Reader(nil), &buf, &buf
+	err := runInShell(shellCmd, env, stdin, stdout, stderr)
+	if err != nil {
+		return err
+	}
+
+	v := utf8.NewValidator()
+	isValid := v.ValidateBytes(buf.Bytes()) && v.ValidateEnd()
+	if !isValid {
+		return errors.New("Shell command output is not valid UTF-8")
+	}
+
+	state.clipboard.Set(clipboard.PageShellCmdOutput, clipboard.PageContent{
+		Text: string(buf.Bytes()),
+	})
+	DeleteSelection(state, false)
+	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
+	SetInputMode(state, InputModeNormal)
+	return nil
 }
 
 func clearTerminal() {

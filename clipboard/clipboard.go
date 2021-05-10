@@ -5,8 +5,9 @@ package clipboard
 type PageId int
 
 const (
-	PageNull    = PageId(iota) // Data written to the null page is discarded.
-	PageDefault                // The default page stores the contents of the most recent delete or yank operation.
+	PageNull           = PageId(iota) // Data written to the null page is discarded.
+	PageDefault                       // The default page stores the contents of the most recent delete or yank operation.
+	PageShellCmdOutput                // Output of the last shell command inserted into the document.
 )
 
 // PageContent represents the content of a page in the clipboard.

@@ -37,8 +37,9 @@ type Config struct {
 }
 
 const (
-	OutputNone     = "none"
-	OutputTerminal = "terminal"
+	OutputNone           = "none"
+	OutputTerminal       = "terminal"
+	OutputDocumentInsert = "documentInsert"
 )
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -74,8 +75,8 @@ func (c Config) Validate() error {
 	}
 
 	for _, cmd := range c.MenuCommands {
-		if cmd.Output != OutputNone && cmd.Output != OutputTerminal {
-			msg := fmt.Sprintf("Menu command '%s' must have output set to either '%s' or '%s'", cmd.Name, OutputNone, OutputTerminal)
+		if cmd.Output != OutputNone && cmd.Output != OutputTerminal && cmd.Output != OutputDocumentInsert {
+			msg := fmt.Sprintf("Menu command '%s' must have output set to either '%s', '%s', or '%s'", cmd.Name, OutputNone, OutputTerminal, OutputDocumentInsert)
 			return errors.New(msg)
 		}
 	}

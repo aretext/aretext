@@ -118,6 +118,11 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:           "incomplete key with escaped quote",
+			inputString:    `"key\":`,
+			expectedTokens: []TokenWithText{},
+		},
+		{
 			name:        "string with escaped quote",
 			inputString: `"abc\"xyz"`,
 			expectedTokens: []TokenWithText{
@@ -125,6 +130,18 @@ func TestJsonTokenizer(t *testing.T) {
 				{Text: `abc\"xyz`, Role: parser.TokenRoleString},
 				{Text: `"`, Role: parser.TokenRoleStringQuote},
 			},
+		},
+		{
+			name:        "incomplete string ending with escaped quote",
+			inputString: `"abc\" 123`,
+			expectedTokens: []TokenWithText{
+				{Text: "123", Role: parser.TokenRoleNumber},
+			},
+		},
+		{
+			name:           "incomplete string ending with newline before quote",
+			inputString:    "\"abc\n\"",
+			expectedTokens: []TokenWithText{},
 		},
 		{
 			name:           "string with line break",

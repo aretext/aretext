@@ -72,12 +72,35 @@ func TestGolangTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:        "interpreted string empty",
+			inputString: `""`,
+			expectedTokens: []TokenWithText{
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `"`, Role: parser.TokenRoleStringQuote},
+			},
+		},
+		{
 			name:        "interpreted string with escaped quote",
 			inputString: `"ab\"cd"`,
 			expectedTokens: []TokenWithText{
 				{Text: `"`, Role: parser.TokenRoleStringQuote},
 				{Text: `ab\"cd`, Role: parser.TokenRoleString},
 				{Text: `"`, Role: parser.TokenRoleStringQuote},
+			},
+		},
+		{
+			name:        "incomplete interpreted string ending with escaped quote",
+			inputString: `"abc\" 123`,
+			expectedTokens: []TokenWithText{
+				{Text: `abc`, Role: parser.TokenRoleIdentifier},
+				{Text: `123`, Role: parser.TokenRoleNumber},
+			},
+		},
+		{
+			name:        "incomplete interpreted string with newline before quote",
+			inputString: "\"abc\n\"",
+			expectedTokens: []TokenWithText{
+				{Text: `abc`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{

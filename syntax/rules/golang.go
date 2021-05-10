@@ -235,7 +235,7 @@ func init() {
 
 		// Interpreted string literal
 		{
-			Regexp:    `"([^\"\n]|\\")*"`,
+			Regexp:    `""|"([^\"\n]|\\")*[^\\\n]"`,
 			TokenRole: parser.TokenRoleString,
 			SubRules: []parser.TokenizerRule{
 				{

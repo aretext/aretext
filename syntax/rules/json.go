@@ -9,6 +9,8 @@ import (
 var JsonRules []parser.TokenizerRule
 
 func init() {
+	stringPattern := `""|"([^\"\n]|\\")*[^\\\n]"`
+
 	JsonRules = []parser.TokenizerRule{
 		{
 			Regexp:    `true|false|null`,
@@ -19,7 +21,7 @@ func init() {
 			TokenRole: parser.TokenRoleNumber,
 		},
 		{
-			Regexp:    `"([^\"\n]|\\")*"`,
+			Regexp:    stringPattern,
 			TokenRole: parser.TokenRoleString,
 			SubRules: []parser.TokenizerRule{
 				{
@@ -33,7 +35,7 @@ func init() {
 			},
 		},
 		{
-			Regexp:    `"([^\"\n]|\\")*"[ \t]*:`,
+			Regexp:    stringPattern + `[ \t]*:`,
 			TokenRole: parser.TokenRoleKey,
 		},
 		{

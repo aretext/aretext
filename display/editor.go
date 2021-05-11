@@ -1,8 +1,9 @@
 package display
 
 import (
-	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/state"
 )
 
 // DrawEditor draws the editor in the screen.

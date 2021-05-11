@@ -4,11 +4,12 @@ import (
 	"io"
 	"log"
 
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
-	"github.com/gdamore/tcell/v2"
 )
 
 func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.Style) int {

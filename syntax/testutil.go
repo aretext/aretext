@@ -4,8 +4,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/aretext/aretext/syntax/parser"
 	"github.com/pkg/errors"
+
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 // TokenWithText is a token that includes its text value.

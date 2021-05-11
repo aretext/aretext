@@ -1,7 +1,7 @@
 all: generate fmt build vet test
 
 fmt:
-	goimports -w .
+	goimports -w -local "github.com/aretext" .
 
 generate:
 	go generate ./...

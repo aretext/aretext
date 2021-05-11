@@ -3,10 +3,11 @@ package state
 import (
 	"log"
 
+	"github.com/pkg/errors"
+
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
-	"github.com/pkg/errors"
 )
 
 // SetSyntax sets the syntax language for the current document.

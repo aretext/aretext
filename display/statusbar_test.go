@@ -3,8 +3,9 @@ package display
 import (
 	"testing"
 
-	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/state"
 )
 
 func TestDrawStatusBar(t *testing.T) {

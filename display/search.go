@@ -1,9 +1,10 @@
 package display
 
 import (
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/text"
-	"github.com/gdamore/tcell/v2"
 )
 
 // DrawSearchQuery draws the search query (if any) on the last line of the screen.

@@ -3,10 +3,11 @@ package state
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/syntax"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestShowMenu(t *testing.T) {

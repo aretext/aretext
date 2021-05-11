@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/pkg/errors"
+
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
-	"github.com/pkg/errors"
 )
 
 func commandMenuItems(config Config) func() []menu.Item {

@@ -5,13 +5,14 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
-	"github.com/gdamore/tcell/v2"
 )
 
 // DrawBuffer draws text buffer in the screen.

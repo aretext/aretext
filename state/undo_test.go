@@ -3,9 +3,10 @@ package state
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/syntax"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUndoAndRedo(t *testing.T) {

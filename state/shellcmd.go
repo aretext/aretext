@@ -8,10 +8,11 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/aretext/aretext/clipboard"
-	"github.com/aretext/aretext/text/utf8"
 	"github.com/google/shlex"
 	"github.com/pkg/errors"
+
+	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/text/utf8"
 )
 
 // SuspendScreenFunc suspends the screen, executes a function, then resumes the screen.

@@ -3,12 +3,13 @@ package state
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/text"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestInsertRune(t *testing.T) {

@@ -1,9 +1,10 @@
 package display
 
 import (
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/state"
-	"github.com/gdamore/tcell/v2"
 )
 
 // DrawMenu draws the menu at the top of the screen.

@@ -3,10 +3,11 @@ package locate
 import (
 	"testing"
 
-	"github.com/aretext/aretext/syntax"
-	"github.com/aretext/aretext/text"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aretext/aretext/syntax"
+	"github.com/aretext/aretext/text"
 )
 
 func TestNextWordStart(t *testing.T) {

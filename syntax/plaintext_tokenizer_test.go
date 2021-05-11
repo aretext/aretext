@@ -3,9 +3,10 @@ package syntax
 import (
 	"testing"
 
-	"github.com/aretext/aretext/syntax/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 func TestPlaintextTokenizer(t *testing.T) {

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/pkg/errors"
+
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
@@ -14,7 +16,6 @@ import (
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 	"github.com/aretext/aretext/undo"
-	"github.com/pkg/errors"
 )
 
 // InsertRune inserts a rune at the current cursor location.

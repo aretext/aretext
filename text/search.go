@@ -3,8 +3,9 @@ package text
 import (
 	"io"
 
-	"github.com/aretext/aretext/text/utf8"
 	"github.com/pkg/errors"
+
+	"github.com/aretext/aretext/text/utf8"
 )
 
 func SearchNextInReader(q string, r io.Reader) (bool, uint64, error) {

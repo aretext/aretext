@@ -8,9 +8,10 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/pkg/errors"
+
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/syntax/rules"
-	"github.com/pkg/errors"
 )
 
 func main() {

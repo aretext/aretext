@@ -3,10 +3,11 @@ package display
 import (
 	"testing"
 
-	"github.com/aretext/aretext/state"
-	"github.com/aretext/aretext/text"
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aretext/aretext/state"
+	"github.com/aretext/aretext/text"
 )
 
 func TestDrawSearchQuery(t *testing.T) {

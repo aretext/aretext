@@ -8,8 +8,9 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/aretext/aretext/app"
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/app"
 )
 
 // These variables are set automatically as part of the release process.

@@ -3,8 +3,9 @@ package input
 import (
 	"log"
 
-	"github.com/aretext/aretext/state"
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/state"
 )
 
 // Interpreter translates key events to commands.

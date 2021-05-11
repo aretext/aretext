@@ -3,12 +3,13 @@ package input
 import (
 	"log"
 
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/text"
-	"github.com/gdamore/tcell/v2"
 )
 
 // Action is a function that mutates the editor state.

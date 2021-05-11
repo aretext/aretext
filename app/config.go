@@ -8,8 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aretext/aretext/config"
 	"github.com/pkg/errors"
+
+	"github.com/aretext/aretext/config"
 )
 
 //go:embed default-config.json

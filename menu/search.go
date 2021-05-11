@@ -5,8 +5,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/aretext/aretext/text"
 	"golang.org/x/text/unicode/norm"
+
+	"github.com/aretext/aretext/text"
 )
 
 const (

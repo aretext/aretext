@@ -3,8 +3,9 @@ package cellwidth
 import (
 	"unicode"
 
-	"github.com/aretext/aretext/text/segment"
 	runewidth "github.com/mattn/go-runewidth"
+
+	"github.com/aretext/aretext/text/segment"
 )
 
 // RuneWidth returns the width in cells of an individual rune.

@@ -37,9 +37,9 @@ type Config struct {
 }
 
 const (
-	OutputNone           = "none"
-	OutputTerminal       = "terminal"
-	OutputDocumentInsert = "documentInsert"
+	CmdModeSilent   = "silent"   // accepts no input and any output is discarded.
+	CmdModeTerminal = "terminal" // takes control of the terminal.
+	CmdModeInsert   = "insert"   // output is inserted into the document at the cursor position, replacing any selection.
 )
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -50,8 +50,8 @@ type MenuCommandConfig struct {
 	// ShellCmd is the shell command to execute when the menu item is selected.
 	ShellCmd string
 
-	// Output determines the destination of the command's output (stdout/stderr)
-	Output string
+	// Mode controls how the command's input and output are handled.
+	Mode string
 }
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
@@ -75,8 +75,8 @@ func (c Config) Validate() error {
 	}
 
 	for _, cmd := range c.MenuCommands {
-		if cmd.Output != OutputNone && cmd.Output != OutputTerminal && cmd.Output != OutputDocumentInsert {
-			msg := fmt.Sprintf("Menu command '%s' must have output set to either '%s', '%s', or '%s'", cmd.Name, OutputNone, OutputTerminal, OutputDocumentInsert)
+		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert {
+			msg := fmt.Sprintf("Menu command '%s' must have mode set to either '%s', '%s', or '%s'", cmd.Name, CmdModeSilent, CmdModeTerminal, CmdModeInsert)
 			return errors.New(msg)
 		}
 	}
@@ -176,7 +176,7 @@ func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 		result = append(result, MenuCommandConfig{
 			Name:     stringOrDefault(menuMap, "name", "[nil]"),
 			ShellCmd: stringOrDefault(menuMap, "shellCmd", ""),
-			Output:   stringOrDefault(menuMap, "output", OutputTerminal),
+			Mode:     stringOrDefault(menuMap, "mode", CmdModeTerminal),
 		})
 	}
 	return result

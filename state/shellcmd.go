@@ -18,32 +18,30 @@ import (
 // This is allows the shell command to take control of the terminal.
 type SuspendScreenFunc func(func() error) error
 
-// ShellCmdOutput controls the destination of the shell command's output.
-type ShellCmdOutput int
+// ShellCmdMode controls how the command's input and output are handled.
+type ShellCmdMode int
 
 const (
-	ShellCmdOutputNone = ShellCmdOutput(iota)
-	ShellCmdOutputTerminal
-	ShellCmdOutputDocumentInsert
+	ShellCmdModeSilent   = ShellCmdMode(iota) // accepts no input and any output is discarded.
+	ShellCmdModeTerminal                      // takes control of the terminal.
+	ShellCmdModeInsert                        // output is inserted into the document at the cursor position, replacing any selection.
 )
 
 // RunShellCmd executes the command in a shell.
-// It suspends the screen to give the command control of the terminal
-// then resumes once the command completes.
-func RunShellCmd(state *EditorState, shellCmd string, output ShellCmdOutput) {
+func RunShellCmd(state *EditorState, shellCmd string, mode ShellCmdMode) {
 	log.Printf("Running shell command: '%s'\n", shellCmd)
 	env := envVars(state)
 
 	var err error
-	switch output {
-	case ShellCmdOutputNone:
-		err = runInShellWithOutputNone(shellCmd, env)
-	case ShellCmdOutputTerminal:
-		err = runInShellWithOutputTerminal(state, shellCmd, env)
-	case ShellCmdOutputDocumentInsert:
-		err = runInShellWithOutputDocumentInsert(state, shellCmd, env)
+	switch mode {
+	case ShellCmdModeSilent:
+		err = runInShellWithModeSilent(shellCmd, env)
+	case ShellCmdModeTerminal:
+		err = runInShellWithModeTerminal(state, shellCmd, env)
+	case ShellCmdModeInsert:
+		err = runInShellWithModeInsert(state, shellCmd, env)
 	default:
-		panic("Unrecognized shell cmd output")
+		panic("Unrecognized shell cmd mode")
 	}
 
 	if err != nil {
@@ -71,18 +69,18 @@ func envVars(state *EditorState) []string {
 	return env
 }
 
-func runInShellWithOutputNone(shellCmd string, env []string) error {
+func runInShellWithModeSilent(shellCmd string, env []string) error {
 	return runInShell(shellCmd, env, nil, nil, nil)
 }
 
-func runInShellWithOutputTerminal(state *EditorState, shellCmd string, env []string) error {
+func runInShellWithModeTerminal(state *EditorState, shellCmd string, env []string) error {
 	return state.suspendScreenFunc(func() error {
 		clearTerminal()
 		return runInShell(shellCmd, env, os.Stdin, os.Stdout, os.Stderr)
 	})
 }
 
-func runInShellWithOutputDocumentInsert(state *EditorState, shellCmd string, env []string) error {
+func runInShellWithModeInsert(state *EditorState, shellCmd string, env []string) error {
 	var buf bytes.Buffer
 	stdin, stdout, stderr := io.Reader(nil), &buf, &buf
 	err := runInShell(shellCmd, env, stdin, stdout, stderr)

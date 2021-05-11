@@ -14,16 +14,16 @@ import (
 
 func TestRunShellCmd(t *testing.T) {
 	testCases := []struct {
-		name   string
-		output ShellCmdOutput
+		name string
+		mode ShellCmdMode
 	}{
 		{
-			name:   "output none",
-			output: ShellCmdOutputNone,
+			name: "mode silent",
+			mode: ShellCmdModeSilent,
 		},
 		{
-			name:   "output terminal",
-			output: ShellCmdOutputTerminal,
+			name: "mode terminal",
+			mode: ShellCmdModeTerminal,
 		},
 	}
 
@@ -32,7 +32,7 @@ func TestRunShellCmd(t *testing.T) {
 			withStateAndTmpDir(t, func(state *EditorState, dir string) {
 				p := path.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printf "hello" > %s`, p)
-				RunShellCmd(state, cmd, tc.output)
+				RunShellCmd(state, cmd, tc.mode)
 				data, err := os.ReadFile(p)
 				require.NoError(t, err)
 				assert.Equal(t, "hello", string(data))
@@ -50,7 +50,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv SELECTION > %s`, p)
-		RunShellCmd(state, cmd, ShellCmdOutputNone)
+		RunShellCmd(state, cmd, ShellCmdModeSilent)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, "foobar\n", string(data))
@@ -63,7 +63,7 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
 		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, ShellCmdOutputDocumentInsert)
+		RunShellCmd(state, cmd, ShellCmdModeInsert)
 		s := state.documentBuffer.textTree.String()
 		cursorPos := state.documentBuffer.cursor.position
 		assert.Equal(t, "hello world", s)
@@ -85,7 +85,7 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
 		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, ShellCmdOutputDocumentInsert)
+		RunShellCmd(state, cmd, ShellCmdModeInsert)
 		s := state.documentBuffer.textTree.String()
 		cursorPos := state.documentBuffer.cursor.position
 		assert.Equal(t, "foohello worldr", s)

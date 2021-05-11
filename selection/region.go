@@ -20,8 +20,8 @@ func (r Region) Clip(n uint64) Region {
 		return EmptyRegion
 	}
 
-	if r.StartPos >= n {
-		r.StartPos = n - 1
+	if r.StartPos > n {
+		r.StartPos = n
 	}
 
 	if r.EndPos > n {

@@ -81,6 +81,17 @@ func TestSelector(t *testing.T) {
 			},
 		},
 		{
+			name:             "charwise select last empty line",
+			inputString:      "abc\n",
+			mode:             ModeChar,
+			initialCursorPos: 4,
+			finalCursorPos:   4,
+			expectedRegion: Region{
+				StartPos: 4,
+				EndPos:   4,
+			},
+		},
+		{
 			name:             "linewise, no cursor movement",
 			inputString:      "abcd\nefgh\nijkl\nmnop",
 			mode:             ModeLine,
@@ -133,6 +144,17 @@ func TestSelector(t *testing.T) {
 			expectedRegion: Region{
 				StartPos: 0,
 				EndPos:   5,
+			},
+		},
+		{
+			name:             "linewise select last empty line",
+			inputString:      "abc\n",
+			mode:             ModeLine,
+			initialCursorPos: 4,
+			finalCursorPos:   4,
+			expectedRegion: Region{
+				StartPos: 4,
+				EndPos:   4,
 			},
 		},
 	}

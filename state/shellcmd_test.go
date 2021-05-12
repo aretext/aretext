@@ -29,7 +29,7 @@ func TestRunShellCmd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withStateAndTmpDir(t, func(state *EditorState, dir string) {
+			setupShellCmdTest(t, func(state *EditorState, dir string) {
 				p := path.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printf "hello" > %s`, p)
 				RunShellCmd(state, cmd, tc.mode)
@@ -42,7 +42,7 @@ func TestRunShellCmd(t *testing.T) {
 }
 
 func TestRunShellCmdFilePathEnvVar(t *testing.T) {
-	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		filePath := path.Join(dir, "test-input.txt")
 		os.WriteFile(filePath, []byte("xyz"), 0644)
 		LoadDocument(state, filePath, true)
@@ -85,7 +85,7 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withStateAndTmpDir(t, func(state *EditorState, dir string) {
+			setupShellCmdTest(t, func(state *EditorState, dir string) {
 				for _, r := range tc.text {
 					InsertRune(state, r)
 				}
@@ -103,7 +103,7 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 }
 
 func TestRunShellCmdWithSelection(t *testing.T) {
-	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		for _, r := range "foobar" {
 			InsertRune(state, r)
 		}
@@ -119,7 +119,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 }
 
 func TestRunShellCmdInsertIntoDocument(t *testing.T) {
-	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		p := path.Join(dir, "test-output.txt")
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
@@ -134,7 +134,7 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 }
 
 func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
-	withStateAndTmpDir(t, func(state *EditorState, dir string) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		for _, r := range "foobar" {
 			InsertRune(state, r)
 		}
@@ -155,7 +155,11 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 	})
 }
 
-func withStateAndTmpDir(t *testing.T, f func(*EditorState, string)) {
+func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
+	oldShellEnv := os.Getenv("SHELL")
+	defer os.Setenv("SHELL", oldShellEnv)
+	os.Setenv("SHELL", "")
+
 	suspendScreenFunc := func(f func() error) error { return f() }
 	state := NewEditorState(100, 100, nil, suspendScreenFunc)
 

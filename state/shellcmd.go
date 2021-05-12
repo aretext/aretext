@@ -62,6 +62,9 @@ func RunShellCmd(state *EditorState, shellCmd string, mode ShellCmdMode) {
 func envVars(state *EditorState) []string {
 	env := os.Environ()
 
+	filePath := state.fileWatcher.Path()
+	env = append(env, fmt.Sprintf("FILEPATH=%s", filePath))
+
 	selection, _ := copySelectionText(state.documentBuffer)
 	if len(selection) > 0 {
 		env = append(env, fmt.Sprintf("SELECTION=%s", selection))

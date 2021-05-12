@@ -56,6 +56,52 @@ func TestRunShellCmdFilePathEnvVar(t *testing.T) {
 	})
 }
 
+func TestRunShellCmdWordEnvVar(t *testing.T) {
+	testCases := []struct {
+		name               string
+		text               string
+		cursorPos          uint64
+		expectedWordEnvVar string
+	}{
+		{
+			name:               "empty document",
+			text:               "",
+			cursorPos:          0,
+			expectedWordEnvVar: "",
+		},
+		{
+			name:               "non-empty word",
+			text:               "abcd  xyz  123",
+			cursorPos:          7,
+			expectedWordEnvVar: "xyz",
+		},
+		{
+			name:               "whitespace between words",
+			text:               "abcd  xyz  123",
+			cursorPos:          4,
+			expectedWordEnvVar: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withStateAndTmpDir(t, func(state *EditorState, dir string) {
+				for _, r := range tc.text {
+					InsertRune(state, r)
+				}
+				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
+
+				p := path.Join(dir, "test-output.txt")
+				cmd := fmt.Sprintf(`printenv WORD > %s`, p)
+				RunShellCmd(state, cmd, ShellCmdModeSilent)
+				data, err := os.ReadFile(p)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedWordEnvVar+"\n", string(data))
+			})
+		})
+	}
+}
+
 func TestRunShellCmdWithSelection(t *testing.T) {
 	withStateAndTmpDir(t, func(state *EditorState, dir string) {
 		for _, r := range "foobar" {

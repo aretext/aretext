@@ -7,11 +7,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/google/shlex"
 	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text/utf8"
 )
 
@@ -62,15 +64,32 @@ func RunShellCmd(state *EditorState, shellCmd string, mode ShellCmdMode) {
 func envVars(state *EditorState) []string {
 	env := os.Environ()
 
+	// $FILEPATH is the path to the current file.
 	filePath := state.fileWatcher.Path()
 	env = append(env, fmt.Sprintf("FILEPATH=%s", filePath))
 
+	// $WORD is the current word under the cursor (excluding whitespace).
+	currentWord := currentWordEnvVar(state)
+	env = append(env, fmt.Sprintf("WORD=%s", currentWord))
+
+	// $SELECTION is the current visual mode selection, if any.
 	selection, _ := copySelectionText(state.documentBuffer)
 	if len(selection) > 0 {
 		env = append(env, fmt.Sprintf("SELECTION=%s", selection))
 	}
 
 	return env
+}
+
+func currentWordEnvVar(state *EditorState) string {
+	buffer := state.documentBuffer
+	textTree := buffer.textTree
+	tokenTree := buffer.tokenTree
+	cursorPos := buffer.cursor.position
+	wordStartPos := locate.CurrentWordStart(textTree, tokenTree, cursorPos)
+	wordEndPos := locate.CurrentWordEnd(textTree, tokenTree, cursorPos)
+	word := copyText(textTree, wordStartPos, wordEndPos-wordStartPos)
+	return strings.TrimSpace(word)
 }
 
 func runInShellWithModeSilent(shellCmd string, env []string) error {

@@ -194,6 +194,22 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
+			name:  "rank case-insensitive match for alias first",
+			query: "W",
+			items: []Item{
+				{Name: "write one"},
+				{Name: "write two", Aliases: []string{"w"}},
+				{Name: "write three"},
+				{Name: "Write capitalized"},
+			},
+			expected: []Item{
+				{Name: "write two", Aliases: []string{"w"}},
+				{Name: "Write capitalized"},
+				{Name: "write one"},
+				{Name: "write three"},
+			},
+		},
+		{
 			name:  "rank match at boundary after punctuation",
 			query: "foo",
 			items: []Item{

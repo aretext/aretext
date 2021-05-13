@@ -102,7 +102,7 @@ func (s *Search) Results() []Item {
 
 func (s *Search) scoreItemForQuery(itemName string, itemAliases []string, query string, querySearcher *text.Searcher) int {
 	for _, alias := range itemAliases {
-		if alias == query {
+		if normalizeString(alias) == normalizeString(query) {
 			return scoreExactMatchAlias
 		}
 	}

@@ -91,12 +91,16 @@ func ExecuteSelectedMenuItem(state *EditorState) {
 
 	idx := state.menu.selectedResultIdx
 	selectedItem := results[idx]
-	log.Printf("Executing menu item '%s' at result index %d\n", selectedItem.Name, idx)
 	HideMenu(state)
+	executeMenuItemAction(state, selectedItem)
+	ScrollViewToCursor(state)
+}
 
-	actionFunc, ok := selectedItem.Action.(func(*EditorState))
+func executeMenuItemAction(state *EditorState, item menu.Item) {
+	log.Printf("Executing menu item '%s'\n", item.Name)
+	actionFunc, ok := item.Action.(func(*EditorState))
 	if !ok {
-		log.Printf("Invalid action for menu item '%s'\n", selectedItem.Name)
+		log.Printf("Invalid action for menu item '%s'\n", item.Name)
 		return
 	}
 	actionFunc(state)

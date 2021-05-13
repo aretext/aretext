@@ -9,21 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 )
 
 func TestRunShellCmd(t *testing.T) {
 	testCases := []struct {
 		name string
-		mode ShellCmdMode
+		mode string
 	}{
 		{
 			name: "mode silent",
-			mode: ShellCmdModeSilent,
+			mode: config.CmdModeSilent,
 		},
 		{
 			name: "mode terminal",
-			mode: ShellCmdModeTerminal,
+			mode: config.CmdModeTerminal,
 		},
 	}
 
@@ -49,7 +50,7 @@ func TestRunShellCmdFilePathEnvVar(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv FILEPATH > %s`, p)
-		RunShellCmd(state, cmd, ShellCmdModeSilent)
+		RunShellCmd(state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, filePath+"\n", string(data))
@@ -93,7 +94,7 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 
 				p := path.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printenv WORD > %s`, p)
-				RunShellCmd(state, cmd, ShellCmdModeSilent)
+				RunShellCmd(state, cmd, config.CmdModeSilent)
 				data, err := os.ReadFile(p)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedWordEnvVar+"\n", string(data))
@@ -111,7 +112,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv SELECTION > %s`, p)
-		RunShellCmd(state, cmd, ShellCmdModeSilent)
+		RunShellCmd(state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, "foobar\n", string(data))
@@ -124,7 +125,7 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
 		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, ShellCmdModeInsert)
+		RunShellCmd(state, cmd, config.CmdModeInsert)
 		s := state.documentBuffer.textTree.String()
 		cursorPos := state.documentBuffer.cursor.position
 		assert.Equal(t, "hello world", s)
@@ -146,7 +147,7 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
 		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, ShellCmdModeInsert)
+		RunShellCmd(state, cmd, config.CmdModeInsert)
 		s := state.documentBuffer.textTree.String()
 		cursorPos := state.documentBuffer.cursor.position
 		assert.Equal(t, "foohello worldr", s)

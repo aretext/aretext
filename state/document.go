@@ -100,28 +100,15 @@ func customMenuItems(config config.Config) []menu.Item {
 	items := make([]menu.Item, 0, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
 		shellCmd := cmd.ShellCmd
-		cmdMode := shellCmdModeFromString(cmd.Mode)
+		shellCmdMode := cmd.Mode
 		items = append(items, menu.Item{
 			Name: cmd.Name,
 			Action: func(state *EditorState) {
-				RunShellCmd(state, shellCmd, cmdMode)
+				RunShellCmd(state, shellCmd, shellCmdMode)
 			},
 		})
 	}
 	return items
-}
-
-func shellCmdModeFromString(s string) ShellCmdMode {
-	switch s {
-	case "silent":
-		return ShellCmdModeSilent
-	case "terminal":
-		return ShellCmdModeTerminal
-	case "insert":
-		return ShellCmdModeInsert
-	default:
-		panic("Unrecognized shell cmd mode")
-	}
 }
 
 func reportOpenSuccess(state *EditorState, path string) {

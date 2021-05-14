@@ -23,11 +23,11 @@ func RunInTerminal(cmd string, env []string) error {
 	return runInShell(cmd, env, os.Stdin, os.Stdout, os.Stderr)
 }
 
-// RunAndCaptureOutput runs the command and returns its output (stdout/stderr) as a byte slice.
+// RunAndCaptureOutput runs the command and returns its stdout as a byte slice.
 // If the output is not valid UTF-8 text, this returns an error.
 func RunAndCaptureOutput(cmd string, env []string) (string, error) {
 	var buf bytes.Buffer
-	stdin, stdout, stderr := io.Reader(nil), &buf, &buf
+	stdin, stdout, stderr := io.Reader(nil), &buf, io.Writer(nil)
 	err := runInShell(cmd, env, stdin, stdout, stderr)
 	if err != nil {
 		return "", err

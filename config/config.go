@@ -37,9 +37,10 @@ type Config struct {
 }
 
 const (
-	CmdModeSilent   = "silent"   // accepts no input and any output is discarded.
-	CmdModeTerminal = "terminal" // takes control of the terminal.
-	CmdModeInsert   = "insert"   // output is inserted into the document at the cursor position, replacing any selection.
+	CmdModeSilent        = "silent"        // accepts no input and any output is discarded.
+	CmdModeTerminal      = "terminal"      // takes control of the terminal.
+	CmdModeInsert        = "insert"        // output is inserted into the document at the cursor position, replacing any selection.
+	CmdModeFileLocations = "fileLocations" // output is interpreted as a list of file locations that can be opened in the editor.
 )
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -75,8 +76,15 @@ func (c Config) Validate() error {
 	}
 
 	for _, cmd := range c.MenuCommands {
-		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert {
-			msg := fmt.Sprintf("Menu command '%s' must have mode set to either '%s', '%s', or '%s'", cmd.Name, CmdModeSilent, CmdModeTerminal, CmdModeInsert)
+		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeFileLocations {
+			msg := fmt.Sprintf(
+				"Menu command '%s' must have mode set to either '%s', '%s', '%s', or '%s'",
+				cmd.Name,
+				CmdModeSilent,
+				CmdModeTerminal,
+				CmdModeInsert,
+				CmdModeFileLocations,
+			)
 			return errors.New(msg)
 		}
 	}

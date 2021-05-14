@@ -89,6 +89,8 @@ func menuIconForStyle(style state.MenuStyle) string {
 		return ":"
 	case state.MenuStyleFilePath:
 		return "./"
+	case state.MenuStyleFileLocation:
+		return "@"
 	default:
 		panic("Unrecognized menu style")
 	}
@@ -100,6 +102,8 @@ func menuPromptForStyle(style state.MenuStyle) string {
 		return "command"
 	case state.MenuStyleFilePath:
 		return "file path"
+	case state.MenuStyleFileLocation:
+		return ""
 	default:
 		panic("Unrecognized menu style")
 	}

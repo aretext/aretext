@@ -11,6 +11,7 @@ type MenuStyle int
 const (
 	MenuStyleCommand = MenuStyle(iota)
 	MenuStyleFilePath
+	MenuStyleFileLocation
 )
 
 // MenuState represents the menu for searching and selecting items.
@@ -54,7 +55,7 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 
 // ShowMenu displays the menu with the specified style and items.
 func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item) {
-	emptyQueryShowAll := bool(style == MenuStyleFilePath)
+	emptyQueryShowAll := bool(style == MenuStyleFilePath || style == MenuStyleFileLocation)
 	items := loadItems()
 	if style == MenuStyleCommand {
 		items = append(items, state.customMenuItems...)

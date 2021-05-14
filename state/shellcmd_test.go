@@ -156,6 +156,34 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 	})
 }
 
+func TestRunShellCmdFileLocationsMenu(t *testing.T) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
+		// Create a test file to load.
+		p := path.Join(dir, "test-file.txt")
+		err := os.WriteFile(p, []byte("ab\ncd\nef\ngh"), 0644)
+		require.NoError(t, err)
+
+		// Populate the location list with a single file location.
+		cmd := fmt.Sprintf("echo '%s:2:cd'", p)
+		RunShellCmd(state, cmd, config.CmdModeFileLocations)
+		assert.Equal(t, InputModeMenu, state.InputMode())
+		assert.True(t, state.Menu().Visible())
+
+		// Verify that the location list menu opens.
+		menuItems, _ := state.Menu().SearchResults()
+		assert.Equal(t, 1, len(menuItems))
+		expectedName := fmt.Sprintf("%s:2  cd", p)
+		assert.Equal(t, expectedName, menuItems[0].Name)
+
+		// Execute the menu item and verify that the document loads.
+		ExecuteSelectedMenuItem(state)
+		assert.Equal(t, p, state.fileWatcher.Path())
+		assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
+		text := state.documentBuffer.textTree.String()
+		assert.Equal(t, "ab\ncd\nef\ngh", text)
+	})
+}
+
 func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
 	oldShellEnv := os.Getenv("SHELL")
 	defer os.Setenv("SHELL", oldShellEnv)

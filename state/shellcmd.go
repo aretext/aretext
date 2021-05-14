@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/shellcmd"
 )
 
@@ -32,6 +36,8 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 		})
 	case config.CmdModeInsert:
 		err = runInShellAndInsertOutput(state, shellCmd, env)
+	case config.CmdModeFileLocations:
+		err = runInShellAndShowFileLocationsMenu(state, shellCmd, env)
 	default:
 		// This should never happen because the config validates the mode.
 		panic("Unrecognized shell cmd mode")
@@ -93,4 +99,65 @@ func runInShellAndInsertOutput(state *EditorState, shellCmd string, env []string
 	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
 	SetInputMode(state, InputModeNormal)
 	return nil
+}
+
+func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env []string) error {
+	text, err := shellcmd.RunAndCaptureOutput(shellCmd, env)
+	if err != nil {
+		return err
+	}
+
+	locations, err := shellcmd.FileLocationsFromLines(strings.NewReader(text))
+	if err != nil {
+		return err
+	}
+
+	if len(locations) == 0 {
+		return errors.New("No file locations in cmd output")
+	}
+
+	menuItems, err := menuItemsFromFileLocations(locations)
+	if err != nil {
+		return err
+	}
+
+	ShowMenu(state, MenuStyleFileLocation, func() []menu.Item {
+		return menuItems
+	})
+
+	return nil
+}
+
+func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item, error) {
+	menuItems := make([]menu.Item, 0, len(locations))
+	for _, loc := range locations {
+		name := formatFileLocationName(loc)
+		path, err := filepath.Abs(loc.Path)
+		if err != nil {
+			return nil, errors.Wrapf(err, "filepath.Abs")
+		}
+		lineNum := translateFileLocationLineNum(loc.LineNum)
+		menuItems = append(menuItems, menu.Item{
+			Name: name,
+			Action: func(s *EditorState) {
+				LoadDocument(s, path, true)
+				MoveCursor(s, func(p LocatorParams) uint64 {
+					return locate.StartOfLineNum(p.TextTree, lineNum)
+				})
+			},
+		})
+	}
+	return menuItems, nil
+}
+
+func formatFileLocationName(loc shellcmd.FileLocation) string {
+	return fmt.Sprintf("%s:%d  %s", loc.Path, loc.LineNum, loc.Snippet)
+}
+
+func translateFileLocationLineNum(lineNum uint64) uint64 {
+	if lineNum > 0 {
+		return lineNum - 1
+	} else {
+		return lineNum
+	}
 }

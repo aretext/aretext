@@ -129,13 +129,15 @@ func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env
 }
 
 func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.Wrapf(err, "os.Getwd")
+	}
+
 	menuItems := make([]menu.Item, 0, len(locations))
 	for _, loc := range locations {
 		name := formatFileLocationName(loc)
-		path, err := filepath.Abs(loc.Path)
-		if err != nil {
-			return nil, errors.Wrapf(err, "filepath.Abs")
-		}
+		path := absPath(loc.Path, cwd)
 		lineNum := translateFileLocationLineNum(loc.LineNum)
 		menuItems = append(menuItems, menu.Item{
 			Name: name,
@@ -152,6 +154,13 @@ func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item,
 
 func formatFileLocationName(loc shellcmd.FileLocation) string {
 	return fmt.Sprintf("%s:%d  %s", loc.Path, loc.LineNum, loc.Snippet)
+}
+
+func absPath(p, wd string) string {
+	if filepath.IsAbs(p) {
+		return filepath.Clean(p)
+	}
+	return filepath.Join(wd, p)
 }
 
 func translateFileLocationLineNum(lineNum uint64) uint64 {

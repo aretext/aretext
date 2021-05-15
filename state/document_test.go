@@ -25,6 +25,8 @@ func createTestFile(t *testing.T, contents string) (path string, cleanup func())
 	return f.Name(), cleanup
 }
 
+func startOfDocLocator(LocatorParams) uint64 { return 0 }
+
 func TestLoadDocumentShowStatus(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
@@ -33,7 +35,7 @@ func TestLoadDocumentShowStatus(t *testing.T) {
 
 	// Load a document.
 	path, cleanup := createTestFile(t, "abcd")
-	LoadDocument(state, path, true)
+	LoadDocument(state, path, true, startOfDocLocator)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the text and watcher are installed.
@@ -48,7 +50,7 @@ func TestLoadDocumentShowStatus(t *testing.T) {
 	cleanup()
 
 	// Load a non-existent path, expect error msg.
-	LoadDocument(state, path, true)
+	LoadDocument(state, path, true, startOfDocLocator)
 	defer state.fileWatcher.Stop()
 	assert.Contains(t, state.statusMsg.Text, "Could not open")
 	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
@@ -59,7 +61,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
-	LoadDocument(state, path, true)
+	LoadDocument(state, path, true, startOfDocLocator)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -90,7 +92,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
-	LoadDocument(state, path, true)
+	LoadDocument(state, path, true, startOfDocLocator)
 	state.documentBuffer.cursor.position = 22
 
 	// Scroll to cursor at end of document.
@@ -104,7 +106,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	// Load a new document with a shorter text.
 	path2, cleanup2 := createTestFile(t, "ab")
 	defer cleanup2()
-	LoadDocument(state, path2, true)
+	LoadDocument(state, path2, true, startOfDocLocator)
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor, view, and syntax are reset.
@@ -121,7 +123,7 @@ func TestSaveDocument(t *testing.T) {
 	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
 	defer cleanup()
-	LoadDocument(state, path, true)
+	LoadDocument(state, path, true, startOfDocLocator)
 	defer state.fileWatcher.Stop()
 
 	// Modify and save the document
@@ -163,7 +165,7 @@ func TestAbortIfFileChanged(t *testing.T) {
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
 			state := NewEditorState(100, 100, nil, nil)
-			LoadDocument(state, path, true)
+			LoadDocument(state, path, true, startOfDocLocator)
 
 			// Modify the file.
 			if tc.didChange {

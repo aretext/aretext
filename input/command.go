@@ -104,7 +104,9 @@ func ShowFileMenu(config Config) Action {
 			items = append(items, menu.Item{
 				Name: file.RelativePath(path, dir),
 				Action: func(s *state.EditorState) {
-					state.LoadDocument(s, path, true)
+					state.LoadDocument(s, path, true, func(state.LocatorParams) uint64 {
+						return 0
+					})
 				},
 			})
 		})

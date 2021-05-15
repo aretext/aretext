@@ -14,7 +14,7 @@ import (
 )
 
 // LoadDocument loads a file into the editor.
-func LoadDocument(state *EditorState, path string, requireExists bool) {
+func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc Locator) {
 	var fileExists bool
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if os.IsNotExist(err) && !requireExists {
@@ -33,7 +33,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool) {
 	state.fileWatcher = watcher
 
 	if path == oldPath {
-		updateAfterReload(state)
+		updateAfterReload(state, cursorLoc)
 		reportReloadSuccess(state, path)
 		return
 	}
@@ -44,7 +44,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool) {
 		return
 	}
 
-	initializeAfterLoad(state, config)
+	initializeAfterLoad(state, config, cursorLoc)
 	if fileExists {
 		reportOpenSuccess(state, path)
 	} else {
@@ -52,7 +52,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool) {
 	}
 }
 
-func updateAfterReload(state *EditorState) {
+func updateAfterReload(state *EditorState, cursorLoc Locator) {
 	// Set the mode to normal and clear any selections or searches.
 	state.inputMode = InputModeNormal
 	state.prevInputMode = InputModeNormal
@@ -62,20 +62,17 @@ func updateAfterReload(state *EditorState) {
 	// Tokenize the document using the current syntax language.
 	SetSyntax(state, state.documentBuffer.syntaxLanguage)
 
-	// Ensure that the cursor position is within the document and within the current view.
-	MoveCursorOntoDocument(state)
-	state.documentBuffer.view.textOrigin = 0
-	ScrollViewToCursor(state)
-
 	// Update the undo log.
 	state.documentBuffer.undoLog.TrackLoad()
+
+	// Set the cursor position and view.
+	setCursorAndViewAfterLoad(state, cursorLoc)
 }
 
-func initializeAfterLoad(state *EditorState, config config.Config) {
+func initializeAfterLoad(state *EditorState, config config.Config, cursorLoc Locator) {
 	state.inputMode = InputModeNormal
 	state.prevInputMode = InputModeNormal
-	state.documentBuffer.cursor = cursorState{}
-	state.documentBuffer.view.textOrigin = 0
+	setCursorAndViewAfterLoad(state, cursorLoc)
 	state.documentBuffer.selector.Clear()
 	state.documentBuffer.search = searchState{}
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
@@ -86,6 +83,12 @@ func initializeAfterLoad(state *EditorState, config config.Config) {
 	state.customMenuItems = customMenuItems(config)
 	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
+}
+
+func setCursorAndViewAfterLoad(state *EditorState, cursorLoc Locator) {
+	state.documentBuffer.view.textOrigin = 0
+	MoveCursor(state, cursorLoc)
+	ScrollViewToCursor(state)
 }
 
 func stringSliceToMap(ss []string) map[string]struct{} {
@@ -157,7 +160,9 @@ func reportConfigError(state *EditorState, err error, path string) {
 // ReloadDocument reloads the current document.
 func ReloadDocument(state *EditorState) {
 	path := state.fileWatcher.Path()
-	LoadDocument(state, path, false)
+	LoadDocument(state, path, false, func(p LocatorParams) uint64 {
+		return p.CursorPos
+	})
 }
 
 // SaveDocument saves the currently loaded document to disk.

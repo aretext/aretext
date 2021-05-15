@@ -63,11 +63,6 @@ func MoveCursor(state *EditorState, loc Locator) {
 	}
 }
 
-// MoveCursorOntoDocument ensures that the cursor is at a valid position in the document.
-func MoveCursorOntoDocument(state *EditorState) {
-	MoveCursor(state, func(params LocatorParams) uint64 { return params.CursorPos })
-}
-
 // MoveCursorToLineAbove moves the cursor up by the specified number of lines, preserving the offset within the line.
 func MoveCursorToLineAbove(state *EditorState, count uint64) {
 	buffer := state.documentBuffer

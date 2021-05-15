@@ -46,7 +46,7 @@ func TestRunShellCmdFilePathEnvVar(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		filePath := path.Join(dir, "test-input.txt")
 		os.WriteFile(filePath, []byte("xyz"), 0644)
-		LoadDocument(state, filePath, true)
+		LoadDocument(state, filePath, true, func(LocatorParams) uint64 { return 0 })
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv FILEPATH > %s`, p)

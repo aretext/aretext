@@ -39,7 +39,13 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 	// Attempt to load the file.
 	// If it doesn't exist, this will start with an empty document
 	// that the user can edit and save to the specified path.
-	state.LoadDocument(editorState, effectivePath(path), false)
+	state.LoadDocument(
+		editorState,
+		effectivePath(path),
+		false,
+		func(state.LocatorParams) uint64 { return 0 },
+	)
+
 	return editor
 }
 

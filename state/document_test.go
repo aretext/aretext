@@ -116,6 +116,55 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	assert.Equal(t, syntax.LanguageUndefined, state.documentBuffer.syntaxLanguage)
 }
 
+func TestLoadPrevDocument(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+	defer cleanup()
+	state := NewEditorState(5, 3, nil, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+	MoveCursor(state, func(LocatorParams) uint64 {
+		return 7
+	})
+
+	// Load another document.
+	path2, cleanup2 := createTestFile(t, "xyz")
+	defer cleanup2()
+	LoadDocument(state, path2, true, startOfDocLocator)
+	assert.Equal(t, "xyz", state.documentBuffer.textTree.String())
+
+	// Return to the previous document.
+	LoadPrevDocument(state)
+	assert.Equal(t, "abcd\nefghi\njklmnop\nqrst", state.documentBuffer.textTree.String())
+	assert.Equal(t, path, state.fileWatcher.Path())
+	assert.Equal(t, uint64(5), state.documentBuffer.cursor.position)
+}
+
+func TestLoadNextDocument(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+	defer cleanup()
+	state := NewEditorState(5, 3, nil, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+	MoveCursor(state, func(LocatorParams) uint64 { return 7 })
+
+	// Load another document.
+	path2, cleanup2 := createTestFile(t, "qrs\ntuv\nwxyz")
+	defer cleanup2()
+	LoadDocument(state, path2, true, startOfDocLocator)
+	assert.Equal(t, path2, state.fileWatcher.Path())
+	MoveCursor(state, func(LocatorParams) uint64 { return 5 })
+
+	// Return to the previous document.
+	LoadPrevDocument(state)
+	assert.Equal(t, path, state.fileWatcher.Path())
+
+	// Forward to the next document.
+	LoadNextDocument(state)
+	assert.Equal(t, path2, state.fileWatcher.Path())
+	assert.Equal(t, "qrs\ntuv\nwxyz", state.documentBuffer.textTree.String())
+	assert.Equal(t, uint64(4), state.documentBuffer.cursor.position)
+}
+
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)

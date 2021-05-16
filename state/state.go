@@ -21,6 +21,7 @@ type EditorState struct {
 	documentBuffer            *BufferState
 	clipboard                 *clipboard.C
 	fileWatcher               *file.Watcher
+	fileTimeline              *file.Timeline
 	menu                      *MenuState
 	customMenuItems           []menu.Item
 	dirNamesToHide            map[string]struct{}
@@ -64,6 +65,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		documentBuffer:    buffer,
 		clipboard:         clipboard.New(),
 		fileWatcher:       file.NewEmptyWatcher(),
+		fileTimeline:      file.NewTimeline(),
 		menu:              &MenuState{},
 		customMenuItems:   nil,
 		dirNamesToHide:    nil,

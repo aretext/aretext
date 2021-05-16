@@ -8,6 +8,7 @@ import (
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
@@ -15,16 +16,15 @@ import (
 
 // LoadDocument loads a file into the editor.
 func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc Locator) {
-	config := state.configRuleSet.ConfigForPath(path)
-	if err := config.Validate(); err != nil {
-		reportConfigError(state, err, path)
-		return
-	}
-
-	fileExists, err := loadDocumentAndResetState(state, path, requireExists, config)
+	timelineState := currentTimelineState(state)
+	fileExists, err := loadDocumentAndResetState(state, path, requireExists)
 	if err != nil {
 		reportLoadError(state, err, path)
 		return
+	}
+
+	if !timelineState.Empty() && timelineState.Path != path {
+		state.fileTimeline.TransitionFrom(timelineState)
 	}
 
 	MoveCursor(state, cursorLoc)
@@ -39,18 +39,13 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 // ReloadDocument reloads the current document.
 func ReloadDocument(state *EditorState) {
 	path := state.fileWatcher.Path()
-	config := state.configRuleSet.ConfigForPath(path)
-	if err := config.Validate(); err != nil {
-		reportConfigError(state, err, path)
-		return
-	}
 
 	// Store the configuration we want to preserve.
 	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
 	oldCursorPos := state.documentBuffer.cursor.position
 
 	// Reload the document.
-	_, err := loadDocumentAndResetState(state, path, true, config)
+	_, err := loadDocumentAndResetState(state, path, true)
 	if err != nil {
 		reportLoadError(state, err, path)
 		return
@@ -70,7 +65,76 @@ func ReloadDocument(state *EditorState) {
 	reportReloadSuccess(state, path)
 }
 
-func loadDocumentAndResetState(state *EditorState, path string, requireExists bool, config config.Config) (fileExists bool, err error) {
+// LoadPrevDocument loads the previous document from the timeline in the editor.
+// The cursor is moved to the start of the line from the when the document was last open.
+func LoadPrevDocument(state *EditorState) {
+	prev := state.fileTimeline.PeekBackward()
+	if prev.Empty() {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  "No previous document to open",
+		})
+		return
+	}
+
+	timelineState := currentTimelineState(state)
+	path := prev.Path
+	_, err := loadDocumentAndResetState(state, path, false)
+	if err != nil {
+		reportLoadError(state, err, path)
+		return
+	}
+
+	state.fileTimeline.TransitionBackwardFrom(timelineState)
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return locate.StartOfLineNum(p.TextTree, prev.LineNum)
+	})
+	reportOpenSuccess(state, path)
+}
+
+// LoadNextDocument loads the next document from the timeline in the editor.
+// The cursor is moved to the start of the line from the when the document was last open.
+func LoadNextDocument(state *EditorState) {
+	next := state.fileTimeline.PeekForward()
+	if next.Empty() {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  "No next document to open",
+		})
+		return
+	}
+
+	timelineState := currentTimelineState(state)
+	path := next.Path
+	_, err := loadDocumentAndResetState(state, path, false)
+	if err != nil {
+		reportLoadError(state, err, path)
+		return
+	}
+
+	state.fileTimeline.TransitionForwardFrom(timelineState)
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return locate.StartOfLineNum(p.TextTree, next.LineNum)
+	})
+	reportOpenSuccess(state, path)
+}
+
+func currentTimelineState(state *EditorState) file.TimelineState {
+	buffer := state.documentBuffer
+	cursorPos := buffer.cursor.position
+	lineNum := buffer.textTree.LineNumForPosition(cursorPos)
+	return file.TimelineState{
+		Path:    state.fileWatcher.Path(),
+		LineNum: lineNum,
+	}
+}
+
+func loadDocumentAndResetState(state *EditorState, path string, requireExists bool) (fileExists bool, err error) {
+	config := state.configRuleSet.ConfigForPath(path)
+	if err := config.Validate(); err != nil {
+		return false, err
+	}
+
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if os.IsNotExist(err) && !requireExists {
 		tree = text.NewTree()
@@ -157,14 +221,6 @@ func reportLoadError(state *EditorState, err error, path string) {
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
 		Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(path)),
-	})
-}
-
-func reportConfigError(state *EditorState, err error, path string) {
-	log.Printf("Invalid configuration for file at '%s': %v\n", path, err)
-	SetStatusMsg(state, StatusMsg{
-		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Invalid configuration for file at %s: %v", file.RelativePathCwd(path), err),
 	})
 }
 

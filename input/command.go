@@ -71,6 +71,20 @@ func commandMenuItems(config Config) func() []menu.Item {
 				},
 			},
 			{
+				Name:    "open previous document",
+				Aliases: []string{"p"},
+				Action: func(s *state.EditorState) {
+					state.AbortIfUnsavedChanges(s, state.LoadPrevDocument, true)
+				},
+			},
+			{
+				Name:    "open next document",
+				Aliases: []string{"n"},
+				Action: func(s *state.EditorState) {
+					state.AbortIfUnsavedChanges(s, state.LoadNextDocument, true)
+				},
+			},
+			{
 				Name:    "toggle line numbers",
 				Aliases: []string{"nu"},
 				Action:  state.ToggleShowLineNumbers,

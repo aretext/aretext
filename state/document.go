@@ -15,36 +15,20 @@ import (
 
 // LoadDocument loads a file into the editor.
 func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc Locator) {
-	var fileExists bool
-	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if os.IsNotExist(err) && !requireExists {
-		tree = text.NewTree()
-		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
-	} else if err != nil {
-		reportLoadError(state, err, path)
-		return
-	} else {
-		fileExists = true
-	}
-
-	oldPath := state.fileWatcher.Path()
-	state.documentBuffer.textTree = tree
-	state.fileWatcher.Stop()
-	state.fileWatcher = watcher
-
-	if path == oldPath {
-		updateAfterReload(state, cursorLoc)
-		reportReloadSuccess(state, path)
-		return
-	}
-
 	config := state.configRuleSet.ConfigForPath(path)
 	if err := config.Validate(); err != nil {
 		reportConfigError(state, err, path)
 		return
 	}
 
-	initializeAfterLoad(state, config, cursorLoc)
+	fileExists, err := loadDocumentAndResetState(state, path, requireExists, config)
+	if err != nil {
+		reportLoadError(state, err, path)
+		return
+	}
+
+	MoveCursor(state, cursorLoc)
+
 	if fileExists {
 		reportOpenSuccess(state, path)
 	} else {
@@ -52,27 +36,58 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 	}
 }
 
-func updateAfterReload(state *EditorState, cursorLoc Locator) {
-	// Set the mode to normal and clear any selections or searches.
-	state.inputMode = InputModeNormal
-	state.prevInputMode = InputModeNormal
-	state.documentBuffer.selector.Clear()
-	state.documentBuffer.search = searchState{}
+// ReloadDocument reloads the current document.
+func ReloadDocument(state *EditorState) {
+	path := state.fileWatcher.Path()
+	config := state.configRuleSet.ConfigForPath(path)
+	if err := config.Validate(); err != nil {
+		reportConfigError(state, err, path)
+		return
+	}
 
-	// Tokenize the document using the current syntax language.
-	SetSyntax(state, state.documentBuffer.syntaxLanguage)
+	// Store the configuration we want to preserve.
+	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
+	oldCursorPos := state.documentBuffer.cursor.position
 
-	// Update the undo log.
-	state.documentBuffer.undoLog.TrackLoad()
+	// Reload the document.
+	_, err := loadDocumentAndResetState(state, path, true, config)
+	if err != nil {
+		reportLoadError(state, err, path)
+		return
+	}
 
-	// Set the cursor position and view.
-	setCursorAndViewAfterLoad(state, cursorLoc)
+	// Retokenize if the configured language doesn't match the previous language.
+	// This can happen only when the language was changed through a menu command.
+	if oldSyntaxLanguage != state.documentBuffer.syntaxLanguage {
+		setSyntaxAndRetokenize(state.documentBuffer, oldSyntaxLanguage)
+	}
+
+	// Attempt to restore the original cursor position.
+	MoveCursor(state, func(LocatorParams) uint64 {
+		return oldCursorPos
+	})
+
+	reportReloadSuccess(state, path)
 }
 
-func initializeAfterLoad(state *EditorState, config config.Config, cursorLoc Locator) {
+func loadDocumentAndResetState(state *EditorState, path string, requireExists bool, config config.Config) (fileExists bool, err error) {
+	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
+	if os.IsNotExist(err) && !requireExists {
+		tree = text.NewTree()
+		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
+	} else if err != nil {
+		return false, err
+	} else {
+		fileExists = true
+	}
+
+	state.documentBuffer.textTree = tree
+	state.fileWatcher.Stop()
+	state.fileWatcher = watcher
 	state.inputMode = InputModeNormal
 	state.prevInputMode = InputModeNormal
-	setCursorAndViewAfterLoad(state, cursorLoc)
+	state.documentBuffer.cursor = cursorState{}
+	state.documentBuffer.view.textOrigin = 0
 	state.documentBuffer.selector.Clear()
 	state.documentBuffer.search = searchState{}
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
@@ -83,12 +98,8 @@ func initializeAfterLoad(state *EditorState, config config.Config, cursorLoc Loc
 	state.customMenuItems = customMenuItems(config)
 	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
-}
 
-func setCursorAndViewAfterLoad(state *EditorState, cursorLoc Locator) {
-	state.documentBuffer.view.textOrigin = 0
-	MoveCursor(state, cursorLoc)
-	ScrollViewToCursor(state)
+	return fileExists, nil
 }
 
 func stringSliceToMap(ss []string) map[string]struct{} {
@@ -154,14 +165,6 @@ func reportConfigError(state *EditorState, err error, path string) {
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
 		Text:  fmt.Sprintf("Invalid configuration for file at %s: %v", file.RelativePathCwd(path), err),
-	})
-}
-
-// ReloadDocument reloads the current document.
-func ReloadDocument(state *EditorState) {
-	path := state.fileWatcher.Path()
-	LoadDocument(state, path, false, func(p LocatorParams) uint64 {
-		return p.CursorPos
 	})
 }
 

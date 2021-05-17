@@ -491,7 +491,7 @@ func IndentLineAtCursor(state *EditorState) {
 func indentLineAtPosition(state *EditorState, pos uint64) uint64 {
 	buffer := state.documentBuffer
 	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
-	endOfLinePos := locate.NextLineBoundary(buffer.textTree, false, startOfLinePos)
+	endOfLinePos := locate.NextLineBoundary(buffer.textTree, true, startOfLinePos)
 	if startOfLinePos < endOfLinePos {
 		// Indent if line is non-empty.
 		insertTabAtPos(state, startOfLinePos)

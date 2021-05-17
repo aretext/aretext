@@ -853,6 +853,28 @@ func TestIndentLineAtCursor(t *testing.T) {
 			expectedText:   "abc\n\ndef",
 		},
 		{
+			name:           "empty line with carriage return",
+			inputString:    "abc\r\n\r\ndef",
+			cursorPos:      5,
+			expectedCursor: cursorState{position: 5},
+			expectedText:   "abc\r\n\r\ndef",
+		},
+		{
+			name:           "line with single character",
+			inputString:    "a",
+			cursorPos:      0,
+			expectedCursor: cursorState{position: 1},
+			expectedText:   "\ta",
+		},
+		{
+			name:           "line with single character, tab expand",
+			tabExpand:      true,
+			inputString:    "a",
+			cursorPos:      0,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "    a",
+		},
+		{
 			name:           "first line, cursor at start",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      0,

@@ -2,7 +2,7 @@ before:
   hooks:
     - go mod tidy
     - go generate ./...
-    - goimports -w .
+    - goimports -w -local "github.com/aretext" .
 
 builds:
   - main: main.go

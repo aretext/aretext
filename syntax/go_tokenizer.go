@@ -3,10 +3,10 @@ package syntax
 
 import "github.com/aretext/aretext/syntax/parser"
 
-var GolangTokenizer *parser.Tokenizer
+var GoTokenizer *parser.Tokenizer
 
 func init() {
-	GolangTokenizer =
+	GoTokenizer =
 		&parser.Tokenizer{
 			StateMachine: &parser.Dfa{
 				NumStates:     523,

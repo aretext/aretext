@@ -27,7 +27,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 		state.fileTimeline.TransitionFrom(timelineState)
 	}
 
-	MoveCursor(state, cursorLoc)
+	setCursorAfterLoad(state, cursorLoc)
 
 	if fileExists {
 		reportOpenSuccess(state, path)
@@ -58,7 +58,7 @@ func ReloadDocument(state *EditorState) {
 	}
 
 	// Attempt to restore the original cursor position.
-	MoveCursor(state, func(LocatorParams) uint64 {
+	setCursorAfterLoad(state, func(LocatorParams) uint64 {
 		return oldCursorPos
 	})
 
@@ -86,7 +86,7 @@ func LoadPrevDocument(state *EditorState) {
 	}
 
 	state.fileTimeline.TransitionBackwardFrom(timelineState)
-	MoveCursor(state, func(p LocatorParams) uint64 {
+	setCursorAfterLoad(state, func(p LocatorParams) uint64 {
 		return locate.StartOfLineNum(p.TextTree, prev.LineNum)
 	})
 	reportOpenSuccess(state, path)
@@ -113,7 +113,7 @@ func LoadNextDocument(state *EditorState) {
 	}
 
 	state.fileTimeline.TransitionForwardFrom(timelineState)
-	MoveCursor(state, func(p LocatorParams) uint64 {
+	setCursorAfterLoad(state, func(p LocatorParams) uint64 {
 		return locate.StartOfLineNum(p.TextTree, next.LineNum)
 	})
 	reportOpenSuccess(state, path)
@@ -164,6 +164,11 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
 
 	return fileExists, nil
+}
+
+func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
+	MoveCursor(state, cursorLoc)
+	ScrollViewToCursor(state)
 }
 
 func stringSliceToMap(ss []string) map[string]struct{} {

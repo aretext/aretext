@@ -2,25 +2,25 @@ package app
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 
 	"github.com/aretext/aretext/config"
 )
 
-//go:embed default-config.json
-var DefaultConfigJson []byte
+//go:embed default-config.yaml
+var DefaultConfigYaml []byte
 
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.
 func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if forceDefaultConfig {
 		log.Printf("Using default config\n")
-		return unmarshalRuleSet(DefaultConfigJson)
+		return unmarshalRuleSet(DefaultConfigYaml)
 	}
 
 	path, err := defaultPath()
@@ -35,7 +35,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		if err := saveDefaultConfig(path); err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("Error writing default config to '%s'", path))
 		}
-		return unmarshalRuleSet(DefaultConfigJson)
+		return unmarshalRuleSet(DefaultConfigYaml)
 	} else if err != nil {
 		return nil, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
 	}
@@ -49,14 +49,14 @@ func defaultPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "os.UserHomeDir")
 	}
-	path := filepath.Join(homeDir, ".config", "aretext", "config.json")
+	path := filepath.Join(homeDir, ".config", "aretext", "config.yaml")
 	return path, nil
 }
 
 func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 	var rules []config.Rule
-	if err := json.Unmarshal(data, &rules); err != nil {
-		return nil, errors.Wrapf(err, "json.Unmarshal")
+	if err := yaml.Unmarshal(data, &rules); err != nil {
+		return nil, errors.Wrapf(err, "yaml")
 	}
 	return config.RuleSet(rules), nil
 }
@@ -66,7 +66,7 @@ func saveDefaultConfig(path string) error {
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		return errors.Wrapf(err, "os.MkdirAll")
 	}
-	if err := os.WriteFile(path, DefaultConfigJson, 0644); err != nil {
+	if err := os.WriteFile(path, DefaultConfigYaml, 0644); err != nil {
 		return errors.Wrapf(err, "os.WriteFile")
 	}
 	return nil

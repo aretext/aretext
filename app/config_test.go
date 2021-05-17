@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefaultConfigJsonValid(t *testing.T) {
-	rs, err := unmarshalRuleSet(DefaultConfigJson)
+func TestDefaultConfigYamlValid(t *testing.T) {
+	rs, err := unmarshalRuleSet(DefaultConfigYaml)
 	require.NoError(t, err)
 	assert.Greater(t, len(rs), 1)
 

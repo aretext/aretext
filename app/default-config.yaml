@@ -1,0 +1,38 @@
+# aretext configuration
+
+# Each rule below defines a pattern to match the file path.
+# All matching rules are merged in-order, with configuration from
+# later rules replacing or extending configurations from prior rules.
+
+- name: default
+  pattern: "**"
+  config:
+    autoIndent: false
+    hideDirectories: [".git"]
+    syntaxLanguage: plaintext
+    tabExpand: false
+    tabSize: 4
+    showLineNumbers: false
+#   menuCommands:
+#     - name: my custom menu command
+#       shellCmd: echo 'hello world!' | less
+#       mode: terminal  # or "silent" or "insert" or "fileLocations"
+
+- name: json
+  pattern: "**/*.json"
+  config:
+    autoIndent: true
+    syntaxLanguage: json
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: go
+  pattern: "**/*.go"
+  config:
+    autoIndent: true
+    syntaxLanguage: go
+    tabExpand: false
+    tabSize: 4
+    showLineNumbers: true
+

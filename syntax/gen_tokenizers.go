@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +16,11 @@ import (
 	"github.com/aretext/aretext/syntax/rules"
 )
 
+var language = flag.String("language", "", "If provided, generate only this language")
+
 func main() {
+	flag.Parse()
+
 	specs := []LanguageSpec{
 		{
 			Name:  "Plaintext",
@@ -31,15 +36,21 @@ func main() {
 		},
 	}
 
+	filteredSpecs := filterSpecs(specs, *language)
+	if len(filteredSpecs) == 0 {
+		fmt.Printf("No matching languages found\n")
+		os.Exit(1)
+	}
+
 	if err := generateLanguageIndex(specs, "languages.go"); err != nil {
 		log.Fatalf("Error generating language index: %v\n", err)
 	}
 
-	for _, spec := range specs {
+	for _, spec := range filteredSpecs {
 		err := generateTokenizer(
 			spec.TokenizerName(),
 			spec.Rules,
-			spec.TokenizerOutputPath(),
+			spec.TokenizerPath(),
 		)
 		if err != nil {
 			log.Fatalf("Error generating tokenizer '%s': %v\n", spec.Name, err)
@@ -64,12 +75,26 @@ func (s LanguageSpec) LanguageString() string {
 	return strings.ToLower(s.Name)
 }
 
-func (s LanguageSpec) TokenizerOutputPath() string {
+func (s LanguageSpec) TokenizerPath() string {
 	return fmt.Sprintf("%s_tokenizer.go", strings.ToLower(s.Name))
 }
 
+func filterSpecs(specs []LanguageSpec, filter string) []LanguageSpec {
+	if filter == "" {
+		return specs
+	}
+
+	filteredSpecs := make([]LanguageSpec, 0, len(specs))
+	for _, spec := range specs {
+		if spec.LanguageString() == filter {
+			filteredSpecs = append(filteredSpecs, spec)
+		}
+	}
+	return filteredSpecs
+}
+
 func generateLanguageIndex(specs []LanguageSpec, outputPath string) error {
-	fmt.Printf("Generating syntax language index at %s\n", outputPath)
+	fmt.Printf("Generating %s\n", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return errors.Wrapf(err, "os.Create")
@@ -152,13 +177,11 @@ func TokenizerForLanguage(language Language) *parser.Tokenizer {
 }
 
 func generateTokenizer(tokenizerName string, tokenizerRules []parser.TokenizerRule, outputPath string) error {
-	fmt.Printf("Generating tokenizer %s to %s\n", tokenizerName, outputPath)
-
+	fmt.Printf("Generating %s\n", outputPath)
 	tokenizer, err := parser.GenerateTokenizer(tokenizerRules)
 	if err != nil {
 		return err
 	}
-
 	return writeTokenizer(tokenizer, tokenizerName, outputPath)
 }
 

@@ -19,7 +19,7 @@ See [open milestones](https://github.com/aretext/aretext/milestones?direction=as
 * Built-in fuzzy search for commands and files.
 * Auto-reload when files are modified outside the editor.
 * Fast and accurate incremental syntax highlighting.
-* Intuitive yet powerful configuration in a single JSON file.
+* Intuitive yet powerful configuration in a single file.
 
 *\* Aretext key bindings are compatible with vim's normal, insert, and visual modes.  Not all keybindings are implemented yet.*
 
@@ -33,9 +33,13 @@ See [open milestones](https://github.com/aretext/aretext/milestones?direction=as
 | macOS    | Will probably work |
 | Windows  | Not supported      |
 
+
 ## Installation
 
-### via the ArchLinux AUR
+### From source
+To install aretext from source, checkout this repository then run `make install`.
+
+### From the ArchLinux AUR
 aretext-git is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-git/)
 If you use [yay](https://github.com/Jguer/yay) just run this to install it:
 
@@ -49,7 +53,7 @@ To build aretext and run tests, use `make`.
 
 You can then open a file in the editor: `./aretext path/to/file.txt`
 
-* The editor supports most key sequences from vim's insert and normal modes.
+* The editor supports most key bindings from vim's normal, insert, and visual modes.
 * Type ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
 
 

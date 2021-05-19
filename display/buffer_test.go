@@ -422,12 +422,12 @@ func TestSyntaxHighlighting(t *testing.T) {
 				tcell.StyleDefault,
 
 				// `"key":` highlighted as a key.
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
-				tcell.StyleDefault.Foreground(tcell.ColorNavy),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				tcell.StyleDefault.Foreground(tcell.ColorTeal),
 
 				// ` ` has no highlighting.
 				tcell.StyleDefault,

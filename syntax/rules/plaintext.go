@@ -2,10 +2,8 @@ package rules
 
 import "github.com/aretext/aretext/syntax/parser"
 
-var PlaintextRules []parser.TokenizerRule
-
-func init() {
-	PlaintextRules = []parser.TokenizerRule{
+func PlaintextRules() []parser.TokenizerRule {
+	return []parser.TokenizerRule{
 		{
 			Regexp:    `\p{P}`,
 			TokenRole: parser.TokenRolePunctuation,

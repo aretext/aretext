@@ -6,12 +6,9 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-var JsonRules []parser.TokenizerRule
-
-func init() {
+func JsonRules() []parser.TokenizerRule {
 	stringPattern := `""|"([^\"\n]|\\")*[^\\\n]"`
-
-	JsonRules = []parser.TokenizerRule{
+	return []parser.TokenizerRule{
 		{
 			Regexp:    `true|false|null`,
 			TokenRole: parser.TokenRoleKeyword,

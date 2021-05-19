@@ -6,11 +6,9 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-var GolangRules []parser.TokenizerRule
-
-// Based on the "Go Programming Language Specification"
-// https://golang.org/ref/spec
-func init() {
+func GolangRules() []parser.TokenizerRule {
+	// Based on the "Go Programming Language Specification"
+	// https://golang.org/ref/spec
 	decimalDigits := `[0-9](_?[0-9])*`
 	binaryDigits := `[01](_?[01])*`
 	octalDigits := `[0-7](_?[0-7])*`
@@ -47,7 +45,7 @@ func init() {
 
 	imaginaryLiteral := `(` + decimalDigits + `|` + intLiteral + `|` + floatLiteral + `)i`
 
-	GolangRules = []parser.TokenizerRule{
+	return []parser.TokenizerRule{
 		// Line Comment
 		{
 			Regexp:    `//[^\n]*`,

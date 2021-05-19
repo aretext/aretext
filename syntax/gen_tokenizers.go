@@ -24,15 +24,15 @@ func main() {
 	specs := []LanguageSpec{
 		{
 			Name:  "Plaintext",
-			Rules: rules.PlaintextRules,
+			Rules: rules.PlaintextRules(),
 		},
 		{
 			Name:  "Json",
-			Rules: rules.JsonRules,
+			Rules: rules.JsonRules(),
 		},
 		{
 			Name:  "Go",
-			Rules: rules.GolangRules,
+			Rules: rules.GolangRules(),
 		},
 	}
 

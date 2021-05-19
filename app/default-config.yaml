@@ -27,6 +27,19 @@
     tabSize: 2
     showLineNumbers: true
 
+- name: yaml
+  pattern: "**/*.yaml"
+  config: &yamlConfig
+    autoIndent: true
+    syntaxLanguage: yaml
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: yml
+  pattern: "**/*.yml"
+  config: *yamlConfig
+
 - name: go
   pattern: "**/*.go"
   config:

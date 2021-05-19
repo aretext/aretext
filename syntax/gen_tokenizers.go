@@ -31,6 +31,10 @@ func main() {
 			Rules: rules.JsonRules(),
 		},
 		{
+			Name:  "Yaml",
+			Rules: rules.YamlRules(),
+		},
+		{
 			Name:  "Go",
 			Rules: rules.GolangRules(),
 		},

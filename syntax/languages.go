@@ -14,12 +14,14 @@ const (
 	LanguageUndefined = Language(iota)
 	LanguagePlaintext
 	LanguageJson
+	LanguageYaml
 	LanguageGo
 )
 
 var AllLanguages = []Language{
 	LanguagePlaintext,
 	LanguageJson,
+	LanguageYaml,
 	LanguageGo,
 }
 
@@ -31,6 +33,8 @@ func (language Language) String() string {
 		return "plaintext"
 	case LanguageJson:
 		return "json"
+	case LanguageYaml:
+		return "yaml"
 	case LanguageGo:
 		return "go"
 	default:
@@ -46,6 +50,8 @@ func LanguageFromString(s string) Language {
 		return LanguagePlaintext
 	case "json":
 		return LanguageJson
+	case "yaml":
+		return LanguageYaml
 	case "go":
 		return LanguageGo
 	default:
@@ -62,6 +68,8 @@ func TokenizerForLanguage(language Language) *parser.Tokenizer {
 		return PlaintextTokenizer
 	case LanguageJson:
 		return JsonTokenizer
+	case LanguageYaml:
+		return YamlTokenizer
 	case LanguageGo:
 		return GoTokenizer
 	default:

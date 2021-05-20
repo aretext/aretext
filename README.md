@@ -59,7 +59,7 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 
 ## Contributing
 
-The project isn't yet ready to accept external contributions.  If you're interested in contributing, please star the repo and check back soon!
+Contributions are welcome!  Please read the [Contribution Guidelines](CONTRIBUTING.md) to get started.
 
 
 ## Security

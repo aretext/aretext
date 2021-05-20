@@ -30,6 +30,39 @@ func TestYamlTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:        "key with single-quoted string",
+			inputString: "'abc': xyz",
+			expectedTokens: []TokenWithText{
+				{Text: `'abc':`, Role: parser.TokenRoleKey},
+			},
+		},
+		{
+			name:        "empty single-quoted string",
+			inputString: `''`,
+			expectedTokens: []TokenWithText{
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+			},
+		},
+		{
+			name:        "single-quoted string",
+			inputString: `'abc'`,
+			expectedTokens: []TokenWithText{
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `abc`, Role: parser.TokenRoleString},
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+			},
+		},
+		{
+			name:        "single-quoted string with escaped quote",
+			inputString: `'ab''c'`,
+			expectedTokens: []TokenWithText{
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `ab''c`, Role: parser.TokenRoleString},
+				{Text: `'`, Role: parser.TokenRoleStringQuote},
+			},
+		},
+		{
 			name: "doc with keys, number, and comment",
 			inputString: `- foo: # this is a test
 							bar: 123`,

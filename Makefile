@@ -2,7 +2,7 @@ all: generate fmt build vet test
 
 fmt:
 	goimports -w -local "github.com/aretext" .
-	markdownfmt -w *.md
+	markdownfmt -w *.md ./docs
 
 generate:
 	go generate ./...

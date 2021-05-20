@@ -1,0 +1,38 @@
+Install
+=======
+
+Supported Platforms
+-------------------
+
+| Platform | Status                |
+|----------|-----------------------|
+| Linux    | Fully supported       |
+| \*BSD    | Will probably work    |
+| macOS    | Will probably work    |
+| Windows  | Supported on WSL only |
+
+From source
+-----------
+
+If you have [installed go](https://golang.org/doc/install), then you can build aretext from source:
+
+```
+git clone https://github.com/aretext/aretext.git
+cd aretext
+make install
+```
+
+This will install aretext in `$HOME/go/bin`, which you can add to your `$PATH`:
+
+```
+export PATH=$PATH:$HOME/go/bin
+```
+
+From the ArchLinux AUR
+----------------------
+
+aretext-git is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-git/) If you use [yay](https://github.com/Jguer/yay) just run this to install it:
+
+```shell
+yay -S aretext-git
+```

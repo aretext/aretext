@@ -3,6 +3,7 @@ package display
 import (
 	"io"
 	"log"
+	"unicode"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -41,6 +42,19 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, gcWidth int, style tcell.Style) {
 	startCol := col
 
+	// Style whitespace (newlines, tabs, etc.) but don't set any runes.
+	// This prevents drawing artifacts with '\r\n' where tcell
+	// sends the combining character ('\n') to the terminal.
+	if unicode.IsSpace(gc[0]) {
+		// Always style at least one cell, even when the gcWidth is zero (carriage returns).
+		// Tabs will usually style multiple cells.
+		for col == startCol || col < startCol+gcWidth {
+			sr.SetContent(col, row, ' ', nil, style)
+			col++
+		}
+		return
+	}
+
 	// Emoji and regional indicator sequences are usually rendered using the
 	// width of the first rune.  This won't support every terminal, but it's probably
 	// the best we can do without knowing how the terminal will render the glyphs.
@@ -66,11 +80,5 @@ func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, gcWidth int,
 		sr.SetContent(col, row, gc[i], gc[i+1:j], style)
 		col += int(cellwidth.RuneWidth(gc[i]))
 		i = j
-	}
-
-	// Style empty cells from tab characters.
-	for col < startCol+gcWidth {
-		sr.SetContent(col, row, ' ', nil, style)
-		col++
 	}
 }

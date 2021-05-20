@@ -92,6 +92,22 @@ func TestDrawBuffer(t *testing.T) {
 			},
 		},
 		{
+			name:        "carriage return and line feed",
+			inputString: "abc\r\ndef",
+			expectedContents: [][]rune{
+				{'a', 'b', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'d', 'e', 'f', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
 			name:        "full-width characters, no wrapping",
 			inputString: "abc界xyz",
 			expectedContents: [][]rune{
@@ -170,6 +186,29 @@ func TestDrawBuffer(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
+	withSimScreen(t, func(s tcell.SimulationScreen) {
+		s.SetSize(5, 2)
+		drawBuffer(t, s, func(editorState *state.EditorState) {
+			state.InsertRune(editorState, '\r')
+			state.InsertRune(editorState, '\n')
+		})
+
+		// Every rune, including combining runes, should be empty.
+		// This detects a bug where tcell would write the combining
+		// char ('\n') to the terminal, which caused
+		// strange display artifacts.
+		cells, width, height := s.GetContents()
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				for _, r := range cells[x+y*width].Runes {
+					assert.Equal(t, ' ', r)
+				}
+			}
+		}
+	})
 }
 
 func TestGraphemeClustersWithMultipleRunes(t *testing.T) {

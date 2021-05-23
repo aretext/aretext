@@ -56,8 +56,8 @@ Getting Started
 For development, you will need to install two formatting tools:
 
 ```
-go install golang.org/x/tools/cmd/goimports@master
-go install github.com/shurcooL/markdownfmt@master
+go install golang.org/x/tools/cmd/goimports@latest
+go install github.com/shurcooL/markdownfmt@latest
 ```
 
 To build aretext and run tests, use `make`.

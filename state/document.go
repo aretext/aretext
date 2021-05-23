@@ -19,6 +19,13 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 	timelineState := currentTimelineState(state)
 	fileExists, err := loadDocumentAndResetState(state, path, requireExists)
 	if err != nil {
+		// If this is the first document loaded into the editor, set a watcher
+		// even if the load failed.  This retains the attempted path so the user
+		// can try saving or reloading the document later.
+		if state.fileWatcher.Path() == "" {
+			state.fileWatcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
+		}
+
 		reportLoadError(state, err, path)
 		return
 	}

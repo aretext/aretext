@@ -53,6 +53,13 @@ yay -S aretext-git
 Getting Started
 ---------------
 
+For development, you will need to install two formatting tools:
+
+```
+go install golang.org/x/tools/cmd/goimports@master
+go install github.com/shurcooL/markdownfmt@master
+```
+
 To build aretext and run tests, use `make`.
 
 You can then open a file in the editor: `./aretext path/to/file.txt`

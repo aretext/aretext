@@ -23,7 +23,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return unmarshalRuleSet(DefaultConfigYaml)
 	}
 
-	path, err := defaultPath()
+	path, err := defaultConfigPath()
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +55,8 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	return ruleSet, nil
 }
 
-// defaultPath returns the path to the user's configuration file.
-func defaultPath() (string, error) {
+// defaultConfigPath returns the path to the user's configuration file.
+func defaultConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", errors.Wrapf(err, "os.UserHomeDir")

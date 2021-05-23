@@ -8,8 +8,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.12
 	github.com/pkg/errors v0.9.1
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
-	github.com/shurcooL/markdownfmt v0.0.0-20210117162146-75134924a9fd // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.0.0-20210521203332-0cec03c779c1 // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect

@@ -20,6 +20,9 @@ jobs:
     - name: Install goimports
       run: go get golang.org/x/tools/cmd/goimports
 
+    - name: Install markdownfmt
+      run: go get github.com/shurcooL/markdownfmt
+
     - name: Build and run tests
       run: make
 

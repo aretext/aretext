@@ -31,6 +31,11 @@ Getting Started
 -	[Quickstart](docs/quickstart.md)
 -	[User Documentation](docs/index.md)
 
+Contributing
+------------
+
+Contributions are welcome! Please read the [Contribution Guidelines](CONTRIBUTING.md) to get started.
+
 Build and Run Tests
 -------------------
 
@@ -65,16 +70,6 @@ You can then start aretext and attach a debugger:
 # replace `pgrep aretext` with the exact process ID.
 dlv attach `pgrep aretext`
 ```
-
-Contributing
-------------
-
-Contributions are welcome! Please read the [Contribution Guidelines](CONTRIBUTING.md) to get started.
-
-Security
---------
-
-Please do NOT post security issues in public. To report a vulnerability, please send an email to [security@aretext.org](mailto:security@aretext.org).
 
 Copyright and License
 ---------------------

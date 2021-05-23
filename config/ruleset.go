@@ -29,3 +29,15 @@ func (rs RuleSet) ConfigForPath(path string) Config {
 	log.Printf("Resolved config for path '%s': %#v\n", path, c)
 	return ConfigFromUntypedMap(c)
 }
+
+// Validate checks whether every rule in the set has a valid configuration.
+func (rs RuleSet) Validate() error {
+	for _, r := range rs {
+		c := ConfigFromUntypedMap(r.Config)
+		err := c.Validate()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

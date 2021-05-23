@@ -40,7 +40,19 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return nil, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
 	}
 
-	return unmarshalRuleSet(data)
+	ruleSet, err := unmarshalRuleSet(data)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ruleSet.Validate(); err != nil {
+		errMsg := err.Error()
+		helpMsg := fmt.Sprintf("To edit the config, try\n\taretext -noconfig %s", path)
+		newErrMsg := fmt.Sprintf("Invalid configuration: %s\n%s", errMsg, helpMsg)
+		return nil, errors.New(newErrMsg)
+	}
+
+	return ruleSet, nil
 }
 
 // defaultPath returns the path to the user's configuration file.

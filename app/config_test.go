@@ -11,6 +11,7 @@ func TestDefaultConfigYamlValid(t *testing.T) {
 	rs, err := unmarshalRuleSet(DefaultConfigYaml)
 	require.NoError(t, err)
 	assert.Greater(t, len(rs), 1)
+	require.NoError(t, rs.Validate())
 
 	c := rs.ConfigForPath("test.go")
 	assert.Equal(t, "go", c.SyntaxLanguage)

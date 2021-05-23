@@ -67,6 +67,29 @@ You can then open a file in the editor: `./aretext path/to/file.txt`
 -	The editor supports most key bindings from vim's normal, insert, and visual modes.
 -	Type ":" in normal mode to open a searchable menu of commands (save, quit, etc.)
 
+Debugging
+---------
+
+First, you will need to [install dlv](https://github.com/go-delve/delve/tree/master/Documentation/installation).
+
+Then build aretext with debug symbols:
+
+```
+make build-debug
+```
+
+You can then start aretext and attach a debugger:
+
+```
+# Start aretext in one terminal.
+./aretext
+
+# Switch to another terminal and attach a debugger.
+# If there are multiple aretext processes running,
+# replace `pgrep aretext` with the exact process ID.
+dlv attach `pgrep aretext`
+```
+
 Contributing
 ------------
 

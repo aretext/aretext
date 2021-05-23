@@ -39,14 +39,16 @@ Contributions are welcome! Please read the [Contribution Guidelines](CONTRIBUTIN
 Build and Run Tests
 -------------------
 
-For development, you will need to install two formatting tools:
+To build aretext, you will first need to [install go](https://golang.org/doc/install).
+
+Next, install `goimports` and `markdownfmt`:
 
 ```
 go install golang.org/x/tools/cmd/goimports@latest
 go install github.com/shurcooL/markdownfmt@latest
 ```
 
-To build aretext and run tests, use `make`.
+You can then build aretext and run tests using `make`. See the [Makefile](Makefile) for available commands.
 
 Debugging
 ---------

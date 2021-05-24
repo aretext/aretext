@@ -8,10 +8,11 @@ Minimalist text editor that never slows you down.
 Project Status
 --------------
 
-**Pre-alpha!**
+**Beta!**
 
--	Important features are planned, but not yet implemented.
--	The user interface may change in fundamental ways.
+-	The user interface is stable, and I am using it as my primary editor.
+-	Syntax highlighting is available for a few languages.
+-	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.
 

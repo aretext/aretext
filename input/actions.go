@@ -222,10 +222,10 @@ func BeginNewLineBelow(s *state.EditorState) {
 }
 
 func BeginNewLineAbove(s *state.EditorState) {
-	CursorLineStart(s)
+	CursorLineStartNonWhitespace(s)
 	state.InsertNewline(s)
 	CursorUp(s)
-	state.SetInputMode(s, state.InputModeInsert)
+	EnterInsertModeAtNextPos(s)
 }
 
 func JoinLines(s *state.EditorState) {

@@ -3,6 +3,8 @@ aretext
 
 Minimalist text editor that never slows you down.
 
+![screenshot of aretext](screenshot.gif)
+
 Project Status
 --------------
 

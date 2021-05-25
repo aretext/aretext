@@ -87,24 +87,35 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
-			name:           "number prefix",
-			inputString:    "123abc",
-			expectedTokens: []TokenWithText{},
+			name:        "number prefix",
+			inputString: "123abc",
+			expectedTokens: []TokenWithText{
+				{Text: `123abc`, Role: parser.TokenRoleWord},
+			},
 		},
 		{
-			name:           "number suffix",
-			inputString:    "abc123",
-			expectedTokens: []TokenWithText{},
+			name:        "number suffix",
+			inputString: "abc123",
+			expectedTokens: []TokenWithText{
+				{Text: `abc123`, Role: parser.TokenRoleWord},
+			},
 		},
 		{
-			name:           "number suffix with underscore",
-			inputString:    "abc_123",
-			expectedTokens: []TokenWithText{},
+			name:        "number suffix with underscore",
+			inputString: "abc_123",
+			expectedTokens: []TokenWithText{
+				{Text: `abc`, Role: parser.TokenRoleWord},
+				{Text: `_`, Role: parser.TokenRolePunctuation},
+				{Text: `123`, Role: parser.TokenRoleWord},
+			},
 		},
 		{
-			name:           "number prefix starting with hyphen",
-			inputString:    "-123abcd",
-			expectedTokens: []TokenWithText{},
+			name:        "number prefix starting with hyphen",
+			inputString: "-123abcd",
+			expectedTokens: []TokenWithText{
+				{Text: `-`, Role: parser.TokenRolePunctuation},
+				{Text: `123abcd`, Role: parser.TokenRoleWord},
+			},
 		},
 		{
 			name:        "key with string value",
@@ -119,9 +130,11 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
-			name:           "incomplete key with escaped quote",
-			inputString:    `"key\":`,
-			expectedTokens: []TokenWithText{},
+			name:        "incomplete key with escaped quote",
+			inputString: `"key\":`,
+			expectedTokens: []TokenWithText{
+				{Text: "key", Role: parser.TokenRoleWord},
+			},
 		},
 		{
 			name:        "string with escaped quote",
@@ -136,18 +149,24 @@ func TestJsonTokenizer(t *testing.T) {
 			name:        "incomplete string ending with escaped quote",
 			inputString: `"abc\" 123`,
 			expectedTokens: []TokenWithText{
+				{Text: "abc", Role: parser.TokenRoleWord},
 				{Text: "123", Role: parser.TokenRoleNumber},
 			},
 		},
 		{
-			name:           "incomplete string ending with newline before quote",
-			inputString:    "\"abc\n\"",
-			expectedTokens: []TokenWithText{},
+			name:        "incomplete string ending with newline before quote",
+			inputString: "\"abc\n\"",
+			expectedTokens: []TokenWithText{
+				{Text: "abc", Role: parser.TokenRoleWord},
+			},
 		},
 		{
-			name:           "string with line break",
-			inputString:    "\"abc\nxyz\"",
-			expectedTokens: []TokenWithText{},
+			name:        "string with line break",
+			inputString: "\"abc\nxyz\"",
+			expectedTokens: []TokenWithText{
+				{Text: "abc", Role: parser.TokenRoleWord},
+				{Text: "xyz", Role: parser.TokenRoleWord},
+			},
 		},
 		{
 			name:        "string with escaped line break",
@@ -189,9 +208,11 @@ func TestJsonTokenizer(t *testing.T) {
 			},
 		},
 		{
-			name:           "keyword prefix",
-			inputString:    "nullable",
-			expectedTokens: []TokenWithText{},
+			name:        "keyword prefix",
+			inputString: "nullable",
+			expectedTokens: []TokenWithText{
+				{Text: `nullable`, Role: parser.TokenRoleWord},
+			},
 		},
 		{
 			name: "object with multiple keys",

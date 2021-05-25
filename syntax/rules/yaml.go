@@ -29,7 +29,7 @@ func YamlRules() []parser.TokenizerRule {
 			TokenRole: parser.TokenRoleComment,
 		},
 		{
-			Regexp:    `[a-zA-Z][a-zA-Z0-9_]*\t*:`,
+			Regexp:    `[a-zA-Z]([a-zA-Z0-9._\-])*\t*:`,
 			TokenRole: parser.TokenRoleKey,
 		},
 	}

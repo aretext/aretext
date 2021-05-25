@@ -42,8 +42,18 @@ func JsonRules() []parser.TokenizerRule {
 
 		// This prevents the number and keyword rules from matching substrings of a symbol.
 		{
-			Regexp:    `-?[a-zA-Z0-9_]+`,
+			Regexp:    `-?([a-zA-Z0-9._\-])+`,
 			TokenRole: parser.TokenRoleNone,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `[._\-]`,
+					TokenRole: parser.TokenRolePunctuation,
+				},
+				{
+					Regexp:    `[a-zA-Z0-9]+`,
+					TokenRole: parser.TokenRoleWord,
+				},
+			},
 		},
 	}
 }

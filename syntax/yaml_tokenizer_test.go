@@ -27,6 +27,7 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: "abc: xyz",
 			expectedTokens: []TokenWithText{
 				{Text: `abc:`, Role: parser.TokenRoleKey},
+				{Text: `xyz`, Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -34,6 +35,7 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: "'abc': xyz",
 			expectedTokens: []TokenWithText{
 				{Text: `'abc':`, Role: parser.TokenRoleKey},
+				{Text: `xyz`, Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -67,10 +69,23 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: `- foo: # this is a test
 							bar: 123`,
 			expectedTokens: []TokenWithText{
+				{Text: `-`, Role: parser.TokenRolePunctuation},
 				{Text: `foo:`, Role: parser.TokenRoleKey},
 				{Text: `# this is a test`, Role: parser.TokenRoleComment},
 				{Text: `bar:`, Role: parser.TokenRoleKey},
 				{Text: `123`, Role: parser.TokenRoleNumber},
+			},
+		},
+		{
+			name:        "unquoted string with number suffix",
+			inputString: "foo: v0.1.2",
+			expectedTokens: []TokenWithText{
+				{Text: `foo:`, Role: parser.TokenRoleKey},
+				{Text: `v0`, Role: parser.TokenRoleWord},
+				{Text: `.`, Role: parser.TokenRolePunctuation},
+				{Text: `1`, Role: parser.TokenRoleWord},
+				{Text: `.`, Role: parser.TokenRolePunctuation},
+				{Text: `2`, Role: parser.TokenRoleWord},
 			},
 		},
 	}

@@ -1172,6 +1172,80 @@ func TestOutdentSelection(t *testing.T) {
 	}
 }
 
+func TestBeginNewLineAbove(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		cursorPos      uint64
+		autoIndent     bool
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty, no autoindent",
+			inputString:    "",
+			cursorPos:      0,
+			autoIndent:     false,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "\n",
+		},
+		{
+			name:           "empty, autoindent",
+			inputString:    "",
+			cursorPos:      0,
+			autoIndent:     true,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "\n",
+		},
+		{
+			name:           "multiple lines, no indentation, no autoindent",
+			inputString:    "abc\ndef\nhij",
+			cursorPos:      5,
+			autoIndent:     false,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "abc\n\ndef\nhij",
+		},
+		{
+			name:           "multiple lines, indentation, no autoindent",
+			inputString:    "abc\n\t\tdef\nhij",
+			cursorPos:      5,
+			autoIndent:     false,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "abc\n\n\t\tdef\nhij",
+		},
+		{
+			name:           "multiple lines, no indentation, autoindent",
+			inputString:    "abc\ndef\nhij",
+			cursorPos:      5,
+			autoIndent:     true,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "abc\n\ndef\nhij",
+		},
+		{
+			name:           "multiple lines, indentation, autoindent",
+			inputString:    "abc\n\t\tdef\nhij",
+			cursorPos:      5,
+			autoIndent:     true,
+			expectedCursor: cursorState{position: 6},
+			expectedText:   "abc\n\t\t\n\t\tdef\nhij",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
+			state.documentBuffer.autoIndent = tc.autoIndent
+			BeginNewLineAbove(state)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestJoinLines(t *testing.T) {
 	testCases := []struct {
 		name           string

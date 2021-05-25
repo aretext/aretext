@@ -377,6 +377,30 @@ func ReplaceChar(state *EditorState, newText string) {
 	}
 }
 
+// BeginNewLineAbove starts a new line above the current line, positioning the cursor at the end of the new line.
+func BeginNewLineAbove(state *EditorState) {
+	autoIndent := state.documentBuffer.autoIndent
+	MoveCursor(state, func(params LocatorParams) uint64 {
+		pos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		if autoIndent {
+			return locate.NextNonWhitespaceOrNewline(params.TextTree, pos)
+		} else {
+			return pos
+		}
+	})
+
+	InsertNewline(state)
+
+	MoveCursor(state, func(params LocatorParams) uint64 {
+		pos := locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
+		if autoIndent {
+			return locate.NextNonWhitespaceOrNewline(params.TextTree, pos)
+		} else {
+			return pos
+		}
+	})
+}
+
 // JoinLines joins the next line with the current line.
 // This matches vim's behavior, which has some subtle edge cases
 // involving empty lines and indentation at the beginning of lines.

@@ -10,7 +10,7 @@ func PlaintextRules() []parser.TokenizerRule {
 		},
 		{
 			Regexp:    `(\p{L}|\p{Nd})+`,
-			TokenRole: parser.TokenRoleIdentifier,
+			TokenRole: parser.TokenRoleWord,
 		},
 	}
 }

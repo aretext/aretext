@@ -28,7 +28,7 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "(\\p{L}|\\p{Nd})+",
-					TokenRole: 3,
+					TokenRole: 11,
 					SubRules:  []parser.TokenizerRule{},
 				},
 			},

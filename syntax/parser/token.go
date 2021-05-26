@@ -16,6 +16,7 @@ const (
 	TokenRoleCommentDelimiter
 	TokenRoleComment
 	TokenRolePunctuation
+	TokenRoleWord
 )
 
 // Token represents a distinct element in a document.

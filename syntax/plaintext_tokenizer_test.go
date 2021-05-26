@@ -19,8 +19,8 @@ func TestPlaintextTokenizer(t *testing.T) {
 			name:        "words separated by spaces",
 			inputString: "hello world",
 			expectedTokens: []TokenWithText{
-				{Text: "hello", Role: parser.TokenRoleIdentifier},
-				{Text: "world", Role: parser.TokenRoleIdentifier},
+				{Text: "hello", Role: parser.TokenRoleWord},
+				{Text: "world", Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -28,9 +28,9 @@ func TestPlaintextTokenizer(t *testing.T) {
 			inputString: "\"hello, world!\"",
 			expectedTokens: []TokenWithText{
 				{Text: "\"", Role: parser.TokenRolePunctuation},
-				{Text: "hello", Role: parser.TokenRoleIdentifier},
+				{Text: "hello", Role: parser.TokenRoleWord},
 				{Text: ",", Role: parser.TokenRolePunctuation},
-				{Text: "world", Role: parser.TokenRoleIdentifier},
+				{Text: "world", Role: parser.TokenRoleWord},
 				{Text: "!", Role: parser.TokenRolePunctuation},
 				{Text: "\"", Role: parser.TokenRolePunctuation},
 			},

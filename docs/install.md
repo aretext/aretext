@@ -18,7 +18,6 @@ Stable Releases
 
 You can download the the official binaries from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
-
 Unstable Builds
 ---------------
 

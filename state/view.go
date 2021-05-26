@@ -22,8 +22,12 @@ func ResizeView(state *EditorState, width, height uint64) {
 // ScrollViewToCursor moves the view origin so that the cursor is visible.
 func ScrollViewToCursor(state *EditorState) {
 	buffer := state.documentBuffer
+	scrollViewToPosition(buffer, buffer.cursor.position)
+}
+
+func scrollViewToPosition(buffer *BufferState, pos uint64) {
 	buffer.view.textOrigin = locate.ViewOriginAfterScroll(
-		buffer.cursor.position,
+		pos,
 		buffer.textTree,
 		buffer.view.textOrigin,
 		buffer.view.width-buffer.LineNumMarginWidth(),

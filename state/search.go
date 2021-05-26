@@ -3,7 +3,6 @@ package state
 import (
 	"unicode/utf8"
 
-	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text"
 )
 
@@ -105,13 +104,7 @@ func runTextSearchQuery(state *EditorState, q string) {
 		StartPos: matchStartPos,
 		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(q)),
 	}
-	buffer.view.textOrigin = locate.ViewOriginAfterScroll(
-		matchStartPos,
-		buffer.textTree,
-		buffer.view.textOrigin,
-		buffer.view.width,
-		buffer.view.height,
-		buffer.tabSize)
+	scrollViewToPosition(buffer, matchStartPos)
 }
 
 // FindNextMatch moves the cursor to the next position matching the search query.

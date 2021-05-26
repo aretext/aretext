@@ -27,4 +27,5 @@ bench:
 
 clean:
 	rm -rf aretext
+	rm -rf dist
 	go clean ./...

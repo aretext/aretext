@@ -3,6 +3,8 @@ aretext
 
 Minimalist text editor that never slows you down.
 
+See the [User Documentation](docs/index.md) to get started!
+
 ![screenshot of aretext](screenshot.gif)
 
 Project Status

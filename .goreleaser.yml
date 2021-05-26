@@ -14,6 +14,10 @@ builds:
       - darwin
 
 archives:
-  - files:
-      - README.md
+  - wrap_in_directory: true
+    files:
       - LICENSE
+      - docs/*
+
+signs:
+  - artifacts: checksum

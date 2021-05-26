@@ -7,10 +7,8 @@ See the [User Documentation](docs/index.md) to get started!
 
 ![screenshot of aretext](screenshot.gif)
 
-Project Status
---------------
-
-**Beta!**
+Project Status: Beta
+--------------------
 
 -	The user interface is stable, and I am using it as my primary editor.
 -	Syntax highlighting is available for a few languages.

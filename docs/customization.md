@@ -8,7 +8,7 @@ Aretext uses a [rule-based system for configuration](#configuration-rules).  Thi
 In addition, you can define [custom menu commands](#custom-menu-commands) that invoke arbitrary programs.  This provides a simple yet powerful way to extend the editor.  For example, you can create custom menu commands to:
 
 * [Build a project with make](#example-make)
-* [Copy and paste using the system clipboard](#example-copy-paste-using-the-system-clipboard)
+* [Copy and paste using the system clipboard](#example-copy-and-paste-using-the-system-clipboard)
 * [Format a file](#example-format-current-file)
 * [Insert a snippet](#example-insert-snippet)
 * [Search a project with grep](#example-grep)
@@ -134,7 +134,7 @@ Add a menu command to build a project using `make`. Piping to `less` allows us t
         # default mode is "terminal"
 ```
 
-### Example: Copy/paste using the system clipboard
+### Example: Copy and paste using the system clipboard
 
 Most systems provide command-line utilities for interacting with the system clipboard.
 

@@ -3,7 +3,7 @@ aretext
 
 Minimalist text editor that never slows you down.
 
-See the [User Documentation](docs/index.md) to get started!
+See the [User Documentation](https://aretext.org/docs/) to get started!
 
 ![screenshot of aretext](screenshot.gif)
 
@@ -25,14 +25,14 @@ Key Features
 -	Fast and accurate incremental syntax highlighting.
 -	Powerful and intuitive configuration in a single file.
 
-*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](docs/command-reference.md) for details.*
+*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 
 Getting Started
 ---------------
 
--	[Install](docs/install.md)
--	[Quickstart](docs/quickstart.md)
--	[User Documentation](docs/index.md)
+-	[Install](https://aretext.org/docs/install.html)
+-	[Quickstart](https://aretext.org/docs/quickstart.html)
+-	[User Documentation](https://aretext.org/docs/)
 
 Contributing
 ------------

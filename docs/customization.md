@@ -196,4 +196,4 @@ You can add a custom menu command to grep for the word under the cursor. The fol
 
 Once the search has completed, aretext loads the locations into a searchable menu. This allows you to easily navigate to a particular result.
 
-The "fileLocations" mode works with any command that outputs file locations as lines with the format: "<file>:<line>:<snippet>" or "<file>:<line>:<col>:<snippet>". You can use grep, ripgrep, or a script you write yourself!
+The "fileLocations" mode works with any command that outputs file locations as lines with the format: `<file>:<line>:<snippet>` or `<file>:<line>:<col>:<snippet>`. You can use grep, ripgrep, or a script you write yourself!

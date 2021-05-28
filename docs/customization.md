@@ -202,7 +202,7 @@ You can add a custom menu command to grep for the word under the cursor. The fol
   pattern: "**"
   config:
     - name: rg word
-      shellCmd: rg $WORD --vimgrep
+      shellCmd: rg $WORD --vimgrep  # or `grep $WORD -n -R .`
       mode: fileLocations
 ```
 

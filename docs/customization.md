@@ -3,15 +3,15 @@ Customization
 
 This guide describes how to customize aretext for your workflows.
 
-Aretext uses a [rule-based system for configuration](#configuration-rules).  This allows you to easily customize the editor for different programming languages and projects.
+Aretext uses a [rule-based system for configuration](#configuration-rules). This allows you to easily customize the editor for different programming languages and projects.
 
-In addition, you can define [custom menu commands](#custom-menu-commands) that invoke arbitrary programs.  This provides a simple yet powerful way to extend the editor.  For example, you can create custom menu commands to:
+In addition, you can define [custom menu commands](#custom-menu-commands) that invoke arbitrary programs. This provides a simple yet powerful way to extend the editor. For example, you can create custom menu commands to:
 
-* [Build a project with make](#example-make)
-* [Copy and paste using the system clipboard](#example-copy-and-paste-using-the-system-clipboard)
-* [Format a file](#example-format-current-file)
-* [Insert a snippet](#example-insert-snippet)
-* [Search a project with grep](#example-grep)
+-	[Build a project with make](#example-make)
+-	[Copy and paste using the system clipboard](#example-copy-and-paste-using-the-system-clipboard)
+-	[Format a file](#example-format-current-file)
+-	[Insert a snippet](#example-insert-snippet)
+-	[Search a project with grep](#example-grep)
 
 ... and much more!
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
+	"github.com/adrg/xdg"
 
 	"github.com/aretext/aretext/config"
 )
@@ -23,7 +24,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return unmarshalRuleSet(DefaultConfigYaml)
 	}
 
-	path, err := defaultConfigPath()
+	path, err := xdg.ConfigFile("aretext/config.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -53,16 +54,6 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	}
 
 	return ruleSet, nil
-}
-
-// defaultConfigPath returns the path to the user's configuration file.
-func defaultConfigPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.Wrapf(err, "os.UserHomeDir")
-	}
-	path := filepath.Join(homeDir, ".config", "aretext", "config.yaml")
-	return path, nil
 }
 
 func unmarshalRuleSet(data []byte) (config.RuleSet, error) {

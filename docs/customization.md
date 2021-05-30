@@ -18,7 +18,7 @@ In addition, you can define [custom menu commands](#custom-menu-commands) that i
 Configuration rules
 -------------------
 
-Aretext stores its configuration in a single YAML file located at `~/.config/aretext/config.yaml`. If you open it, you should see something like this:
+Aretext stores its configuration in a single YAML file.  By default, the config file is located at `~/.config/aretext/config.yaml`, but you can change the location by setting the `XDG_CONFIG_HOME` env var (following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)).  If you open the config file, you should see something like:
 
 ```
 - name: default

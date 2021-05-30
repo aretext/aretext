@@ -52,7 +52,7 @@ func CursorDown(s *state.EditorState) {
 
 func CursorNextWordStart(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		return locate.NextWordStart(params.TextTree, params.TokenTree, params.CursorPos, false)
 	})
 }
 
@@ -288,6 +288,15 @@ func DeleteToStartOfLineNonWhitespace(s *state.EditorState) {
 	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
 		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+	})
+}
+
+func DeleteToStartOfNextWord(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+	})
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
 	})
 }
 

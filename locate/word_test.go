@@ -12,11 +12,12 @@ import (
 
 func TestNextWordStart(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name             string
+		inputString      string
+		syntaxLanguage   syntax.Language
+		includeEndOfFile bool
+		pos              uint64
+		expectedPos      uint64
 	}{
 		{
 			name:        "empty",
@@ -61,6 +62,20 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 2,
 		},
 		{
+			name:             "last word, do not include eof",
+			inputString:      "abc",
+			includeEndOfFile: false,
+			pos:              1,
+			expectedPos:      2,
+		},
+		{
+			name:             "last word, include eof",
+			inputString:      "abc",
+			includeEndOfFile: true,
+			pos:              1,
+			expectedPos:      3,
+		},
+		{
 			name:           "next syntax token",
 			inputString:    "123+456",
 			syntaxLanguage: syntax.LanguageGo,
@@ -89,7 +104,134 @@ func TestNextWordStart(t *testing.T) {
 			require.NoError(t, err)
 			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tokenTree, tc.pos)
+			actualPos := NextWordStart(textTree, tokenTree, tc.pos, tc.includeEndOfFile)
+			assert.Equal(t, tc.expectedPos, actualPos)
+		})
+	}
+}
+
+func TestNextWordStartInLine(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "start of word before another word",
+			inputString: "abc  def",
+			pos:         0,
+			expectedPos: 5,
+		},
+		{
+			name:        "middle of word before another word",
+			inputString: "abc  def",
+			pos:         1,
+			expectedPos: 5,
+		},
+		{
+			name:        "end of word before another word",
+			inputString: "abc  def",
+			pos:         2,
+			expectedPos: 5,
+		},
+		{
+			name:        "whitespace before word",
+			inputString: "abc  def",
+			pos:         3,
+			expectedPos: 5,
+		},
+		{
+			name:        "start of last word in document",
+			inputString: "abc",
+			pos:         0,
+			expectedPos: 3,
+		},
+		{
+			name:        "middle of last word in document",
+			inputString: "abc",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "end of last word in document",
+			inputString: "abc",
+			pos:         2,
+			expectedPos: 3,
+		},
+		{
+			name:        "last word in document single char",
+			inputString: "a",
+			pos:         0,
+			expectedPos: 1,
+		},
+		{
+			name:        "last word in line before next line",
+			inputString: "abc\ndef",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "last word in line with trailing whitespace before next line",
+			inputString: "abc   \ndef",
+			pos:         1,
+			expectedPos: 6,
+		},
+		{
+			name:        "single line, all whitespace, cursor at start",
+			inputString: "   ",
+			pos:         0,
+			expectedPos: 3,
+		},
+		{
+			name:        "single line, all whitespace, cursor in middle",
+			inputString: "   ",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "single line, all whitespace, cursor at end",
+			inputString: "   ",
+			pos:         2,
+			expectedPos: 3,
+		},
+		{
+			name:        "lines with all whitespace, first line",
+			inputString: "   \n   ",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "lines with all whitespace, last line",
+			inputString: "   \n   ",
+			pos:         5,
+			expectedPos: 7,
+		},
+		{
+			name:        "last word in line single char",
+			inputString: "a\nbcd",
+			pos:         0,
+			expectedPos: 1,
+		},
+		{
+			name:        "empty lines",
+			inputString: "\n\n\n",
+			pos:         1,
+			expectedPos: 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualPos := NextWordStartInLine(textTree, nil, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

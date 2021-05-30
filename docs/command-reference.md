@@ -49,6 +49,7 @@ Normal Mode Commands
 | delete to start of line                   | d0          |
 | delete to start of line after indentation | d^          |
 | delete to end of line                     | D           |
+| delete to start of next word              | dw          |
 | delete a word                             | daw         |
 | delete inner word                         | diw         |
 | change a word                             | caw         |

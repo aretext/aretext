@@ -412,6 +412,16 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "delete to start of next word (dw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteToStartOfNextWord
+		},
+	},
+	{
 		Name: "delete a word (daw)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},

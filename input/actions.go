@@ -318,6 +318,13 @@ func DeleteInnerWord(s *state.EditorState) {
 	})
 }
 
+func ChangeToStartOfNextWord(s *state.EditorState) {
+	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+	})
+	EnterInsertMode(s)
+}
+
 func ChangeAWord(s *state.EditorState) {
 	DeleteAWord(s)
 	EnterInsertMode(s)

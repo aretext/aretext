@@ -52,6 +52,7 @@ Normal Mode Commands
 | delete to start of next word              | dw          |
 | delete a word                             | daw         |
 | delete inner word                         | diw         |
+| change to start of next word              | cw          |
 | change a word                             | caw         |
 | change inner word                         | ciw         |
 | replace character                         | r           |

@@ -1,8 +1,6 @@
 package display
 
 import (
-	"log"
-
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -13,27 +11,14 @@ type ScreenRegion struct {
 }
 
 // NewScreenRegion defines a new rectangular region within a screen.
-// If the dimensions are invalid (for example, if the width of the region is greater than the width of the screen),
-// then this will exit with an error.
 func NewScreenRegion(screen tcell.Screen, x, y, width, height int) *ScreenRegion {
-	r := &ScreenRegion{screen, x, y, width, height}
-	r.validateDimensions()
-	return r
+	return &ScreenRegion{screen, x, y, width, height}
 }
 
 // Resize changes the size of the region.
-// This will exit with an error if the new width/height are invalid.
 func (r *ScreenRegion) Resize(newWidth, newHeight int) {
 	r.width = newWidth
 	r.height = newHeight
-	r.validateDimensions()
-}
-
-func (r *ScreenRegion) validateDimensions() {
-	screenWidth, screenHeight := r.screen.Size()
-	if r.width > screenWidth || r.height > screenHeight || r.x >= screenWidth+r.width || r.y >= screenHeight+r.height {
-		log.Fatalf("Invalid dimensions for screen region: screenWidth=%d, screenHeight=%d, x=%d, y=%d, width=%d, height=%d", screenWidth, screenHeight, r.x, r.y, r.width, r.height)
-	}
 }
 
 // Clear resets a rectangular region of the screen to its initial state.
@@ -60,7 +45,7 @@ func (r *ScreenRegion) Fill(c rune, style tcell.Style) {
 
 // SetContent sets the content of a cell in the screen region.
 // The x and y coordinates are relative to the origin of the region.
-// Attempts to set content outside the region are ignored.
+// Attempts to set content outside the region or screen are ignored.
 func (r *ScreenRegion) SetContent(x int, y int, mainc rune, combc []rune, style tcell.Style) {
 	if x < 0 || y < 0 || x >= r.width || y >= r.height {
 		return

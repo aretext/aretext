@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"github.com/adrg/xdg"
 
 	"github.com/aretext/aretext/config"
 )

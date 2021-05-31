@@ -329,7 +329,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteLine
+			return DeleteLines(p.CountArg)
 		},
 	},
 	{

@@ -238,12 +238,18 @@ func JoinLines(s *state.EditorState) {
 	state.JoinLines(s)
 }
 
-func DeleteLine(s *state.EditorState) {
-	currentPos := func(params state.LocatorParams) uint64 {
-		return params.CursorPos
+func DeleteLines(countArg *uint64) Action {
+	count := countArgOrDefault(countArg, 0)
+	if count > 0 {
+		count--
 	}
-	state.DeleteLines(s, currentPos, false, false)
-	CursorLineStartNonWhitespace(s)
+	return func(s *state.EditorState) {
+		targetLoc := func(params state.LocatorParams) uint64 {
+			return locate.StartOfLineBelow(params.TextTree, count, params.CursorPos)
+		}
+		state.DeleteLines(s, targetLoc, false, false)
+		CursorLineStartNonWhitespace(s)
+	}
 }
 
 func DeletePrevCharInLine(s *state.EditorState) {

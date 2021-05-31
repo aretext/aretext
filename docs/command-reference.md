@@ -42,6 +42,7 @@ Normal Mode Commands
 | new line above                            | O           |
 | join lines                                | J           |
 | delete line                               | dd          |
+| delete {count} lines down                 | \{count\}dd |
 | delete previous character in line         | dh          |
 | delete lines below                        | dj          |
 | delete lines above                        | dk          |

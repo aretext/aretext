@@ -18,6 +18,14 @@ type Action func(*state.EditorState)
 // EmptyAction is an action that does nothing.
 func EmptyAction(s *state.EditorState) {}
 
+func countArgOrDefault(countArg *uint64, defaultCount uint64) uint64 {
+	if countArg != nil {
+		return *countArg
+	} else {
+		return defaultCount
+	}
+}
+
 func CursorLeft(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
@@ -244,13 +252,16 @@ func DeletePrevCharInLine(s *state.EditorState) {
 	})
 }
 
-func DeleteNextCharInLine(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
-	})
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-	})
+func DeleteNextCharInLine(countArg *uint64) Action {
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.NextCharInLine(params.TextTree, count, true, params.CursorPos)
+		})
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		})
+	}
 }
 
 func DeleteDown(s *state.EditorState) {

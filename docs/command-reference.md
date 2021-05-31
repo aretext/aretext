@@ -33,6 +33,7 @@ Normal Mode Commands
 | scroll up                                 | ctrl-u      |
 | scroll down                               | ctrl-d      |
 | delete next character in line             | x           |
+| delete next \{count\} characters in line  | \{count\}x  |
 | insert                                    | i           |
 | insert at start of line                   | I           |
 | append                                    | a           |
@@ -44,7 +45,8 @@ Normal Mode Commands
 | delete previous character in line         | dh          |
 | delete lines below                        | dj          |
 | delete lines above                        | dk          |
-| delete next characater in line            | dl          |
+| delete next character in line             | dl          |
+| delete next \{count\} characters in line  | \{count\}dl |
 | delete to end of line                     | d$          |
 | delete to start of line                   | d0          |
 | delete to start of line after indentation | d^          |

@@ -256,7 +256,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'x'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteNextCharInLine
+			return DeleteNextCharInLine(p.CountArg)
 		},
 	},
 	{
@@ -369,7 +369,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'l'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteNextCharInLine
+			return DeleteNextCharInLine(p.CountArg)
 		},
 	},
 	{

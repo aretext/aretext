@@ -515,6 +515,38 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "yank to start of next word (yw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'y'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CopyToStartOfNextWord
+		},
+	},
+	{
+		Name: "yank a word (yaw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'y'},
+			{Key: tcell.KeyRune, Rune: 'a'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CopyAWord
+		},
+	},
+	{
+		Name: "yank inner word (yiw)",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'y'},
+			{Key: tcell.KeyRune, Rune: 'i'},
+			{Key: tcell.KeyRune, Rune: 'w'},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CopyInnerWord
+		},
+	},
+	{
 		Name: "yank line (yy)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'y'},

@@ -594,6 +594,18 @@ func changeIndentationForSelection(state *EditorState, f func(*EditorState, uint
 	buffer.cursor = cursorState{position: newCursorPos}
 }
 
+// CopyRegion copies the characters in a region from startLoc (inclusive) to endLoc (exclusive) to the default page in the clipboard.
+func CopyRegion(state *EditorState, startLoc Locator, endLoc Locator) {
+	locParams := locatorParamsForBuffer(state.documentBuffer)
+	startPos, endPos := startLoc(locParams), endLoc(locParams)
+	if startPos >= endPos {
+		return
+	}
+
+	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
+	state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{Text: text})
+}
+
 // CopyLine copies the line under the cursor to the default page in the clipboard.
 func CopyLine(state *EditorState) {
 	buffer := state.documentBuffer

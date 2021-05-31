@@ -1361,6 +1361,56 @@ func TestJoinLines(t *testing.T) {
 	}
 }
 
+func TestCopyRegion(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		startLoc          Locator
+		endLoc            Locator
+		expectedClipboard clipboard.PageContent
+	}{
+		{
+			name:              "empty",
+			inputString:       "",
+			startLoc:          func(p LocatorParams) uint64 { return 0 },
+			endLoc:            func(p LocatorParams) uint64 { return 0 },
+			expectedClipboard: clipboard.PageContent{},
+		},
+		{
+			name:              "start pos equal to end pos",
+			inputString:       "abcd",
+			startLoc:          func(p LocatorParams) uint64 { return 2 },
+			endLoc:            func(p LocatorParams) uint64 { return 2 },
+			expectedClipboard: clipboard.PageContent{},
+		},
+		{
+			name:              "start pos after  end pos",
+			inputString:       "abcd",
+			startLoc:          func(p LocatorParams) uint64 { return 3 },
+			endLoc:            func(p LocatorParams) uint64 { return 2 },
+			expectedClipboard: clipboard.PageContent{},
+		},
+		{
+			name:              "start pos before end pos",
+			inputString:       "abcd",
+			startLoc:          func(p LocatorParams) uint64 { return 1 },
+			endLoc:            func(p LocatorParams) uint64 { return 3 },
+			expectedClipboard: clipboard.PageContent{Text: "bc"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			CopyRegion(state, tc.startLoc, tc.endLoc)
+			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+		})
+	}
+}
+
 func TestCopyLine(t *testing.T) {
 	testCases := []struct {
 		name              string

@@ -59,6 +59,9 @@ Normal Mode Commands
 | toggle case                               | ~           |
 | indent line                               | >>          |
 | outdent line                              | \<\<        |
+| yank to start of next word                | yw          |
+| yank a word                               | yaw         |
+| yank inner word                           | yiw         |
 | yank line                                 | yy          |
 | put after cursor                          | p           |
 | put before cursor                         | P           |

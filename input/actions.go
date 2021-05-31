@@ -370,6 +370,36 @@ func OutdentLine(s *state.EditorState) {
 	state.OutdentLineAtCursor(s)
 }
 
+func CopyToStartOfNextWord(s *state.EditorState) {
+	startLoc := func(params state.LocatorParams) uint64 {
+		return params.CursorPos
+	}
+	endLoc := func(params state.LocatorParams) uint64 {
+		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+	}
+	state.CopyRegion(s, startLoc, endLoc)
+}
+
+func CopyAWord(s *state.EditorState) {
+	startLoc := func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	}
+	endLoc := func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
+	}
+	state.CopyRegion(s, startLoc, endLoc)
+}
+
+func CopyInnerWord(s *state.EditorState) {
+	startLoc := func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+	}
+	endLoc := func(params state.LocatorParams) uint64 {
+		return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+	}
+	state.CopyRegion(s, startLoc, endLoc)
+}
+
 func CopyLines(s *state.EditorState) {
 	state.CopyLine(s)
 }

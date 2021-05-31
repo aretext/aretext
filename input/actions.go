@@ -137,11 +137,11 @@ func CursorLineEndIncludeEndOfLineOrFile(s *state.EditorState) {
 	})
 }
 
-func CursorStartOfLineNum(count *int64) Action {
+func CursorStartOfLineNum(countArg *uint64) Action {
 	// Convert 1-indexed count to 0-indexed line num
 	var lineNum uint64
-	if count != nil && *count > 0 {
-		lineNum = uint64(*count - 1)
+	if countArg != nil && *countArg > 0 {
+		lineNum = *countArg - 1
 	}
 
 	return func(s *state.EditorState) {

@@ -9,7 +9,7 @@ type ActionBuilder func(p ActionBuilderParams) Action
 
 type ActionBuilderParams struct {
 	InputEvents   []*tcell.EventKey
-	CountArg      *int64
+	CountArg      *uint64
 	MacroRecorder *MacroRecorder
 	Config        Config
 }

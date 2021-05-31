@@ -22,7 +22,7 @@ type ParseResult struct {
 	// For example, "5x" (delete five characters) would have count set to 5.
 	// If provided, the count will always be at least one and at most math.MaxInt64.
 	// If no count parameter was provided, this will be nil.
-	Count *int64
+	Count *uint64
 }
 
 // maxParseInputLen is the maximum number of input key events that can be recognized.
@@ -172,7 +172,7 @@ func (p *Parser) reset() {
 	}
 }
 
-func (p *Parser) calculateCount() *int64 {
+func (p *Parser) calculateCount() *uint64 {
 	if len(p.countDigits) == 0 {
 		return nil
 	}
@@ -186,7 +186,9 @@ func (p *Parser) calculateCount() *int64 {
 			break
 		}
 	}
-	return &count
+
+	unsignedCount := uint64(count) // safe because of overflow check.
+	return &unsignedCount
 }
 
 func isDigit(event *tcell.EventKey) bool {

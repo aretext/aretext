@@ -10,11 +10,11 @@ import (
 
 type acceptResult struct {
 	input string
-	count *int64
+	count *uint64
 }
 
-var five = int64(5)
-var oneHundredAndTwo = int64(102)
+var five = uint64(5)
+var oneHundredAndTwo = uint64(102)
 
 func TestParser(t *testing.T) {
 	rules := []Rule{
@@ -322,5 +322,5 @@ func TestParseCountOverflow(t *testing.T) {
 	assert.True(t, result.Accepted)
 	assert.Equal(t, 37, len(result.Input))
 	assert.True(t, result.Count != nil)
-	assert.Equal(t, int64(math.MaxInt64), *result.Count)
+	assert.Equal(t, uint64(math.MaxInt64), *result.Count)
 }

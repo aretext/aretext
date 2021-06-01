@@ -750,3 +750,53 @@ func TestShowLineNumbers(t *testing.T) {
 		})
 	}
 }
+
+func TestShowTabs(t *testing.T) {
+	testCases := []struct {
+		name             string
+		width, height    int
+		showTabs         bool
+		inputString      string
+		expectedContents [][]rune
+	}{
+		{
+			name:        "hide tabs",
+			width:       8,
+			height:      2,
+			showTabs:    false,
+			inputString: "\ta\t\nb\t",
+			expectedContents: [][]rune{
+				{' ', ' ', ' ', ' ', 'a', ' ', ' ', ' '},
+				{'b', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "show tabs",
+			width:       8,
+			height:      2,
+			showTabs:    true,
+			inputString: "\ta\t\nb\t",
+			expectedContents: [][]rune{
+				{tcell.RuneRArrow, ' ', ' ', ' ', 'a', tcell.RuneRArrow, ' ', ' '},
+				{'b', tcell.RuneRArrow, ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					if tc.showTabs {
+						state.ToggleShowTabs(editorState)
+					}
+				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}

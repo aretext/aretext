@@ -32,14 +32,21 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 			break
 		}
 
-		drawGraphemeCluster(sr, col, row, gc.Runes(), int(gcWidth), style)
+		drawGraphemeCluster(sr, col, row, gc.Runes(), int(gcWidth), style, false)
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
 	}
 
 	return col
 }
 
-func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, gcWidth int, style tcell.Style) {
+func drawGraphemeCluster(
+	sr *ScreenRegion,
+	col, row int,
+	gc []rune,
+	gcWidth int,
+	style tcell.Style,
+	showTabs bool,
+) {
 	startCol := col
 
 	// Style whitespace (newlines, tabs, etc.) but don't set any runes.
@@ -52,6 +59,12 @@ func drawGraphemeCluster(sr *ScreenRegion, col, row int, gc []rune, gcWidth int,
 			sr.SetContent(col, row, ' ', nil, style)
 			col++
 		}
+
+		// Draw a special character to represent a tab.
+		if gc[0] == '\t' && showTabs {
+			sr.SetContent(startCol, row, tcell.RuneRArrow, nil, tcell.StyleDefault.Dim(true))
+		}
+
 		return
 	}
 

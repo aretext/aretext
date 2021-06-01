@@ -12,6 +12,7 @@
     syntaxLanguage: plaintext
     tabExpand: false
     tabSize: 4
+    showTabs: false
     showLineNumbers: false
 #   menuCommands:
 #     - name: my custom menu command

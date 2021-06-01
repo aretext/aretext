@@ -111,6 +111,7 @@ Menu Commands
 | find and open                | f        |
 | open previous document       | p        |
 | open next document           | n        |
+| toggle show tabs             | ta       |
 | toggle line numbers          | nu       |
 | set syntax plaintext         |          |
 | set syntax json              |          |

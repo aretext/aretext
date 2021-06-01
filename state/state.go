@@ -55,6 +55,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		tokenizer:      nil,
 		tabSize:        uint64(config.DefaultTabSize),
 		tabExpand:      config.DefaultTabExpand,
+		showTabs:       config.DefaultShowTabs,
 		autoIndent:     config.DefaultAutoIndent,
 	}
 
@@ -124,6 +125,7 @@ type BufferState struct {
 	tokenizer      *parser.Tokenizer
 	tabSize        uint64
 	tabExpand      bool
+	showTabs       bool
 	autoIndent     bool
 	showLineNum    bool
 }
@@ -171,6 +173,10 @@ func (s *BufferState) SetViewSize(width, height uint64) {
 
 func (s *BufferState) TabSize() uint64 {
 	return s.tabSize
+}
+
+func (s *BufferState) ShowTabs() bool {
+	return s.showTabs
 }
 
 func (s *BufferState) LineNumMarginWidth() uint64 {

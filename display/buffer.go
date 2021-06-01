@@ -29,6 +29,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
+	showTabs := buffer.ShowTabs()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	wrapWidth := uint64(width) - lineNumMargin
 	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
@@ -62,6 +63,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 			selectedRegion,
 			searchMatch,
 			gcWidthFunc,
+			showTabs,
 		)
 		pos += wrappedLine.NumRunes()
 	}
@@ -93,6 +95,7 @@ func drawLineAndSetCursor(
 	selectedRegion selection.Region,
 	searchMatch *state.SearchMatch,
 	gcWidthFunc segment.GraphemeClusterWidthFunc,
+	showTabs bool,
 ) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
@@ -126,7 +129,7 @@ func drawLineAndSetCursor(
 		}
 
 		style := styleAtPosition(pos, selectedRegion, searchMatch, tokenIter)
-		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style)
+		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs)
 
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.

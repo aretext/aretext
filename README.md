@@ -22,8 +22,8 @@ Key Features
 -	Vim-compatible\* key bindings.
 -	Built-in fuzzy search for commands and files.
 -	Auto-reload when files are modified outside the editor.
--	Fast and accurate incremental syntax highlighting.
--	Powerful and intuitive configuration in a single file.
+-	Fast incremental syntax highlighting.
+-	Easily [customize settings and menu commands](https://aretext.org/docs/customization.html) for different projects.
 
 *\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 

@@ -833,6 +833,28 @@ func TestShowTrailingSpaces(t *testing.T) {
 				{'d', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
+		{
+			name:               "show single trailing space in document",
+			width:              4,
+			height:             1,
+			showTrailingSpaces: true,
+			inputString:        " ",
+			expectedContents: [][]rune{
+				{tcell.RuneBullet, ' ', ' ', ' '},
+			},
+		},
+		{
+			name:               "show single trailing space on line",
+			width:              4,
+			height:             3,
+			showTrailingSpaces: true,
+			inputString:        "\n  \n",
+			expectedContents: [][]rune{
+				{' ', ' ', ' ', ' '},
+				{tcell.RuneBullet, tcell.RuneBullet, ' ', ' '},
+				{' ', ' ', ' ', ' '},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

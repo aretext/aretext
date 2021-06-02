@@ -338,6 +338,90 @@ func TestInsertNewline(t *testing.T) {
 	}
 }
 
+func TestClearAutoIndentWhitespaceLine(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		cursorPos         uint64
+		targetLinePos     uint64
+		expectedText      string
+		expectedCursorPos uint64
+	}{
+		{
+			name:              "empty",
+			inputString:       "",
+			cursorPos:         0,
+			targetLinePos:     0,
+			expectedText:      "",
+			expectedCursorPos: 0,
+		},
+		{
+			name:              "line with non-whitespace chars",
+			inputString:       "    abc",
+			cursorPos:         0,
+			targetLinePos:     0,
+			expectedText:      "    abc",
+			expectedCursorPos: 0,
+		},
+		{
+			name:              "line with only spaces",
+			inputString:       "    ",
+			cursorPos:         1,
+			targetLinePos:     0,
+			expectedText:      "",
+			expectedCursorPos: 0,
+		},
+		{
+			name:              "line with only tabs",
+			inputString:       "\t\t",
+			cursorPos:         1,
+			targetLinePos:     0,
+			expectedText:      "",
+			expectedCursorPos: 0,
+		},
+		{
+			name:              "cursor after target line",
+			inputString:       "    ab\n    \n    cd",
+			cursorPos:         17,
+			targetLinePos:     7,
+			expectedText:      "    ab\n\n    cd",
+			expectedCursorPos: 13,
+		},
+		{
+			name:              "cursor before target line",
+			inputString:       "    ab\n    \n    cd",
+			cursorPos:         5,
+			targetLinePos:     7,
+			expectedText:      "    ab\n\n    cd",
+			expectedCursorPos: 5,
+		},
+		{
+			name:              "cursor on target line",
+			inputString:       "    ab\n    \n    cd",
+			cursorPos:         9,
+			targetLinePos:     7,
+			expectedText:      "    ab\n\n    cd",
+			expectedCursorPos: 7,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
+			state.documentBuffer.autoIndent = true
+			ClearAutoIndentWhitespaceLine(state, func(p LocatorParams) uint64 {
+				return locate.StartOfLineAtPos(p.TextTree, tc.targetLinePos)
+			})
+			assert.Equal(t, cursorState{position: tc.expectedCursorPos}, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestInsertTab(t *testing.T) {
 	testCases := []struct {
 		name           string

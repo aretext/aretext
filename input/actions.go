@@ -187,9 +187,14 @@ func EnterInsertModeAtEndOfLine(s *state.EditorState) {
 }
 
 func ReturnToNormalMode(s *state.EditorState) {
-	if s.InputMode() == state.InputModeInsert {
-		CursorLeft(s)
-	}
+	state.SetInputMode(s, state.InputModeNormal)
+}
+
+func ReturnToNormalModeAfterInsert(s *state.EditorState) {
+	state.ClearAutoIndentWhitespaceLine(s, func(params state.LocatorParams) uint64 {
+		return locate.StartOfLineAtPos(params.TextTree, params.CursorPos)
+	})
+	CursorLeft(s)
 	state.SetInputMode(s, state.InputModeNormal)
 }
 
@@ -199,8 +204,11 @@ func InsertRune(r rune) Action {
 	}
 }
 
-func InsertNewline(s *state.EditorState) {
+func InsertNewlineAndUpdateAutoIndentWhitespace(s *state.EditorState) {
 	state.InsertNewline(s)
+	state.ClearAutoIndentWhitespaceLine(s, func(params state.LocatorParams) uint64 {
+		return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
+	})
 }
 
 func InsertTab(s *state.EditorState) {

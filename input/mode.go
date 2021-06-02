@@ -80,7 +80,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		return DeletePrevChar
 	case tcell.KeyEnter:
-		return InsertNewline
+		return InsertNewlineAndUpdateAutoIndentWhitespace
 	case tcell.KeyTab:
 		return InsertTab
 	case tcell.KeyLeft:
@@ -91,8 +91,10 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 		return CursorUp
 	case tcell.KeyDown:
 		return CursorDown
+	case tcell.KeyEscape:
+		return ReturnToNormalModeAfterInsert
 	default:
-		return ReturnToNormalMode
+		return EmptyAction
 	}
 }
 

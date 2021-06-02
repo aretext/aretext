@@ -138,6 +138,33 @@ func indentFromPos(state *EditorState, pos uint64, numCols uint64) uint64 {
 	return pos
 }
 
+// ClearAutoIndentWhitespaceLine clears a line consisting of only whitespace characters when autoindent is enabled.
+// This is used to remove whitespace introduced by autoindent (for example, when inserting consecutive newlines).
+func ClearAutoIndentWhitespaceLine(state *EditorState, startOfLineLoc Locator) {
+	if !state.documentBuffer.autoIndent {
+		return
+	}
+
+	params := locatorParamsForBuffer(state.documentBuffer)
+	startOfLinePos := startOfLineLoc(params)
+	endOfLinePos := locate.NextLineBoundary(params.TextTree, true, startOfLinePos)
+	firstNonWhitespacePos := locate.NextNonWhitespaceOrNewline(params.TextTree, startOfLinePos)
+
+	if endOfLinePos > startOfLinePos && firstNonWhitespacePos == endOfLinePos {
+		numDeleted := endOfLinePos - startOfLinePos
+		deleteRunes(state, startOfLinePos, numDeleted, true)
+		MoveCursor(state, func(params LocatorParams) uint64 {
+			if params.CursorPos > endOfLinePos {
+				return params.CursorPos - numDeleted
+			} else if params.CursorPos > startOfLinePos {
+				return startOfLinePos
+			} else {
+				return params.CursorPos
+			}
+		})
+	}
+}
+
 // InsertTab inserts a tab at the current cursor position.
 func InsertTab(state *EditorState) {
 	cursorPos := state.documentBuffer.cursor.position

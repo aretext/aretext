@@ -30,6 +30,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
 	showTabs := buffer.ShowTabs()
+	showTrailingSpaces := buffer.ShowTrailingSpaces()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	wrapWidth := uint64(width) - lineNumMargin
 	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
@@ -64,6 +65,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 			searchMatch,
 			gcWidthFunc,
 			showTabs,
+			showTrailingSpaces,
 		)
 		pos += wrappedLine.NumRunes()
 	}
@@ -96,6 +98,7 @@ func drawLineAndSetCursor(
 	searchMatch *state.SearchMatch,
 	gcWidthFunc segment.GraphemeClusterWidthFunc,
 	showTabs bool,
+	showTrailingSpaces bool,
 ) {
 	startPos := pos
 	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
@@ -104,6 +107,7 @@ func drawLineAndSetCursor(
 	totalWidth := uint64(0)
 	col := 0
 	var lastGcWasNewline bool
+	var numTrailingSpaces int
 
 	if startPos == lineStartPos {
 		drawLineNumIfNecessary(sr, row, lineNum, lineNumMargin)
@@ -131,6 +135,12 @@ func drawLineAndSetCursor(
 		style := styleAtPosition(pos, selectedRegion, searchMatch, tokenIter)
 		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs)
 
+		if len(gcRunes) == 1 && gcRunes[0] == ' ' {
+			numTrailingSpaces++
+		} else if !lastGcWasNewline {
+			numTrailingSpaces = 0
+		}
+
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.
 			break
@@ -142,6 +152,12 @@ func drawLineAndSetCursor(
 
 		pos += gc.NumRunes()
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
+	}
+
+	if showTrailingSpaces {
+		for i := 0; i < numTrailingSpaces; i++ {
+			sr.SetContent(col-1-i, row, tcell.RuneBullet, nil, tcell.StyleDefault.Dim(true))
+		}
 	}
 
 	if gc != nil && lastGcWasNewline {

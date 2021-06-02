@@ -10,6 +10,7 @@ const DefaultSyntaxLanguage = "undefined"
 const DefaultTabSize = 4
 const DefaultTabExpand = false
 const DefaultShowTabs = false
+const DefaultShowTrailingSpaces = false
 const DefaultAutoIndent = false
 const DefaultShowLineNumbers = false
 
@@ -26,6 +27,9 @@ type Config struct {
 
 	// If enabled, display tab characters in the document.
 	ShowTabs bool
+
+	// If enabled, show trailing spaces at the end of each line.
+	ShowTrailingSpaces bool
 
 	// If enabled, indent a new line to match indentation of the previous line.
 	AutoIndent bool
@@ -63,14 +67,15 @@ type MenuCommandConfig struct {
 // The map is usually loaded from a JSON document.
 func ConfigFromUntypedMap(m map[string]interface{}) Config {
 	return Config{
-		SyntaxLanguage:  stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),
-		TabSize:         intOrDefault(m, "tabSize", DefaultTabSize),
-		TabExpand:       boolOrDefault(m, "tabExpand", DefaultTabExpand),
-		ShowTabs:        boolOrDefault(m, "showTabs", DefaultShowTabs),
-		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
-		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
-		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
-		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
+		SyntaxLanguage:     stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),
+		TabSize:            intOrDefault(m, "tabSize", DefaultTabSize),
+		TabExpand:          boolOrDefault(m, "tabExpand", DefaultTabExpand),
+		ShowTabs:           boolOrDefault(m, "showTabs", DefaultShowTabs),
+		ShowTrailingSpaces: boolOrDefault(m, "showTrailingSpaces", DefaultShowTrailingSpaces),
+		AutoIndent:         boolOrDefault(m, "autoIndent", DefaultAutoIndent),
+		ShowLineNumbers:    boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
+		MenuCommands:       menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
+		HideDirectories:    stringSliceOrNil(m, "hideDirectories"),
 	}
 }
 

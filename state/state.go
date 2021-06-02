@@ -48,15 +48,16 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 			width:      screenWidth,
 			height:     documentBufferHeight,
 		},
-		search:         searchState{},
-		undoLog:        undo.NewLog(),
-		syntaxLanguage: syntax.LanguageUndefined,
-		tokenTree:      nil,
-		tokenizer:      nil,
-		tabSize:        uint64(config.DefaultTabSize),
-		tabExpand:      config.DefaultTabExpand,
-		showTabs:       config.DefaultShowTabs,
-		autoIndent:     config.DefaultAutoIndent,
+		search:             searchState{},
+		undoLog:            undo.NewLog(),
+		syntaxLanguage:     syntax.LanguageUndefined,
+		tokenTree:          nil,
+		tokenizer:          nil,
+		tabSize:            uint64(config.DefaultTabSize),
+		tabExpand:          config.DefaultTabExpand,
+		showTabs:           config.DefaultShowTabs,
+		showTrailingSpaces: config.DefaultShowTrailingSpaces,
+		autoIndent:         config.DefaultAutoIndent,
 	}
 
 	return &EditorState{
@@ -114,20 +115,21 @@ func (s *EditorState) QuitFlag() bool {
 
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
-	textTree       *text.Tree
-	cursor         cursorState
-	selector       *selection.Selector
-	view           viewState
-	search         searchState
-	undoLog        *undo.Log
-	syntaxLanguage syntax.Language
-	tokenTree      *parser.TokenTree
-	tokenizer      *parser.Tokenizer
-	tabSize        uint64
-	tabExpand      bool
-	showTabs       bool
-	autoIndent     bool
-	showLineNum    bool
+	textTree           *text.Tree
+	cursor             cursorState
+	selector           *selection.Selector
+	view               viewState
+	search             searchState
+	undoLog            *undo.Log
+	syntaxLanguage     syntax.Language
+	tokenTree          *parser.TokenTree
+	tokenizer          *parser.Tokenizer
+	tabSize            uint64
+	tabExpand          bool
+	showTabs           bool
+	showTrailingSpaces bool
+	autoIndent         bool
+	showLineNum        bool
 }
 
 func (s *BufferState) TextTree() *text.Tree {
@@ -177,6 +179,10 @@ func (s *BufferState) TabSize() uint64 {
 
 func (s *BufferState) ShowTabs() bool {
 	return s.showTabs
+}
+
+func (s *BufferState) ShowTrailingSpaces() bool {
+	return s.showTrailingSpaces
 }
 
 func (s *BufferState) LineNumMarginWidth() uint64 {

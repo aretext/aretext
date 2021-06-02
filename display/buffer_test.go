@@ -800,3 +800,55 @@ func TestShowTabs(t *testing.T) {
 		})
 	}
 }
+
+func TestShowTrailingSpaces(t *testing.T) {
+	testCases := []struct {
+		name               string
+		width, height      int
+		showTrailingSpaces bool
+		inputString        string
+		expectedContents   [][]rune
+	}{
+		{
+			name:               "hide trailing spaces",
+			width:              8,
+			height:             3,
+			showTrailingSpaces: false,
+			inputString:        "a  \nbc \nd",
+			expectedContents: [][]rune{
+				{'a', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'b', 'c', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'d', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:               "show trailing spaces",
+			width:              8,
+			height:             3,
+			showTrailingSpaces: true,
+			inputString:        "a  \nbc \nd",
+			expectedContents: [][]rune{
+				{'a', tcell.RuneBullet, tcell.RuneBullet, ' ', ' ', ' ', ' ', ' '},
+				{'b', 'c', tcell.RuneBullet, ' ', ' ', ' ', ' ', ' '},
+				{'d', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					if tc.showTrailingSpaces {
+						state.ToggleShowTrailingSpaces(editorState)
+					}
+				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}

@@ -62,7 +62,7 @@ func drawGraphemeCluster(
 
 		// Draw a special character to represent a tab.
 		if gc[0] == '\t' && showTabs {
-			sr.SetContent(startCol, row, tcell.RuneRArrow, nil, tcell.StyleDefault.Dim(true))
+			sr.SetContent(startCol, row, tcell.RuneRArrow, nil, style.Dim(true))
 		}
 
 		return

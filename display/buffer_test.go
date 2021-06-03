@@ -801,6 +801,41 @@ func TestShowTabs(t *testing.T) {
 	}
 }
 
+func TestShowTabsWithSelectionStyle(t *testing.T) {
+	withSimScreen(t, func(s tcell.SimulationScreen) {
+		s.SetSize(8, 1)
+		drawBuffer(t, s, func(editorState *state.EditorState) {
+			state.InsertRune(editorState, '\t')
+			state.InsertRune(editorState, 'a')
+			state.InsertRune(editorState, 'b')
+			state.InsertRune(editorState, 'c')
+			state.ToggleShowTabs(editorState)
+			state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+				return 0
+			})
+			state.ToggleVisualMode(editorState, selection.ModeChar)
+			state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+				return 2
+			})
+		})
+		assertCellContents(t, s, [][]rune{
+			{tcell.RuneRArrow, ' ', ' ', ' ', 'a', 'b', 'c', ' '},
+		})
+		assertCellStyles(t, s, [][]tcell.Style{
+			{
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault.Reverse(true).Dim(true),
+				tcell.StyleDefault,
+				tcell.StyleDefault,
+			},
+		})
+	})
+}
+
 func TestShowTrailingSpaces(t *testing.T) {
 	testCases := []struct {
 		name               string

@@ -112,7 +112,6 @@ Menu Commands
 | open previous document       | p        |
 | open next document           | n        |
 | toggle show tabs             | ta       |
-| toggle show trailing spaces  | ts       |
 | toggle line numbers          | nu       |
 | set syntax plaintext         |          |
 | set syntax json              |          |

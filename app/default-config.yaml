@@ -13,7 +13,6 @@
     tabExpand: false
     tabSize: 4
     showTabs: false
-    showTrailingSpaces: false
     showLineNumbers: false
 #   menuCommands:
 #     - name: my custom menu command

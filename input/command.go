@@ -90,11 +90,6 @@ func commandMenuItems(config Config) func() []menu.Item {
 				Action:  state.ToggleShowTabs,
 			},
 			{
-				Name:    "toggle show trailing spaces",
-				Aliases: []string{"ts"},
-				Action:  state.ToggleShowTrailingSpaces,
-			},
-			{
 				Name:    "toggle line numbers",
 				Aliases: []string{"nu"},
 				Action:  state.ToggleShowLineNumbers,

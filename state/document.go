@@ -160,7 +160,6 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.showTabs = config.ShowTabs
-	state.documentBuffer.showTrailingSpaces = config.ShowTrailingSpaces
 	state.documentBuffer.autoIndent = config.AutoIndent
 	state.documentBuffer.showLineNum = config.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()

@@ -75,3 +75,9 @@ func listDir(path string) ([]fs.DirEntry, error) {
 	}
 	return dirs, nil
 }
+
+func shouldSkipDir(path string, dirNamesToHide map[string]struct{}) bool {
+	name := filepath.Base(path)
+	_, ok := dirNamesToHide[name]
+	return ok
+}

@@ -118,18 +118,21 @@ func ShowFileMenu(config Config) Action {
 			return nil
 		}
 
-		items := make([]menu.Item, 0, 0)
-		file.Walk(dir, config.DirNamesToHide, func(path string) {
+		paths := file.ListDir(dir, config.DirNamesToHide)
+		log.Printf("Listed %d paths for dir '%s\n", len(paths), dir)
+
+		items := make([]menu.Item, 0, len(paths))
+		for _, p := range paths {
+			menuPath := p // reference path in this iteration of the loop
 			items = append(items, menu.Item{
-				Name: file.RelativePath(path, dir),
+				Name: file.RelativePath(menuPath, dir),
 				Action: func(s *state.EditorState) {
-					state.LoadDocument(s, path, true, func(state.LocatorParams) uint64 {
+					state.LoadDocument(s, menuPath, true, func(state.LocatorParams) uint64 {
 						return 0
 					})
 				},
 			})
-		})
-
+		}
 		return items
 	}
 

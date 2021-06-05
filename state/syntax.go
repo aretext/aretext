@@ -32,7 +32,7 @@ func setSyntaxAndRetokenize(buffer *BufferState, language syntax.Language) error
 	textLen := buffer.textTree.NumChars()
 	tokenTree, err := buffer.tokenizer.TokenizeAll(r, textLen)
 	if err != nil {
-		return errors.Wrapf(err, "TokenizeAll")
+		return errors.Wrap(err, "TokenizeAll")
 	}
 
 	buffer.tokenTree = tokenTree
@@ -51,7 +51,7 @@ func retokenizeAfterEdit(buffer *BufferState, edit parser.Edit) error {
 	}
 	updatedTokenTree, err := buffer.tokenizer.RetokenizeAfterEdit(buffer.tokenTree, edit, textLen, readerAtPos)
 	if err != nil {
-		return errors.Wrapf(err, "RetokenizeAfterEdit")
+		return errors.Wrap(err, "RetokenizeAfterEdit")
 	}
 
 	buffer.tokenTree = updatedTokenTree

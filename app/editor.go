@@ -58,7 +58,7 @@ func effectivePath(path string) string {
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Printf("Error converting '%s' to absolute path: %v", path, errors.Wrapf(err, "filepath.Abs"))
+		log.Printf("Error converting '%s' to absolute path: %v", path, errors.Wrap(err, "filepath.Abs"))
 		return path
 	}
 
@@ -136,7 +136,7 @@ func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
 	return func(f func() error) error {
 		// Suspend input processing and reset the terminal to its original state.
 		if err := screen.Suspend(); err != nil {
-			return errors.Wrapf(err, "screen.Suspend()")
+			return errors.Wrap(err, "screen.Suspend()")
 		}
 
 		// Ensure screen is resumed after executing the function.

@@ -63,7 +63,7 @@ func runInShell(shellCmd string, env []string, stdin io.Reader, stdout io.Writer
 	cmd.Stderr = stderr
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "Cmd.Run")
+		return errors.Wrap(err, "Cmd.Run")
 	}
 	return nil
 }
@@ -80,7 +80,7 @@ func shellProgAndArgs() ([]string, error) {
 	// These args need to be passed separately to exec.Command, so split them here.
 	parts, err := shlex.Split(s)
 	if err != nil {
-		return nil, errors.Wrapf(err, "shlex.Split")
+		return nil, errors.Wrap(err, "shlex.Split")
 	}
 	return parts, nil
 }

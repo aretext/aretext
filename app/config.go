@@ -34,11 +34,11 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if os.IsNotExist(err) {
 		log.Printf("Writing default config to '%s'\n", path)
 		if err := saveDefaultConfig(path); err != nil {
-			return nil, errors.Wrapf(err, fmt.Sprintf("Error writing default config to '%s'", path))
+			return nil, errors.Wrapf(err, "Error writing default config to '%s'", path)
 		}
 		return unmarshalRuleSet(DefaultConfigYaml)
 	} else if err != nil {
-		return nil, errors.Wrapf(err, fmt.Sprintf("Error loading config from '%s'", path))
+		return nil, errors.Wrapf(err, "Error loading config from '%s'", path)
 	}
 
 	ruleSet, err := unmarshalRuleSet(data)
@@ -59,7 +59,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 	var rules []config.Rule
 	if err := yaml.Unmarshal(data, &rules); err != nil {
-		return nil, errors.Wrapf(err, "yaml")
+		return nil, errors.Wrap(err, "yaml")
 	}
 	return config.RuleSet(rules), nil
 }
@@ -67,10 +67,10 @@ func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 func saveDefaultConfig(path string) error {
 	dirPath := filepath.Dir(path)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		return errors.Wrapf(err, "os.MkdirAll")
+		return errors.Wrap(err, "os.MkdirAll")
 	}
 	if err := os.WriteFile(path, DefaultConfigYaml, 0644); err != nil {
-		return errors.Wrapf(err, "os.WriteFile")
+		return errors.Wrap(err, "os.WriteFile")
 	}
 	return nil
 }

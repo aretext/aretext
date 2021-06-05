@@ -22,7 +22,7 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// don't work; see https://danluu.com/deconstruct-files/
 	f, err := os.Create(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "os.Create")
+		return nil, errors.Wrap(err, "os.Create")
 	}
 	defer f.Close()
 
@@ -35,13 +35,13 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// Write to the file and calculate the checksum.
 	_, err = io.Copy(f, r)
 	if err != nil {
-		return nil, errors.Wrapf(err, "io.Copy")
+		return nil, errors.Wrap(err, "io.Copy")
 	}
 
 	// Sync the file to disk so the watcher calculates the checksum correctly later.
 	err = f.Sync()
 	if err != nil {
-		return nil, errors.Wrapf(err, "File.Sync")
+		return nil, errors.Wrap(err, "File.Sync")
 	}
 
 	// Start a new watcher for subsequent changes to the file.

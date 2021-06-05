@@ -59,7 +59,7 @@ func (s *Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
 				return false, 0, nil
 			}
 		} else if err != nil {
-			return false, 0, errors.Wrapf(err, "Read")
+			return false, 0, errors.Wrap(err, "Read")
 		}
 
 		var j int

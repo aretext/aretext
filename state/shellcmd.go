@@ -131,7 +131,7 @@ func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env
 func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, errors.Wrapf(err, "os.Getwd")
+		return nil, errors.Wrap(err, "os.Getwd")
 	}
 
 	menuItems := make([]menu.Item, 0, len(locations))

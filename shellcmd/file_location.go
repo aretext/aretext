@@ -40,7 +40,7 @@ func FileLocationsFromLines(r io.Reader) ([]FileLocation, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, errors.Wrapf(err, "scanner.Scan")
+		return nil, errors.Wrap(err, "scanner.Scan")
 	}
 
 	return fileLocations, nil

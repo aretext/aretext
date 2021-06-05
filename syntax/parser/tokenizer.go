@@ -38,7 +38,7 @@ func GenerateTokenizer(rules []TokenizerRule) (*Tokenizer, error) {
 	for i, r := range rules {
 		regexp, err := ParseRegexp(r.Regexp)
 		if err != nil {
-			return nil, errors.Wrapf(err, "parse rule regexp")
+			return nil, errors.Wrap(err, "parse rule regexp")
 		}
 		ruleNfa := regexp.CompileNfa().SetAcceptAction(i)
 		nfa = nfa.Union(ruleNfa)
@@ -118,7 +118,7 @@ func (t *Tokenizer) RetokenizeAfterEdit(tree *TokenTree, edit Edit, textLen uint
 	for pos < textLen {
 		nextPos, nextTokens, err := t.nextTokens(r, textLen, pos)
 		if err != nil {
-			return nil, errors.Wrapf(err, "next token")
+			return nil, errors.Wrap(err, "next token")
 		}
 
 		if len(nextTokens) > 0 && nextTokens[0].StartPos > edit.Pos+edit.NumInserted {
@@ -199,7 +199,7 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 	for pos < textLen {
 		accepted, endPos, lookaheadPos, actions, numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
-			return 0, nil, errors.Wrapf(err, "tokenizing input")
+			return 0, nil, errors.Wrap(err, "tokenizing input")
 		}
 
 		// Identify a token if the DFA accepts AND the accepted prefix is non-empty.
@@ -208,7 +208,7 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 			// We already skipped some characters, so we need to output an empty token.
 			if emptyToken.StartPos < emptyToken.EndPos {
 				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
-					return 0, nil, errors.Wrapf(err, "rewind reader")
+					return 0, nil, errors.Wrap(err, "rewind reader")
 				}
 				return pos, []Token{emptyToken}, nil
 			}
@@ -225,7 +225,7 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 			if subTokenizer != nil {
 				// Rewind the reader to the start of the token.
 				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
-					return 0, nil, errors.Wrapf(err, "rewind reader")
+					return 0, nil, errors.Wrap(err, "rewind reader")
 				}
 				// Run the relevant sub-tokenizer on the contents of the token.
 				return t.runSubTokenizer(r, subTokenizer, acceptedToken)
@@ -237,7 +237,7 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 		// We couldn't find a match, so advance to the next position and try again.
 		pos++
 		if err := t.advanceReaderOneRune(r); err != nil {
-			return 0, nil, errors.Wrapf(err, "advance reader")
+			return 0, nil, errors.Wrap(err, "advance reader")
 		}
 
 		// Cover the skipped position with an empty token.
@@ -310,13 +310,13 @@ func (t *Tokenizer) actionsToRule(actions []int) (int, TokenizerRule) {
 
 func (t *Tokenizer) advanceReaderOneRune(r InputReader) error {
 	if _, err := r.Read(t.buf[:1]); err != nil && err != io.EOF {
-		return errors.Wrapf(err, "read first byte")
+		return errors.Wrap(err, "read first byte")
 	}
 
 	w := int64(utf8.CharWidth[t.buf[0]])
 	if w > 1 {
 		if _, err := r.Read(t.buf[:w-1]); err != nil {
-			return errors.Wrapf(err, "read next bytes")
+			return errors.Wrap(err, "read next bytes")
 		}
 	}
 

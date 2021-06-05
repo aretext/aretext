@@ -114,7 +114,7 @@ func ShowFileMenu(config Config) Action {
 	findFileMenuItems := func() []menu.Item {
 		dir, err := os.Getwd()
 		if err != nil {
-			log.Printf("Error loading menu items: %v\n", errors.Wrapf(err, "os.GetCwd"))
+			log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
 			return nil
 		}
 

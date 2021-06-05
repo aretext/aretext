@@ -66,12 +66,12 @@ func listDirRec(root string, dirNamesToHide map[string]struct{}, semaphoreChan c
 func listDir(path string) ([]fs.DirEntry, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "os.Open")
+		return nil, errors.Wrap(err, "os.Open")
 	}
 	dirs, err := f.ReadDir(-1)
 	f.Close()
 	if err != nil {
-		return nil, errors.Wrapf(err, "f.ReadDir")
+		return nil, errors.Wrap(err, "f.ReadDir")
 	}
 	return dirs, nil
 }

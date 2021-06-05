@@ -101,7 +101,7 @@ func generateLanguageIndex(specs []LanguageSpec, outputPath string) error {
 	fmt.Printf("Generating %s\n", outputPath)
 	f, err := os.Create(outputPath)
 	if err != nil {
-		return errors.Wrapf(err, "os.Create")
+		return errors.Wrap(err, "os.Create")
 	}
 	defer f.Close()
 
@@ -172,7 +172,7 @@ func TokenizerForLanguage(language Language) *parser.Tokenizer {
 `
 	tmpl, err := template.New("root").Parse(tmplStr)
 	if err != nil {
-		return errors.Wrapf(err, "template.New")
+		return errors.Wrap(err, "template.New")
 	}
 
 	return tmpl.Execute(f, map[string]interface{}{
@@ -192,7 +192,7 @@ func generateTokenizer(tokenizerName string, tokenizerRules []parser.TokenizerRu
 func writeTokenizer(tokenizer *parser.Tokenizer, tokenizerName string, outputPath string) error {
 	f, err := os.Create(outputPath)
 	if err != nil {
-		return errors.Wrapf(err, "os.Create")
+		return errors.Wrap(err, "os.Create")
 	}
 	defer f.Close()
 
@@ -241,7 +241,7 @@ func init() {
 
 	tmpl, err := template.New("root").Parse(tmplStr)
 	if err != nil {
-		return errors.Wrapf(err, "template.New")
+		return errors.Wrap(err, "template.New")
 	}
 
 	return tmpl.Execute(f, map[string]interface{}{

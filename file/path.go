@@ -13,7 +13,7 @@ import (
 func RelativePathCwd(p string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error getting current working directory: %v\n", errors.Wrapf(err, "os.Getwd"))
+		log.Printf("Error getting current working directory: %v\n", errors.Wrap(err, "os.Getwd"))
 		return p
 	}
 	return RelativePath(p, cwd)
@@ -24,7 +24,7 @@ func RelativePathCwd(p string) string {
 func RelativePath(p string, baseDir string) string {
 	relPath, err := filepath.Rel(baseDir, p)
 	if err != nil {
-		log.Printf("Error converting '%s' to relative path from base '%s': %v\n", p, baseDir, errors.Wrapf(err, "filepath.Rel"))
+		log.Printf("Error converting '%s' to relative path from base '%s': %v\n", p, baseDir, errors.Wrap(err, "filepath.Rel"))
 		return p
 	}
 	return relPath

@@ -38,7 +38,7 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLo
 	var n uint64
 	for _, r := range s {
 		if err := buffer.textTree.InsertAtPosition(pos+n, r); err != nil {
-			return errors.Wrapf(err, "text.Tree.InsertAtPosition")
+			return errors.Wrap(err, "text.Tree.InsertAtPosition")
 		}
 		n++
 	}
@@ -48,7 +48,7 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLo
 		NumInserted: n,
 	}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
-		return errors.Wrapf(err, "retokenizeAfterEdit")
+		return errors.Wrap(err, "retokenizeAfterEdit")
 	}
 
 	if updateUndoLog && len(s) > 0 {
@@ -364,7 +364,7 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 	edit := parser.Edit{Pos: pos, NumDeleted: count}
 	if err := retokenizeAfterEdit(buffer, edit); err != nil {
 		// This should never happen when using a text tree reader.
-		log.Fatalf("error deleting runes: %v\n", errors.Wrapf(err, "retokenizeAfterEdit"))
+		log.Fatalf("error deleting runes: %v\n", errors.Wrap(err, "retokenizeAfterEdit"))
 	}
 
 	deletedText := string(deletedRunes)

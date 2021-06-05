@@ -255,7 +255,7 @@ func reportSaveError(state *EditorState, err error, path string) {
 	log.Printf("Error saving file to '%s': %v", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not save %s", path),
+		Text:  fmt.Sprintf("Could not save '%s': %s", file.RelativePathCwd(path), errors.Cause(err)),
 	})
 }
 

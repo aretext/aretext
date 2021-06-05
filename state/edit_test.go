@@ -735,6 +735,7 @@ func TestReplaceChar(t *testing.T) {
 		inputString    string
 		initialCursor  cursorState
 		newChar        rune
+		autoIndent     bool
 		expectedCursor cursorState
 		expectedText   string
 	}{
@@ -770,6 +771,15 @@ func TestReplaceChar(t *testing.T) {
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\nd",
 		},
+		{
+			name:           "insert newline with autoindent",
+			inputString:    "\tabcd",
+			newChar:        '\n',
+			initialCursor:  cursorState{position: 2},
+			autoIndent:     true,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "\ta\n\tcd",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -779,6 +789,7 @@ func TestReplaceChar(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
+			state.documentBuffer.autoIndent = tc.autoIndent
 			ReplaceChar(state, tc.newChar)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())

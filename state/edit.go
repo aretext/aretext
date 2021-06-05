@@ -379,29 +379,29 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 // ReplaceChar replaces the character under the cursor.
 func ReplaceChar(state *EditorState, newChar rune) {
 	buffer := state.documentBuffer
-	cursorPos := state.documentBuffer.cursor.position
-	nextCharPos := locate.NextCharInLine(buffer.textTree, 1, true, cursorPos)
+	pos := state.documentBuffer.cursor.position
+	nextCharPos := locate.NextCharInLine(buffer.textTree, 1, true, pos)
 
-	if nextCharPos == cursorPos {
+	if nextCharPos == pos {
 		// No character under the cursor on the current line, so abort.
 		return
 	}
 
-	numToDelete := nextCharPos - cursorPos
-	deleteRunes(state, cursorPos, numToDelete, true)
+	numToDelete := nextCharPos - pos
+	deleteRunes(state, pos, numToDelete, true)
 
-	pos := cursorPos
-	newText := string(newChar)
-	if err := insertTextAtPosition(state, newText, pos, true); err != nil {
-		// invalid UTF-8 rune; ignore it.
-		log.Printf("Error inserting text '%s': %v\n", newText, err)
-	}
-	pos += uint64(utf8.RuneCountInString(newText))
-
-	if newText != "\n" {
-		buffer.cursor.position = cursorPos
-	} else {
-		buffer.cursor.position = pos
+	switch newChar {
+	case '\n':
+		InsertNewline(state)
+	default:
+		newText := string(newChar)
+		if err := insertTextAtPosition(state, newText, pos, true); err != nil {
+			// invalid UTF-8 rune; ignore it.
+			log.Printf("Error inserting text '%s': %v\n", newText, err)
+		}
+		MoveCursor(state, func(p LocatorParams) uint64 {
+			return pos
+		})
 	}
 }
 

@@ -367,19 +367,18 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	}
 
 	lastInput := inputEvents[len(inputEvents)-1]
-	var newRune rune
+	var newChar rune
 	if lastInput.Key() == tcell.KeyEnter {
-		newRune = '\n'
+		newChar = '\n'
 	} else if lastInput.Key() == tcell.KeyRune {
-		newRune = lastInput.Rune()
+		newChar = lastInput.Rune()
 	} else {
 		log.Printf("Unsupported input for replace character command\n")
 		return EmptyAction
 	}
 
-	newText := string([]rune{newRune})
 	return func(s *state.EditorState) {
-		state.ReplaceChar(s, newText)
+		state.ReplaceChar(s, newChar)
 	}
 }
 

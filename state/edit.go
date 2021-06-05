@@ -376,8 +376,8 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 	return deletedText
 }
 
-// ReplaceChar replaces the character under the cursor with the specified string.
-func ReplaceChar(state *EditorState, newText string) {
+// ReplaceChar replaces the character under the cursor.
+func ReplaceChar(state *EditorState, newChar rune) {
 	buffer := state.documentBuffer
 	cursorPos := state.documentBuffer.cursor.position
 	nextCharPos := locate.NextCharInLine(buffer.textTree, 1, true, cursorPos)
@@ -391,6 +391,7 @@ func ReplaceChar(state *EditorState, newText string) {
 	deleteRunes(state, cursorPos, numToDelete, true)
 
 	pos := cursorPos
+	newText := string(newChar)
 	if err := insertTextAtPosition(state, newText, pos, true); err != nil {
 		// invalid UTF-8 rune; ignore it.
 		log.Printf("Error inserting text '%s': %v\n", newText, err)

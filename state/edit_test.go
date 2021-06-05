@@ -734,14 +734,14 @@ func TestReplaceChar(t *testing.T) {
 		name           string
 		inputString    string
 		initialCursor  cursorState
-		newText        string
+		newChar        rune
 		expectedCursor cursorState
 		expectedText   string
 	}{
 		{
 			name:           "empty",
 			inputString:    "",
-			newText:        "a",
+			newChar:        'a',
 			initialCursor:  cursorState{position: 0},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
@@ -749,7 +749,7 @@ func TestReplaceChar(t *testing.T) {
 		{
 			name:           "replace char",
 			inputString:    "abcd",
-			newText:        "x",
+			newChar:        'x',
 			initialCursor:  cursorState{position: 1},
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "axcd",
@@ -757,7 +757,7 @@ func TestReplaceChar(t *testing.T) {
 		{
 			name:           "empty line",
 			inputString:    "ab\n\ncd",
-			newText:        "x",
+			newChar:        'x',
 			initialCursor:  cursorState{position: 3},
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\n\ncd",
@@ -765,7 +765,7 @@ func TestReplaceChar(t *testing.T) {
 		{
 			name:           "insert newline",
 			inputString:    "abcd",
-			newText:        "\n",
+			newChar:        '\n',
 			initialCursor:  cursorState{position: 2},
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\nd",
@@ -779,7 +779,7 @@ func TestReplaceChar(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			ReplaceChar(state, tc.newText)
+			ReplaceChar(state, tc.newChar)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})

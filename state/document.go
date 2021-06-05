@@ -139,7 +139,7 @@ func currentTimelineState(state *EditorState) file.TimelineState {
 func loadDocumentAndResetState(state *EditorState, path string, requireExists bool) (fileExists bool, err error) {
 	config := state.configRuleSet.ConfigForPath(path)
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if os.IsNotExist(err) && !requireExists {
+	if err := errors.Cause(err); errors.Is(err, os.ErrNotExist) && !requireExists {
 		tree = text.NewTree()
 		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
 	} else if err != nil {

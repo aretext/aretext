@@ -21,8 +21,7 @@ func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher,
 
 	f, err := os.Open(path)
 	if err != nil {
-		// Return the error directly so callers can use os.IsNotExist(err) to check if the file exists.
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "os.Open")
 	}
 	defer f.Close()
 

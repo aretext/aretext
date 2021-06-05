@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/locate"
@@ -229,7 +231,7 @@ func reportLoadError(state *EditorState, err error, path string) {
 	log.Printf("Error loading file at '%s': %v\n", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not open %s", file.RelativePathCwd(path)),
+		Text:  fmt.Sprintf("Could not open '%s': %s", file.RelativePathCwd(path), errors.Cause(err)),
 	})
 }
 

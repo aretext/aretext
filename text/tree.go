@@ -1,13 +1,18 @@
 package text
 
 import (
-	"errors"
 	"io"
 	"io/ioutil"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/pkg/errors"
+
 	textUtf8 "github.com/aretext/aretext/text/utf8"
+)
+
+var (
+	InvalidUtf8Error = errors.New("invalid UTF-8")
 )
 
 // text.Tree is a data structure for representing UTF-8 text.
@@ -67,7 +72,7 @@ func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
 		}
 
 		if !v.ValidateBytes(buf[:n]) {
-			return nil, errors.New("invalid UTF-8")
+			return nil, InvalidUtf8Error
 		}
 
 		for i := 0; i < n; i++ {
@@ -92,7 +97,7 @@ func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
 	}
 
 	if !v.ValidateEnd() {
-		return nil, errors.New("invalid UTF-8")
+		return nil, InvalidUtf8Error
 	}
 
 	return leafGroups, nil
@@ -545,7 +550,7 @@ func (l *leafNode) key() indexKey {
 func (l *leafNode) insertAtPosition(charPos uint64, c rune) (*leafNode, error) {
 	w := utf8.RuneLen(c)
 	if w < 0 {
-		return nil, errors.New("invalid UTF-8")
+		return nil, InvalidUtf8Error
 	}
 
 	charWidth := uint64(w)

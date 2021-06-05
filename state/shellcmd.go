@@ -46,7 +46,7 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 	if err != nil {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  err.Error(),
+			Text:  fmt.Sprintf("Shell command failed: %s", errors.Cause(err)),
 		})
 		return
 	}

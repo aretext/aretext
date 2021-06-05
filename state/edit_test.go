@@ -736,6 +736,7 @@ func TestReplaceChar(t *testing.T) {
 		initialCursor  cursorState
 		newChar        rune
 		autoIndent     bool
+		tabExpand      bool
 		expectedCursor cursorState
 		expectedText   string
 	}{
@@ -780,6 +781,23 @@ func TestReplaceChar(t *testing.T) {
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "\ta\n\tcd",
 		},
+		{
+			name:           "insert tab, no expand",
+			inputString:    "abcd",
+			newChar:        '\t',
+			initialCursor:  cursorState{position: 2},
+			expectedCursor: cursorState{position: 2},
+			expectedText:   "ab\td",
+		},
+		{
+			name:           "insert tab, expand",
+			inputString:    "abcd",
+			newChar:        '\t',
+			initialCursor:  cursorState{position: 2},
+			tabExpand:      true,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab  d",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -790,6 +808,8 @@ func TestReplaceChar(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.autoIndent = tc.autoIndent
+			state.documentBuffer.tabExpand = tc.tabExpand
+			state.documentBuffer.tabSize = 4
 			ReplaceChar(state, tc.newChar)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())

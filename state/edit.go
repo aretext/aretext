@@ -393,6 +393,11 @@ func ReplaceChar(state *EditorState, newChar rune) {
 	switch newChar {
 	case '\n':
 		InsertNewline(state)
+	case '\t':
+		InsertTab(state)
+		MoveCursor(state, func(p LocatorParams) uint64 {
+			return locate.PrevCharInLine(p.TextTree, 1, false, p.CursorPos)
+		})
 	default:
 		newText := string(newChar)
 		if err := insertTextAtPosition(state, newText, pos, true); err != nil {

@@ -370,6 +370,8 @@ func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	var newChar rune
 	if lastInput.Key() == tcell.KeyEnter {
 		newChar = '\n'
+	} else if lastInput.Key() == tcell.KeyTab {
+		newChar = '\t'
 	} else if lastInput.Key() == tcell.KeyRune {
 		newChar = lastInput.Rune()
 	} else {

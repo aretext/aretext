@@ -38,6 +38,14 @@ func main() {
 			Name:  "Go",
 			Rules: rules.GolangRules(),
 		},
+		{
+			Name:  "GitCommit",
+			Rules: rules.GitCommitRules(),
+		},
+		{
+			Name:  "GitRebase",
+			Rules: rules.GitRebaseRules(),
+		},
 	}
 
 	filteredSpecs := filterSpecs(specs, *language)

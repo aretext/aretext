@@ -19,6 +19,16 @@
 #       shellCmd: echo 'hello world!' | less
 #       mode: terminal  # or "silent" or "insert" or "fileLocations"
 
+- name: git commit
+  pattern: "**/.git/COMMIT_EDITMSG"
+  config:
+    syntaxLanguage: gitcommit
+
+- name: git rebase
+  pattern: "**/.git/**/git-rebase-todo"
+  config:
+    syntaxLanguage: gitrebase
+
 - name: json
   pattern: "**/*.json"
   config:

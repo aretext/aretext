@@ -16,6 +16,8 @@ const (
 	LanguageJson
 	LanguageYaml
 	LanguageGo
+	LanguageGitCommit
+	LanguageGitRebase
 )
 
 var AllLanguages = []Language{
@@ -23,6 +25,8 @@ var AllLanguages = []Language{
 	LanguageJson,
 	LanguageYaml,
 	LanguageGo,
+	LanguageGitCommit,
+	LanguageGitRebase,
 }
 
 func (language Language) String() string {
@@ -37,6 +41,10 @@ func (language Language) String() string {
 		return "yaml"
 	case LanguageGo:
 		return "go"
+	case LanguageGitCommit:
+		return "gitcommit"
+	case LanguageGitRebase:
+		return "gitrebase"
 	default:
 		return ""
 	}
@@ -54,6 +62,10 @@ func LanguageFromString(s string) Language {
 		return LanguageYaml
 	case "go":
 		return LanguageGo
+	case "gitcommit":
+		return LanguageGitCommit
+	case "gitrebase":
+		return LanguageGitRebase
 	default:
 		log.Printf("Unrecognized syntax language '%s'\n", s)
 		return LanguageUndefined
@@ -72,6 +84,10 @@ func TokenizerForLanguage(language Language) *parser.Tokenizer {
 		return YamlTokenizer
 	case LanguageGo:
 		return GoTokenizer
+	case LanguageGitCommit:
+		return GitCommitTokenizer
+	case LanguageGitRebase:
+		return GitRebaseTokenizer
 	default:
 		return nil
 	}

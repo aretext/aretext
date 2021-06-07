@@ -636,7 +636,7 @@ func (dfa *Dfa) NextState(fromState int, onInput int) int {
 // they also control the behavior of start-of-text (^) and end-of-text ($) patterns.
 func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (DfaMatchResult, error) {
 	var result DfaMatchResult
-	var totalBytesRead int
+	var totalBytesRead, numBytesReadInText int
 	pos := startPos
 	state := dfa.StartState
 
@@ -659,7 +659,6 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (Df
 		}
 	}
 
-	var truncatedBytesRead int
 	for {
 		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
@@ -675,10 +674,10 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (Df
 				// The reader produced more bytes than the length of the text.
 				// Exit the loop and treat the last rune read as the end of the text.
 				pos = textLen
-				truncatedBytesRead = prevTotalBytesRead + i
 				break
 			}
 
+			numBytesReadInText++
 			state = dfa.NextState(state, int(c))
 			if state == DfaDeadState {
 				break
@@ -702,14 +701,8 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (Df
 		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
 			result.Accepted = true
 			result.EndPos = pos
-			result.NumBytesReadAtLastAccept = totalBytesRead
+			result.NumBytesReadAtLastAccept = numBytesReadInText
 			result.Actions = acceptActions
-
-			// If the reader produced more bytes than the length of the text,
-			// we consume up only the bytes in the text.
-			if truncatedBytesRead > 0 {
-				result.NumBytesReadAtLastAccept = truncatedBytesRead
-			}
 		}
 	}
 

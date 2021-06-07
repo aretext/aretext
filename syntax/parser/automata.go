@@ -598,8 +598,50 @@ type DfaMatchResult struct {
 	Accepted                 bool
 	EndPos                   uint64
 	LookaheadPos             uint64
-	Actions                  []int
 	NumBytesReadAtLastAccept int
+	Actions                  []int
+}
+
+var DfaMatchResultNone = DfaMatchResult{}
+
+// consolidate combines two match results into a single match result.
+// It chooses the longest accepting match of the pair.  In the event
+// of a tie, it returns an accepting match with the actions from both matches.
+func (m DfaMatchResult) consolidate(other DfaMatchResult) DfaMatchResult {
+	if m.Accepted && other.Accepted {
+		if m.EndPos > other.EndPos {
+			return m
+		} else if other.EndPos > m.EndPos {
+			return other
+		} else {
+			return DfaMatchResult{
+				Accepted:                 true,
+				EndPos:                   m.EndPos,
+				LookaheadPos:             maxUint64(m.LookaheadPos, other.LookaheadPos),
+				NumBytesReadAtLastAccept: m.NumBytesReadAtLastAccept,
+				Actions:                  append(m.Actions, other.Actions...),
+			}
+		}
+	} else if m.Accepted {
+		return m
+	} else if other.Accepted {
+		return other
+	} else {
+		return DfaMatchResultNone
+	}
+}
+
+// dfaStateSet represents a set of DFA states.
+type dfaStateSet []int
+
+// allDead returns whether every state in the set is the dead state.
+func (ss dfaStateSet) allDead() bool {
+	for _, s := range ss {
+		if s != DfaDeadState {
+			return false
+		}
+	}
+	return true
 }
 
 // Dfa is a deterministic finite automata.
@@ -638,31 +680,32 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (Df
 	var result DfaMatchResult
 	var totalBytesRead, numBytesReadInText int
 	pos := startPos
-	state := dfa.StartState
+	stateSet := dfaStateSet{dfa.StartState}
 
-	if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-		result.Accepted = true
-		result.EndPos = pos
-		result.Actions = acceptActions
+	// If at the start of text, we need to run the state machine both with and
+	// without the "start-of-text" input.  For example, if the state machine
+	// has two patterns "a" and "^a", and the input is "a", we should match
+	// both patterns.
+	if startPos == 0 {
+		stateSet = append(stateSet, dfa.NextState(dfa.StartState, startOfText))
 	}
 
-	if startPos == 0 {
-		prevState := state
-		state = dfa.NextState(state, startOfText)
-		if state == DfaDeadState {
-			// The DFA doesn't match start-of-text, so try to recover by restarting at the first character.
-			state = prevState
-		} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-			result.Accepted = true
-			result.EndPos = pos
-			result.Actions = acceptActions
+	// Check if the first state is an accept state.
+	for _, s := range stateSet {
+		if acceptActions := dfa.AcceptActions[s]; len(acceptActions) > 0 {
+			result = result.consolidate(DfaMatchResult{
+				Accepted: true,
+				EndPos:   pos,
+				Actions:  acceptActions,
+			})
 		}
 	}
 
+	// Run the state machine on bytes from the input reader.
 	for {
 		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
-			return DfaMatchResult{}, err
+			return DfaMatchResultNone, err
 		}
 
 		prevTotalBytesRead := totalBytesRead
@@ -678,38 +721,53 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (Df
 			}
 
 			numBytesReadInText++
-			state = dfa.NextState(state, int(c))
-			if state == DfaDeadState {
+
+			for stateIdx := range stateSet {
+				nextState := dfa.NextState(stateSet[stateIdx], int(c))
+				if acceptActions := dfa.AcceptActions[nextState]; len(acceptActions) > 0 {
+					result = result.consolidate(DfaMatchResult{
+						Accepted:                 true,
+						EndPos:                   pos,
+						NumBytesReadAtLastAccept: prevTotalBytesRead + i + 1,
+						Actions:                  acceptActions,
+					})
+				}
+				stateSet[stateIdx] = nextState
+			}
+
+			if stateSet.allDead() {
 				break
-			} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-				result.Accepted = true
-				result.EndPos = pos
-				result.NumBytesReadAtLastAccept = prevTotalBytesRead + i + 1
-				result.Actions = acceptActions
 			}
 		}
 
-		if err == io.EOF || state == DfaDeadState || pos >= textLen {
+		if err == io.EOF || stateSet.allDead() || pos >= textLen {
 			break
 		}
 	}
 
+	// Record the maximum position reached by the state machine.
+	// This is used during retokenization to decide which tokens to invalidate.
 	result.LookaheadPos = pos
 
+	// Check if any pattern matches the end-of-text input.
 	if pos == textLen {
-		state = dfa.NextState(state, endOfText)
-		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-			result.Accepted = true
-			result.EndPos = pos
-			result.NumBytesReadAtLastAccept = numBytesReadInText
-			result.Actions = acceptActions
+		for stateIdx := range stateSet {
+			nextState := dfa.NextState(stateSet[stateIdx], endOfText)
+			if acceptActions := dfa.AcceptActions[nextState]; len(acceptActions) > 0 {
+				result = result.consolidate(DfaMatchResult{
+					Accepted:                 true,
+					EndPos:                   pos,
+					NumBytesReadAtLastAccept: numBytesReadInText,
+					Actions:                  acceptActions,
+				})
+			}
 		}
 	}
 
 	// Reset the reader position to the end of the last match.
 	// If there was no match, this resets the reader to its original position.
 	if err := r.SeekBackward(uint64(totalBytesRead - result.NumBytesReadAtLastAccept)); err != nil {
-		return DfaMatchResult{}, err
+		return DfaMatchResultNone, err
 	}
 
 	return result, nil

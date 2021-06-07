@@ -312,6 +312,84 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			startPos:       0,
 			expectAccepted: false,
 		},
+		{
+			name: "start-of-text rule union non start-of-text-rule, match non start-of-text-rule",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).SetAcceptAction(50),
+			).Union(
+				NfaForStartOfText().Concat(NfaForChars([]byte{'c'})).SetAcceptAction(99),
+			),
+			inputString:    "ab",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   2,
+			expectActions:  []int{50},
+		},
+		{
+			name: "start-of-text rule union non start-of-text-rule, match start-of-text-rule",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).SetAcceptAction(50),
+			).Union(
+				NfaForStartOfText().Concat(NfaForChars([]byte{'c'})).SetAcceptAction(99),
+			),
+			inputString:    "c",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{99},
+		},
+		{
+			name: "start-of-text rule union non start-of-text-rule, match both rules, start-of-text-rule longer",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'e'})).SetAcceptAction(50),
+			).Union(
+				NfaForStartOfText().Concat(NfaForChars([]byte{'a'})).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'c'})).SetAcceptAction(99),
+			),
+			inputString:    "abc",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   3,
+			expectActions:  []int{99},
+		},
+		{
+			name: "start-of-text rule union non start-of-text-rule, match both rules, start-of-text-rule shorter",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'d'})).SetAcceptAction(50),
+			).Union(
+				NfaForStartOfText().Concat(NfaForChars([]byte{'a'})).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'c'})).SetAcceptAction(99),
+			),
+			inputString:    "abd",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   3,
+			expectActions:  []int{50},
+		},
+		{
+			name: "start-of-text rule union non start-of-text-rule, match both rules same length",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'c'})).SetAcceptAction(50),
+			).Union(
+				NfaForStartOfText().Concat(NfaForChars([]byte{'a'})).Concat(NfaForChars([]byte{'b'})).Concat(NfaForChars([]byte{'c'})).SetAcceptAction(99),
+			),
+			inputString:    "abc",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   3,
+			expectActions:  []int{50, 99},
+		},
+		{
+			name: "end-of-text rule union non end-of-text-rule, match both rules same length",
+			nfa: EmptyLanguageNfa().Union(
+				NfaForChars([]byte{'a'}).SetAcceptAction(50),
+			).Union(
+				NfaForChars([]byte{'a'}).Concat(NfaForEndOfText()).SetAcceptAction(99),
+			),
+			inputString:    "a",
+			startPos:       0,
+			expectAccepted: true,
+			expectEndPos:   1,
+			expectActions:  []int{50, 99},
+		},
 	}
 
 	for _, tc := range testCases {

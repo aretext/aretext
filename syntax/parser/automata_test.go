@@ -319,11 +319,11 @@ func TestCompileAndMatchLongest(t *testing.T) {
 			dfa := tc.nfa.CompileDfa()
 			r := &ReadSeekerInput{R: strings.NewReader(tc.inputString)}
 			textLen := tc.startPos + uint64(len(tc.inputString))
-			accepted, endPos, _, actions, _, err := dfa.MatchLongest(r, tc.startPos, textLen)
+			matchResult, err := dfa.MatchLongest(r, tc.startPos, textLen)
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectAccepted, accepted)
-			assert.Equal(t, tc.expectEndPos, endPos)
-			assert.Equal(t, tc.expectActions, actions)
+			assert.Equal(t, tc.expectAccepted, matchResult.Accepted)
+			assert.Equal(t, tc.expectEndPos, matchResult.EndPos)
+			assert.Equal(t, tc.expectActions, matchResult.Actions)
 		})
 	}
 }
@@ -336,11 +336,11 @@ func TestMatchLongestTruncatedText(t *testing.T) {
 
 	// Set textLen to 3 so the DFA treats the third character as the end of the text,
 	// even though the reader outputs more bytes.
-	accepted, endPos, _, actions, _, err := dfa.MatchLongest(r, 0, 3)
+	matchResult, err := dfa.MatchLongest(r, 0, 3)
 	require.NoError(t, err)
-	assert.True(t, accepted)
-	assert.Equal(t, uint64(3), endPos)
-	assert.Equal(t, []int{99}, actions)
+	assert.True(t, matchResult.Accepted)
+	assert.Equal(t, uint64(3), matchResult.EndPos)
+	assert.Equal(t, []int{99}, matchResult.Actions)
 
 	// Verify that the reader is reset to the end of the match.
 	remaining, err := ioutil.ReadAll(r)
@@ -414,12 +414,12 @@ func TestMinimizeDfa(t *testing.T) {
 	for _, tc := range testCases {
 		textLen := uint64(len(tc.inputString))
 		r := &ReadSeekerInput{R: strings.NewReader(tc.inputString)}
-		accepted, endPos, _, actions, _, err := dfa.MatchLongest(r, 0, textLen)
+		matchResult, err := dfa.MatchLongest(r, 0, textLen)
 		require.NoError(t, err)
-		assert.Equal(t, tc.expectAccepted, accepted)
-		assert.Equal(t, tc.expectEndPos, endPos)
+		assert.Equal(t, tc.expectAccepted, matchResult.Accepted)
+		assert.Equal(t, tc.expectEndPos, matchResult.EndPos)
 		if tc.expectAccepted {
-			assert.Equal(t, []int{99}, actions)
+			assert.Equal(t, []int{99}, matchResult.Actions)
 		}
 	}
 }

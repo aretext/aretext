@@ -593,6 +593,15 @@ const maxTransitionsPerState int = 258
 const startOfText int = 256
 const endOfText int = 257
 
+// DfaMatchResult represents the result of a running a DFA to find the longest match.
+type DfaMatchResult struct {
+	Accepted                 bool
+	EndPos                   uint64
+	LookaheadPos             uint64
+	Actions                  []int
+	NumBytesReadAtLastAccept int
+}
+
 // Dfa is a deterministic finite automata.
 type Dfa struct {
 	// Number of states in the DFA.
@@ -625,13 +634,16 @@ func (dfa *Dfa) NextState(fromState int, onInput int) int {
 // The reader position is reset to the end of the match, if there is one, or its original position if not.
 // startPos and textLen determine the maximum number of runes the DFA will process;
 // they also control the behavior of start-of-text (^) and end-of-text ($) patterns.
-func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (accepted bool, endPos uint64, lookaheadPos uint64, actions []int, numBytesReadAtLastAccept int, err error) {
+func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (DfaMatchResult, error) {
+	var result DfaMatchResult
 	var totalBytesRead int
 	pos := startPos
 	state := dfa.StartState
 
 	if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-		accepted, endPos, actions = true, pos, acceptActions
+		result.Accepted = true
+		result.EndPos = pos
+		result.Actions = acceptActions
 	}
 
 	if startPos == 0 {
@@ -641,7 +653,9 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 			// The DFA doesn't match start-of-text, so try to recover by restarting at the first character.
 			state = prevState
 		} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-			accepted, endPos, actions = true, pos, acceptActions
+			result.Accepted = true
+			result.EndPos = pos
+			result.Actions = acceptActions
 		}
 	}
 
@@ -649,7 +663,7 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 	for {
 		n, err := r.Read(dfa.buf[:])
 		if err != nil && err != io.EOF {
-			return false, 0, 0, nil, 0, err
+			return DfaMatchResult{}, err
 		}
 
 		prevTotalBytesRead := totalBytesRead
@@ -669,7 +683,10 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 			if state == DfaDeadState {
 				break
 			} else if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-				accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, prevTotalBytesRead+i+1, acceptActions
+				result.Accepted = true
+				result.EndPos = pos
+				result.NumBytesReadAtLastAccept = prevTotalBytesRead + i + 1
+				result.Actions = acceptActions
 			}
 		}
 
@@ -678,23 +695,29 @@ func (dfa *Dfa) MatchLongest(r InputReader, startPos uint64, textLen uint64) (ac
 		}
 	}
 
+	result.LookaheadPos = pos
+
 	if pos == textLen {
 		state = dfa.NextState(state, endOfText)
 		if acceptActions := dfa.AcceptActions[state]; len(acceptActions) > 0 {
-			accepted, endPos, numBytesReadAtLastAccept, actions = true, pos, totalBytesRead, acceptActions
+			result.Accepted = true
+			result.EndPos = pos
+			result.NumBytesReadAtLastAccept = totalBytesRead
+			result.Actions = acceptActions
+
 			// If the reader produced more bytes than the length of the text,
 			// we consume up only the bytes in the text.
 			if truncatedBytesRead > 0 {
-				numBytesReadAtLastAccept = truncatedBytesRead
+				result.NumBytesReadAtLastAccept = truncatedBytesRead
 			}
 		}
 	}
 
 	// Reset the reader position to the end of the last match.
 	// If there was no match, this resets the reader to its original position.
-	if err := r.SeekBackward(uint64(totalBytesRead - numBytesReadAtLastAccept)); err != nil {
-		return false, 0, 0, nil, 0, err
+	if err := r.SeekBackward(uint64(totalBytesRead - result.NumBytesReadAtLastAccept)); err != nil {
+		return DfaMatchResult{}, err
 	}
 
-	return accepted, endPos, pos, actions, numBytesReadAtLastAccept, nil
+	return result, nil
 }

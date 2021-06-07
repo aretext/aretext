@@ -197,41 +197,41 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 	}
 
 	for pos < textLen {
-		accepted, endPos, lookaheadPos, actions, numBytesReadAtLastAccept, err := t.StateMachine.MatchLongest(r, pos, textLen)
+		matchResult, err := t.StateMachine.MatchLongest(r, pos, textLen)
 		if err != nil {
 			return 0, nil, errors.Wrap(err, "tokenizing input")
 		}
 
 		// Identify a token if the DFA accepts AND the accepted prefix is non-empty.
 		// (An empty prefix can occur when "a*" matches "" at the beginning of "bcd")
-		if accepted && endPos > pos {
+		if matchResult.Accepted && matchResult.EndPos > pos {
 			// We already skipped some characters, so we need to output an empty token.
 			if emptyToken.StartPos < emptyToken.EndPos {
-				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
+				if err := r.SeekBackward(uint64(matchResult.NumBytesReadAtLastAccept)); err != nil {
 					return 0, nil, errors.Wrap(err, "rewind reader")
 				}
 				return pos, []Token{emptyToken}, nil
 			}
 
-			ruleIdx, rule := t.actionsToRule(actions) // Choose matched rule with the lowest index.
+			ruleIdx, rule := t.actionsToRule(matchResult.Actions) // Choose matched rule with the lowest index.
 			acceptedToken := Token{
 				StartPos:     pos,
-				EndPos:       endPos,
-				LookaheadPos: lookaheadPos,
+				EndPos:       matchResult.EndPos,
+				LookaheadPos: matchResult.LookaheadPos,
 				Role:         rule.TokenRole,
 			}
 
 			subTokenizer := t.SubTokenizers[ruleIdx]
 			if subTokenizer != nil {
 				// Rewind the reader to the start of the token.
-				if err := r.SeekBackward(uint64(numBytesReadAtLastAccept)); err != nil {
+				if err := r.SeekBackward(uint64(matchResult.NumBytesReadAtLastAccept)); err != nil {
 					return 0, nil, errors.Wrap(err, "rewind reader")
 				}
 				// Run the relevant sub-tokenizer on the contents of the token.
 				return t.runSubTokenizer(r, subTokenizer, acceptedToken)
 			}
 
-			return endPos, []Token{acceptedToken}, nil
+			return matchResult.EndPos, []Token{acceptedToken}, nil
 		}
 
 		// We couldn't find a match, so advance to the next position and try again.
@@ -242,8 +242,8 @@ func (t *Tokenizer) nextTokens(r InputReader, textLen uint64, pos uint64) (uint6
 
 		// Cover the skipped position with an empty token.
 		emptyToken.EndPos = pos
-		if lookaheadPos > emptyToken.LookaheadPos {
-			emptyToken.LookaheadPos = lookaheadPos
+		if matchResult.LookaheadPos > emptyToken.LookaheadPos {
+			emptyToken.LookaheadPos = matchResult.LookaheadPos
 		}
 	}
 

@@ -24,7 +24,7 @@ type EditorState struct {
 	fileTimeline              *file.Timeline
 	menu                      *MenuState
 	customMenuItems           []menu.Item
-	dirNamesToHide            map[string]struct{}
+	dirPatternsToHide         []string
 	statusMsg                 StatusMsg
 	suspendScreenFunc         SuspendScreenFunc
 	quitFlag                  bool
@@ -69,7 +69,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		fileTimeline:      file.NewTimeline(),
 		menu:              &MenuState{},
 		customMenuItems:   nil,
-		dirNamesToHide:    nil,
+		dirPatternsToHide: nil,
 		statusMsg:         StatusMsg{},
 		suspendScreenFunc: suspendScreenFunc,
 	}
@@ -96,8 +96,8 @@ func (s *EditorState) Menu() *MenuState {
 	return s.menu
 }
 
-func (s *EditorState) DirNamesToHide() map[string]struct{} {
-	return s.dirNamesToHide
+func (s *EditorState) DirPatternsToHide() []string {
+	return s.dirPatternsToHide
 }
 
 func (s *EditorState) StatusMsg() StatusMsg {

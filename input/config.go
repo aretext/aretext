@@ -12,6 +12,6 @@ type Config struct {
 	// ScrollLines is the number of lines to scroll up or down with Ctrl-U / Ctrl-D.
 	ScrollLines uint64
 
-	// Set of directory names to hide from file search.
-	DirNamesToHide map[string]struct{}
+	// Glob patterns for directories to hide from file search.
+	DirPatternsToHide []string
 }

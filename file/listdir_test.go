@@ -44,12 +44,8 @@ func TestListDir(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	dirNamesToHide := map[string]struct{}{
-		".hidden": struct{}{},
-	}
-
 	// List all paths in tmpdir.
-	foundPaths := ListDir(tmpDir, dirNamesToHide)
+	foundPaths := ListDir(tmpDir, []string{"**/.hidden"})
 	relPaths := make([]string, 0, len(foundPaths))
 	for _, p := range foundPaths {
 		relPaths = append(relPaths, RelativePathCwd(p))

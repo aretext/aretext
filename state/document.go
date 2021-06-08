@@ -166,7 +166,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.showLineNum = config.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()
 	state.customMenuItems = customMenuItems(config)
-	state.dirNamesToHide = stringSliceToMap(config.HideDirectories)
+	state.dirPatternsToHide = config.HideDirectories
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
 
 	return fileExists, nil
@@ -175,14 +175,6 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
 	MoveCursor(state, cursorLoc)
 	ScrollViewToCursor(state)
-}
-
-func stringSliceToMap(ss []string) map[string]struct{} {
-	m := make(map[string]struct{}, len(ss))
-	for _, s := range ss {
-		m[s] = struct{}{}
-	}
-	return m
 }
 
 func customMenuItems(config config.Config) []menu.Item {

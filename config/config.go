@@ -36,7 +36,7 @@ type Config struct {
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
 
-	// Directories to exclude from file search.
+	// Glob patterns for directories to exclude from file search.
 	HideDirectories []string
 }
 

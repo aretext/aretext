@@ -118,7 +118,7 @@ func ShowFileMenu(config Config) Action {
 			return nil
 		}
 
-		paths := file.ListDir(dir, config.DirNamesToHide)
+		paths := file.ListDir(dir, config.DirPatternsToHide)
 		log.Printf("Listed %d paths for dir '%s\n", len(paths), dir)
 
 		items := make([]menu.Item, 0, len(paths))

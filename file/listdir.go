@@ -17,13 +17,13 @@ import (
 // Symbolic links are not followed.
 // If an error occurs while accessing a directory, ListDir will skip that
 // directory and log the error.
-func ListDir(root string, dirNamesToHide map[string]struct{}) []string {
+func ListDir(root string, dirPatternsToHide []string) []string {
 	// Use a semaphore to limit the number of open files.
 	semaphoreChan := make(chan struct{}, runtime.NumCPU())
-	return listDirRec(root, dirNamesToHide, semaphoreChan)
+	return listDirRec(root, dirPatternsToHide, semaphoreChan)
 }
 
-func listDirRec(root string, dirNamesToHide map[string]struct{}, semaphoreChan chan struct{}) []string {
+func listDirRec(root string, dirPatternsToHide []string, semaphoreChan chan struct{}) []string {
 	semaphoreChan <- struct{}{} // Block until open file count decreases.
 	dirEntries, err := listDir(root)
 	<-semaphoreChan // Decrease open file count.
@@ -44,7 +44,7 @@ func listDirRec(root string, dirNamesToHide map[string]struct{}, semaphoreChan c
 			continue
 		}
 
-		if shouldSkipDir(path, dirNamesToHide) {
+		if shouldSkipDir(path, dirPatternsToHide) {
 			continue
 		}
 
@@ -52,7 +52,7 @@ func listDirRec(root string, dirNamesToHide map[string]struct{}, semaphoreChan c
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
-			subpaths := listDirRec(path, dirNamesToHide, semaphoreChan)
+			subpaths := listDirRec(path, dirPatternsToHide, semaphoreChan)
 			mu.Lock()
 			results = append(results, subpaths...)
 			mu.Unlock()
@@ -76,8 +76,11 @@ func listDir(path string) ([]fs.DirEntry, error) {
 	return dirs, nil
 }
 
-func shouldSkipDir(path string, dirNamesToHide map[string]struct{}) bool {
-	name := filepath.Base(path)
-	_, ok := dirNamesToHide[name]
-	return ok
+func shouldSkipDir(path string, dirPatternsToHide []string) bool {
+	for _, pattern := range dirPatternsToHide {
+		if GlobMatch(pattern, path) {
+			return true
+		}
+	}
+	return false
 }

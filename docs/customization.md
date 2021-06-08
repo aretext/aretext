@@ -45,7 +45,7 @@ Each item in the configuration file describes a *rule*. For example, in the snip
 
 Each rule has a *pattern*. The "\*\*" is a wildcard that matches any subdirectory, and "\*" is a wildcard that matches zero or more characters in a file or directory name.
 
-When aretext loads a file, it checks each rule in order. If the rule's pattern matches the file path, it applies the rule to update the configuration.
+When aretext loads a file, it checks each rule in order. If the rule's pattern matches the file's absolute path, it applies the rule to update the configuration.
 
 For example, if aretext loaded the file "foo/bar.json" using the above configuration, both rules would match the filename. The resulting configuration would be:
 

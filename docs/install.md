@@ -18,6 +18,14 @@ Stable Releases
 
 You can download the the official binaries from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
+### Arch Linux
+
+aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/) If you use [yay](https://github.com/Jguer/yay) just run this to install it:
+
+```shell
+yay -S aretext
+```
+
 Unstable Builds
 ---------------
 
@@ -35,12 +43,4 @@ This will install aretext in `$HOME/go/bin`, which you can add to your `$PATH`:
 
 ```
 export PATH=$PATH:$HOME/go/bin
-```
-
-### From the ArchLinux AUR
-
-aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/) If you use [yay](https://github.com/Jguer/yay) just run this to install it:
-
-```shell
-yay -S aretext
 ```

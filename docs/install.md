@@ -20,7 +20,7 @@ You can download the the official binaries from [the aretext releases page](http
 
 ### Arch Linux
 
-aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/) If you use [yay](https://github.com/Jguer/yay) just run this to install it:
+aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/). If you use [yay](https://github.com/Jguer/yay), run this to install it:
 
 ```shell
 yay -S aretext

@@ -19,6 +19,8 @@ These guides explain how to use aretext effectively:
 
 For an overview of all available commands, see [Command Reference](command-reference.md)
 
+For a complete list of available configuration options, see [Configuration Reference](config-reference.md).
+
 If you have questions about aretext, you can ask in [GitHub Discussions](https://github.com/aretext/aretext/discussions).
 
 If you want to report a bug or request a feature, please open a [GitHub Issue](https://github.com/aretext/aretext/issues).

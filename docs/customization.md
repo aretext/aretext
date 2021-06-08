@@ -75,6 +75,11 @@ This is a powerful mechanism for customizing configuration based on filename ext
     tabSize: 4
 ```
 
+Configuration Reference
+-----------------------
+
+For a complete list of available configuration options, see [Configuration Reference](config-reference.md).
+
 Fixing configuration errors
 ---------------------------
 

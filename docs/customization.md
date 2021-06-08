@@ -103,7 +103,7 @@ You can add new menu commands by editing the YAML config file at `~/.config/aret
         mode: terminal  # or "silent" or "insert" or "fileLocations"
 ```
 
-After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell (configured by the `$SHELL` environment variable) and execute the shell comand (in this case, echoing "hello world").
+After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell (configured by the `$SHELL` environment variable) and execute the shell command (in this case, echoing "hello world").
 
 The "mode" parameter controls how aretext handles the command's input and output. There are four modes:
 

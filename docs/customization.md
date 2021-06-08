@@ -12,6 +12,7 @@ In addition, you can define [custom menu commands](#custom-menu-commands) that i
 -	[Format a file](#example-format-current-file)
 -	[Insert a snippet](#example-insert-snippet)
 -	[Search a project with grep](#example-grep)
+-	[Open the current document in a new tmux window](#example-split-tmux-window)
 
 ... and much more!
 
@@ -214,3 +215,16 @@ You can add a custom menu command to grep for the word under the cursor. The fol
 Once the search has completed, aretext loads the locations into a searchable menu. This allows you to easily navigate to a particular result.
 
 The "fileLocations" mode works with any command that outputs file locations as lines with the format: `<file>:<line>:<snippet>` or `<file>:<line>:<col>:<snippet>`. You can use grep, ripgrep, or a script you write yourself!
+
+### Example: Split tmux window
+
+If you use [tmux](https://wiki.archlinux.org/title/Tmux), you can add a custom menu command to open the current document in a new window.
+
+```
+- name: split window horizontal
+  shellCmd: tmux split-window -h "aretext $FILEPATH"
+  mode: silent
+- name: split window vertical
+  shellCmd: tmux split-window -v "aretext $FILEPATH"
+  mode: silent
+```

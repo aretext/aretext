@@ -2,6 +2,8 @@ package config
 
 import (
 	"log"
+
+	"github.com/aretext/aretext/file"
 )
 
 // Rule is a configuration rule.
@@ -21,7 +23,7 @@ type RuleSet []Rule
 func (rs RuleSet) ConfigForPath(path string) Config {
 	c := make(map[string]interface{}, 0)
 	for _, rule := range rs {
-		if GlobMatch(rule.Pattern, path) {
+		if file.GlobMatch(rule.Pattern, path) {
 			log.Printf("Applying config rule '%s' with pattern '%s' for path '%s'\n", rule.Name, rule.Pattern, path)
 			c = MergeRecursive(c, rule.Config).(map[string]interface{})
 		}

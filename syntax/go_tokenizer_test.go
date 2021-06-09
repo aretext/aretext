@@ -9,7 +9,7 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-func TestGolangTokenizer(t *testing.T) {
+func TestGoTokenizer(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string

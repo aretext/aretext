@@ -25,7 +25,13 @@ func GitRebaseRules() []parser.TokenizerRule {
 	gitRebaseRules := []parser.TokenizerRule{
 		{
 			Regexp:    fmt.Sprintf("(^|\n)(%s)", strings.Join(gitRebaseKeywords, `|`)),
-			TokenRole: parser.TokenRoleKeyword,
+			TokenRole: parser.TokenRoleNone,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `[^\n]+`,
+					TokenRole: parser.TokenRoleKeyword,
+				},
+			},
 		},
 	}
 	return append(gitRebaseRules, gitCommitRules...)

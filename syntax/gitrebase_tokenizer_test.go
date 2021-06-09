@@ -76,6 +76,20 @@ func TestGitRebaseTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:        "keyword after newline",
+			inputString: "\nreword test",
+			expectedTokens: []TokenWithText{
+				{
+					Text: "reword",
+					Role: parser.TokenRoleKeyword,
+				},
+				{
+					Text: "test",
+					Role: parser.TokenRoleWord,
+				},
+			},
+		},
+		{
 			name:        "comment in commit message",
 			inputString: "pick insert # in file",
 			expectedTokens: []TokenWithText{

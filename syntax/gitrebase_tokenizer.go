@@ -15,7 +15,26 @@ func init() {
 				AcceptActions: [][]int{[]int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int(nil), []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{0}, []int{1}, []int{2}, []int{3}},
 			},
 			SubTokenizers: []*parser.Tokenizer{
-				nil,
+
+				&parser.Tokenizer{
+					StateMachine: &parser.Dfa{
+						NumStates:     3,
+						StartState:    1,
+						Transitions:   []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0},
+						AcceptActions: [][]int{[]int(nil), []int(nil), []int{0}},
+					},
+					SubTokenizers: []*parser.Tokenizer{
+						nil,
+					},
+					Rules: []parser.TokenizerRule{
+
+						parser.TokenizerRule{
+							Regexp:    "[^\\n]+",
+							TokenRole: 2,
+							SubRules:  []parser.TokenizerRule{},
+						},
+					},
+				},
 
 				&parser.Tokenizer{
 					StateMachine: &parser.Dfa{
@@ -43,8 +62,15 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "(^|\n)(p|pick|r|reword|e|edit|s|squash|f|fixup|x|exec|b|break|d|drop|l|label|t|reset|m|merge)",
-					TokenRole: 2,
-					SubRules:  []parser.TokenizerRule{},
+					TokenRole: 0,
+					SubRules: []parser.TokenizerRule{
+
+						parser.TokenizerRule{
+							Regexp:    "[^\\n]+",
+							TokenRole: 2,
+							SubRules:  []parser.TokenizerRule{},
+						},
+					},
 				},
 
 				parser.TokenizerRule{

@@ -75,6 +75,32 @@ func TestGitRebaseTokenizer(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:        "comment in commit message",
+			inputString: "pick insert # in file",
+			expectedTokens: []TokenWithText{
+				{
+					Text: "pick",
+					Role: parser.TokenRoleKeyword,
+				},
+				{
+					Text: "insert",
+					Role: parser.TokenRoleWord,
+				},
+				{
+					Text: "#",
+					Role: parser.TokenRolePunctuation,
+				},
+				{
+					Text: "in",
+					Role: parser.TokenRoleWord,
+				},
+				{
+					Text: "file",
+					Role: parser.TokenRoleWord,
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -11,17 +11,17 @@ import (
 
 func TestGitCommitTokenizer(t *testing.T) {
 	inputString := `
-	This is a test commit
-	# Please enter the commit message for your changes. Lines starting
-	# with '#' will be ignored, and an empty message aborts the commit.
-	#
-	# On branch testbranch
-	# Changes to be committed:
-	#   new file:   test
-	#
-	# Untracked files:
-	#   sometest.go
-	#
+This is a test commit
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch testbranch
+# Changes to be committed:
+#   new file:   test
+#
+# Untracked files:
+#   sometest.go
+#
 `
 	expectedTokens := []TokenWithText{
 		{

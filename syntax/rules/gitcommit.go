@@ -6,8 +6,14 @@ func GitCommitRules() []parser.TokenizerRule {
 	plaintextRules := PlaintextRules()
 	gitCommitRules := []parser.TokenizerRule{
 		{
-			Regexp:    "#[^\n]*",
-			TokenRole: parser.TokenRoleComment,
+			Regexp:    "(^|\n)#[^\n]*",
+			TokenRole: parser.TokenRoleNone,
+			SubRules: []parser.TokenizerRule{
+				{
+					Regexp:    `#[^\n]*`,
+					TokenRole: parser.TokenRoleComment,
+				},
+			},
 		},
 	}
 	return append(gitCommitRules, plaintextRules...)

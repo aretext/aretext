@@ -133,12 +133,20 @@ func TestFindNextMatch(t *testing.T) {
 			expectedCursorPos: 8,
 		},
 		{
-			name:              "find next at end of text",
+			name:              "find next at end of text, not found in wraparound",
+			text:              "foo bar baz",
+			cursorPos:         10,
+			query:             "xa",
+			direction:         text.ReadDirectionForward,
+			expectedCursorPos: 10,
+		},
+		{
+			name:              "find next at end of text, found in wraparound",
 			text:              "foo bar baz",
 			cursorPos:         10,
 			query:             "ba",
 			direction:         text.ReadDirectionForward,
-			expectedCursorPos: 10,
+			expectedCursorPos: 4,
 		},
 		{
 			name:              "find next with multi-byte unicode",

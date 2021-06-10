@@ -136,17 +136,25 @@ func FindNextMatch(state *EditorState, reverse bool) {
 
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.
 func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
+	searcher := text.NewSearcher(query)
 	r := tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
-	foundMatch, matchOffset, err := text.SearchNextInReader(query, r)
+	foundMatch, matchOffset, err := searcher.NextInReader(r)
 	if err != nil {
 		panic(err) // should never happen because the tree reader shouldn't return an error.
 	}
 
-	if !foundMatch {
-		return false, 0
+	if foundMatch {
+		return true, startPos + matchOffset
 	}
 
-	return true, startPos + matchOffset
+	// Wraparound search.
+	r = tree.ReaderAtPosition(0, text.ReadDirectionForward)
+	searcher.Limit(startPos)
+	foundMatch, matchOffset, err = searcher.NextInReader(r)
+	if err != nil {
+		panic(err)
+	}
+	return foundMatch, matchOffset
 }
 
 // searchTextBackward finds the beginning of the previous match before the start position.

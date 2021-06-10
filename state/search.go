@@ -177,9 +177,10 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 	// and we're searching backwards for "abcd", the cursor should end up on "a".
 	// To ensure that we find these matches, we need to start searching from the current
 	// position plus one less than the length of the query (or the end of text if that comes sooner).
+	n := tree.NumChars()
 	numRunesInQuery := uint64(utf8.RuneCountInString(query))
 	pos := startPos + numRunesInQuery - 1
-	if n := tree.NumChars(); pos >= n {
+	if pos >= n {
 		if n > 0 {
 			pos = n - 1
 		} else {
@@ -187,16 +188,28 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 		}
 	}
 
+	searcher := text.NewSearcher(string(reversedQuery))
 	r := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
-	foundMatch, matchOffset, err := text.SearchNextInReader(string(reversedQuery), r)
+	foundMatch, matchOffset, err := searcher.NextInReader(r)
 	if err != nil {
 		panic(err) // should never happen because the tree reader shouldn't return an error.
 	}
+	if foundMatch {
+		matchStartPos := pos - matchOffset - numRunesInQuery
+		return true, matchStartPos
+	}
 
+	// Wraparound search.
+	searcher.Limit(n - pos)
+	r = tree.ReaderAtPosition(n, text.ReadDirectionBackward)
+	foundMatch, matchOffset, err = searcher.NextInReader(r)
+	if err != nil {
+		panic(err)
+	}
 	if !foundMatch {
 		return false, 0
 	}
 
-	matchStartPos := pos - matchOffset - numRunesInQuery
+	matchStartPos := n - matchOffset - numRunesInQuery
 	return true, matchStartPos
 }

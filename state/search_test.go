@@ -193,12 +193,21 @@ func TestFindNextMatch(t *testing.T) {
 			reverse:           true,
 		},
 		{
-			name:              "find prev from start of text",
+			name:              "find prev from start of text, not found in wraparound",
+			text:              "foo bar baz xyz",
+			cursorPos:         0,
+			query:             "lm",
+			direction:         text.ReadDirectionForward,
+			expectedCursorPos: 0,
+			reverse:           true,
+		},
+		{
+			name:              "find prev from start of text, found in wraparound",
 			text:              "foo bar baz xyz",
 			cursorPos:         0,
 			query:             "ba",
 			direction:         text.ReadDirectionForward,
-			expectedCursorPos: 0,
+			expectedCursorPos: 8,
 			reverse:           true,
 		},
 		{

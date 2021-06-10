@@ -23,6 +23,7 @@ type Searcher struct {
 	query               string
 	queryStartByteCount uint64
 	prefixTable         []int
+	offsetLimit         *uint64
 }
 
 func NewSearcher(query string) *Searcher {
@@ -40,6 +41,14 @@ func NewSearcher(query string) *Searcher {
 		queryStartByteCount: queryStartByteCount,
 		prefixTable:         buildPrefixTable(query),
 	}
+}
+
+// Limit sets the maximum offset (in rune positions) for the end of a match.
+// For example, a limit of 3 would allow matches that end on the second
+// rune from the reader, but not on the following runes.
+func (s *Searcher) Limit(offset uint64) *Searcher {
+	s.offsetLimit = &offset
+	return s
 }
 
 // NextInReader finds the next occurrence of a query in the text produced by an io.Reader.
@@ -65,6 +74,11 @@ func (s *Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
 		var j int
 		for j < n {
 			i, j, offsetToEnd = s.advance(i, j, offsetToEnd, buf[j])
+			if s.offsetLimit != nil && offsetToEnd > *s.offsetLimit {
+				// No match found within offset limit.
+				return false, 0, nil
+			}
+
 			if i == len(s.query) {
 				// Found a substring match, so calculate the offset (in rune positions) and return.
 				offsetToStart := offsetToEnd - s.queryStartByteCount
@@ -91,6 +105,11 @@ func (s *Searcher) AllInString(text string, matchPositions []uint64) []uint64 {
 	var offsetToEnd uint64
 	for j < len(text) {
 		i, j, offsetToEnd = s.advance(i, j, offsetToEnd, text[j])
+		if s.offsetLimit != nil && offsetToEnd > *s.offsetLimit {
+			// No match found within offset limit.
+			break
+		}
+
 		if i == len(s.query) {
 			// Found a substring match, so calculate the offset (in rune positions) and add it to the result set.
 			offsetToStart := offsetToEnd - s.queryStartByteCount

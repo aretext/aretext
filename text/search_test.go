@@ -154,6 +154,80 @@ func TestSearchNextInReaderWithSingleByteReader(t *testing.T) {
 	}
 }
 
+func TestSearchNextInReaderWithLimit(t *testing.T) {
+	testCases := []struct {
+		name         string
+		s            string
+		q            string
+		limit        uint64
+		expectFound  bool
+		expectOffset uint64
+	}{
+		{
+			name:        "ascii, limit zero",
+			s:           "abcd123",
+			q:           "cd",
+			limit:       0,
+			expectFound: false,
+		},
+		{
+			name:         "ascii, find before limit",
+			s:            "abcd123",
+			q:            "cd",
+			limit:        4,
+			expectFound:  true,
+			expectOffset: 2,
+		},
+		{
+			name:        "ascii, find on limit",
+			s:           "abcd123",
+			q:           "cd",
+			limit:       3,
+			expectFound: false,
+		},
+		{
+			name:        "ascii, find after limit",
+			s:           "abcd123",
+			q:           "cd",
+			limit:       1,
+			expectFound: false,
+		},
+		{
+			name:         "multi-byte unicode, find before limit",
+			q:            "丅丆",
+			s:            "丂丄丅丆丏 ¢ह€한",
+			limit:        4,
+			expectFound:  true,
+			expectOffset: 2,
+		},
+		{
+			name:        "multi-byte unicode, find on limit",
+			q:           "丅丆",
+			s:           "丂丄丅丆丏 ¢ह€한",
+			limit:       3,
+			expectFound: false,
+		},
+		{
+			name:        "multi-byte unicode, find after limit",
+			q:           "丅丆",
+			s:           "丂丄丅丆丏 ¢ह€한",
+			limit:       2,
+			expectFound: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := strings.NewReader(tc.s)
+			searcher := NewSearcher(tc.q).Limit(tc.limit)
+			ok, offset, err := searcher.NextInReader(r)
+			assert.Equal(t, tc.expectFound, ok)
+			assert.Equal(t, tc.expectOffset, offset)
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestSearchAllInString(t *testing.T) {
 	testCases := []struct {
 		name                 string
@@ -256,6 +330,60 @@ func TestSearchAllInString(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			matchPositions := SearchAllInString(tc.q, tc.s)
+			assert.Equal(t, tc.expectMatchPositions, matchPositions)
+		})
+	}
+}
+
+func TestSearchAllInStringWithLimit(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		q                    string
+		s                    string
+		limit                uint64
+		expectMatchPositions []uint64
+	}{
+		{
+			name:                 "ascii, limit zero",
+			q:                    "x",
+			s:                    "xaxbxcxd",
+			limit:                0,
+			expectMatchPositions: nil,
+		},
+		{
+			name:                 "ascii, find before limit",
+			q:                    "x",
+			s:                    "xaxbxcxd",
+			limit:                3,
+			expectMatchPositions: []uint64{0, 2},
+		},
+		{
+			name:                 "ascii, find on limit",
+			q:                    "x",
+			s:                    "xaxbxcxd",
+			limit:                4,
+			expectMatchPositions: []uint64{0, 2},
+		},
+		{
+			name:                 "muti-byte unicode, find before limit",
+			q:                    "丅丆",
+			s:                    "丂丄丅丆丏 ¢ह€한 丂丄丅丆丏 ¢ह€한",
+			limit:                4,
+			expectMatchPositions: []uint64{2},
+		},
+		{
+			name:                 "muti-byte unicode, find on limit",
+			q:                    "丅丆",
+			s:                    "丂丄丅丆丏 ¢ह€한 丂丄丅丆丏 ¢ह€한",
+			limit:                3,
+			expectMatchPositions: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			searcher := NewSearcher(tc.q).Limit(tc.limit)
+			matchPositions := searcher.AllInString(tc.s, nil)
 			assert.Equal(t, tc.expectMatchPositions, matchPositions)
 		})
 	}

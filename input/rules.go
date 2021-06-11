@@ -176,6 +176,50 @@ var cursorRules = []Rule{
 		SkipMacroInNormalMode: true,
 	},
 	{
+		Name: "cursor to next matching char (f{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'f'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, true)
+		},
+		SkipMacroInNormalMode: true,
+	},
+	{
+		Name: "cursor to prev matching char (F{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'F'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, true)
+		},
+		SkipMacroInNormalMode: true,
+	},
+	{
+		Name: "cursor till next matching char (t{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 't'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, false)
+		},
+		SkipMacroInNormalMode: true,
+	},
+	{
+		Name: "cursor to prev matching char (T{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'T'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, false)
+		},
+		SkipMacroInNormalMode: true,
+	},
+	{
 		Name: "cursor line start (0)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: '0'},

@@ -292,6 +292,188 @@ func TestPrevChar(t *testing.T) {
 	}
 }
 
+func TestNextMatchingCharInLine(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		char        rune
+		count       uint64
+		includeChar bool
+		pos         uint64
+		expectedPos uint64
+	}{
+		{
+			name:        "empty string",
+			inputString: "",
+			char:        'x',
+			count:       1,
+			pos:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "not found on first line",
+			inputString: "abcxyz",
+			char:        'm',
+			count:       1,
+			pos:         1,
+			expectedPos: 1,
+		},
+		{
+			name:        "count zero finds nothing",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       0,
+			pos:         1,
+			expectedPos: 1,
+		},
+		{
+			name:        "found on first line, include",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "found on first line, exclude",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       1,
+			includeChar: false,
+			pos:         1,
+			expectedPos: 2,
+		},
+		{
+			name:        "found on first line, count > 0",
+			inputString: "abcxyzxyz",
+			char:        'x',
+			count:       2,
+			includeChar: true,
+			pos:         1,
+			expectedPos: 6,
+		},
+		{
+			name:        "next match on subsequent line",
+			inputString: "abc\nxyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         1,
+			expectedPos: 1,
+		},
+		{
+			name:        "match at end of current line",
+			inputString: "abc\nabx\nyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         4,
+			expectedPos: 6,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualPos := NextMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			assert.Equal(t, tc.expectedPos, actualPos)
+		})
+	}
+}
+
+func TestPrevMatchingCharInLine(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		char        rune
+		count       uint64
+		includeChar bool
+		pos         uint64
+		expectedPos uint64
+	}{
+		{
+			name:        "empty string",
+			inputString: "",
+			char:        'x',
+			count:       1,
+			pos:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "not found on first line",
+			inputString: "abcxyz",
+			char:        'm',
+			count:       1,
+			pos:         5,
+			expectedPos: 5,
+		},
+		{
+			name:        "count zero finds nothing",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       0,
+			pos:         5,
+			expectedPos: 5,
+		},
+		{
+			name:        "found on first line, include",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         5,
+			expectedPos: 3,
+		},
+		{
+			name:        "found on first line, exclude",
+			inputString: "abcxyz",
+			char:        'x',
+			count:       1,
+			includeChar: false,
+			pos:         5,
+			expectedPos: 4,
+		},
+		{
+			name:        "found on first line, count > 0",
+			inputString: "abcxyzxyz",
+			char:        'x',
+			count:       2,
+			includeChar: true,
+			pos:         8,
+			expectedPos: 3,
+		},
+		{
+			name:        "next match on previous line",
+			inputString: "abcx\nyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         6,
+			expectedPos: 6,
+		},
+		{
+			name:        "match at start of current line",
+			inputString: "abc\nxab\nyz",
+			char:        'x',
+			count:       1,
+			includeChar: true,
+			pos:         6,
+			expectedPos: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualPos := PrevMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			assert.Equal(t, tc.expectedPos, actualPos)
+		})
+	}
+}
+
 func TestPrevAutoIndent(t *testing.T) {
 	testCases := []struct {
 		name              string

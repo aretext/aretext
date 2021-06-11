@@ -26,6 +26,15 @@ func countArgOrDefault(countArg *uint64, defaultCount uint64) uint64 {
 	}
 }
 
+func lastInputEvent(inputEvents []*tcell.EventKey) *tcell.EventKey {
+	if len(inputEvents) == 0 {
+		// This should never happen if the parser rule is configured correctly.
+		panic("Expected at least one input event")
+	}
+
+	return inputEvents[len(inputEvents)-1]
+}
+
 func CursorLeft(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
@@ -86,6 +95,38 @@ func CursorNextParagraph(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 		return locate.NextParagraph(params.TextTree, params.CursorPos)
 	})
+}
+
+func CursorToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+	lastInput := lastInputEvent(inputEvents)
+	if lastInput.Key() != tcell.KeyRune {
+		// Accept only rune keys.
+		return EmptyAction
+	}
+
+	char := lastInput.Rune()
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+		})
+	}
+}
+
+func CursorToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+	lastInput := lastInputEvent(inputEvents)
+	if lastInput.Key() != tcell.KeyRune {
+		// Accept only rune keys.
+		return EmptyAction
+	}
+
+	char := lastInput.Rune()
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+		})
+	}
 }
 
 func ScrollUp(config Config) Action {
@@ -361,12 +402,7 @@ func ChangeInnerWord(s *state.EditorState) {
 }
 
 func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
-	if len(inputEvents) == 0 {
-		// This should never happen if the parser rule is configured correctly.
-		panic("Replace chars expects at least one input event")
-	}
-
-	lastInput := inputEvents[len(inputEvents)-1]
+	lastInput := lastInputEvent(inputEvents)
 	var newChar rune
 	if lastInput.Key() == tcell.KeyEnter {
 		newChar = '\n'

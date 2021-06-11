@@ -69,6 +69,72 @@ func PrevChar(tree *text.Tree, count uint64, pos uint64) uint64 {
 	return pos
 }
 
+// NextMatchingCharInLine locates the count'th next occurrence of a rune in the line.
+// If no match is found, the original position is returned.
+func NextMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeChar bool, pos uint64) uint64 {
+	var matchCount uint64
+	var offset, prevOffset uint64
+	startPos := pos
+	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+	seg := segment.Empty()
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof || seg.HasNewline() {
+			// No match found before end of line or file.
+			return startPos
+		}
+
+		for _, r := range seg.Runes() {
+			if r == char {
+				matchCount++
+				if matchCount == count {
+					if includeChar {
+						return pos + offset
+					} else {
+						return pos + prevOffset
+					}
+				}
+			}
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+	}
+}
+
+// PrevMatchingCharInLine locates the count'th previous occurrence of a rune in the line.
+// If no match is found, the original position is returned.
+func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeChar bool, pos uint64) uint64 {
+	var matchCount uint64
+	var offset, prevOffset uint64
+	startPos := pos
+	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
+	seg := segment.Empty()
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof || seg.HasNewline() {
+			// No match found before end of line or file.
+			return startPos
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+
+		for _, r := range seg.Runes() {
+			if r == char {
+				matchCount++
+				if matchCount == count {
+					if includeChar {
+						return pos - offset
+					} else {
+						return pos - prevOffset
+					}
+				}
+			}
+		}
+	}
+}
+
 // PrevAutoIndent locates the previous tab stop if autoIndent is enabled.
 // If autoIndent is disabled or the characters before the cursor are not spaces/tabs, it returns the original position.
 func PrevAutoIndent(tree *text.Tree, autoIndentEnabled bool, tabSize uint64, pos uint64) uint64 {

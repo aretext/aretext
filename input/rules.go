@@ -456,6 +456,50 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "delete to next matching char (df{char}",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'f'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, true)
+		},
+	},
+	{
+		Name: "delete to prev matching char (dF{char}",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'F'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, true)
+		},
+	},
+	{
+		Name: "delete till next matching char (dt{char}",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 't'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, false)
+		},
+	},
+	{
+		Name: "delete till prev matching char (dT{char}",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'd'},
+			{Key: tcell.KeyRune, Rune: 'T'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, false)
+		},
+	},
+	{
 		Name: "delete to start of next word (dw)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},

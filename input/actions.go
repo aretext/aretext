@@ -319,6 +319,47 @@ func DeleteNextCharInLine(countArg *uint64) Action {
 	}
 }
 
+func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+	lastInput := lastInputEvent(inputEvents)
+	if lastInput.Key() != tcell.KeyRune {
+		// Accept only rune keys.
+		return EmptyAction
+	}
+
+	char := lastInput.Rune()
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if pos == params.CursorPos {
+				// No character matched in this line, so don't delete anything.
+				return pos
+			}
+			// Delete up to and including `pos`
+			return locate.NextCharInLine(params.TextTree, 1, true, pos)
+		})
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		})
+	}
+}
+
+func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+	lastInput := lastInputEvent(inputEvents)
+	if lastInput.Key() != tcell.KeyRune {
+		// Accept only rune keys.
+		return EmptyAction
+	}
+
+	char := lastInput.Rune()
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+		})
+	}
+}
+
 func DeleteDown(s *state.EditorState) {
 	targetLineLoc := func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)

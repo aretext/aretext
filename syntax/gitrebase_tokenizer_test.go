@@ -20,7 +20,11 @@ func TestGitRebaseTokenizer(t *testing.T) {
 			inputString: "# Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
 			expectedTokens: []TokenWithText{
 				{
-					Text: "# Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
+					Text: "#",
+					Role: parser.TokenRoleCommentDelimiter,
+				},
+				{
+					Text: " Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
 					Role: parser.TokenRoleComment,
 				},
 			},

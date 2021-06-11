@@ -12,6 +12,12 @@ func GitCommitRules() []parser.TokenizerRule {
 				{
 					Regexp:    `#[^\n]*`,
 					TokenRole: parser.TokenRoleComment,
+					SubRules: []parser.TokenizerRule{
+						{
+							Regexp:    `^#`,
+							TokenRole: parser.TokenRoleCommentDelimiter,
+						},
+					},
 				},
 			},
 		},

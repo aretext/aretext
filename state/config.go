@@ -9,3 +9,8 @@ func ToggleShowTabs(s *EditorState) {
 func ToggleShowLineNumbers(s *EditorState) {
 	s.documentBuffer.showLineNum = !s.documentBuffer.showLineNum
 }
+
+// ToggleAutoIndent enables or disables auto-indent.
+func ToggleAutoIndent(s *EditorState) {
+	s.documentBuffer.autoIndent = !s.documentBuffer.autoIndent
+}

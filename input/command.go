@@ -94,6 +94,11 @@ func commandMenuItems(config Config) func() []menu.Item {
 				Aliases: []string{"nu"},
 				Action:  state.ToggleShowLineNumbers,
 			},
+			{
+				Name:    "toggle auto-indent",
+				Aliases: []string{"ai"},
+				Action:  state.ToggleAutoIndent,
+			},
 		}
 
 		for _, language := range syntax.AllLanguages {

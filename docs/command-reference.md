@@ -113,6 +113,7 @@ Menu Commands
 | open next document           | n        |
 | toggle show tabs             | ta       |
 | toggle line numbers          | nu       |
+| toggle auto-indent           | ai       |
 | set syntax plaintext         |          |
 | set syntax json              |          |
 | set syntax yaml              |          |

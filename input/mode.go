@@ -33,10 +33,11 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 
 	log.Printf("Normal mode parser accepted input for rule '%s'\n", result.Rule.Name)
 	action := result.Rule.ActionBuilder(ActionBuilderParams{
-		InputEvents:   result.Input,
-		CountArg:      result.Count,
-		MacroRecorder: macroRecorder,
-		Config:        config,
+		InputEvents:          result.Input,
+		CountArg:             result.Count,
+		ClipboardPageNameArg: result.ClipboardPageName,
+		MacroRecorder:        macroRecorder,
+		Config:               config,
 	})
 	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
 
@@ -78,7 +79,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	case tcell.KeyRune:
 		return InsertRune(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return DeletePrevChar
+		return DeletePrevChar(nil)
 	case tcell.KeyEnter:
 		return InsertNewlineAndUpdateAutoIndentWhitespace
 	case tcell.KeyTab:
@@ -167,10 +168,11 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 
 	log.Printf("Visual mode parser accepted input for rule '%s'\n", result.Rule.Name)
 	action := result.Rule.ActionBuilder(ActionBuilderParams{
-		InputEvents:   result.Input,
-		CountArg:      result.Count,
-		MacroRecorder: macroRecorder,
-		Config:        config,
+		InputEvents:          result.Input,
+		CountArg:             result.Count,
+		ClipboardPageNameArg: result.ClipboardPageName,
+		MacroRecorder:        macroRecorder,
+		Config:               config,
 	})
 	action = thenScrollViewToCursor(action)
 	macroRecorder.RecordAction(action)

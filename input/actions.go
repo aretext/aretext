@@ -26,6 +26,13 @@ func countArgOrDefault(countArg *uint64, defaultCount uint64) uint64 {
 	}
 }
 
+func clipboardPageArgOrDefault(arg *rune) clipboard.PageId {
+	if arg == nil {
+		return clipboard.PageDefault
+	}
+	return clipboard.PageIdForLetter(*arg)
+}
+
 func lastInputEvent(inputEvents []*tcell.EventKey) *tcell.EventKey {
 	if len(inputEvents) == 0 {
 		// This should never happen if the parser rule is configured correctly.
@@ -256,20 +263,23 @@ func InsertTab(s *state.EditorState) {
 	state.InsertTab(s)
 }
 
-func DeletePrevChar(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
-		prevAutoIndentPos := locate.PrevAutoIndent(
-			params.TextTree,
-			params.AutoIndentEnabled,
-			params.TabSize,
-			params.CursorPos)
-		if prevInLinePos < prevAutoIndentPos {
-			return prevInLinePos
-		} else {
-			return prevAutoIndentPos
-		}
-	})
+func DeletePrevChar(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
+			prevAutoIndentPos := locate.PrevAutoIndent(
+				params.TextTree,
+				params.AutoIndentEnabled,
+				params.TabSize,
+				params.CursorPos)
+			if prevInLinePos < prevAutoIndentPos {
+				return prevInLinePos
+			} else {
+				return prevAutoIndentPos
+			}
+		}, clipboardPage)
+	}
 }
 
 func BeginNewLineBelow(s *state.EditorState) {
@@ -287,39 +297,44 @@ func JoinLines(s *state.EditorState) {
 	state.JoinLines(s)
 }
 
-func DeleteLines(countArg *uint64) Action {
+func DeleteLines(countArg *uint64, clipboardPageNameArg *rune) Action {
 	count := countArgOrDefault(countArg, 0)
 	if count > 0 {
 		count--
 	}
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		targetLoc := func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineBelow(params.TextTree, count, params.CursorPos)
 		}
-		state.DeleteLines(s, targetLoc, false, false)
+		state.DeleteLines(s, targetLoc, false, false, clipboardPage)
 		CursorLineStartNonWhitespace(s)
 	}
 }
 
-func DeletePrevCharInLine(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
-	})
+func DeletePrevCharInLine(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+		}, clipboardPage)
+	}
 }
 
-func DeleteNextCharInLine(countArg *uint64) Action {
+func DeleteNextCharInLine(countArg *uint64, clipboardPageNameArg *rune) Action {
 	count := countArgOrDefault(countArg, 1)
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.NextCharInLine(params.TextTree, count, true, params.CursorPos)
-		})
+		}, clipboardPage)
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
 		})
 	}
 }
 
-func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
 	lastInput := lastInputEvent(inputEvents)
 	if lastInput.Key() != tcell.KeyRune {
 		// Accept only rune keys.
@@ -328,6 +343,7 @@ func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 
 	char := lastInput.Rune()
 	count := countArgOrDefault(countArg, 1)
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
@@ -337,14 +353,14 @@ func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 			}
 			// Delete up to and including `pos`
 			return locate.NextCharInLine(params.TextTree, 1, true, pos)
-		})
+		}, clipboardPage)
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
 		})
 	}
 }
 
-func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
+func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
 	lastInput := lastInputEvent(inputEvents)
 	if lastInput.Key() != tcell.KeyRune {
 		// Accept only rune keys.
@@ -353,93 +369,127 @@ func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 
 	char := lastInput.Rune()
 	count := countArgOrDefault(countArg, 1)
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+		}, clipboardPage)
+	}
+}
+
+func DeleteDown(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		targetLineLoc := func(params state.LocatorParams) uint64 {
+			return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
+		}
+		state.DeleteLines(s, targetLineLoc, true, false, clipboardPage)
+		CursorLineStartNonWhitespace(s)
+	}
+}
+
+func DeleteUp(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		targetLineLoc := func(params state.LocatorParams) uint64 {
+			return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
+		}
+		state.DeleteLines(s, targetLineLoc, true, false, clipboardPage)
+		CursorLineStartNonWhitespace(s)
+	}
+}
+
+func DeleteToEndOfLine(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+		}, clipboardPage)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
 		})
 	}
 }
 
-func DeleteDown(s *state.EditorState) {
-	targetLineLoc := func(params state.LocatorParams) uint64 {
-		return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
+func DeleteToStartOfLine(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+		}, clipboardPage)
 	}
-	state.DeleteLines(s, targetLineLoc, true, false)
-	CursorLineStartNonWhitespace(s)
 }
 
-func DeleteUp(s *state.EditorState) {
-	targetLineLoc := func(params state.LocatorParams) uint64 {
-		return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
+func DeleteToStartOfLineNonWhitespace(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+			return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+		}, clipboardPage)
 	}
-	state.DeleteLines(s, targetLineLoc, true, false)
-	CursorLineStartNonWhitespace(s)
 }
 
-func DeleteToEndOfLine(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
-	})
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-	})
+func DeleteToStartOfNextWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+		}, clipboardPage)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		})
+	}
 }
 
-func DeleteToStartOfLine(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-	})
+func DeleteAWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		})
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
+		}, clipboardPage)
+	}
 }
 
-func DeleteToStartOfLineNonWhitespace(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
-		return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
-	})
+func DeleteInnerWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		})
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+		}, clipboardPage)
+	}
 }
 
-func DeleteToStartOfNextWord(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
-	})
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
-	})
+func ChangeToStartOfNextWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
+			return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+		}, clipboardPage)
+		EnterInsertMode(s)
+	}
 }
 
-func DeleteAWord(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
-	})
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
-	})
+func ChangeAWord(clipboardPageNameArg *rune) Action {
+	deleteAWordAction := DeleteAWord(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		deleteAWordAction(s)
+		EnterInsertMode(s)
+	}
 }
 
-func DeleteInnerWord(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
-	})
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
-	})
-}
-
-func ChangeToStartOfNextWord(s *state.EditorState) {
-	state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
-	})
-	EnterInsertMode(s)
-}
-
-func ChangeAWord(s *state.EditorState) {
-	DeleteAWord(s)
-	EnterInsertMode(s)
-}
-
-func ChangeInnerWord(s *state.EditorState) {
-	DeleteInnerWord(s)
-	EnterInsertMode(s)
+func ChangeInnerWord(clipboardPageNameArg *rune) Action {
+	deleteInnerWordAction := DeleteInnerWord(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		deleteInnerWordAction(s)
+		EnterInsertMode(s)
+	}
 }
 
 func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
@@ -473,46 +523,64 @@ func OutdentLine(s *state.EditorState) {
 	state.OutdentLineAtCursor(s)
 }
 
-func CopyToStartOfNextWord(s *state.EditorState) {
-	startLoc := func(params state.LocatorParams) uint64 {
-		return params.CursorPos
+func CopyToStartOfNextWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		startLoc := func(params state.LocatorParams) uint64 {
+			return params.CursorPos
+		}
+		endLoc := func(params state.LocatorParams) uint64 {
+			return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
+		}
+		state.CopyRegion(s, clipboardPage, startLoc, endLoc)
 	}
-	endLoc := func(params state.LocatorParams) uint64 {
-		return locate.NextWordStartInLine(params.TextTree, params.TokenTree, params.CursorPos)
-	}
-	state.CopyRegion(s, startLoc, endLoc)
 }
 
-func CopyAWord(s *state.EditorState) {
-	startLoc := func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+func CopyAWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		startLoc := func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		}
+		endLoc := func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
+		}
+		state.CopyRegion(s, clipboardPage, startLoc, endLoc)
 	}
-	endLoc := func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.TokenTree, params.CursorPos)
-	}
-	state.CopyRegion(s, startLoc, endLoc)
 }
 
-func CopyInnerWord(s *state.EditorState) {
-	startLoc := func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+func CopyInnerWord(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		startLoc := func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordStart(params.TextTree, params.TokenTree, params.CursorPos)
+		}
+		endLoc := func(params state.LocatorParams) uint64 {
+			return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+		}
+		state.CopyRegion(s, clipboardPage, startLoc, endLoc)
 	}
-	endLoc := func(params state.LocatorParams) uint64 {
-		return locate.CurrentWordEnd(params.TextTree, params.TokenTree, params.CursorPos)
+}
+
+func CopyLines(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.CopyLine(s, clipboardPage)
 	}
-	state.CopyRegion(s, startLoc, endLoc)
 }
 
-func CopyLines(s *state.EditorState) {
-	state.CopyLine(s)
+func PasteAfterCursor(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.PasteAfterCursor(s, clipboardPage)
+	}
 }
 
-func PasteAfterCursor(s *state.EditorState) {
-	state.PasteAfterCursor(s, clipboard.PageDefault)
-}
-
-func PasteBeforeCursor(s *state.EditorState) {
-	state.PasteBeforeCursor(s, clipboard.PageDefault)
+func PasteBeforeCursor(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.PasteBeforeCursor(s, clipboardPage)
+	}
 }
 
 func ShowCommandMenu(config Config) Action {
@@ -603,9 +671,12 @@ func ToggleVisualModeLinewise(s *state.EditorState) {
 	state.ToggleVisualMode(s, selection.ModeLine)
 }
 
-func DeleteSelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.DeleteSelection(s, false)
-	ReturnToNormalMode(s)
+func DeleteSelectionAndReturnToNormalMode(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteSelection(s, false, clipboardPage)
+		ReturnToNormalMode(s)
+	}
 }
 
 func ToggleCaseInSelectionAndReturnToNormalMode(s *state.EditorState) {
@@ -623,12 +694,18 @@ func OutdentSelectionAndReturnToNormalMode(s *state.EditorState) {
 	ReturnToNormalMode(s)
 }
 
-func ChangeSelection(s *state.EditorState) {
-	state.DeleteSelection(s, true)
-	EnterInsertMode(s)
+func ChangeSelection(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.DeleteSelection(s, true, clipboardPage)
+		EnterInsertMode(s)
+	}
 }
 
-func CopySelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.CopySelection(s)
-	ReturnToNormalMode(s)
+func CopySelectionAndReturnToNormalMode(clipboardPageNameArg *rune) Action {
+	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+	return func(s *state.EditorState) {
+		state.CopySelection(s, clipboardPage)
+		ReturnToNormalMode(s)
+	}
 }

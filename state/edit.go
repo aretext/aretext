@@ -218,7 +218,7 @@ func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
-func DeleteRunes(state *EditorState, loc Locator) {
+func DeleteRunes(state *EditorState, loc Locator, clipboardPage clipboard.PageId) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
@@ -233,7 +233,7 @@ func DeleteRunes(state *EditorState, loc Locator) {
 	}
 
 	if deletedText != "" {
-		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
+		state.clipboard.Set(clipboardPage, clipboard.PageContent{
 			Text:     deletedText,
 			Linewise: false,
 		})
@@ -241,7 +241,7 @@ func DeleteRunes(state *EditorState, loc Locator) {
 }
 
 // DeleteSelection deletes the currently selected region, if any.
-func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool) {
+func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool, clipboardPage clipboard.PageId) {
 	buffer := state.documentBuffer
 	selectionMode := buffer.selector.Mode()
 	if selectionMode == selection.ModeNone {
@@ -252,9 +252,9 @@ func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool) {
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
 	targetLineLoc := func(LocatorParams) uint64 { return r.EndPos }
 	if selectionMode == selection.ModeChar {
-		DeleteRunes(state, targetLineLoc)
+		DeleteRunes(state, targetLineLoc, clipboardPage)
 	} else if selectionMode == selection.ModeLine {
-		DeleteLines(state, targetLineLoc, false, replaceLinesWithEmptyLine)
+		DeleteLines(state, targetLineLoc, false, replaceLinesWithEmptyLine, clipboardPage)
 	} else {
 		panic("Unsupported selection mode")
 	}
@@ -262,7 +262,7 @@ func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool) {
 
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.
 // It moves the cursor to the start of the line following the last deleted line.
-func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool) {
+func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool, clipboardPage clipboard.PageId) {
 	buffer := state.documentBuffer
 	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
 	targetPos := targetLineLoc(locatorParamsForBuffer(buffer))
@@ -305,7 +305,7 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 
 	if len(deletedLines) > 0 {
 		deletedText := strings.Join(deletedLines, "\n")
-		state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{
+		state.clipboard.Set(clipboardPage, clipboard.PageContent{
 			Text:     deletedText,
 			Linewise: true,
 		})
@@ -628,7 +628,7 @@ func changeIndentationForSelection(state *EditorState, f func(*EditorState, uint
 }
 
 // CopyRegion copies the characters in a region from startLoc (inclusive) to endLoc (exclusive) to the default page in the clipboard.
-func CopyRegion(state *EditorState, startLoc Locator, endLoc Locator) {
+func CopyRegion(state *EditorState, page clipboard.PageId, startLoc Locator, endLoc Locator) {
 	locParams := locatorParamsForBuffer(state.documentBuffer)
 	startPos, endPos := startLoc(locParams), endLoc(locParams)
 	if startPos >= endPos {
@@ -636,11 +636,11 @@ func CopyRegion(state *EditorState, startLoc Locator, endLoc Locator) {
 	}
 
 	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
-	state.clipboard.Set(clipboard.PageDefault, clipboard.PageContent{Text: text})
+	state.clipboard.Set(page, clipboard.PageContent{Text: text})
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.
-func CopyLine(state *EditorState) {
+func CopyLine(state *EditorState, page clipboard.PageId) {
 	buffer := state.documentBuffer
 	startPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
 	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
@@ -649,18 +649,18 @@ func CopyLine(state *EditorState) {
 		Text:     line,
 		Linewise: true,
 	}
-	state.clipboard.Set(clipboard.PageDefault, content)
+	state.clipboard.Set(page, content)
 }
 
 // CopySelection copies the current selection to the clipboard.
-func CopySelection(state *EditorState) {
+func CopySelection(state *EditorState, page clipboard.PageId) {
 	buffer := state.documentBuffer
 	text, r := copySelectionText(buffer)
 	content := clipboard.PageContent{Text: text}
 	if buffer.selector.Mode() == selection.ModeLine {
 		content.Linewise = true
 	}
-	state.clipboard.Set(clipboard.PageDefault, content)
+	state.clipboard.Set(page, content)
 
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
 }

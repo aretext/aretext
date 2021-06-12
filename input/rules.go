@@ -8,10 +8,11 @@ import (
 type ActionBuilder func(p ActionBuilderParams) Action
 
 type ActionBuilderParams struct {
-	InputEvents   []*tcell.EventKey
-	CountArg      *uint64
-	MacroRecorder *MacroRecorder
-	Config        Config
+	InputEvents          []*tcell.EventKey
+	CountArg             *uint64
+	ClipboardPageNameArg *rune
+	MacroRecorder        *MacroRecorder
+	Config               Config
 }
 
 // Rule defines a command that the input parser can recognize.
@@ -300,7 +301,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'x'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteNextCharInLine(p.CountArg)
+			return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -373,7 +374,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteLines(p.CountArg)
+			return DeleteLines(p.CountArg, p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -383,7 +384,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'h'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeletePrevCharInLine
+			return DeletePrevCharInLine(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -393,7 +394,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'j'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteDown
+			return DeleteDown(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -403,7 +404,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'k'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteUp
+			return DeleteUp(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -413,7 +414,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'l'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteNextCharInLine(p.CountArg)
+			return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -423,7 +424,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: '$'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToEndOfLine
+			return DeleteToEndOfLine(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -433,7 +434,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: '0'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToStartOfLine
+			return DeleteToStartOfLine(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -443,7 +444,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: '^'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToStartOfLineNonWhitespace
+			return DeleteToStartOfLineNonWhitespace(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -452,7 +453,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'D'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToEndOfLine
+			return DeleteToEndOfLine(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -463,7 +464,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Wildcard: true},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, true)
+			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
 	},
 	{
@@ -474,7 +475,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Wildcard: true},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, true)
+			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
 	},
 	{
@@ -485,7 +486,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Wildcard: true},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, false)
+			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
 	},
 	{
@@ -496,7 +497,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Wildcard: true},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, false)
+			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
 	},
 	{
@@ -506,7 +507,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteToStartOfNextWord
+			return DeleteToStartOfNextWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -517,7 +518,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteAWord
+			return DeleteAWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -528,7 +529,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteInnerWord
+			return DeleteInnerWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -538,7 +539,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ChangeToStartOfNextWord
+			return ChangeToStartOfNextWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -549,7 +550,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ChangeAWord
+			return ChangeAWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -560,7 +561,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ChangeInnerWord
+			return ChangeInnerWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -609,7 +610,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return CopyToStartOfNextWord
+			return CopyToStartOfNextWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -620,7 +621,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return CopyAWord
+			return CopyAWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -631,7 +632,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'w'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return CopyInnerWord
+			return CopyInnerWord(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -641,7 +642,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'y'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return CopyLines
+			return CopyLines(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -650,7 +651,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'p'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return PasteAfterCursor
+			return PasteAfterCursor(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -659,7 +660,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'P'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return PasteBeforeCursor
+			return PasteBeforeCursor(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -805,7 +806,7 @@ var visualModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'x'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteSelectionAndReturnToNormalMode
+			return DeleteSelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -814,7 +815,7 @@ var visualModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'd'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return DeleteSelectionAndReturnToNormalMode
+			return DeleteSelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -823,7 +824,7 @@ var visualModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'c'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return ChangeSelection
+			return ChangeSelection(p.ClipboardPageNameArg)
 		},
 	},
 	{
@@ -859,7 +860,7 @@ var visualModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: 'y'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return CopySelectionAndReturnToNormalMode
+			return CopySelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
 		},
 	},
 }...)

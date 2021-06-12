@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/syntax"
 )
@@ -22,7 +23,7 @@ func TestUndoAndRedo(t *testing.T) {
 	CheckpointUndoLog(state)
 	DeleteRunes(state, func(params LocatorParams) uint64 {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
-	})
+	}, clipboard.PageDefault)
 	CheckpointUndoLog(state)
 
 	// Verify state before undo.
@@ -71,7 +72,7 @@ func TestUndoDeleteLinesWithIndentation(t *testing.T) {
 
 	// Delete second-to-last line, which is indented.
 	MoveCursor(state, func(p LocatorParams) uint64 { return locate.StartOfLineNum(p.TextTree, 1) })
-	DeleteLines(state, func(p LocatorParams) uint64 { return p.CursorPos }, false, false)
+	DeleteLines(state, func(p LocatorParams) uint64 { return p.CursorPos }, false, false, clipboard.PageDefault)
 	CheckpointUndoLog(state)
 
 	// Verify state before undo.

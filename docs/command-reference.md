@@ -10,98 +10,100 @@ Normal Mode Commands
 
 Some commands may be prefixed with a number *count* to repeat the command *count* times. For example "5x" deletes the next five characters.
 
-| Name                                        | Key Binding | Options |
-|---------------------------------------------|-------------|---------|
-| cursor left                                 | left arrow  |         |
-| cursor right                                | right arrow |         |
-| cursor up                                   | up arrow    |         |
-| cursor down                                 | down arrow  |         |
-| cursor left                                 | h           |         |
-| cursor right                                | l           |         |
-| cursor up                                   | k           |         |
-| cursor down                                 | j           |         |
-| cursor back                                 | backspace   |         |
-| cursor to next matching character in line   | f\{char\}   | count   |
-| cursor to prev matching character in line   | F\{char\}   | count   |
-| cursor till next matching character in line | t\{char\}   | count   |
-| cursor till prev matching character in line | T\{char\}   | count   |
-| cursor next word start                      | w           |         |
-| cursor prev word start                      | b           |         |
-| cursor next word end                        | e           |         |
-| cursor prev paragraph                       | \{          |         |
-| cursor next paragraph                       | \}          |         |
-| cursor line start                           | 0           |         |
-| cursor line start after indentation         | ^           |         |
-| cursor line end                             | $           |         |
-| cursor start of first line                  | gg          |         |
-| cursor start of line number                 | \{count\}gg |         |
-| cursor start of last line                   | G           |         |
-| scroll up                                   | ctrl-u      |         |
-| scroll down                                 | ctrl-d      |         |
-| delete next character in line               | x           | count   |
-| delete to next matching character in line   | df\{char\}  | count   |
-| delete to prev matching character in line   | dF\{char\}  | count   |
-| delete till next matching character in line | dt\{char\}  | count   |
-| delete till prev matching character in line | dT\{char\}  | count   |
-| insert                                      | i           |         |
-| insert at start of line                     | I           |         |
-| append                                      | a           |         |
-| append at end of line                       | A           |         |
-| new line below                              | o           |         |
-| new line above                              | O           |         |
-| join lines                                  | J           |         |
-| delete line                                 | dd          | count   |
-| delete previous character in line           | dh          |         |
-| delete lines below                          | dj          |         |
-| delete lines above                          | dk          |         |
-| delete next character in line               | dl          | count   |
-| delete to end of line                       | d$          |         |
-| delete to start of line                     | d0          |         |
-| delete to start of line after indentation   | d^          |         |
-| delete to end of line                       | D           |         |
-| delete to start of next word                | dw          |         |
-| delete a word                               | daw         |         |
-| delete inner word                           | diw         |         |
-| change to start of next word                | cw          |         |
-| change a word                               | caw         |         |
-| change inner word                           | ciw         |         |
-| replace character                           | r           |         |
-| toggle case                                 | ~           |         |
-| indent line                                 | >>          |         |
-| outdent line                                | \<\<        |         |
-| yank to start of next word                  | yw          |         |
-| yank a word                                 | yaw         |         |
-| yank inner word                             | yiw         |         |
-| yank line                                   | yy          |         |
-| put after cursor                            | p           |         |
-| put before cursor                           | P           |         |
-| show command menu                           | :           |         |
-| start forward search                        | /           |         |
-| start backward search                       | ?           |         |
-| find next match                             | n           |         |
-| find previous match                         | N           |         |
-| undo                                        | u           |         |
-| redo                                        | ctrl-r      |         |
-| visual mode charwise                        | v           |         |
-| visual mode linewise                        | V           |         |
-| repeat last action                          | .           |         |
+Commands that interact with the clipboard accept a *clipboard page* prefix of the form `"[a-z]`, where the letter is the name of the page. If not provided, a default (unnamed) page is used.
+
+| Name                                        | Key Binding | Options               |
+|---------------------------------------------|-------------|-----------------------|
+| cursor left                                 | left arrow  |                       |
+| cursor right                                | right arrow |                       |
+| cursor up                                   | up arrow    |                       |
+| cursor down                                 | down arrow  |                       |
+| cursor left                                 | h           |                       |
+| cursor right                                | l           |                       |
+| cursor up                                   | k           |                       |
+| cursor down                                 | j           |                       |
+| cursor back                                 | backspace   |                       |
+| cursor to next matching character in line   | f\{char\}   | count                 |
+| cursor to prev matching character in line   | F\{char\}   | count                 |
+| cursor till next matching character in line | t\{char\}   | count                 |
+| cursor till prev matching character in line | T\{char\}   | count                 |
+| cursor next word start                      | w           |                       |
+| cursor prev word start                      | b           |                       |
+| cursor next word end                        | e           |                       |
+| cursor prev paragraph                       | \{          |                       |
+| cursor next paragraph                       | \}          |                       |
+| cursor line start                           | 0           |                       |
+| cursor line start after indentation         | ^           |                       |
+| cursor line end                             | $           |                       |
+| cursor start of first line                  | gg          |                       |
+| cursor start of line number                 | \{count\}gg |                       |
+| cursor start of last line                   | G           |                       |
+| scroll up                                   | ctrl-u      |                       |
+| scroll down                                 | ctrl-d      |                       |
+| delete next character in line               | x           | count, clipboard page |
+| delete to next matching character in line   | df\{char\}  | count, clipboard page |
+| delete to prev matching character in line   | dF\{char\}  | count, clipboard page |
+| delete till next matching character in line | dt\{char\}  | count, clipboard page |
+| delete till prev matching character in line | dT\{char\}  | count, clipboard page |
+| insert                                      | i           |                       |
+| insert at start of line                     | I           |                       |
+| append                                      | a           |                       |
+| append at end of line                       | A           |                       |
+| new line below                              | o           |                       |
+| new line above                              | O           |                       |
+| join lines                                  | J           |                       |
+| delete line                                 | dd          | count, clipboard page |
+| delete previous character in line           | dh          | clipboard page        |
+| delete lines below                          | dj          | clipboard page        |
+| delete lines above                          | dk          | clipboard page        |
+| delete next character in line               | dl          | count, clipboard page |
+| delete to end of line                       | d$          | clipboard page        |
+| delete to start of line                     | d0          | clipboard page        |
+| delete to start of line after indentation   | d^          | clipboard page        |
+| delete to end of line                       | D           | clipboard page        |
+| delete to start of next word                | dw          | clipboard page        |
+| delete a word                               | daw         | clipboard page        |
+| delete inner word                           | diw         | clipboard page        |
+| change to start of next word                | cw          | clipboard page        |
+| change a word                               | caw         | clipboard page        |
+| change inner word                           | ciw         | clipboard page        |
+| replace character                           | r           |                       |
+| toggle case                                 | ~           |                       |
+| indent line                                 | >>          |                       |
+| outdent line                                | \<\<        |                       |
+| yank to start of next word                  | yw          | clipboard page        |
+| yank a word                                 | yaw         | clipboard page        |
+| yank inner word                             | yiw         | clipboard page        |
+| yank line                                   | yy          | clipboard page        |
+| put after cursor                            | p           | clipboard page        |
+| put before cursor                           | P           | clipboard page        |
+| show command menu                           | :           |                       |
+| start forward search                        | /           |                       |
+| start backward search                       | ?           |                       |
+| find next match                             | n           |                       |
+| find previous match                         | N           |                       |
+| undo                                        | u           |                       |
+| redo                                        | ctrl-r      |                       |
+| visual mode charwise                        | v           |                       |
+| visual mode linewise                        | V           |                       |
+| repeat last action                          | .           |                       |
 
 Visual Mode Commands
 --------------------
 
-| Name                        | Key Binding |
-|-----------------------------|-------------|
-| toggle visual mode charwise | v           |
-| toggle visual mode linewise | V           |
-| return to normal mode       | escape      |
-| show command menu           | :           |
-| delete selection            | x           |
-| delete selection            | d           |
-| change selection            | c           |
-| toggle case for selection   | ~           |
-| indent selection            | \>          |
-| outdent selection           | \<          |
-| yank selection              | y           |
+| Name                        | Key Binding | Options        |
+|-----------------------------|-------------|----------------|
+| toggle visual mode charwise | v           |                |
+| toggle visual mode linewise | V           |                |
+| return to normal mode       | escape      |                |
+| show command menu           | :           |                |
+| delete selection            | x           | clipboard page |
+| delete selection            | d           | clipboard page |
+| change selection            | c           | clipboard page |
+| toggle case for selection   | ~           |                |
+| indent selection            | \>          |                |
+| outdent selection           | \<          |                |
+| yank selection              | y           | clipboard page |
 
 Menu Commands
 -------------

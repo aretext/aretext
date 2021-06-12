@@ -19,10 +19,15 @@ type ParseResult struct {
 	Input []*tcell.EventKey
 
 	// Count is the parsed count parameter, if provided.
-	// For example, "5x" (delete five characters) would have count set to 5.
+	// For example, `5x` (delete five characters) would have count set to 5.
 	// If provided, the count will always be at least one and at most math.MaxInt64.
 	// If no count parameter was provided, this will be nil.
 	Count *uint64
+
+	// ClipboardPageName is the name of the page to copy or paste.
+	// For example `"ap` means "paste clipboard page named 'a'"
+	// If not provided, this will be nil.
+	ClipboardPageName *rune
 }
 
 // maxParseInputLen is the maximum number of input key events that can be recognized.
@@ -34,9 +39,10 @@ const maxParseInputLen = 64
 type parserState int
 
 const (
-	parserStateStart       = parserState(iota) // initial state.
-	parserStateCountPrefix                     // parsing the "count" parameter at the start of the command.
-	parserStateCommand                         // parsing the command itself.
+	parserStateStart         = parserState(iota) // initial state.
+	parserStateCountPrefix                       // parsing the "count" parameter at the start of the command.
+	parserStateClipboardPage                     // parsing the clipboard page name at the start of the command.
+	parserStateCommand                           // parsing the command itself.
 )
 
 // candidateState describes the state of a particular candidate rule that could accept the input.
@@ -49,11 +55,12 @@ type candidateState struct {
 // It parses input incrementally, waiting for a key that will trigger some rule.
 // If the input is rejected by all rules, the parser resets.
 type Parser struct {
-	state       parserState
-	rules       []Rule
-	candidates  []candidateState
-	inputBuffer []*tcell.EventKey
-	countDigits []rune
+	state             parserState
+	rules             []Rule
+	candidates        []candidateState
+	inputBuffer       []*tcell.EventKey
+	countDigits       []rune
+	clipboardPageName *rune
 }
 
 // NewParser constructs a new parser for a set of rules.
@@ -88,6 +95,9 @@ func (p *Parser) ProcessInput(event *tcell.EventKey) ParseResult {
 				// Digits 1-9 at the start of a sequence are parsed as the "count" parameter.
 				// Note that the character '0' is treated as a command (cursor to start of line), not a count.
 				p.state = parserStateCountPrefix
+			} else if isQuote(event) {
+				p.state = parserStateClipboardPage
+				return ParseResult{Accepted: false}
 			} else {
 				p.state = parserStateCommand
 			}
@@ -96,8 +106,15 @@ func (p *Parser) ProcessInput(event *tcell.EventKey) ParseResult {
 				p.countDigits = append(p.countDigits, event.Rune())
 				return ParseResult{Accepted: false}
 			} else {
-				p.state = parserStateCommand
+				p.state = parserStateStart
 			}
+		case parserStateClipboardPage:
+			if event.Key() == tcell.KeyRune {
+				r := event.Rune()
+				p.clipboardPageName = &r
+			}
+			p.state = parserStateStart
+			return ParseResult{Accepted: false}
 		case parserStateCommand:
 			return p.processCommandInput(event)
 		}
@@ -117,12 +134,14 @@ func (p *Parser) processCommandInput(event *tcell.EventKey) ParseResult {
 			rule := p.rules[c.ruleIdx]
 			input := append([]*tcell.EventKey{}, p.inputBuffer...)
 			count := p.calculateCount() // This checks for overflow.
+			clipboardPageName := p.clipboardPageName
 			p.reset()
 			return ParseResult{
-				Accepted: true,
-				Rule:     rule,
-				Input:    input,
-				Count:    count,
+				Accepted:          true,
+				Rule:              rule,
+				Input:             input,
+				Count:             count,
+				ClipboardPageName: clipboardPageName,
 			}
 		} else {
 			// The candidate neither accepted nor rejected the input, so we keep the candidate
@@ -163,6 +182,7 @@ func (p *Parser) reset() {
 	p.state = parserStateStart
 	p.inputBuffer = p.inputBuffer[:0]
 	p.countDigits = p.countDigits[:0]
+	p.clipboardPageName = nil
 	p.candidates = p.candidates[:0]
 	for i := 0; i < len(p.rules); i++ {
 		p.candidates = append(p.candidates, candidateState{
@@ -197,4 +217,8 @@ func isDigit(event *tcell.EventKey) bool {
 
 func isZeroDigit(event *tcell.EventKey) bool {
 	return event.Key() == tcell.KeyRune && event.Rune() == '0'
+}
+
+func isQuote(event *tcell.EventKey) bool {
+	return event.Key() == tcell.KeyRune && event.Rune() == '"'
 }

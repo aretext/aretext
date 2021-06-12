@@ -95,7 +95,7 @@ func runInShellAndInsertOutput(state *EditorState, shellCmd string, env []string
 	}
 	page := clipboard.PageContent{Text: text}
 	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
-	DeleteSelection(state, false)
+	DeleteSelection(state, false, clipboard.PageDefault)
 	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
 	SetInputMode(state, InputModeNormal)
 	return nil

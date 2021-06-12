@@ -127,7 +127,7 @@ func TestDeleteRunes(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			DeleteRunes(state, tc.locator)
+			DeleteRunes(state, tc.locator, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
@@ -221,7 +221,7 @@ func TestDeleteSelection(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			DeleteSelection(state, tc.replaceLinesWithEmptyLine)
+			DeleteSelection(state, tc.replaceLinesWithEmptyLine, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
@@ -720,7 +720,7 @@ func TestDeleteLines(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine)
+			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
@@ -1520,7 +1520,7 @@ func TestCopyRegion(t *testing.T) {
 			require.NoError(t, err)
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
-			CopyRegion(state, tc.startLoc, tc.endLoc)
+			CopyRegion(state, clipboard.PageDefault, tc.startLoc, tc.endLoc)
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
 		})
 	}
@@ -1622,7 +1622,7 @@ func TestCopyLine(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			CopyLine(state)
+			CopyLine(state, clipboard.PageDefault)
 			assert.Equal(t, tc.initialCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
 		})
@@ -1719,7 +1719,7 @@ func TestCopySelection(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
 			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			CopySelection(state)
+			CopySelection(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))

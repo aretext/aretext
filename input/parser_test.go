@@ -9,12 +9,14 @@ import (
 )
 
 type acceptResult struct {
-	input string
-	count *uint64
+	input             string
+	count             *uint64
+	clipboardPageName *rune
 }
 
 var five = uint64(5)
 var oneHundredAndTwo = uint64(102)
+var lowercaseA = 'a'
 
 func TestParser(t *testing.T) {
 	rules := []Rule{
@@ -254,6 +256,65 @@ func TestParser(t *testing.T) {
 				{input: "5a", count: &five},
 			},
 		},
+		{
+			name: "clipboard name rune",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+			},
+			expected: []acceptResult{
+				{input: `"aa`, clipboardPageName: &lowercaseA},
+			},
+		},
+		{
+			name: "clipboard name non-rune",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyCtrlQ, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+			},
+			expected: []acceptResult{
+				{input: "\"\x00a"}, // Ignore the clipboard page name
+			},
+		},
+		{
+			name: "count before clipboard name",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+			},
+			expected: []acceptResult{
+				{input: "5\"aa", count: &five, clipboardPageName: &lowercaseA},
+			},
+		},
+		{
+			name: "clipboard name before count",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+			},
+			expected: []acceptResult{
+				{input: "\"a5a", count: &five, clipboardPageName: &lowercaseA},
+			},
+		},
+		{
+			name: "multiple clipboard names, use last",
+			inputEvents: []*tcell.EventKey{
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '"', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+			},
+			expected: []acceptResult{
+				{input: "\"b\"aa", clipboardPageName: &lowercaseA},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -268,8 +329,9 @@ func TestParser(t *testing.T) {
 						inputRunes[i] = e.Rune()
 					}
 					acceptResults = append(acceptResults, acceptResult{
-						input: string(inputRunes),
-						count: result.Count,
+						input:             string(inputRunes),
+						count:             result.Count,
+						clipboardPageName: result.ClipboardPageName,
 					})
 				}
 			}

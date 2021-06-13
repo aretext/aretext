@@ -2,6 +2,7 @@ package input
 
 import (
 	"math"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -75,6 +76,18 @@ func NewParser(rules []Rule) *Parser {
 		candidates:  candidates,
 		inputBuffer: make([]*tcell.EventKey, 0),
 	}
+}
+
+// InputBufferString returns a string describing buffered input events.
+// This can be displayed to the user to help them understand the input state.
+func (p *Parser) InputBufferString() string {
+	var sb strings.Builder
+	for _, e := range p.inputBuffer {
+		if e.Key() == tcell.KeyRune {
+			sb.WriteRune(e.Rune())
+		}
+	}
+	return sb.String()
 }
 
 // ProcessInput processes an input event key.

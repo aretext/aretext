@@ -10,11 +10,12 @@ import (
 
 func TestDrawStatusBar(t *testing.T) {
 	testCases := []struct {
-		name             string
-		statusMsg        state.StatusMsg
-		inputMode        state.InputMode
-		filePath         string
-		expectedContents [][]rune
+		name              string
+		statusMsg         state.StatusMsg
+		inputMode         state.InputMode
+		inputBufferString string
+		filePath          string
+		expectedContents  [][]rune
 	}{
 		{
 			name:      "normal mode shows file path",
@@ -74,13 +75,21 @@ func TestDrawStatusBar(t *testing.T) {
 				{'e', 'r', 'r', 'o', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
+		{
+			name:              "input buffer",
+			inputBufferString: `"aya`,
+			expectedContents: [][]rune{
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{tcell.RuneBlock, ' ', '"', 'a', 'y', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(16, 2)
-				DrawStatusBar(s, tc.statusMsg, tc.inputMode, tc.filePath)
+				DrawStatusBar(s, tc.statusMsg, tc.inputMode, tc.inputBufferString, tc.filePath)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)
 			})

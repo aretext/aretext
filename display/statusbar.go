@@ -1,6 +1,8 @@
 package display
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/file"
@@ -8,7 +10,7 @@ import (
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.
-func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode state.InputMode, filePath string) {
+func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) {
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 {
 		return
@@ -17,11 +19,16 @@ func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode sta
 	row := screenHeight - 1
 	sr := NewScreenRegion(screen, 0, row, screenWidth, 1)
 	sr.Fill(' ', tcell.StyleDefault)
-	text, style := statusBarContent(statusMsg, inputMode, filePath)
+	text, style := statusBarContent(statusMsg, inputMode, inputBufferString, filePath)
 	drawStringNoWrap(sr, text, 0, 0, style)
 }
 
-func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, filePath string) (string, tcell.Style) {
+func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) (string, tcell.Style) {
+	if len(inputBufferString) > 0 {
+		msg := fmt.Sprintf("%s %s", string(tcell.RuneBlock), inputBufferString)
+		return msg, tcell.StyleDefault.Bold(true)
+	}
+
 	if len(statusMsg.Text) > 0 {
 		return statusMsg.Text, styleForStatusMsg(statusMsg)
 	}

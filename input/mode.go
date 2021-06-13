@@ -13,6 +13,10 @@ type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
 	// It will return any user-initiated action resulting from the keypress
 	ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action
+
+	// InputBufferString returns a string describing buffered input events.
+	// It can be displayed to the user to help them understand the input state.
+	InputBufferString() string
 }
 
 // normalMode is used for navigating text.
@@ -52,6 +56,10 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	return action
 }
 
+func (m *normalMode) InputBufferString() string {
+	return m.parser.InputBufferString()
+}
+
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
@@ -87,6 +95,10 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	}
 }
 
+func (m *insertMode) InputBufferString() string {
+	return ""
+}
+
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
@@ -111,6 +123,10 @@ func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRe
 	}
 }
 
+func (m *menuMode) InputBufferString() string {
+	return ""
+}
+
 // searchMode is used to search the text for a substring.
 type searchMode struct{}
 
@@ -128,6 +144,10 @@ func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	default:
 		return EmptyAction
 	}
+}
+
+func (m *searchMode) InputBufferString() string {
+	return ""
 }
 
 // visualMode is used to visually select a region of the document.
@@ -157,6 +177,10 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 	macroRecorder.RecordAction(action)
 	return action
+}
+
+func (m *visualMode) InputBufferString() string {
+	return m.parser.InputBufferString()
 }
 
 // firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.

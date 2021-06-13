@@ -55,3 +55,9 @@ func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) Action {
 		state.ScrollViewToCursor(s)
 	}
 }
+
+// InputBufferString returns a string describing buffered input events.
+// It can be displayed to the user to help them understand the input state.
+func (inp *Interpreter) InputBufferString(mode state.InputMode) string {
+	return inp.modes[mode].InputBufferString()
+}

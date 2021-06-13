@@ -67,11 +67,8 @@ func effectivePath(path string) string {
 
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
-	display.DrawEditor(e.screen, e.editorState)
-	e.screen.Sync()
-
+	e.redraw(true)
 	go e.pollTermEvents()
-
 	e.runMainEventLoop()
 	e.shutdown()
 }
@@ -98,7 +95,7 @@ func (e *Editor) runMainEventLoop() {
 			return
 		}
 
-		e.redraw()
+		e.redraw(false)
 	}
 }
 
@@ -127,9 +124,15 @@ func (e *Editor) inputConfig() input.Config {
 	}
 }
 
-func (e *Editor) redraw() {
-	display.DrawEditor(e.screen, e.editorState)
-	e.screen.Show()
+func (e *Editor) redraw(sync bool) {
+	inputMode := e.editorState.InputMode()
+	inputBufferString := e.inputInterpreter.InputBufferString(inputMode)
+	display.DrawEditor(e.screen, e.editorState, inputBufferString)
+	if sync {
+		e.screen.Sync()
+	} else {
+		e.screen.Show()
+	}
 }
 
 func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {

@@ -48,12 +48,6 @@ func SetInputMode(state *EditorState, mode InputMode) {
 		state.documentBuffer.selector.Clear()
 	}
 
-	if state.inputMode == InputModeNormal && mode != InputModeNormal {
-		// Transitioning from normal mode to other modes should clear the status msg.
-		// This allows the status bar to display "--INSERT--", "--VISUAL--", or the search query.
-		SetStatusMsg(state, StatusMsg{})
-	}
-
 	state.prevInputMode = state.inputMode
 	state.inputMode = mode
 }

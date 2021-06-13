@@ -39,7 +39,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 		MacroRecorder:        macroRecorder,
 		Config:               config,
 	})
-	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
+	action = firstCheckpointUndoLog(thenScrollViewToCursor(thenClearStatusMsg(action)))
 
 	// Record the action so we can replay it later.
 	// We ignore cursor movements, searches, and undo/redo, since the user
@@ -50,18 +50,6 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	}
 
 	return action
-}
-
-// firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
-func firstCheckpointUndoLog(f Action) Action {
-	return func(s *state.EditorState) {
-		// This ensures that an undo after the action returns the document
-		// to the state BEFORE the action was executed.
-		// For example, if the user deletes a line (dd), then the next undo should
-		// restore the deleted line.
-		state.CheckpointUndoLog(s)
-		f(s)
-	}
 }
 
 // insertMode is used for inserting characters into text.
@@ -123,14 +111,6 @@ func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRe
 	}
 }
 
-// thenScrollViewToCursor executes the action, then scrolls the view so the cursor is visible.
-func thenScrollViewToCursor(f Action) Action {
-	return func(s *state.EditorState) {
-		f(s)
-		state.ScrollViewToCursor(s)
-	}
-}
-
 // searchMode is used to search the text for a substring.
 type searchMode struct{}
 
@@ -174,7 +154,35 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 		MacroRecorder:        macroRecorder,
 		Config:               config,
 	})
-	action = thenScrollViewToCursor(action)
+	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 	macroRecorder.RecordAction(action)
 	return action
+}
+
+// firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
+func firstCheckpointUndoLog(f Action) Action {
+	return func(s *state.EditorState) {
+		// This ensures that an undo after the action returns the document
+		// to the state BEFORE the action was executed.
+		// For example, if the user deletes a line (dd), then the next undo should
+		// restore the deleted line.
+		state.CheckpointUndoLog(s)
+		f(s)
+	}
+}
+
+// thenScrollViewToCursor executes the action, then scrolls the view so the cursor is visible.
+func thenScrollViewToCursor(f Action) Action {
+	return func(s *state.EditorState) {
+		f(s)
+		state.ScrollViewToCursor(s)
+	}
+}
+
+// thenClearStatusMsg executes the action, then clears the status message.
+func thenClearStatusMsg(f Action) Action {
+	return func(s *state.EditorState) {
+		f(s)
+		state.SetStatusMsg(s, state.StatusMsg{})
+	}
 }

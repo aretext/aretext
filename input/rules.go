@@ -565,6 +565,50 @@ var normalModeRules = append(cursorRules, []Rule{
 		},
 	},
 	{
+		Name: "change to next matching char (cf{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 'f'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+		},
+	},
+	{
+		Name: "change to prev matching char (cF{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 'F'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+		},
+	},
+	{
+		Name: "change till next matching char (ct{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 't'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+		},
+	},
+	{
+		Name: "change till prev matching char (cT{char})",
+		Pattern: []EventMatcher{
+			{Key: tcell.KeyRune, Rune: 'c'},
+			{Key: tcell.KeyRune, Rune: 'T'},
+			{Wildcard: true},
+		},
+		ActionBuilder: func(p ActionBuilderParams) Action {
+			return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+		},
+	},
+	{
 		Name: "replace character (r)",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'r'},

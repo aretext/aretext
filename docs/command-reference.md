@@ -67,6 +67,10 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change to start of next word                | cw          | clipboard page        |
 | change a word                               | caw         | clipboard page        |
 | change inner word                           | ciw         | clipboard page        |
+| change to next matching character in line   | cf\{char\}  | count, clipboard page |
+| change to prev matching character in line   | cF\{char\}  | count, clipboard page |
+| change till next matching character in line | ct\{char\}  | count, clipboard page |
+| change till prev matching character in line | cT\{char\}  | count, clipboard page |
 | replace character                           | r           |                       |
 | toggle case                                 | ~           |                       |
 | indent line                                 | >>          |                       |

@@ -492,6 +492,22 @@ func ChangeInnerWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
+func ChangeToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
+	deleteToNextMatchingCharAction := DeleteToNextMatchingChar(inputEvents, countArg, clipboardPageNameArg, includeChar)
+	return func(s *state.EditorState) {
+		deleteToNextMatchingCharAction(s)
+		EnterInsertMode(s)
+	}
+}
+
+func ChangeToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
+	deleteToPrevMatchingCharAction := DeleteToPrevMatchingChar(inputEvents, countArg, clipboardPageNameArg, includeChar)
+	return func(s *state.EditorState) {
+		deleteToPrevMatchingCharAction(s)
+		EnterInsertMode(s)
+	}
+}
+
 func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
 	lastInput := lastInputEvent(inputEvents)
 	var newChar rune

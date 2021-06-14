@@ -40,11 +40,6 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor start of last line                   | G           |                       |
 | scroll up                                   | ctrl-u      |                       |
 | scroll down                                 | ctrl-d      |                       |
-| delete next character in line               | x           | count, clipboard page |
-| delete to next matching character in line   | df\{char\}  | count, clipboard page |
-| delete to prev matching character in line   | dF\{char\}  | count, clipboard page |
-| delete till next matching character in line | dt\{char\}  | count, clipboard page |
-| delete till prev matching character in line | dT\{char\}  | count, clipboard page |
 | insert                                      | i           |                       |
 | insert at start of line                     | I           |                       |
 | append                                      | a           |                       |
@@ -52,6 +47,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | new line below                              | o           |                       |
 | new line above                              | O           |                       |
 | join lines                                  | J           |                       |
+| delete next character in line               | x           | count, clipboard page |
 | delete line                                 | dd          | count, clipboard page |
 | delete previous character in line           | dh          | clipboard page        |
 | delete lines below                          | dj          | clipboard page        |
@@ -64,6 +60,10 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to start of next word                | dw          | clipboard page        |
 | delete a word                               | daw         | clipboard page        |
 | delete inner word                           | diw         | clipboard page        |
+| delete to next matching character in line   | df\{char\}  | count, clipboard page |
+| delete to prev matching character in line   | dF\{char\}  | count, clipboard page |
+| delete till next matching character in line | dt\{char\}  | count, clipboard page |
+| delete till prev matching character in line | dT\{char\}  | count, clipboard page |
 | change to start of next word                | cw          | clipboard page        |
 | change a word                               | caw         | clipboard page        |
 | change inner word                           | ciw         | clipboard page        |

@@ -1,8 +1,6 @@
 package display
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/file"
@@ -25,8 +23,7 @@ func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode sta
 
 func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) (string, tcell.Style) {
 	if len(inputBufferString) > 0 {
-		msg := fmt.Sprintf("%s %s", string(tcell.RuneBlock), inputBufferString)
-		return msg, tcell.StyleDefault.Bold(true)
+		return inputBufferString, tcell.StyleDefault.Bold(true)
 	}
 
 	if len(statusMsg.Text) > 0 {

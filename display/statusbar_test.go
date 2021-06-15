@@ -80,7 +80,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputBufferString: `"aya`,
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{tcell.RuneBlock, ' ', '"', 'a', 'y', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'"', 'a', 'y', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
 	}

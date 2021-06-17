@@ -24,6 +24,14 @@ func TestVisualModeToNormalMode(t *testing.T) {
 	assert.Equal(t, selection.ModeNone, state.documentBuffer.selector.Mode())
 }
 
+func TestVisualModeToInsertMode(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+	ToggleVisualMode(state, selection.ModeChar)
+	SetInputMode(state, InputModeInsert)
+	assert.Equal(t, InputModeInsert, state.inputMode)
+	assert.Equal(t, selection.ModeNone, state.documentBuffer.selector.Mode())
+}
+
 func TestToggleVisualModeSameSelectionMode(t *testing.T) {
 	testCases := []struct {
 		name          string

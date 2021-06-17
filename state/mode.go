@@ -43,7 +43,7 @@ func SetInputMode(state *EditorState, mode InputMode) {
 
 	}
 
-	if state.inputMode == InputModeVisual && mode == InputModeNormal {
+	if state.inputMode == InputModeVisual && (mode == InputModeNormal || mode == InputModeInsert) {
 		// Clear selection when exiting visual mode.
 		state.documentBuffer.selector.Clear()
 	}

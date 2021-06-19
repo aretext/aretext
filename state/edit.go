@@ -240,26 +240,6 @@ func DeleteRunes(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 	}
 }
 
-// DeleteSelection deletes the currently selected region, if any.
-func DeleteSelection(state *EditorState, replaceLinesWithEmptyLine bool, clipboardPage clipboard.PageId) {
-	buffer := state.documentBuffer
-	selectionMode := buffer.selector.Mode()
-	if selectionMode == selection.ModeNone {
-		return
-	}
-
-	r := buffer.SelectedRegion()
-	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
-	targetLineLoc := func(LocatorParams) uint64 { return r.EndPos }
-	if selectionMode == selection.ModeChar {
-		DeleteRunes(state, targetLineLoc, clipboardPage)
-	} else if selectionMode == selection.ModeLine {
-		DeleteLines(state, targetLineLoc, false, replaceLinesWithEmptyLine, clipboardPage)
-	} else {
-		panic("Unsupported selection mode")
-	}
-}
-
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.
 // It moves the cursor to the start of the line following the last deleted line.
 func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool, clipboardPage clipboard.PageId) {
@@ -502,16 +482,13 @@ func ToggleCaseAtCursor(state *EditorState) {
 	})
 }
 
-// ToggleCaseInSelection toggles the case of all characters in the current selection.
-func ToggleCaseInSelection(state *EditorState) {
+// ToggleCaseInSelection toggles the case of all characters in the region
+// from the cursor position to the position found by selectionEndLoc.
+func ToggleCaseInSelection(state *EditorState, selectionEndLoc Locator) {
 	buffer := state.documentBuffer
-	selectionMode := buffer.selector.Mode()
-	if selectionMode == selection.ModeNone {
-		return
-	}
-	region := buffer.SelectedRegion()
-	toggleCaseForRange(state, region.StartPos, region.EndPos)
-	MoveCursor(state, func(p LocatorParams) uint64 { return region.StartPos })
+	cursorPos := buffer.cursor.position
+	endPos := selectionEndLoc(locatorParamsForBuffer(buffer))
+	toggleCaseForRange(state, cursorPos, endPos)
 }
 
 // toggleCaseForRange changes the case of all characters in the range [startPos, endPos)
@@ -534,44 +511,49 @@ func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 	mustInsertTextAtPosition(state, string(newRunes), startPos, true)
 }
 
-// IndentLineAtCursor indents the line under the cursor.
-// If the line is empty, this does nothing.
-// After indenting the line, it moves the cursor to the first nonwhitespace char in the line.
-func IndentLineAtCursor(state *EditorState) {
+// IndentLines indents every line from the current cursor position to the position found by targetLineLoc.
+func IndentLines(state *EditorState, targetLineLoc Locator) {
+	changeIndentationOfLines(state, targetLineLoc, indentLineNum)
+}
+
+// OutdentLines outdents every line from the current cursor position to the position found by targetLineLoc.
+func OutdentLines(state *EditorState, targetLineLoc Locator) {
+	changeIndentationOfLines(state, targetLineLoc, outdentLineNum)
+}
+
+func changeIndentationOfLines(state *EditorState, targetLineLoc Locator, f func(*EditorState, uint64)) {
 	buffer := state.documentBuffer
-	cursorPos := buffer.cursor.position
-	startOfLinePos := indentLineAtPosition(state, cursorPos)
-	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
+	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
+	targetPos := targetLineLoc(locatorParamsForBuffer(buffer))
+	targetLine := buffer.textTree.LineNumForPosition(targetPos)
+	if targetLine < currentLine {
+		currentLine, targetLine = targetLine, currentLine
+	}
+
+	for lineNum := currentLine; lineNum <= targetLine; lineNum++ {
+		f(state, lineNum)
+	}
+
+	startOfFirstLinePos := locate.StartOfLineNum(buffer.textTree, currentLine)
+	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfFirstLinePos)
 	buffer.cursor = cursorState{position: newCursorPos}
 }
 
-func indentLineAtPosition(state *EditorState, pos uint64) uint64 {
+func indentLineNum(state *EditorState, lineNum uint64) {
 	buffer := state.documentBuffer
-	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
+	startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
 	endOfLinePos := locate.NextLineBoundary(buffer.textTree, true, startOfLinePos)
 	if startOfLinePos < endOfLinePos {
 		// Indent if line is non-empty.
 		insertTabAtPos(state, startOfLinePos)
 	}
-	return startOfLinePos
 }
 
-// OutdentLineAtCursor outdents the line under the cursor.
-// After outdenting, it moves the cursor to the first nonwhitespace char in the line.
-func OutdentLineAtCursor(state *EditorState) {
+func outdentLineNum(state *EditorState, lineNum uint64) {
 	buffer := state.documentBuffer
-	cursorPos := buffer.cursor.position
-	startOfLinePos := outdentLineAtPosition(state, cursorPos)
-	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
-	buffer.cursor = cursorState{position: newCursorPos}
-}
-
-func outdentLineAtPosition(state *EditorState, pos uint64) uint64 {
-	buffer := state.documentBuffer
-	startOfLinePos := locate.StartOfLineAtPos(buffer.textTree, pos)
+	startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
 	numToDelete := numRunesInFirstIndent(buffer, startOfLinePos)
 	deleteRunes(state, startOfLinePos, numToDelete, true)
-	return startOfLinePos
 }
 
 func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
@@ -590,41 +572,6 @@ func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
 	}
 
 	return pos - startOfLinePos
-}
-
-// IndentSelection indents all the lines in the current selection.
-// It moves the cursor to the first nonwhitespace char on the first line in the selection.
-func IndentSelection(state *EditorState) {
-	changeIndentationForSelection(state, func(state *EditorState, pos uint64) {
-		indentLineAtPosition(state, pos)
-	})
-}
-
-// OutdentSelection outdents all the lines in the current selection.
-// It moves the cursor to the first nonwhitespace char on the first line in the selection.
-func OutdentSelection(state *EditorState) {
-	changeIndentationForSelection(state, func(state *EditorState, pos uint64) {
-		outdentLineAtPosition(state, pos)
-	})
-}
-
-func changeIndentationForSelection(state *EditorState, f func(*EditorState, uint64)) {
-	buffer := state.documentBuffer
-	selectionMode := buffer.selector.Mode()
-	if selectionMode == selection.ModeNone {
-		return
-	}
-
-	r := buffer.SelectedRegion()
-	startLineNum := buffer.textTree.LineNumForPosition(r.StartPos)
-	endLineNum := buffer.textTree.LineNumForPosition(r.EndPos)
-	for i := startLineNum; i <= endLineNum; i++ {
-		f(state, locate.StartOfLineNum(buffer.textTree, i))
-	}
-
-	startOfFirstLinePos := locate.StartOfLineAtPos(buffer.textTree, r.StartPos)
-	newCursorPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfFirstLinePos)
-	buffer.cursor = cursorState{position: newCursorPos}
 }
 
 // CopyRegion copies the characters in a region from startLoc (inclusive) to endLoc (exclusive) to the default page in the clipboard.

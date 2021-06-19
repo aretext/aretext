@@ -135,25 +135,61 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 }
 
 func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
-	setupShellCmdTest(t, func(state *EditorState, dir string) {
-		for _, r := range "foobar" {
-			InsertRune(state, r)
-		}
-		MoveCursor(state, func(p LocatorParams) uint64 { return 3 })
-		ToggleVisualMode(state, selection.ModeChar)
-		MoveCursor(state, func(p LocatorParams) uint64 { return 4 })
+	testCases := []struct {
+		name              string
+		documentText      string
+		insertedText      string
+		selectionMode     selection.Mode
+		cursorStartPos    uint64
+		cursorEndPos      uint64
+		expectedCursorPos uint64
+		expectedText      string
+	}{
+		{
+			name:              "charwise selection",
+			documentText:      "foobar",
+			insertedText:      "hello world",
+			selectionMode:     selection.ModeChar,
+			cursorStartPos:    3,
+			cursorEndPos:      4,
+			expectedCursorPos: 13,
+			expectedText:      "foohello worldr",
+		},
+		{
+			name:              "linewise selection",
+			documentText:      "foo\nbar\nbaz\nbat",
+			insertedText:      "hello world",
+			selectionMode:     selection.ModeLine,
+			cursorStartPos:    5,
+			cursorEndPos:      9,
+			expectedCursorPos: 14,
+			expectedText:      "foo\nhello world\nbat",
+		},
+	}
 
-		p := path.Join(dir, "test-output.txt")
-		err := os.WriteFile(p, []byte("hello world"), 0644)
-		require.NoError(t, err)
-		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, config.CmdModeInsert)
-		s := state.documentBuffer.textTree.String()
-		cursorPos := state.documentBuffer.cursor.position
-		assert.Equal(t, "foohello worldr", s)
-		assert.Equal(t, uint64(13), cursorPos)
-		assert.Equal(t, InputModeNormal, state.InputMode())
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			setupShellCmdTest(t, func(state *EditorState, dir string) {
+				for _, r := range tc.documentText {
+					InsertRune(state, r)
+				}
+				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorStartPos })
+				ToggleVisualMode(state, tc.selectionMode)
+				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorEndPos })
+
+				p := path.Join(dir, "test-output.txt")
+				err := os.WriteFile(p, []byte(tc.insertedText), 0644)
+				require.NoError(t, err)
+				cmd := fmt.Sprintf("cat %s", p)
+				RunShellCmd(state, cmd, config.CmdModeInsert)
+				s := state.documentBuffer.textTree.String()
+				cursorPos := state.documentBuffer.cursor.position
+				assert.Equal(t, tc.expectedText, s)
+				assert.Equal(t, tc.expectedCursorPos, cursorPos)
+				assert.Equal(t, InputModeNormal, state.InputMode())
+			})
+		})
+	}
 }
 
 func TestRunShellCmdFileLocationsMenu(t *testing.T) {

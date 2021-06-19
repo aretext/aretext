@@ -136,100 +136,6 @@ func TestDeleteRunes(t *testing.T) {
 	}
 }
 
-func TestDeleteSelection(t *testing.T) {
-	testCases := []struct {
-		name                      string
-		inputString               string
-		selectionMode             selection.Mode
-		replaceLinesWithEmptyLine bool
-		cursorStartPos            uint64
-		cursorEndPos              uint64
-		expectedCursor            cursorState
-		expectedText              string
-		expectedClipboard         clipboard.PageContent
-		expectUnsavedChanges      bool
-	}{
-		{
-			name:                 "empty document, select charwise",
-			inputString:          "",
-			selectionMode:        selection.ModeChar,
-			cursorStartPos:       0,
-			cursorEndPos:         0,
-			expectedCursor:       cursorState{position: 0},
-			expectedText:         "",
-			expectedClipboard:    clipboard.PageContent{Text: ""},
-			expectUnsavedChanges: false,
-		},
-		{
-			name:                 "empty document, select linewise",
-			inputString:          "",
-			selectionMode:        selection.ModeLine,
-			cursorStartPos:       0,
-			cursorEndPos:         0,
-			expectedCursor:       cursorState{position: 0},
-			expectedText:         "",
-			expectedClipboard:    clipboard.PageContent{Text: ""},
-			expectUnsavedChanges: false,
-		},
-		{
-			name:                 "nonempty charwise selection",
-			inputString:          "abcd1234",
-			selectionMode:        selection.ModeChar,
-			cursorStartPos:       1,
-			cursorEndPos:         3,
-			expectedCursor:       cursorState{position: 1},
-			expectedText:         "a1234",
-			expectedClipboard:    clipboard.PageContent{Text: "bcd"},
-			expectUnsavedChanges: true,
-		},
-		{
-			name:           "nonempty linewise selection",
-			inputString:    "ab\ncde\nfgh\n12\n34",
-			selectionMode:  selection.ModeLine,
-			cursorStartPos: 4,
-			cursorEndPos:   8,
-			expectedCursor: cursorState{position: 3},
-			expectedText:   "ab\n12\n34",
-			expectedClipboard: clipboard.PageContent{
-				Text:     "cde\nfgh",
-				Linewise: true,
-			},
-			expectUnsavedChanges: true,
-		},
-		{
-			name:                      "replace lines with empty line",
-			inputString:               "ab\ncd\nef\ngh",
-			selectionMode:             selection.ModeLine,
-			replaceLinesWithEmptyLine: true,
-			cursorStartPos:            3,
-			cursorEndPos:              4,
-			expectedCursor:            cursorState{position: 3},
-			expectedText:              "ab\n\nef\ngh",
-			expectedClipboard: clipboard.PageContent{
-				Text:     "cd",
-				Linewise: true,
-			},
-			expectUnsavedChanges: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil, nil)
-			state.documentBuffer.textTree = textTree
-			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
-			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			DeleteSelection(state, tc.replaceLinesWithEmptyLine, clipboard.PageDefault)
-			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
-			assert.Equal(t, tc.expectUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
-		})
-	}
-}
-
 func TestInsertNewline(t *testing.T) {
 	testCases := []struct {
 		name              string
@@ -892,40 +798,40 @@ func TestToggleCaseAtCursor(t *testing.T) {
 
 func TestToggleCaseInSelection(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		selectionMode  selection.Mode
-		cursorStartPos uint64
-		cursorEndPos   uint64
-		expectedCursor cursorState
-		expectedText   string
+		name              string
+		inputString       string
+		selectionMode     selection.Mode
+		selectionStartPos uint64
+		selectionEndPos   uint64
+		expectedCursor    cursorState
+		expectedText      string
 	}{
 		{
-			name:           "empty",
-			inputString:    "",
-			selectionMode:  selection.ModeChar,
-			cursorStartPos: 0,
-			cursorEndPos:   0,
-			expectedCursor: cursorState{position: 0},
-			expectedText:   "",
+			name:              "empty",
+			inputString:       "",
+			selectionMode:     selection.ModeChar,
+			selectionStartPos: 0,
+			selectionEndPos:   0,
+			expectedCursor:    cursorState{position: 0},
+			expectedText:      "",
 		},
 		{
-			name:           "charwise selection",
-			inputString:    "abcdefgh",
-			selectionMode:  selection.ModeChar,
-			cursorStartPos: 2,
-			cursorEndPos:   4,
-			expectedCursor: cursorState{position: 2},
-			expectedText:   "abCDEfgh",
+			name:              "select single character",
+			inputString:       "abcdefgh",
+			selectionMode:     selection.ModeChar,
+			selectionStartPos: 2,
+			selectionEndPos:   3,
+			expectedCursor:    cursorState{position: 2},
+			expectedText:      "abCdefgh",
 		},
 		{
-			name:           "linewise selection",
-			inputString:    "ab\ncd\nef\ngh",
-			selectionMode:  selection.ModeLine,
-			cursorStartPos: 4,
-			cursorEndPos:   6,
-			expectedCursor: cursorState{position: 3},
-			expectedText:   "ab\nCD\nEF\ngh",
+			name:              "select multiple characters",
+			inputString:       "abcdefgh",
+			selectionMode:     selection.ModeLine,
+			selectionStartPos: 2,
+			selectionEndPos:   6,
+			expectedCursor:    cursorState{position: 2},
+			expectedText:      "abCDEFgh",
 		},
 	}
 
@@ -935,20 +841,21 @@ func TestToggleCaseInSelection(t *testing.T) {
 			require.NoError(t, err)
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
-			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
-			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			ToggleCaseInSelection(state)
+			state.documentBuffer.cursor = cursorState{position: tc.selectionStartPos}
+			selectionEndLoc := func(p LocatorParams) uint64 { return tc.selectionEndPos }
+			ToggleCaseInSelection(state, selectionEndLoc)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
 }
 
-func TestIndentLineAtCursor(t *testing.T) {
+func TestIndentLines(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string
 		cursorPos      uint64
+		targetLinePos  uint64
 		tabExpand      bool
 		expectedCursor cursorState
 		expectedText   string
@@ -957,6 +864,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "empty",
 			inputString:    "",
 			cursorPos:      0,
+			targetLinePos:  0,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 		},
@@ -964,6 +872,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "empty line",
 			inputString:    "abc\n\ndef",
 			cursorPos:      4,
+			targetLinePos:  4,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "abc\n\ndef",
 		},
@@ -971,6 +880,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "empty line with carriage return",
 			inputString:    "abc\r\n\r\ndef",
 			cursorPos:      5,
+			targetLinePos:  5,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\r\n\r\ndef",
 		},
@@ -978,6 +888,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "line with single character",
 			inputString:    "a",
 			cursorPos:      0,
+			targetLinePos:  0,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\ta",
 		},
@@ -986,6 +897,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			tabExpand:      true,
 			inputString:    "a",
 			cursorPos:      0,
+			targetLinePos:  0,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "    a",
 		},
@@ -993,6 +905,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "first line, cursor at start",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      0,
+			targetLinePos:  0,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\tabc\ndef\nghi",
 		},
@@ -1000,6 +913,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "first line, cursor past start",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      1,
+			targetLinePos:  1,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\tabc\ndef\nghi",
 		},
@@ -1007,6 +921,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "second line, cursor at start",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      4,
+			targetLinePos:  4,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
 		},
@@ -1014,6 +929,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "second line, cursor past start",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      6,
+			targetLinePos:  6,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
 		},
@@ -1021,6 +937,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "last line, cursor at end",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      11,
+			targetLinePos:  11,
 			expectedCursor: cursorState{position: 9},
 			expectedText:   "abc\ndef\n\tghi",
 		},
@@ -1028,6 +945,7 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "tab expand, aligned",
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      6,
+			targetLinePos:  6,
 			tabExpand:      true,
 			expectedCursor: cursorState{position: 8},
 			expectedText:   "abc\n    def\nghi",
@@ -1036,9 +954,18 @@ func TestIndentLineAtCursor(t *testing.T) {
 			name:           "tab expand, line with whitespace at start",
 			inputString:    "abc\n  def\nghi",
 			cursorPos:      7,
+			targetLinePos:  7,
 			tabExpand:      true,
 			expectedCursor: cursorState{position: 10},
 			expectedText:   "abc\n      def\nghi",
+		},
+		{
+			name:           "multiple lines",
+			inputString:    "ab\ncd\nef\ngh",
+			cursorPos:      4,
+			targetLinePos:  7,
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "ab\n\tcd\n\tef\ngh",
 		},
 	}
 
@@ -1050,72 +977,20 @@ func TestIndentLineAtCursor(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabExpand = tc.tabExpand
-			IndentLineAtCursor(state)
+			targetLineLoc := func(p LocatorParams) uint64 { return tc.targetLinePos }
+			IndentLines(state, targetLineLoc)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})
 	}
 }
 
-func TestIndentSelection(t *testing.T) {
-	testCases := []struct {
-		name           string
-		inputString    string
-		cursorStartPos uint64
-		cursorEndPos   uint64
-		selectionMode  selection.Mode
-		expectedCursor cursorState
-		expectedText   string
-	}{
-		{
-			name:           "empty",
-			inputString:    "",
-			cursorStartPos: 0,
-			cursorEndPos:   0,
-			selectionMode:  selection.ModeLine,
-			expectedCursor: cursorState{position: 0},
-			expectedText:   "",
-		},
-		{
-			name:           "linewise selection",
-			inputString:    "ab\ncd\nef\ngh",
-			cursorStartPos: 4,
-			cursorEndPos:   6,
-			selectionMode:  selection.ModeLine,
-			expectedCursor: cursorState{position: 4},
-			expectedText:   "ab\n\tcd\n\tef\ngh",
-		},
-		{
-			name:           "charwise selection",
-			inputString:    "ab\ncd\nef\ngh",
-			cursorStartPos: 4,
-			cursorEndPos:   6,
-			selectionMode:  selection.ModeChar,
-			expectedCursor: cursorState{position: 4},
-			expectedText:   "ab\n\tcd\n\tef\ngh",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil, nil)
-			state.documentBuffer.textTree = textTree
-			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
-			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			IndentSelection(state)
-			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, textTree.String())
-		})
-	}
-}
-
-func TestOutdentLineAtCursor(t *testing.T) {
+func TestOutdentLines(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string
 		cursorPos      uint64
+		targetLinePos  uint64
 		tabSize        uint64
 		expectedCursor cursorState
 		expectedText   string
@@ -1124,6 +999,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "empty",
 			inputString:    "",
 			cursorPos:      0,
+			targetLinePos:  0,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
@@ -1132,6 +1008,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with a single tab, on tab",
 			inputString:    "\tabc",
 			cursorPos:      0,
+			targetLinePos:  0,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1140,6 +1017,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with a single tab, on start of text",
 			inputString:    "\tabc",
 			cursorPos:      1,
+			targetLinePos:  1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1148,6 +1026,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with a single tab, on end of text",
 			inputString:    "\tabc",
 			cursorPos:      3,
+			targetLinePos:  3,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1156,6 +1035,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with multiple tabs",
 			inputString:    "\t\t\tabc",
 			cursorPos:      4,
+			targetLinePos:  4,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 2},
 			expectedText:   "\t\tabc",
@@ -1164,6 +1044,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with spaces less than tabsize",
 			inputString:    "  abc",
 			cursorPos:      2,
+			targetLinePos:  2,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1172,6 +1053,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with spaces equal to tabsize",
 			inputString:    "    abc",
 			cursorPos:      2,
+			targetLinePos:  2,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1180,6 +1062,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent first line starting with spaces greater than tabsize",
 			inputString:    "    abc",
 			cursorPos:      2,
+			targetLinePos:  2,
 			tabSize:        2,
 			expectedCursor: cursorState{position: 2},
 			expectedText:   "  abc",
@@ -1188,6 +1071,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent empty line",
 			inputString:    "abc\n\ndef",
 			cursorPos:      5,
+			targetLinePos:  5,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\ndef",
@@ -1196,6 +1080,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent line with only space",
 			inputString:    "abc\n      \ndef",
 			cursorPos:      5,
+			targetLinePos:  5,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 6},
 			expectedText:   "abc\n  \ndef",
@@ -1204,6 +1089,7 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent middle line",
 			inputString:    "abc\n\t\tdef\nghi",
 			cursorPos:      7,
+			targetLinePos:  7,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
@@ -1212,9 +1098,19 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			name:           "outdent mix of tabs and spaces",
 			inputString:    "  \t abc",
 			cursorPos:      5,
+			targetLinePos:  5,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   " abc",
+		},
+		{
+			name:           "multiple lines",
+			inputString:    "ab\n\tcd\n\t\tef\ngh",
+			cursorPos:      5,
+			targetLinePos:  8,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\ncd\n\tef\ngh",
 		},
 	}
 
@@ -1226,61 +1122,8 @@ func TestOutdentLineAtCursor(t *testing.T) {
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabSize = tc.tabSize
-			OutdentLineAtCursor(state)
-			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedText, textTree.String())
-		})
-	}
-}
-
-func TestOutdentSelection(t *testing.T) {
-	testCases := []struct {
-		name           string
-		inputString    string
-		cursorStartPos uint64
-		cursorEndPos   uint64
-		selectionMode  selection.Mode
-		expectedCursor cursorState
-		expectedText   string
-	}{
-		{
-			name:           "empty",
-			inputString:    "",
-			cursorStartPos: 0,
-			cursorEndPos:   0,
-			selectionMode:  selection.ModeLine,
-			expectedCursor: cursorState{position: 0},
-			expectedText:   "",
-		},
-		{
-			name:           "linewise selection",
-			inputString:    "ab\n\tcd\n\t\tef\ngh",
-			cursorStartPos: 5,
-			cursorEndPos:   8,
-			selectionMode:  selection.ModeLine,
-			expectedCursor: cursorState{position: 3},
-			expectedText:   "ab\ncd\n\tef\ngh",
-		},
-		{
-			name:           "charwise selection",
-			inputString:    "ab\n\tcd\n\t\tef\ngh",
-			cursorStartPos: 5,
-			cursorEndPos:   6,
-			selectionMode:  selection.ModeChar,
-			expectedCursor: cursorState{position: 3},
-			expectedText:   "ab\ncd\n\tef\ngh",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			state := NewEditorState(100, 100, nil, nil)
-			state.documentBuffer.textTree = textTree
-			state.documentBuffer.selector.Start(tc.selectionMode, tc.cursorStartPos)
-			state.documentBuffer.cursor = cursorState{position: tc.cursorEndPos}
-			OutdentSelection(state)
+			targetLineLoc := func(p LocatorParams) uint64 { return tc.targetLinePos }
+			OutdentLines(state, targetLineLoc)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})

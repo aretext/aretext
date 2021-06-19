@@ -146,6 +146,14 @@ func (s *BufferState) SelectedRegion() selection.Region {
 	return s.selector.Region(s.textTree, s.cursor.position)
 }
 
+func (s *BufferState) SelectionMode() selection.Mode {
+	return s.selector.Mode()
+}
+
+func (s *BufferState) SelectionEndLocator() Locator {
+	return SelectionEndLocator(s.textTree, s.cursor.position, s.selector)
+}
+
 func (s *BufferState) ViewTextOrigin() uint64 {
 	return s.view.textOrigin
 }

@@ -48,7 +48,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	// Record the action so we can replay it later.
 	// We ignore cursor movements, searches, and undo/redo, since the user
 	// may want to replay the last action before these operations.
-	if !result.Rule.SkipMacroInNormalMode {
+	if !result.Rule.SkipMacro {
 		macroRecorder.ClearLastAction()
 		macroRecorder.RecordAction(action)
 	}
@@ -175,7 +175,14 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 		Config:               config,
 	})
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
-	macroRecorder.RecordAction(action)
+
+	// Record the action so we can replay it later.
+	// We ignore some actions (like cursor movements) since the user
+	// may want to replay the last action before these operations.
+	if !result.Rule.SkipMacro {
+		macroRecorder.RecordAction(action)
+	}
+
 	return action
 }
 

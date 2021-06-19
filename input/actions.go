@@ -532,11 +532,13 @@ func ToggleCaseAtCursor(s *state.EditorState) {
 }
 
 func IndentLine(s *state.EditorState) {
-	state.IndentLineAtCursor(s)
+	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
+	state.IndentLines(s, targetLineLoc)
 }
 
 func OutdentLine(s *state.EditorState) {
-	state.OutdentLineAtCursor(s)
+	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
+	state.OutdentLines(s, targetLineLoc)
 }
 
 func CopyToStartOfNextWord(clipboardPageNameArg *rune) Action {
@@ -687,33 +689,54 @@ func ToggleVisualModeLinewise(s *state.EditorState) {
 	state.ToggleVisualMode(s, selection.ModeLine)
 }
 
-func DeleteSelectionAndReturnToNormalMode(clipboardPageNameArg *rune) Action {
+func DeleteSelection(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator, replaceWithEmptyLine bool) Action {
 	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
-		state.DeleteSelection(s, false, clipboardPage)
+		state.MoveCursorToStartOfSelection(s)
+		if selectionMode == selection.ModeChar {
+			state.DeleteRunes(s, selectionEndLoc, clipboardPage)
+		} else if selectionMode == selection.ModeLine {
+			state.DeleteLines(s, selectionEndLoc, false, replaceWithEmptyLine, clipboardPage)
+		}
+	}
+}
+
+func DeleteSelectionAndReturnToNormalMode(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
+	deleteSelectionAction := DeleteSelection(clipboardPageNameArg, selectionMode, selectionEndLoc, false)
+	return func(s *state.EditorState) {
+		deleteSelectionAction(s)
 		ReturnToNormalMode(s)
 	}
 }
 
-func ToggleCaseInSelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.ToggleCaseInSelection(s)
-	ReturnToNormalMode(s)
-}
-
-func IndentSelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.IndentSelection(s)
-	ReturnToNormalMode(s)
-}
-
-func OutdentSelectionAndReturnToNormalMode(s *state.EditorState) {
-	state.OutdentSelection(s)
-	ReturnToNormalMode(s)
-}
-
-func ChangeSelection(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func ToggleCaseInSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action {
 	return func(s *state.EditorState) {
-		state.DeleteSelection(s, true, clipboardPage)
+		state.MoveCursorToStartOfSelection(s)
+		state.ToggleCaseInSelection(s, selectionEndLoc)
+		ReturnToNormalMode(s)
+	}
+}
+
+func IndentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursorToStartOfSelection(s)
+		state.IndentLines(s, selectionEndLoc)
+		ReturnToNormalMode(s)
+	}
+}
+
+func OutdentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursorToStartOfSelection(s)
+		state.OutdentLines(s, selectionEndLoc)
+		ReturnToNormalMode(s)
+	}
+}
+
+func ChangeSelection(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
+	deleteSelectionAction := DeleteSelection(clipboardPageNameArg, selectionMode, selectionEndLoc, true)
+	return func(s *state.EditorState) {
+		deleteSelectionAction(s)
 		EnterInsertMode(s)
 	}
 }

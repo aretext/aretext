@@ -13,6 +13,7 @@ import (
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/shellcmd"
 )
 
@@ -95,10 +96,26 @@ func runInShellAndInsertOutput(state *EditorState, shellCmd string, env []string
 	}
 	page := clipboard.PageContent{Text: text}
 	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
-	DeleteSelection(state, false, clipboard.PageDefault)
+	deleteCurrentSelection(state)
 	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
 	SetInputMode(state, InputModeNormal)
 	return nil
+}
+
+func deleteCurrentSelection(state *EditorState) {
+	selectionMode := state.documentBuffer.selector.Mode()
+	if selectionMode == selection.ModeNone {
+		return
+	}
+
+	selectedRegion := state.documentBuffer.SelectedRegion()
+	MoveCursor(state, func(p LocatorParams) uint64 { return selectedRegion.StartPos })
+	selectionEndLoc := func(p LocatorParams) uint64 { return selectedRegion.EndPos }
+	if selectionMode == selection.ModeChar {
+		DeleteRunes(state, selectionEndLoc, clipboard.PageDefault)
+	} else if selectionMode == selection.ModeLine {
+		DeleteLines(state, selectionEndLoc, false, true, clipboard.PageDefault)
+	}
 }
 
 func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env []string) error {

@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 )
 
@@ -14,4 +15,10 @@ type Config struct {
 
 	// Glob patterns for directories to hide from file search.
 	DirPatternsToHide []string
+
+	// Information about the current selection (visual mode).
+	// If not in visual mode, the mode will be selection.ModeNone
+	// and the end locator will be nil.
+	SelectionMode       selection.Mode
+	SelectionEndLocator state.Locator
 }

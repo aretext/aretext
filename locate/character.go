@@ -220,3 +220,20 @@ func NextNewline(tree *text.Tree, pos uint64) (uint64, uint64, bool) {
 		offset += seg.NumRunes()
 	}
 }
+
+// NumGraphemeClustersInRange counts the number of grapheme clusters from the start position (inclusive) to the end position (exclusive).
+func NumGraphemeClustersInRange(tree *text.Tree, startPos, endPos uint64) uint64 {
+	segmentIter := segment.NewGraphemeClusterIterForTree(tree, startPos, text.ReadDirectionForward)
+	seg := segment.Empty()
+	var offset, count uint64
+	for startPos+offset < endPos {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof || seg.HasNewline() {
+			break
+		}
+		count++
+		offset += seg.NumRunes()
+	}
+	return count
+
+}

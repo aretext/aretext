@@ -704,3 +704,58 @@ func TestNextNewline(t *testing.T) {
 		})
 	}
 }
+
+func TestNumGraphemeClustersInRange(t *testing.T) {
+	testCases := []struct {
+		name          string
+		inputString   string
+		startPos      uint64
+		endPos        uint64
+		expectedCount uint64
+	}{
+		{
+			name:          "empty text",
+			inputString:   "",
+			startPos:      0,
+			endPos:        0,
+			expectedCount: 0,
+		},
+		{
+			name:          "empty range",
+			inputString:   "abcdefgh",
+			startPos:      1,
+			endPos:        1,
+			expectedCount: 0,
+		},
+		{
+			name:          "single-rune grapheme clusters",
+			inputString:   "abcdefgh",
+			startPos:      1,
+			endPos:        4,
+			expectedCount: 3,
+		},
+		{
+			name:          "multi-rune grapheme clusters",
+			inputString:   "ᄀ̈각각̈͏",
+			startPos:      0,
+			endPos:        6,
+			expectedCount: 3,
+		},
+		{
+			name:          "past end of file",
+			inputString:   "abcdefgh",
+			startPos:      3,
+			endPos:        100,
+			expectedCount: 5,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualCount := NumGraphemeClustersInRange(textTree, tc.startPos, tc.endPos)
+			assert.Equal(t, tc.expectedCount, actualCount)
+		})
+	}
+}

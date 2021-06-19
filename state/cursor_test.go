@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/text"
 )
 
@@ -275,6 +276,79 @@ func TestMoveCursorToLineBelow(t *testing.T) {
 			state.documentBuffer.cursor = tc.initialCursor
 			state.documentBuffer.tabSize = 4
 			MoveCursorToLineBelow(state, tc.count)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+		})
+	}
+}
+
+func TestMoveCursorToStartOfSelection(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		selectionMode     selection.Mode
+		selectionStartPos uint64
+		selectionEndPos   uint64
+		expectedCursor    cursorState
+	}{
+		{
+			name:              "empty",
+			inputString:       "",
+			selectionMode:     selection.ModeChar,
+			selectionStartPos: 0,
+			selectionEndPos:   0,
+			expectedCursor:    cursorState{position: 0},
+		},
+		{
+			name:              "no selection",
+			inputString:       "abcdefh",
+			selectionMode:     selection.ModeNone,
+			selectionStartPos: 1,
+			selectionEndPos:   3,
+			expectedCursor:    cursorState{position: 3},
+		},
+		{
+			name:              "charwise, select forward",
+			inputString:       "abcdefgh",
+			selectionMode:     selection.ModeChar,
+			selectionStartPos: 1,
+			selectionEndPos:   3,
+			expectedCursor:    cursorState{position: 1},
+		},
+		{
+			name:              "charwise, select backward",
+			inputString:       "abcdefgh",
+			selectionMode:     selection.ModeChar,
+			selectionStartPos: 3,
+			selectionEndPos:   1,
+			expectedCursor:    cursorState{position: 1},
+		},
+		{
+			name:              "linewise select forward",
+			inputString:       "abcd\nef\ngh\nijkl",
+			selectionMode:     selection.ModeLine,
+			selectionStartPos: 6,
+			selectionEndPos:   9,
+			expectedCursor:    cursorState{position: 5},
+		},
+		{
+			name:              "linewise select backward",
+			inputString:       "abcd\nef\ngh\nijkl",
+			selectionMode:     selection.ModeLine,
+			selectionStartPos: 9,
+			selectionEndPos:   6,
+			expectedCursor:    cursorState{position: 5},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.selector.Start(tc.selectionMode, tc.selectionStartPos)
+			state.documentBuffer.cursor = cursorState{position: tc.selectionEndPos}
+			MoveCursorToStartOfSelection(state)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 		})
 	}

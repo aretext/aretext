@@ -3,6 +3,7 @@ package state
 import (
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/locate"
+	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -155,4 +156,16 @@ func advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint
 	}
 
 	return lineStartPos + posOffset, cellOffset
+}
+
+// MoveCursorToStartOfSelection moves the cursor to the start of the current selection.
+// If nothing is selected, this does nothing.
+func MoveCursorToStartOfSelection(state *EditorState) {
+	if state.documentBuffer.SelectionMode() == selection.ModeNone {
+		return
+	}
+	selectedRegion := state.documentBuffer.SelectedRegion()
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return selectedRegion.StartPos
+	})
 }

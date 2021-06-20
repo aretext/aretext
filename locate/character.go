@@ -103,18 +103,16 @@ func NextMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeCha
 }
 
 // PrevMatchingCharInLine locates the count'th previous occurrence of a rune in the line.
-// If no match is found, the original position is returned.
-func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeChar bool, pos uint64) uint64 {
+func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeChar bool, pos uint64) (bool, uint64) {
 	var matchCount uint64
 	var offset, prevOffset uint64
-	startPos := pos
 	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	for {
 		eof := segment.NextOrEof(segmentIter, seg)
 		if eof || seg.HasNewline() {
 			// No match found before end of line or file.
-			return startPos
+			return false, 0
 		}
 
 		prevOffset = offset
@@ -125,9 +123,9 @@ func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeCha
 				matchCount++
 				if matchCount == count {
 					if includeChar {
-						return pos - offset
+						return true, pos - offset
 					} else {
-						return pos - prevOffset
+						return true, pos - prevOffset
 					}
 				}
 			}

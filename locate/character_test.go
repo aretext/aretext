@@ -431,6 +431,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 		count       uint64
 		includeChar bool
 		pos         uint64
+		expectFound bool
 		expectedPos uint64
 	}{
 		{
@@ -439,6 +440,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			char:        'x',
 			count:       1,
 			pos:         0,
+			expectFound: false,
 			expectedPos: 0,
 		},
 		{
@@ -447,7 +449,8 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			char:        'm',
 			count:       1,
 			pos:         5,
-			expectedPos: 5,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "count zero finds nothing",
@@ -455,7 +458,8 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			char:        'x',
 			count:       0,
 			pos:         5,
-			expectedPos: 5,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "found on first line, include",
@@ -464,6 +468,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         5,
+			expectFound: true,
 			expectedPos: 3,
 		},
 		{
@@ -473,6 +478,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: false,
 			pos:         5,
+			expectFound: true,
 			expectedPos: 4,
 		},
 		{
@@ -482,6 +488,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			count:       2,
 			includeChar: true,
 			pos:         8,
+			expectFound: true,
 			expectedPos: 3,
 		},
 		{
@@ -491,7 +498,8 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         6,
-			expectedPos: 6,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "match at start of current line",
@@ -500,6 +508,7 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         6,
+			expectFound: true,
 			expectedPos: 4,
 		},
 	}
@@ -508,7 +517,8 @@ func TestPrevMatchingCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := PrevMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			found, actualPos := PrevMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			assert.Equal(t, tc.expectFound, found)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

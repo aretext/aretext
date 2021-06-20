@@ -135,7 +135,11 @@ func CursorToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 	count := countArgOrDefault(countArg, 1)
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			found, pos := locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
+				pos = params.CursorPos
+			}
+			return pos
 		})
 	}
 }
@@ -376,7 +380,11 @@ func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, c
 	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			found, pos := locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
+				pos = params.CursorPos
+			}
+			return pos
 		}, clipboardPage)
 	}
 }

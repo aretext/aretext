@@ -300,6 +300,7 @@ func TestNextMatchingCharInLine(t *testing.T) {
 		count       uint64
 		includeChar bool
 		pos         uint64
+		expectFound bool
 		expectedPos uint64
 	}{
 		{
@@ -308,6 +309,7 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			char:        'x',
 			count:       1,
 			pos:         0,
+			expectFound: false,
 			expectedPos: 0,
 		},
 		{
@@ -316,7 +318,8 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			char:        'm',
 			count:       1,
 			pos:         1,
-			expectedPos: 1,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "count zero finds nothing",
@@ -324,7 +327,8 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			char:        'x',
 			count:       0,
 			pos:         1,
-			expectedPos: 1,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "found on first line, include",
@@ -333,6 +337,7 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         1,
+			expectFound: true,
 			expectedPos: 3,
 		},
 		{
@@ -342,6 +347,7 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: false,
 			pos:         1,
+			expectFound: true,
 			expectedPos: 2,
 		},
 		{
@@ -351,6 +357,7 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			count:       2,
 			includeChar: true,
 			pos:         1,
+			expectFound: true,
 			expectedPos: 6,
 		},
 		{
@@ -360,7 +367,8 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         1,
-			expectedPos: 1,
+			expectFound: false,
+			expectedPos: 0,
 		},
 		{
 			name:        "match at end of current line",
@@ -369,7 +377,38 @@ func TestNextMatchingCharInLine(t *testing.T) {
 			count:       1,
 			includeChar: true,
 			pos:         4,
+			expectFound: true,
 			expectedPos: 6,
+		},
+		{
+			name:        "no match character same as under cursor",
+			inputString: "ab",
+			char:        'a',
+			count:       1,
+			includeChar: false,
+			pos:         0,
+			expectFound: false,
+			expectedPos: 0,
+		},
+		{
+			name:        "match character same as under cursor",
+			inputString: "xaaaaaaaxbbbb",
+			char:        'x',
+			count:       1,
+			includeChar: false,
+			pos:         0,
+			expectFound: true,
+			expectedPos: 7,
+		},
+		{
+			name:        "match next character same as character under cursor",
+			inputString: "aab",
+			char:        'a',
+			count:       1,
+			includeChar: false,
+			pos:         0,
+			expectFound: true,
+			expectedPos: 0,
 		},
 	}
 
@@ -377,7 +416,8 @@ func TestNextMatchingCharInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			found, actualPos := NextMatchingCharInLine(textTree, tc.char, tc.count, tc.includeChar, tc.pos)
+			assert.Equal(t, tc.expectFound, found)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

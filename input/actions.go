@@ -115,7 +115,11 @@ func CursorToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 	count := countArgOrDefault(countArg, 1)
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			found, pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
+				pos = params.CursorPos
+			}
+			return pos
 		})
 	}
 }
@@ -346,10 +350,10 @@ func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, c
 	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
-			if pos == params.CursorPos {
+			found, pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
 				// No character matched in this line, so don't delete anything.
-				return pos
+				return params.CursorPos
 			}
 			// Delete up to and including `pos`
 			return locate.NextCharInLine(params.TextTree, 1, true, pos)

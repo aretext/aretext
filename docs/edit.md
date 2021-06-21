@@ -28,6 +28,7 @@ There are many delete commands of the form "d<motion>", where <motion> is one of
 -	"daw" (which means "delete a word") deletes the current word under the cursor and any trailing whitespace.
 -	"dh" deletes one character to the left, and "dl" deletes one character to the right.
 -	"dj" deletes the current and previous lines, and "dk" deletes the current and next line.
+-	"dt\{char\}" deletes up to, but not including, the next matching character on the current line.
 
 Replace
 -------

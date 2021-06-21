@@ -23,6 +23,13 @@ To move the cursor to the start of the current line (after any indentation), use
 
 To move the cursor to the end of the current line, type "$" in normal mode.
 
+Next or previous matching character
+-----------------------------------
+
+To move the cursor forward to the next matching character on a line, type "f\{char\}" in normal mode, where "\{char\}" is the character to match. To move the cursor up to, but not on, that character use "t\{char\}".
+
+Similarly, to move the cursor backwards to a matching char, use "F\{char\}" and "T\{char\}".
+
 Word movement
 -------------
 

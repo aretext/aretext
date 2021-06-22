@@ -8,7 +8,7 @@ import (
 )
 
 // DrawMenu draws the menu at the top of the screen.
-func DrawMenu(screen tcell.Screen, menu *state.MenuState) {
+func DrawMenu(screen tcell.Screen, palette *Palette, menu *state.MenuState) {
 	if !menu.Visible() {
 		return
 	}
@@ -24,7 +24,7 @@ func DrawMenu(screen tcell.Screen, menu *state.MenuState) {
 	// Search input
 	row := 0
 	searchInputRegion := NewScreenRegion(screen, 0, row, screenWidth, 1)
-	drawSearchInput(searchInputRegion, menu.Style(), menu.SearchQuery())
+	drawSearchInput(searchInputRegion, palette, menu.Style(), menu.SearchQuery())
 	row++
 
 	// Filtered menu items (search results)
@@ -33,14 +33,14 @@ func DrawMenu(screen tcell.Screen, menu *state.MenuState) {
 	for i := 0; i < len(items) && row < height; i++ {
 		menuItemRegion := NewScreenRegion(screen, 0, row, screenWidth, 1)
 		isSelected := i == selectedIdx
-		drawMenuItem(menuItemRegion, items[i], isSelected)
+		drawMenuItem(menuItemRegion, palette, items[i], isSelected)
 		row++
 	}
 
 	// Bottom border
 	if row < height {
 		borderRegion := NewScreenRegion(screen, 0, row, screenWidth, 1)
-		borderRegion.Fill(tcell.RuneHLine, tcell.StyleDefault.Dim(true))
+		borderRegion.Fill(tcell.RuneHLine, palette.StyleForMenuBorder())
 		row++
 	}
 }
@@ -70,16 +70,16 @@ func maxNumVisibleItems(numItems int, height int) int {
 	return numItems
 }
 
-func drawSearchInput(sr *ScreenRegion, style state.MenuStyle, query string) {
+func drawSearchInput(sr *ScreenRegion, palette *Palette, style state.MenuStyle, query string) {
 	sr.Clear()
-	col := drawStringNoWrap(sr, menuIconForStyle(style), 0, 0, tcell.StyleDefault)
+	col := drawStringNoWrap(sr, menuIconForStyle(style), 0, 0, palette.StyleForMenuIcon())
 	if len(query) == 0 {
 		sr.ShowCursor(col, 0)
-		drawStringNoWrap(sr, menuPromptForStyle(style), col, 0, tcell.StyleDefault.Dim(true))
+		drawStringNoWrap(sr, menuPromptForStyle(style), col, 0, palette.StyleForMenuPrompt())
 		return
 	}
 
-	col = drawStringNoWrap(sr, query, col, 0, tcell.StyleDefault)
+	col = drawStringNoWrap(sr, query, col, 0, palette.StyleForMenuQuery())
 	sr.ShowCursor(col, 0)
 }
 
@@ -109,18 +109,15 @@ func menuPromptForStyle(style state.MenuStyle) string {
 	}
 }
 
-func drawMenuItem(sr *ScreenRegion, item menu.Item, selected bool) {
+func drawMenuItem(sr *ScreenRegion, palette *Palette, item menu.Item, selected bool) {
 	sr.Clear()
 
 	col := 2
 	if selected {
-		sr.SetContent(col, 0, '>', nil, tcell.StyleDefault.Bold(true))
+		sr.SetContent(col, 0, '>', nil, palette.StyleForMenuCursor())
 	}
 	col += 2
 
-	style := tcell.StyleDefault
-	if selected {
-		style = style.Underline(true)
-	}
+	style := palette.StyleForMenuItem(selected)
 	drawStringNoWrap(sr, item.Name, col, 0, style)
 }

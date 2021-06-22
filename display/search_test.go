@@ -86,7 +86,8 @@ func TestDrawSearchQuery(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(6, 2)
-				DrawSearchQuery(s, tc.inputMode, tc.query, tc.direction)
+				palette := NewPalette()
+				DrawSearchQuery(s, palette, tc.inputMode, tc.query, tc.direction)
 				s.Sync()
 				assertCellContents(t, s, tc.expectContents)
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()

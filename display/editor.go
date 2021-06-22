@@ -7,17 +7,24 @@ import (
 )
 
 // DrawEditor draws the editor in the screen.
-func DrawEditor(screen tcell.Screen, editorState *state.EditorState, inputBufferString string) {
+func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.EditorState, inputBufferString string) {
 	screen.Clear()
-	DrawBuffer(screen, editorState.DocumentBuffer())
-	DrawMenu(screen, editorState.Menu())
+	DrawBuffer(screen, palette, editorState.DocumentBuffer())
+	DrawMenu(screen, palette, editorState.Menu())
 	DrawStatusBar(
 		screen,
+		palette,
 		editorState.StatusMsg(),
 		editorState.InputMode(),
 		inputBufferString,
 		editorState.FileWatcher().Path(),
 	)
 	searchQuery, searchDirection := editorState.DocumentBuffer().SearchQueryAndDirection()
-	DrawSearchQuery(screen, editorState.InputMode(), searchQuery, searchDirection)
+	DrawSearchQuery(
+		screen,
+		palette,
+		editorState.InputMode(),
+		searchQuery,
+		searchDirection,
+	)
 }

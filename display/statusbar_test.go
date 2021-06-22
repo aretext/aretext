@@ -89,7 +89,8 @@ func TestDrawStatusBar(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(16, 2)
-				DrawStatusBar(s, tc.statusMsg, tc.inputMode, tc.inputBufferString, tc.filePath)
+				palette := NewPalette()
+				DrawStatusBar(s, palette, tc.statusMsg, tc.inputMode, tc.inputBufferString, tc.filePath)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)
 			})

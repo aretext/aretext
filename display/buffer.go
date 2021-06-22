@@ -16,7 +16,7 @@ import (
 )
 
 // DrawBuffer draws text buffer in the screen.
-func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
+func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState) {
 	x, y, width, height := viewDimensions(buffer)
 	sr := NewScreenRegion(screen, x, y, width, height)
 	textTree := buffer.TextTree()
@@ -51,6 +51,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 		lineStartPos := textTree.LineStartPosition(lineNum)
 		drawLineAndSetCursor(
 			sr,
+			palette,
 			pos,
 			row,
 			int(wrapWidth),
@@ -71,7 +72,7 @@ func DrawBuffer(screen tcell.Screen, buffer *state.BufferState) {
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
 		sr.ShowCursor(int(lineNumMargin), 0)
-		drawLineNumIfNecessary(sr, 0, 0, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin)
 	}
 }
 
@@ -83,6 +84,7 @@ func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
 
 func drawLineAndSetCursor(
 	sr *ScreenRegion,
+	palette *Palette,
 	pos uint64,
 	row int,
 	maxLineWidth int,
@@ -106,7 +108,7 @@ func drawLineAndSetCursor(
 	var lastGcWasNewline bool
 
 	if startPos == lineStartPos {
-		drawLineNumIfNecessary(sr, row, lineNum, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin)
 	}
 	col += int(lineNumMargin)
 
@@ -128,7 +130,7 @@ func drawLineAndSetCursor(
 			return
 		}
 
-		style := styleAtPosition(pos, selectedRegion, searchMatch, tokenIter)
+		style := styleAtPosition(palette, pos, selectedRegion, searchMatch, tokenIter)
 		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs)
 
 		if pos-startPos == uint64(maxLineWidth) {
@@ -146,7 +148,7 @@ func drawLineAndSetCursor(
 
 	if gc != nil && lastGcWasNewline {
 		// Draw line number for an empty final line.
-		drawLineNumIfNecessary(sr, row+1, lineNum+1, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin)
 	}
 
 	if pos == cursorPos {
@@ -160,12 +162,12 @@ func drawLineAndSetCursor(
 	}
 }
 
-func drawLineNumIfNecessary(sr *ScreenRegion, row int, lineNum uint64, lineNumMargin uint64) {
+func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum uint64, lineNumMargin uint64) {
 	if lineNumMargin == 0 {
 		return
 	}
 
-	style := tcell.StyleDefault.Foreground(tcell.ColorOrange)
+	style := palette.StyleForLineNum()
 	lineNumStr := strconv.FormatUint(lineNum+1, 10)
 
 	// Right-aligned in the margin, with one space of padding on the right.
@@ -176,19 +178,19 @@ func drawLineNumIfNecessary(sr *ScreenRegion, row int, lineNum uint64, lineNumMa
 	}
 }
 
-func styleAtPosition(pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
+func styleAtPosition(palette *Palette, pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
 	if selectedRegion.ContainsPosition(pos) {
-		return tcell.StyleDefault.Reverse(true).Dim(true)
+		return palette.StyleForSelection()
 	}
 
 	if searchMatch.ContainsPosition(pos) {
-		return tcell.StyleDefault.Reverse(true)
+		return palette.StyleForSearchMatch()
 	}
 
 	var token parser.Token
 	for tokenIter.Get(&token) {
 		if token.StartPos <= pos && token.EndPos > pos {
-			return styleForTokenRole(token.Role)
+			return palette.StyleForTokenRole(token.Role)
 		}
 
 		if token.StartPos > pos {
@@ -199,24 +201,4 @@ func styleAtPosition(pos uint64, selectedRegion selection.Region, searchMatch *s
 	}
 
 	return tcell.StyleDefault
-}
-
-func styleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
-	s := tcell.StyleDefault
-	switch tokenRole {
-	case parser.TokenRoleOperator:
-		return s.Foreground(tcell.ColorFuchsia)
-	case parser.TokenRoleKeyword:
-		return s.Foreground(tcell.ColorOrange)
-	case parser.TokenRoleNumber:
-		return s.Foreground(tcell.ColorGreen)
-	case parser.TokenRoleString, parser.TokenRoleStringQuote:
-		return s.Foreground(tcell.ColorRed)
-	case parser.TokenRoleKey:
-		return s.Foreground(tcell.ColorTeal)
-	case parser.TokenRoleComment, parser.TokenRoleCommentDelimiter:
-		return s.Foreground(tcell.ColorBlue)
-	default:
-		return s
-	}
 }

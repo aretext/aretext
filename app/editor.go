@@ -20,6 +20,7 @@ type Editor struct {
 	inputInterpreter *input.Interpreter
 	editorState      *state.EditorState
 	screen           tcell.Screen
+	palette          *display.Palette
 	termEventChan    chan tcell.Event
 }
 
@@ -33,8 +34,9 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 		suspendScreenFunc(screen),
 	)
 	inputInterpreter := input.NewInterpreter()
+	palette := display.NewPalette()
 	termEventChan := make(chan tcell.Event, 1)
-	editor := &Editor{inputInterpreter, editorState, screen, termEventChan}
+	editor := &Editor{inputInterpreter, editorState, screen, palette, termEventChan}
 
 	// Attempt to load the file.
 	// If it doesn't exist, this will start with an empty document
@@ -129,7 +131,7 @@ func (e *Editor) inputConfig() input.Config {
 func (e *Editor) redraw(sync bool) {
 	inputMode := e.editorState.InputMode()
 	inputBufferString := e.inputInterpreter.InputBufferString(inputMode)
-	display.DrawEditor(e.screen, e.editorState, inputBufferString)
+	display.DrawEditor(e.screen, e.palette, e.editorState, inputBufferString)
 	if sync {
 		e.screen.Sync()
 	} else {

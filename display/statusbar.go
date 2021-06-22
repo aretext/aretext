@@ -8,7 +8,7 @@ import (
 )
 
 // DrawStatusBar draws a status bar on the last line of the screen.
-func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) {
+func DrawStatusBar(screen tcell.Screen, palette *Palette, statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) {
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 {
 		return
@@ -17,38 +17,26 @@ func DrawStatusBar(screen tcell.Screen, statusMsg state.StatusMsg, inputMode sta
 	row := screenHeight - 1
 	sr := NewScreenRegion(screen, 0, row, screenWidth, 1)
 	sr.Fill(' ', tcell.StyleDefault)
-	text, style := statusBarContent(statusMsg, inputMode, inputBufferString, filePath)
+	text, style := statusBarContent(palette, statusMsg, inputMode, inputBufferString, filePath)
 	drawStringNoWrap(sr, text, 0, 0, style)
 }
 
-func statusBarContent(statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) (string, tcell.Style) {
+func statusBarContent(palette *Palette, statusMsg state.StatusMsg, inputMode state.InputMode, inputBufferString string, filePath string) (string, tcell.Style) {
 	if len(inputBufferString) > 0 {
-		return inputBufferString, tcell.StyleDefault.Bold(true)
+		return inputBufferString, palette.StyleForStatusInputBuffer()
 	}
 
 	if len(statusMsg.Text) > 0 {
-		return statusMsg.Text, styleForStatusMsg(statusMsg)
+		return statusMsg.Text, palette.StyleForStatusMsg(statusMsg.Style)
 	}
 
 	switch inputMode {
 	case state.InputModeInsert:
-		return "-- INSERT --", tcell.StyleDefault.Bold(true)
+		return "-- INSERT --", palette.StyleForStatusInputMode()
 	case state.InputModeVisual:
-		return "-- VISUAL --", tcell.StyleDefault.Bold(true)
+		return "-- VISUAL --", palette.StyleForStatusInputMode()
 	default:
 		relPath := file.RelativePathCwd(filePath)
-		return relPath, tcell.StyleDefault
-	}
-}
-
-func styleForStatusMsg(statusMsg state.StatusMsg) tcell.Style {
-	s := tcell.StyleDefault
-	switch statusMsg.Style {
-	case state.StatusMsgStyleSuccess:
-		return s.Foreground(tcell.ColorGreen).Bold(true)
-	case state.StatusMsgStyleError:
-		return s.Background(tcell.ColorRed).Foreground(tcell.ColorWhite).Bold(true)
-	default:
-		return s
+		return relPath, palette.StyleForStatusFilePath()
 	}
 }

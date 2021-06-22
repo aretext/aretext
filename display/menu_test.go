@@ -127,8 +127,9 @@ func TestDrawMenu(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(10, 6)
+				palette := NewPalette()
 				menu := tc.buildMenu()
-				DrawMenu(s, menu)
+				DrawMenu(s, palette, menu)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)
 			})

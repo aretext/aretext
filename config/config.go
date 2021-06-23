@@ -38,6 +38,9 @@ type Config struct {
 
 	// Glob patterns for directories to exclude from file search.
 	HideDirectories []string
+
+	// Style overrides.
+	Styles map[string]StyleConfig
 }
 
 const (
@@ -59,6 +62,27 @@ type MenuCommandConfig struct {
 	Mode string
 }
 
+// Names of styles that can be overridden by configuration.
+const (
+	StyleLineNum       = "lineNum"
+	StyleTokenOperator = "tokenOperator"
+	StyleTokenKeyword  = "tokenKeyword"
+	StyleTokenNumber   = "tokenNumber"
+	StyleTokenString   = "tokenString"
+	StyleTokenComment  = "tokenComment"
+)
+
+// StyleConfig is a configuration for how text should be displayed.
+type StyleConfig struct {
+	// Color is either a W3C color name ("green", "red", etc.)
+	// or a hexadecimal RGB code (formatted like "#ffffff").
+	// The named colors respect the palette set by the terminal.
+	// The hexadecimal colors represent the exact 24-bit RGB value
+	// for the color; if the terminal does not support true-color,
+	// we fallback to a similar 8-bit color.
+	Color string
+}
+
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
 // The map is usually loaded from a JSON document.
 func ConfigFromUntypedMap(m map[string]interface{}) Config {
@@ -71,6 +95,7 @@ func ConfigFromUntypedMap(m map[string]interface{}) Config {
 		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
+		Styles:          stylesFromMap(mapOrNil(m, "styles")),
 	}
 }
 
@@ -177,6 +202,21 @@ func stringSliceOrNil(m map[string]interface{}, key string) []string {
 	return stringSlice
 }
 
+func mapOrNil(m map[string]interface{}, key string) map[string]interface{} {
+	v, ok := m[key]
+	if !ok {
+		return nil
+	}
+
+	subMap, ok := v.(map[string]interface{})
+	if !ok {
+		log.Printf("Could not decode map for config key '%s'\n", key)
+		return nil
+	}
+
+	return subMap
+}
+
 func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 	result := make([]MenuCommandConfig, 0, len(s))
 	for _, m := range s {
@@ -191,6 +231,21 @@ func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 			ShellCmd: stringOrDefault(menuMap, "shellCmd", ""),
 			Mode:     stringOrDefault(menuMap, "mode", CmdModeTerminal),
 		})
+	}
+	return result
+}
+
+func stylesFromMap(m map[string]interface{}) map[string]StyleConfig {
+	result := make(map[string]StyleConfig, len(m))
+	for k, v := range m {
+		styleMap, ok := v.(map[string]interface{})
+		if !ok {
+			log.Printf("Could not decode style map from %v\n", v)
+			continue
+		}
+
+		color := stringOrDefault(styleMap, "color", "")
+		result[k] = StyleConfig{Color: color}
 	}
 	return result
 }

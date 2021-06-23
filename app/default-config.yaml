@@ -14,6 +14,13 @@
     tabSize: 4
     showTabs: false
     showLineNumbers: false
+    styles:
+      lineNum: {color: "olive"}
+      tokenOperator: {color: "purple"}
+      tokenKeyword: {color: "olive"}
+      tokenNumber: {color: "green"}
+      tokenString: {color: "maroon"}
+      tokenComment: {color: "navy"}
 #   menuCommands:
 #     - name: my custom menu command
 #       shellCmd: echo 'hello world!' | less

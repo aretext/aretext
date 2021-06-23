@@ -16,6 +16,7 @@ import (
 type EditorState struct {
 	screenWidth, screenHeight uint64
 	configRuleSet             config.RuleSet
+	configVersion             int
 	inputMode                 InputMode
 	prevInputMode             InputMode
 	documentBuffer            *BufferState
@@ -25,6 +26,7 @@ type EditorState struct {
 	menu                      *MenuState
 	customMenuItems           []menu.Item
 	dirPatternsToHide         []string
+	styles                    map[string]config.StyleConfig
 	statusMsg                 StatusMsg
 	suspendScreenFunc         SuspendScreenFunc
 	quitFlag                  bool
@@ -71,12 +73,17 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		customMenuItems:   nil,
 		dirPatternsToHide: nil,
 		statusMsg:         StatusMsg{},
+		styles:            nil,
 		suspendScreenFunc: suspendScreenFunc,
 	}
 }
 
 func (s *EditorState) ScreenSize() (uint64, uint64) {
 	return s.screenWidth, s.screenHeight
+}
+
+func (s *EditorState) ConfigVersion() int {
+	return s.configVersion
 }
 
 func (s *EditorState) SetScreenSize(width, height uint64) {
@@ -102,6 +109,10 @@ func (s *EditorState) DirPatternsToHide() []string {
 
 func (s *EditorState) StatusMsg() StatusMsg {
 	return s.statusMsg
+}
+
+func (s *EditorState) Styles() map[string]config.StyleConfig {
+	return s.styles
 }
 
 func (s *EditorState) FileWatcher() *file.Watcher {

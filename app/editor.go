@@ -17,11 +17,12 @@ import (
 
 // Editor is a terminal-based text editing program.
 type Editor struct {
-	inputInterpreter *input.Interpreter
-	editorState      *state.EditorState
-	screen           tcell.Screen
-	palette          *display.Palette
-	termEventChan    chan tcell.Event
+	inputInterpreter     *input.Interpreter
+	editorState          *state.EditorState
+	screen               tcell.Screen
+	palette              *display.Palette
+	paletteConfigVersion int
+	termEventChan        chan tcell.Event
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
@@ -35,8 +36,16 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 	)
 	inputInterpreter := input.NewInterpreter()
 	palette := display.NewPalette()
+	paletteConfigVersion := editorState.ConfigVersion()
 	termEventChan := make(chan tcell.Event, 1)
-	editor := &Editor{inputInterpreter, editorState, screen, palette, termEventChan}
+	editor := &Editor{
+		inputInterpreter,
+		editorState,
+		screen,
+		palette,
+		paletteConfigVersion,
+		termEventChan,
+	}
 
 	// Attempt to load the file.
 	// If it doesn't exist, this will start with an empty document
@@ -129,6 +138,7 @@ func (e *Editor) inputConfig() input.Config {
 }
 
 func (e *Editor) redraw(sync bool) {
+	e.reloadPaletteIfConfigChanged()
 	inputMode := e.editorState.InputMode()
 	inputBufferString := e.inputInterpreter.InputBufferString(inputMode)
 	display.DrawEditor(e.screen, e.palette, e.editorState, inputBufferString)
@@ -136,6 +146,16 @@ func (e *Editor) redraw(sync bool) {
 		e.screen.Sync()
 	} else {
 		e.screen.Show()
+	}
+}
+
+func (e *Editor) reloadPaletteIfConfigChanged() {
+	configVersion := e.editorState.ConfigVersion()
+	if configVersion != e.paletteConfigVersion {
+		log.Printf("Config change detected, reloading palette\n")
+		styles := e.editorState.Styles()
+		e.palette = display.NewPaletteFromConfigStyles(styles)
+		e.paletteConfigVersion = configVersion
 	}
 }
 

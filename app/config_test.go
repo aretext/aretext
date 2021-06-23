@@ -17,4 +17,5 @@ func TestDefaultConfigYamlValid(t *testing.T) {
 	assert.Equal(t, "go", c.SyntaxLanguage)
 	assert.Equal(t, 4, c.TabSize)
 	assert.True(t, c.AutoIndent)
+	assert.Equal(t, "olive", c.Styles["lineNum"].Color)
 }

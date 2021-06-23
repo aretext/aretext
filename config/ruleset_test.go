@@ -23,6 +23,7 @@ func TestConfigForPath(t *testing.T) {
 				TabExpand:      DefaultTabExpand,
 				AutoIndent:     DefaultAutoIndent,
 				MenuCommands:   []MenuCommandConfig{},
+				Styles:         map[string]StyleConfig{},
 			},
 		},
 		{
@@ -50,6 +51,7 @@ func TestConfigForPath(t *testing.T) {
 				TabExpand:      DefaultTabExpand,
 				AutoIndent:     DefaultAutoIndent,
 				MenuCommands:   []MenuCommandConfig{},
+				Styles:         map[string]StyleConfig{},
 			},
 		},
 	}

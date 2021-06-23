@@ -150,6 +150,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 		fileExists = true
 	}
 
+	state.configVersion++
 	state.documentBuffer.textTree = tree
 	state.fileWatcher.Stop()
 	state.fileWatcher = watcher
@@ -167,6 +168,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.undoLog.TrackLoad()
 	state.customMenuItems = customMenuItems(config)
 	state.dirPatternsToHide = config.HideDirectories
+	state.styles = config.Styles
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
 
 	return fileExists, nil

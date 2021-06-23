@@ -1,8 +1,11 @@
 package display
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
 )
@@ -61,6 +64,29 @@ func NewPalette() *Palette {
 		tokenKeyStyle:           s.Foreground(tcell.ColorTeal),
 		tokenCommentStyle:       s.Foreground(tcell.ColorNavy),
 	}
+}
+
+func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
+	p := NewPalette()
+	for k, v := range styles {
+		switch k {
+		case config.StyleLineNum:
+			p.lineNumStyle = styleFromConfig(v)
+		case config.StyleTokenOperator:
+			p.tokenOperatorStyle = styleFromConfig(v)
+		case config.StyleTokenKeyword:
+			p.tokenKeywordStyle = styleFromConfig(v)
+		case config.StyleTokenNumber:
+			p.tokenNumberStyle = styleFromConfig(v)
+		case config.StyleTokenString:
+			p.tokenStringStyle = styleFromConfig(v)
+		case config.StyleTokenComment:
+			p.tokenCommentStyle = styleFromConfig(v)
+		default:
+			log.Printf("Unrecognized style key: %s\n", k)
+		}
+	}
+	return p
 }
 
 func (p *Palette) StyleForLineNum() tcell.Style {
@@ -151,4 +177,9 @@ func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 	default:
 		return tcell.StyleDefault
 	}
+}
+
+func styleFromConfig(s config.StyleConfig) tcell.Style {
+	c := tcell.GetColor(s.Color)
+	return tcell.StyleDefault.Foreground(c)
 }

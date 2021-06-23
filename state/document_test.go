@@ -165,6 +165,21 @@ func TestLoadNextDocument(t *testing.T) {
 	assert.Equal(t, uint64(4), state.documentBuffer.cursor.position)
 }
 
+func TestLoadDocumentIncrementConfigVersion(t *testing.T) {
+	// Start with an empty document.
+	state := NewEditorState(100, 100, nil, nil)
+	assert.Equal(t, state.ConfigVersion(), 0)
+
+	// Load a document.
+	path, cleanup := createTestFile(t, "abcd")
+	LoadDocument(state, path, true, startOfDocLocator)
+	defer state.fileWatcher.Stop()
+	defer cleanup()
+
+	// Expect that the config version was bumped.
+	assert.Equal(t, state.ConfigVersion(), 1)
+}
+
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)

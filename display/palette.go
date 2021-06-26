@@ -37,11 +37,11 @@ type Palette struct {
 func NewPalette() *Palette {
 	s := tcell.StyleDefault
 	return &Palette{
-		lineNumStyle:            s.Foreground(tcell.ColorOrange),
+		lineNumStyle:            s.Foreground(tcell.ColorOlive),
 		selectionStyle:          s.Reverse(true).Dim(true),
 		searchMatchStyle:        s.Reverse(true),
 		statusMsgSuccessStyle:   s.Foreground(tcell.ColorGreen).Bold(true),
-		statusMsgErrorStyle:     s.Background(tcell.ColorRed).Foreground(tcell.ColorWhite).Bold(true),
+		statusMsgErrorStyle:     s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),
 		statusInputModeStyle:    s.Bold(true),
 		statusInputBufferStyle:  s.Bold(true),
 		statusFilePathStyle:     s,
@@ -54,12 +54,12 @@ func NewPalette() *Palette {
 		menuItemUnselectedStyle: s,
 		searchPrefixStyle:       s,
 		searchQueryStyle:        s,
-		tokenOperatorStyle:      s.Foreground(tcell.ColorFuchsia),
-		tokenKeywordStyle:       s.Foreground(tcell.ColorOrange),
+		tokenOperatorStyle:      s.Foreground(tcell.ColorPurple),
+		tokenKeywordStyle:       s.Foreground(tcell.ColorOlive),
 		tokenNumberStyle:        s.Foreground(tcell.ColorGreen),
-		tokenStringStyle:        s.Foreground(tcell.ColorRed),
+		tokenStringStyle:        s.Foreground(tcell.ColorMaroon),
 		tokenKeyStyle:           s.Foreground(tcell.ColorTeal),
-		tokenCommentStyle:       s.Foreground(tcell.ColorBlue),
+		tokenCommentStyle:       s.Foreground(tcell.ColorNavy),
 	}
 }
 

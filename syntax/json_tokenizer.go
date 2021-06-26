@@ -62,13 +62,13 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "[._\\-]",
-							TokenRole: 10,
+							TokenRole: 9,
 							SubRules:  []parser.TokenizerRule{},
 						},
 
 						parser.TokenizerRule{
 							Regexp:    "[a-zA-Z0-9]+",
-							TokenRole: 11,
+							TokenRole: 10,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},
@@ -109,13 +109,13 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "\"\"|\"([^\\\"\\n]|\\\\\")*[^\\\\\\n]\"[ \\t]*:",
-					TokenRole: 7,
+					TokenRole: 65536,
 					SubRules:  []parser.TokenizerRule{},
 				},
 
 				parser.TokenizerRule{
 					Regexp:    "\\{|\\}|\\[|\\]|,",
-					TokenRole: 10,
+					TokenRole: 9,
 					SubRules:  []parser.TokenizerRule{},
 				},
 
@@ -126,13 +126,13 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "[._\\-]",
-							TokenRole: 10,
+							TokenRole: 9,
 							SubRules:  []parser.TokenizerRule{},
 						},
 
 						parser.TokenizerRule{
 							Regexp:    "[a-zA-Z0-9]+",
-							TokenRole: 11,
+							TokenRole: 10,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},

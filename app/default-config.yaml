@@ -44,6 +44,8 @@
     tabExpand: true
     tabSize: 2
     showLineNumbers: true
+    styles:
+      tokenCustom1: {color: "teal"} # object keys
 
 - name: yaml
   pattern: "**/*.yaml"

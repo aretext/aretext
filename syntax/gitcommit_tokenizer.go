@@ -39,7 +39,7 @@ func init() {
 
 								parser.TokenizerRule{
 									Regexp:    "^#",
-									TokenRole: 8,
+									TokenRole: 7,
 									SubRules:  []parser.TokenizerRule{},
 								},
 							},
@@ -49,12 +49,12 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "#[^\\n]*",
-							TokenRole: 9,
+							TokenRole: 8,
 							SubRules: []parser.TokenizerRule{
 
 								parser.TokenizerRule{
 									Regexp:    "^#",
-									TokenRole: 8,
+									TokenRole: 7,
 									SubRules:  []parser.TokenizerRule{},
 								},
 							},
@@ -73,12 +73,12 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "#[^\\n]*",
-							TokenRole: 9,
+							TokenRole: 8,
 							SubRules: []parser.TokenizerRule{
 
 								parser.TokenizerRule{
 									Regexp:    "^#",
-									TokenRole: 8,
+									TokenRole: 7,
 									SubRules:  []parser.TokenizerRule{},
 								},
 							},
@@ -88,13 +88,13 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "\\p{P}",
-					TokenRole: 10,
+					TokenRole: 9,
 					SubRules:  []parser.TokenizerRule{},
 				},
 
 				parser.TokenizerRule{
 					Regexp:    "(\\p{L}|\\p{Nd})+",
-					TokenRole: 11,
+					TokenRole: 10,
 					SubRules:  []parser.TokenizerRule{},
 				},
 			},

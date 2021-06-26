@@ -70,6 +70,14 @@ const (
 	StyleTokenNumber   = "tokenNumber"
 	StyleTokenString   = "tokenString"
 	StyleTokenComment  = "tokenComment"
+	StyleTokenCustom1  = "tokenCustom1"
+	StyleTokenCustom2  = "tokenCustom2"
+	StyleTokenCustom3  = "tokenCustom3"
+	StyleTokenCustom4  = "tokenCustom4"
+	StyleTokenCustom5  = "tokenCustom5"
+	StyleTokenCustom6  = "tokenCustom6"
+	StyleTokenCustom7  = "tokenCustom7"
+	StyleTokenCustom8  = "tokenCustom8"
 )
 
 // StyleConfig is a configuration for how text should be displayed.

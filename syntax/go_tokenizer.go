@@ -30,7 +30,7 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "^//",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},
@@ -51,13 +51,13 @@ func init() {
 
 						parser.TokenizerRule{
 							Regexp:    "^/\\*",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 
 						parser.TokenizerRule{
 							Regexp:    "\\*/$",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},
@@ -156,12 +156,12 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "//[^\\n]*",
-					TokenRole: 9,
+					TokenRole: 8,
 					SubRules: []parser.TokenizerRule{
 
 						parser.TokenizerRule{
 							Regexp:    "^//",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},
@@ -169,18 +169,18 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "/\\*([^*]|(\\*+[^*/]))*\\*+/",
-					TokenRole: 9,
+					TokenRole: 8,
 					SubRules: []parser.TokenizerRule{
 
 						parser.TokenizerRule{
 							Regexp:    "^/\\*",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 
 						parser.TokenizerRule{
 							Regexp:    "\\*/$",
-							TokenRole: 8,
+							TokenRole: 7,
 							SubRules:  []parser.TokenizerRule{},
 						},
 					},
@@ -212,7 +212,7 @@ func init() {
 
 				parser.TokenizerRule{
 					Regexp:    "\\(|\\)|\\[|\\]|\\{|\\}|,|;|\\.\\.\\.|\\.|:",
-					TokenRole: 10,
+					TokenRole: 9,
 					SubRules:  []parser.TokenizerRule{},
 				},
 

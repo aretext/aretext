@@ -12,11 +12,21 @@ const (
 	TokenRoleNumber
 	TokenRoleStringQuote
 	TokenRoleString
-	TokenRoleKey
 	TokenRoleCommentDelimiter
 	TokenRoleComment
 	TokenRolePunctuation
 	TokenRoleWord
+)
+
+const (
+	TokenRoleCustom1 = TokenRole((1 << 16) + iota)
+	TokenRoleCustom2
+	TokenRoleCustom3
+	TokenRoleCustom4
+	TokenRoleCustom5
+	TokenRoleCustom6
+	TokenRoleCustom7
+	TokenRoleCustom8
 )
 
 // Token represents a distinct element in a document.

@@ -449,36 +449,42 @@ func TestDrawBufferCursor(t *testing.T) {
 
 func TestSyntaxHighlighting(t *testing.T) {
 	withSimScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(12, 1)
+		s.SetSize(18, 1)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
-			state.SetSyntax(editorState, syntax.LanguageJson)
-			for _, r := range `{"key": 123}` {
+			state.SetSyntax(editorState, syntax.LanguageGo)
+			for _, r := range `const foo = "test"` {
 				state.InsertRune(editorState, r)
 			}
 		})
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
-				// `"{"` has no highlighting
+				// `const` highlighted as keyword.
+				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+
+				// ` foo ` has no highlighting.
+				tcell.StyleDefault,
+				tcell.StyleDefault,
+				tcell.StyleDefault,
+				tcell.StyleDefault,
 				tcell.StyleDefault,
 
-				// `"key":` highlighted as a key.
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
-				tcell.StyleDefault.Foreground(tcell.ColorTeal),
+				// `=` highlighted as an operator.
+				tcell.StyleDefault.Foreground(tcell.ColorPurple),
 
 				// ` ` has no highlighting.
 				tcell.StyleDefault,
 
-				// `123` highlighted as a number.
-				tcell.StyleDefault.Foreground(tcell.ColorGreen),
-				tcell.StyleDefault.Foreground(tcell.ColorGreen),
-				tcell.StyleDefault.Foreground(tcell.ColorGreen),
-
-				// `}` has no highlighting.
-				tcell.StyleDefault,
+				// `"test"` highlighted as a string.
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
 			},
 		})
 	})

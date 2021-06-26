@@ -7,6 +7,7 @@ import (
 )
 
 func JsonRules() []parser.TokenizerRule {
+	const tokenRoleKey = parser.TokenRoleCustom1
 	stringPattern := `""|"([^\"\n]|\\")*[^\\\n]"`
 	return []parser.TokenizerRule{
 		{
@@ -33,7 +34,7 @@ func JsonRules() []parser.TokenizerRule {
 		},
 		{
 			Regexp:    stringPattern + `[ \t]*:`,
-			TokenRole: parser.TokenRoleKey,
+			TokenRole: tokenRoleKey,
 		},
 		{
 			Regexp:    strings.Join([]string{`\{`, `\}`, `\[`, `\]`, `,`}, "|"),

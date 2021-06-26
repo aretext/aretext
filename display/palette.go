@@ -33,8 +33,15 @@ type Palette struct {
 	tokenKeywordStyle       tcell.Style
 	tokenNumberStyle        tcell.Style
 	tokenStringStyle        tcell.Style
-	tokenKeyStyle           tcell.Style
 	tokenCommentStyle       tcell.Style
+	tokenCustom1Style       tcell.Style
+	tokenCustom2Style       tcell.Style
+	tokenCustom3Style       tcell.Style
+	tokenCustom4Style       tcell.Style
+	tokenCustom5Style       tcell.Style
+	tokenCustom6Style       tcell.Style
+	tokenCustom7Style       tcell.Style
+	tokenCustom8Style       tcell.Style
 }
 
 func NewPalette() *Palette {
@@ -61,8 +68,15 @@ func NewPalette() *Palette {
 		tokenKeywordStyle:       s.Foreground(tcell.ColorOlive),
 		tokenNumberStyle:        s.Foreground(tcell.ColorGreen),
 		tokenStringStyle:        s.Foreground(tcell.ColorMaroon),
-		tokenKeyStyle:           s.Foreground(tcell.ColorTeal),
 		tokenCommentStyle:       s.Foreground(tcell.ColorNavy),
+		tokenCustom1Style:       s,
+		tokenCustom2Style:       s,
+		tokenCustom3Style:       s,
+		tokenCustom4Style:       s,
+		tokenCustom5Style:       s,
+		tokenCustom6Style:       s,
+		tokenCustom7Style:       s,
+		tokenCustom8Style:       s,
 	}
 }
 
@@ -82,6 +96,22 @@ func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
 			p.tokenStringStyle = styleFromConfig(v)
 		case config.StyleTokenComment:
 			p.tokenCommentStyle = styleFromConfig(v)
+		case config.StyleTokenCustom1:
+			p.tokenCustom1Style = styleFromConfig(v)
+		case config.StyleTokenCustom2:
+			p.tokenCustom2Style = styleFromConfig(v)
+		case config.StyleTokenCustom3:
+			p.tokenCustom3Style = styleFromConfig(v)
+		case config.StyleTokenCustom4:
+			p.tokenCustom4Style = styleFromConfig(v)
+		case config.StyleTokenCustom5:
+			p.tokenCustom5Style = styleFromConfig(v)
+		case config.StyleTokenCustom6:
+			p.tokenCustom6Style = styleFromConfig(v)
+		case config.StyleTokenCustom7:
+			p.tokenCustom7Style = styleFromConfig(v)
+		case config.StyleTokenCustom8:
+			p.tokenCustom8Style = styleFromConfig(v)
 		default:
 			log.Printf("Unrecognized style key: %s\n", k)
 		}
@@ -170,10 +200,24 @@ func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 		return p.tokenNumberStyle
 	case parser.TokenRoleString, parser.TokenRoleStringQuote:
 		return p.tokenStringStyle
-	case parser.TokenRoleKey:
-		return p.tokenKeyStyle
 	case parser.TokenRoleComment, parser.TokenRoleCommentDelimiter:
 		return p.tokenCommentStyle
+	case parser.TokenRoleCustom1:
+		return p.tokenCustom1Style
+	case parser.TokenRoleCustom2:
+		return p.tokenCustom2Style
+	case parser.TokenRoleCustom3:
+		return p.tokenCustom3Style
+	case parser.TokenRoleCustom4:
+		return p.tokenCustom4Style
+	case parser.TokenRoleCustom5:
+		return p.tokenCustom5Style
+	case parser.TokenRoleCustom6:
+		return p.tokenCustom6Style
+	case parser.TokenRoleCustom7:
+		return p.tokenCustom7Style
+	case parser.TokenRoleCustom8:
+		return p.tokenCustom8Style
 	default:
 		return tcell.StyleDefault
 	}

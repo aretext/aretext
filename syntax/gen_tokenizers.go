@@ -46,6 +46,10 @@ func main() {
 			Name:  "GitRebase",
 			Rules: rules.GitRebaseRules(),
 		},
+		{
+			Name:  "Devlog",
+			Rules: rules.DevlogRules(),
+		},
 	}
 
 	filteredSpecs := filterSpecs(specs, *language)

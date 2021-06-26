@@ -11,7 +11,7 @@ This document lists every configuration option in aretext.
 | `showTabs`        | boolean          | If true, display tabs in the document.                                                                                                      |
 | `autoIndent`      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                        |
 | `showLineNumbers` | boolean          | If true, display line numbers.                                                                                                              |
-| `menuCommands`    | object           | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields. |
+| `menuCommands`    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields. |
 | `hideDirectories` | array of strings | Glob patterns matching directories to hide from file search. Patterns are matched against the absolute path to the directory.               |
 
 Syntax Languages

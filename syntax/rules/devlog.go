@@ -7,7 +7,7 @@ import (
 func DevlogRules() []parser.TokenizerRule {
 	// Rules for the devlog file format.
 	// https://devlog-cli.org/
-	devlogRules := []parser.TokenizerRule{
+	return []parser.TokenizerRule{
 		// "To do" task
 		{
 			Regexp:    `(^|\n)\*`,
@@ -44,5 +44,4 @@ func DevlogRules() []parser.TokenizerRule {
 			TokenRole: parser.TokenRoleCustom6,
 		},
 	}
-	return append(devlogRules, PlaintextRules()...)
 }

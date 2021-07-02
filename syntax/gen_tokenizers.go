@@ -23,10 +23,6 @@ func main() {
 
 	specs := []LanguageSpec{
 		{
-			Name:  "Plaintext",
-			Rules: rules.PlaintextRules(),
-		},
-		{
 			Name:  "Json",
 			Rules: rules.JsonRules(),
 		},
@@ -130,7 +126,7 @@ import (
 type Language int
 
 const (
-	LanguageUndefined = Language(iota)
+	LanguagePlaintext = Language(iota)
 	{{ range .Specs -}}
 	{{ .LanguageConst }}
 	{{ end }}
@@ -144,8 +140,8 @@ var AllLanguages = []Language{
 
 func (language Language) String() string {
 	switch language {
-	case LanguageUndefined:
-		return "undefined"
+	case LanguagePlaintext:
+		return "plaintext"
 	{{ range .Specs -}}
 	case {{ .LanguageConst }}:
 		return "{{ .LanguageString }}"
@@ -157,20 +153,20 @@ func (language Language) String() string {
 
 func LanguageFromString(s string) Language {
 	switch s {
-	case "undefined":
-		return LanguageUndefined
+	case "plaintext":
+		return LanguagePlaintext
 	{{ range .Specs -}}
 	case "{{ .LanguageString }}":
 		return {{ .LanguageConst }}
 	{{ end -}}
 	default:
 		log.Printf("Unrecognized syntax language '%s'\n", s)
-		return LanguageUndefined
+		return LanguagePlaintext
 	}
 }
 
 // TokenizerForLanguage returns a tokenizer for the specified language.
-// If no tokenizer is available (e.g. for LanguageUndefined), this returns nil.
+// If no tokenizer is available (e.g. for LanguagePlaintext) this returns nil.
 func TokenizerForLanguage(language Language) *parser.Tokenizer {
 	switch language {
 	{{ range .Specs -}}

@@ -81,10 +81,9 @@ func envVars(state *EditorState) []string {
 func currentWordEnvVar(state *EditorState) string {
 	buffer := state.documentBuffer
 	textTree := buffer.textTree
-	tokenTree := buffer.tokenTree
 	cursorPos := buffer.cursor.position
-	wordStartPos := locate.CurrentWordStart(textTree, tokenTree, cursorPos)
-	wordEndPos := locate.CurrentWordEnd(textTree, tokenTree, cursorPos)
+	wordStartPos := locate.CurrentWordStart(textTree, cursorPos)
+	wordEndPos := locate.CurrentWordEnd(textTree, cursorPos)
 	word := copyText(textTree, wordStartPos, wordEndPos-wordStartPos)
 	return strings.TrimSpace(word)
 }

@@ -19,17 +19,14 @@ func TestGoTokenizer(t *testing.T) {
 			name:        "line comment",
 			inputString: "// comment",
 			expectedTokens: []TokenWithText{
-				{Text: `//`, Role: parser.TokenRoleCommentDelimiter},
-				{Text: ` comment`, Role: parser.TokenRoleComment},
+				{Text: `// comment`, Role: parser.TokenRoleComment},
 			},
 		},
 		{
 			name:        "general comment",
 			inputString: "/* abcd\n123 */",
 			expectedTokens: []TokenWithText{
-				{Text: "/*", Role: parser.TokenRoleCommentDelimiter},
-				{Text: " abcd\n123 ", Role: parser.TokenRoleComment},
-				{Text: "*/", Role: parser.TokenRoleCommentDelimiter},
+				{Text: "/* abcd\n123 */", Role: parser.TokenRoleComment},
 			},
 		},
 		{
@@ -38,8 +35,6 @@ func TestGoTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: "var", Role: parser.TokenRoleKeyword},
 				{Text: "foo", Role: parser.TokenRoleIdentifier},
-				{Text: "[", Role: parser.TokenRolePunctuation},
-				{Text: "]", Role: parser.TokenRolePunctuation},
 				{Text: "int", Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -58,35 +53,28 @@ func TestGoTokenizer(t *testing.T) {
 			name:        "raw string",
 			inputString: "`abcd\n123`",
 			expectedTokens: []TokenWithText{
-				{Text: "`", Role: parser.TokenRoleStringQuote},
-				{Text: "abcd\n123", Role: parser.TokenRoleString},
-				{Text: "`", Role: parser.TokenRoleStringQuote},
+				{Text: "`abcd\n123`", Role: parser.TokenRoleString},
 			},
 		},
 		{
 			name:        "interpreted string",
 			inputString: `"abcd"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
-				{Text: `abcd`, Role: parser.TokenRoleString},
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `"abcd"`, Role: parser.TokenRoleString},
 			},
 		},
 		{
 			name:        "interpreted string empty",
 			inputString: `""`,
 			expectedTokens: []TokenWithText{
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `""`, Role: parser.TokenRoleString},
 			},
 		},
 		{
 			name:        "interpreted string with escaped quote",
 			inputString: `"ab\"cd"`,
 			expectedTokens: []TokenWithText{
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
-				{Text: `ab\"cd`, Role: parser.TokenRoleString},
-				{Text: `"`, Role: parser.TokenRoleStringQuote},
+				{Text: `"ab\"cd"`, Role: parser.TokenRoleString},
 			},
 		},
 		{
@@ -108,9 +96,7 @@ func TestGoTokenizer(t *testing.T) {
 			name:        "rune",
 			inputString: `'a'`,
 			expectedTokens: []TokenWithText{
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
-				{Text: `a`, Role: parser.TokenRoleString},
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: "'a'", Role: parser.TokenRoleString},
 			},
 		},
 		{
@@ -362,7 +348,6 @@ func TestGoTokenizer(t *testing.T) {
 			expectedTokens: []TokenWithText{
 				{Text: `0`, Role: parser.TokenRoleNumber},
 				{Text: `x`, Role: parser.TokenRoleIdentifier},
-				{Text: `.`, Role: parser.TokenRolePunctuation},
 				{Text: `p1`, Role: parser.TokenRoleIdentifier},
 			},
 		},

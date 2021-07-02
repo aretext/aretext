@@ -18,15 +18,14 @@ This document lists every configuration option in aretext.
 Syntax Languages
 ----------------
 
-| Value       | Description                                                                                               |
-|-------------|-----------------------------------------------------------------------------------------------------------|
-| `undefined` | Do not apply any syntax highlighting.                                                                     |
-| `plaintext` | Parse punctuation characters as separate tokens. This affects word movement, but not syntax highlighting. |
-| `json`      | [JSON](https://www.json.org/json-en.html)                                                                 |
-| `yaml`      | [YAML](https://yaml.org/spec/)                                                                            |
-| `go`        | [Go](https://golang.org/ref/spec)                                                                         |
-| `gitcommit` | Format for editing a git commit                                                                           |
-| `gitrebase` | Format for git interactive rebase                                                                         |
+| Value       | Description                               |
+|-------------|-------------------------------------------|
+| `plaintext` | Do not apply any syntax highlighting.     |
+| `json`      | [JSON](https://www.json.org/json-en.html) |
+| `yaml`      | [YAML](https://yaml.org/spec/)            |
+| `go`        | [Go](https://golang.org/ref/spec)         |
+| `gitcommit` | Format for editing a git commit           |
+| `gitrebase` | Format for git interactive rebase         |
 
 Menu Command Object
 -------------------

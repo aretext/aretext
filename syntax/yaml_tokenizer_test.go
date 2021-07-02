@@ -28,7 +28,6 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: "abc: xyz",
 			expectedTokens: []TokenWithText{
 				{Text: `abc:`, Role: tokenRoleKey},
-				{Text: `xyz`, Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -36,33 +35,27 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: "'abc': xyz",
 			expectedTokens: []TokenWithText{
 				{Text: `'abc':`, Role: tokenRoleKey},
-				{Text: `xyz`, Role: parser.TokenRoleWord},
 			},
 		},
 		{
 			name:        "empty single-quoted string",
 			inputString: `''`,
 			expectedTokens: []TokenWithText{
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `''`, Role: parser.TokenRoleString},
 			},
 		},
 		{
 			name:        "single-quoted string",
 			inputString: `'abc'`,
 			expectedTokens: []TokenWithText{
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
-				{Text: `abc`, Role: parser.TokenRoleString},
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `'abc'`, Role: parser.TokenRoleString},
 			},
 		},
 		{
 			name:        "single-quoted string with escaped quote",
 			inputString: `'ab''c'`,
 			expectedTokens: []TokenWithText{
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
-				{Text: `ab''c`, Role: parser.TokenRoleString},
-				{Text: `'`, Role: parser.TokenRoleStringQuote},
+				{Text: `'ab''c'`, Role: parser.TokenRoleString},
 			},
 		},
 		{
@@ -70,7 +63,6 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: `- foo: # this is a test
 							bar: 123`,
 			expectedTokens: []TokenWithText{
-				{Text: `-`, Role: parser.TokenRolePunctuation},
 				{Text: `foo:`, Role: tokenRoleKey},
 				{Text: `# this is a test`, Role: parser.TokenRoleComment},
 				{Text: `bar:`, Role: tokenRoleKey},
@@ -82,11 +74,6 @@ func TestYamlTokenizer(t *testing.T) {
 			inputString: "foo: v0.1.2",
 			expectedTokens: []TokenWithText{
 				{Text: `foo:`, Role: tokenRoleKey},
-				{Text: `v0`, Role: parser.TokenRoleWord},
-				{Text: `.`, Role: parser.TokenRolePunctuation},
-				{Text: `1`, Role: parser.TokenRoleWord},
-				{Text: `.`, Role: parser.TokenRolePunctuation},
-				{Text: `2`, Role: parser.TokenRoleWord},
 			},
 		},
 	}

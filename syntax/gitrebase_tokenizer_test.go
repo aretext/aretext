@@ -20,11 +20,7 @@ func TestGitRebaseTokenizer(t *testing.T) {
 			inputString: "# Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
 			expectedTokens: []TokenWithText{
 				{
-					Text: "#",
-					Role: parser.TokenRoleCommentDelimiter,
-				},
-				{
-					Text: " Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
+					Text: "# Rebase 5c828d6..bb41094 onto 5c828d6 (1 command)",
 					Role: parser.TokenRoleComment,
 				},
 			},
@@ -37,18 +33,6 @@ func TestGitRebaseTokenizer(t *testing.T) {
 					Text: "pick",
 					Role: parser.TokenRoleKeyword,
 				},
-				{
-					Text: "bc51064",
-					Role: parser.TokenRoleWord,
-				},
-				{
-					Text: "Test",
-					Role: parser.TokenRoleWord,
-				},
-				{
-					Text: "commit",
-					Role: parser.TokenRoleWord,
-				},
 			},
 		},
 		{
@@ -59,25 +43,12 @@ func TestGitRebaseTokenizer(t *testing.T) {
 					Text: "edit",
 					Role: parser.TokenRoleKeyword,
 				},
-				{
-					Text: "reword",
-					Role: parser.TokenRoleWord,
-				},
-				{
-					Text: "pick",
-					Role: parser.TokenRoleWord,
-				},
 			},
 		},
 		{
-			name:        "keyword prefix of another word",
-			inputString: "pi",
-			expectedTokens: []TokenWithText{
-				{
-					Text: "pi",
-					Role: parser.TokenRoleWord,
-				},
-			},
+			name:           "keyword prefix of another word",
+			inputString:    "pi",
+			expectedTokens: []TokenWithText{},
 		},
 		{
 			name:        "keyword after newline",
@@ -86,10 +57,6 @@ func TestGitRebaseTokenizer(t *testing.T) {
 				{
 					Text: "reword",
 					Role: parser.TokenRoleKeyword,
-				},
-				{
-					Text: "test",
-					Role: parser.TokenRoleWord,
 				},
 			},
 		},
@@ -100,22 +67,6 @@ func TestGitRebaseTokenizer(t *testing.T) {
 				{
 					Text: "pick",
 					Role: parser.TokenRoleKeyword,
-				},
-				{
-					Text: "insert",
-					Role: parser.TokenRoleWord,
-				},
-				{
-					Text: "#",
-					Role: parser.TokenRolePunctuation,
-				},
-				{
-					Text: "in",
-					Role: parser.TokenRoleWord,
-				},
-				{
-					Text: "file",
-					Role: parser.TokenRoleWord,
 				},
 			},
 		},

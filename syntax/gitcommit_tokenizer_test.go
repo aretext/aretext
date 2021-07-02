@@ -25,92 +25,44 @@ This is a test commit
 `
 	expectedTokens := []TokenWithText{
 		{
-			Text: "This",
-			Role: parser.TokenRoleWord,
+			Text: "# Please enter the commit message for your changes. Lines starting",
+			Role: parser.TokenRoleComment,
 		},
 		{
-			Text: "is",
-			Role: parser.TokenRoleWord,
-		},
-		{
-			Text: "a",
-			Role: parser.TokenRoleWord,
-		},
-		{
-			Text: "test",
-			Role: parser.TokenRoleWord,
-		},
-		{
-			Text: "commit",
-			Role: parser.TokenRoleWord,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: " Please enter the commit message for your changes. Lines starting",
+			Text: "# with '#' will be ignored, and an empty message aborts the commit.",
 			Role: parser.TokenRoleComment,
 		},
 		{
 			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
+			Role: parser.TokenRoleComment,
 		},
 		{
-			Text: " with '#' will be ignored, and an empty message aborts the commit.",
+			Text: "# On branch testbranch",
+			Role: parser.TokenRoleComment,
+		},
+		{
+			Text: "# Changes to be committed:",
+			Role: parser.TokenRoleComment,
+		},
+		{
+			Text: "#   new file:   test",
 			Role: parser.TokenRoleComment,
 		},
 		{
 			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
+			Role: parser.TokenRoleComment,
 		},
 		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
+			Text: "# Untracked files:",
+			Role: parser.TokenRoleComment,
 		},
 		{
-			Text: " On branch testbranch",
+			Text: "#   sometest.go",
 			Role: parser.TokenRoleComment,
 		},
 		{
 			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: " Changes to be committed:",
 			Role: parser.TokenRoleComment,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: "   new file:   test",
-			Role: parser.TokenRoleComment,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: " Untracked files:",
-			Role: parser.TokenRoleComment,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
-		},
-		{
-			Text: "   sometest.go",
-			Role: parser.TokenRoleComment,
-		},
-		{
-			Text: "#",
-			Role: parser.TokenRoleCommentDelimiter,
 		},
 	}
 

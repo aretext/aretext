@@ -50,12 +50,6 @@ func GolangRules() []parser.TokenizerRule {
 		{
 			Regexp:    `//[^\n]*`,
 			TokenRole: parser.TokenRoleComment,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    `^//`,
-					TokenRole: parser.TokenRoleCommentDelimiter,
-				},
-			},
 		},
 
 		// General comment
@@ -63,16 +57,6 @@ func GolangRules() []parser.TokenizerRule {
 		{
 			Regexp:    `/\*([^*]|(\*+[^*/]))*\*+/`,
 			TokenRole: parser.TokenRoleComment,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    `^/\*`,
-					TokenRole: parser.TokenRoleCommentDelimiter,
-				},
-				{
-					Regexp:    `\*/$`,
-					TokenRole: parser.TokenRoleCommentDelimiter,
-				},
-			},
 		},
 
 		// Keywords
@@ -172,15 +156,6 @@ func GolangRules() []parser.TokenizerRule {
 			TokenRole: parser.TokenRoleOperator,
 		},
 
-		// Punctuation
-		{
-			Regexp: strings.Join([]string{
-				`\(`, `\)`, `\[`, `\]`, `\{`, `\}`,
-				`,`, `;`, `\.\.\.`, `\.`, `:`,
-			}, "|"),
-			TokenRole: parser.TokenRolePunctuation,
-		},
-
 		// Integer literal
 		{
 			Regexp:    intLiteral,
@@ -203,48 +178,18 @@ func GolangRules() []parser.TokenizerRule {
 		{
 			Regexp:    "'[^']*'",
 			TokenRole: parser.TokenRoleString,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    "^'",
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-				{
-					Regexp:    "'$",
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-			},
 		},
 
 		// Raw string literal
 		{
 			Regexp:    "`[^`]*`",
 			TokenRole: parser.TokenRoleString,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    "^`",
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-				{
-					Regexp:    "`$",
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-			},
 		},
 
 		// Interpreted string literal
 		{
 			Regexp:    `""|"([^\"\n]|\\")*[^\\\n]"`,
 			TokenRole: parser.TokenRoleString,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    `^"`,
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-				{
-					Regexp:    `"$`,
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-			},
 		},
 	}
 }

@@ -36,8 +36,6 @@ func TestDevlogTokenizer(t *testing.T) {
 				{Text: "\n+ completed", Role: completedRole},
 				{Text: "\n- blocked", Role: blockedRole},
 				{Text: "\n*", Role: toDoRole},
-				{Text: "to", Role: parser.TokenRoleWord},
-				{Text: "do", Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -49,9 +47,7 @@ func TestDevlogTokenizer(t *testing.T) {
 				"after",
 			}, "\n"),
 			expectedTokens: []TokenWithText{
-				{Text: "before", Role: parser.TokenRoleWord},
 				{Text: "``` code`\n``block ```", Role: codeBlockRole},
-				{Text: "after", Role: parser.TokenRoleWord},
 			},
 		},
 		{
@@ -62,9 +58,7 @@ func TestDevlogTokenizer(t *testing.T) {
 				"after",
 			}, "\n"),
 			expectedTokens: []TokenWithText{
-				{Text: "before", Role: parser.TokenRoleWord},
 				{Text: "\n~~~", Role: tildeSeparatorRole},
-				{Text: "after", Role: parser.TokenRoleWord},
 			},
 		},
 	}

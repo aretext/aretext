@@ -434,7 +434,7 @@ func TestTokenTreeDeleteRange(t *testing.T) {
 			startPos:      0,
 			numDeleted:    maxEntriesPerLeafNode*maxEntriesPerInnerNode*2 - 1,
 			expectedTokens: []Token{
-				Token{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleStringQuote},
+				Token{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleString},
 			},
 		},
 		{
@@ -444,7 +444,7 @@ func TestTokenTreeDeleteRange(t *testing.T) {
 			numDeleted:    maxEntriesPerLeafNode*maxEntriesPerInnerNode*2 - 2,
 			expectedTokens: []Token{
 				Token{StartPos: 0, EndPos: 1, LookaheadPos: 1, Role: TokenRoleNone},
-				Token{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleStringQuote},
+				Token{StartPos: 1, EndPos: 2, LookaheadPos: 2, Role: TokenRoleString},
 			},
 		},
 	}

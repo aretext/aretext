@@ -33,11 +33,7 @@ Similarly, to move the cursor backwards to a matching char, use "F\{char\}" and 
 Word movement
 -------------
 
-A "word" in aretext is a sequence of characters separated by whitespace.
-
-If syntax highlighting is enabled, then the syntax language will define additional word boundaries. For example, when editing Go code, the text `foo.Bar` would treat `foo`, `.`, and `Bar` as separate words because the Go compiler would recognize these as separate tokens.
-
-To move the cursor forward to the next word, press "w" in normal mode. Use "e" to move the cursor to the *end* of the current word, and "b" to move the cursor *back* to the start of the previous word.
+A "word" in aretext is a sequence of characters separated by whitespace or punctuation. To move the cursor forward to the next word, press "w" in normal mode. Use "e" to move the cursor to the *end* of the current word, and "b" to move the cursor *back* to the start of the previous word.
 
 Paragraph movement
 ------------------

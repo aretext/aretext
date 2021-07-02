@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
 )
 
@@ -14,7 +13,6 @@ func TestNextWordStart(t *testing.T) {
 	testCases := []struct {
 		name             string
 		inputString      string
-		syntaxLanguage   syntax.Language
 		includeEndOfFile bool
 		pos              uint64
 		expectedPos      uint64
@@ -75,36 +73,13 @@ func TestNextWordStart(t *testing.T) {
 			pos:              1,
 			expectedPos:      3,
 		},
-		{
-			name:           "next syntax token",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            1,
-			expectedPos:    3,
-		},
-		{
-			name:           "next syntax token skip empty",
-			inputString:    "123    +      456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            1,
-			expectedPos:    7,
-		},
-		{
-			name:           "syntax token starts with whitespace",
-			inputString:    "//    foobar",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            0,
-			expectedPos:    6,
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tokenTree, tc.pos, tc.includeEndOfFile)
+			actualPos := NextWordStart(textTree, tc.pos, tc.includeEndOfFile)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -231,7 +206,7 @@ func TestNextWordStartInLine(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStartInLine(textTree, nil, tc.pos)
+			actualPos := NextWordStartInLine(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -239,11 +214,10 @@ func TestNextWordStartInLine(t *testing.T) {
 
 func TestNextWordEnd(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -287,43 +261,13 @@ func TestNextWordEnd(t *testing.T) {
 			pos:         4,
 			expectedPos: 10,
 		},
-		{
-			name:           "next syntax token",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            2,
-			expectedPos:    3,
-		},
-		{
-			name:           "next syntax token skip empty",
-			inputString:    "123    +      456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            2,
-			expectedPos:    7,
-		},
-		{
-			name:           "next syntax token ends with whitespace",
-			inputString:    `"    abcd    "`,
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            8,
-			expectedPos:    13,
-		},
-		{
-			name:           "end of current syntax token",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            0,
-			expectedPos:    2,
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := NextWordEnd(textTree, tokenTree, tc.pos)
+			actualPos := NextWordEnd(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -331,11 +275,10 @@ func TestNextWordEnd(t *testing.T) {
 
 func TestPrevWordStart(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -379,36 +322,13 @@ func TestPrevWordStart(t *testing.T) {
 			pos:         2,
 			expectedPos: 1,
 		},
-		{
-			name:           "prev syntax token",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            4,
-			expectedPos:    3,
-		},
-		{
-			name:           "prev syntax token skip empty",
-			inputString:    "123    +      456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            14,
-			expectedPos:    7,
-		},
-		{
-			name:           "prev syntax token starts with whitespace",
-			inputString:    "// abcd",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            3,
-			expectedPos:    0,
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := PrevWordStart(textTree, tokenTree, tc.pos)
+			actualPos := PrevWordStart(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -416,11 +336,10 @@ func TestPrevWordStart(t *testing.T) {
 
 func TestCurrentWordStart(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -488,22 +407,13 @@ func TestCurrentWordStart(t *testing.T) {
 			pos:         4,
 			expectedPos: 4,
 		},
-		{
-			name:           "adjacent syntax tokens",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            5,
-			expectedPos:    4,
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := CurrentWordStart(textTree, tokenTree, tc.pos)
+			actualPos := CurrentWordStart(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -511,11 +421,10 @@ func TestCurrentWordStart(t *testing.T) {
 
 func TestCurrentWordEnd(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -583,29 +492,13 @@ func TestCurrentWordEnd(t *testing.T) {
 			pos:         4,
 			expectedPos: 4,
 		},
-		{
-			name:           "adjacent syntax tokens",
-			inputString:    "123+456",
-			syntaxLanguage: syntax.LanguageGo,
-			pos:            1,
-			expectedPos:    3,
-		},
-		{
-			name:           "empty syntax token",
-			inputString:    `{ "ab }`,
-			syntaxLanguage: syntax.LanguageJson,
-			pos:            2,
-			expectedPos:    5,
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := CurrentWordEnd(textTree, tokenTree, tc.pos)
+			actualPos := CurrentWordEnd(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -613,11 +506,10 @@ func TestCurrentWordEnd(t *testing.T) {
 
 func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		syntaxLanguage syntax.Language
-		pos            uint64
-		expectedPos    uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -697,9 +589,7 @@ func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			tokenTree, err := syntax.TokenizeString(tc.syntaxLanguage, tc.inputString)
-			require.NoError(t, err)
-			actualPos := CurrentWordEndWithTrailingWhitespace(textTree, tokenTree, tc.pos)
+			actualPos := CurrentWordEndWithTrailingWhitespace(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

@@ -1,7 +1,6 @@
 package locate
 
 import (
-	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -10,19 +9,7 @@ import (
 // Word boundaries occur:
 //  1) at the first non-whitespace after a whitespace
 //  2) at the start of an empty line
-//  3) at the start of a non-empty syntax token
-func NextWordStart(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64, includeEndOfFile bool) uint64 {
-	newPos := findNextWordStartFromWhitespace(textTree, pos, includeEndOfFile)
-	if tokenTree != nil {
-		nextTokenPos := findNextWordStartFromSyntaxTokens(tokenTree, pos)
-		if nextTokenPos < newPos && !isWhitespaceAtPos(textTree, nextTokenPos) {
-			newPos = nextTokenPos
-		}
-	}
-	return newPos
-}
-
-func findNextWordStartFromWhitespace(textTree *text.Tree, pos uint64, includeEndOfFile bool) uint64 {
+func NextWordStart(textTree *text.Tree, pos uint64, includeEndOfFile bool) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
 	var whitespaceFlag, newlineFlag bool
@@ -57,24 +44,9 @@ func findNextWordStartFromWhitespace(textTree *text.Tree, pos uint64, includeEnd
 	return pos + offset
 }
 
-func findNextWordStartFromSyntaxTokens(tokenTree *parser.TokenTree, pos uint64) uint64 {
-	startPos := pos
-	iter := tokenTree.IterFromPosition(pos, parser.IterDirectionForward)
-	var tok parser.Token
-	for iter.Get(&tok) {
-		pos = tok.StartPos
-		if tok.Role != parser.TokenRoleNone && pos > startPos {
-			break
-		}
-		pos = tok.EndPos
-		iter.Advance()
-	}
-	return pos
-}
-
 // NextWordStartInLine locates the start of the next word or the end of the line, whichever comes first.
-func NextWordStartInLine(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	nextWordStart := NextWordStart(textTree, tokenTree, pos, true)
+func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
+	nextWordStart := NextWordStart(textTree, pos, true)
 	endOfLine := NextLineBoundary(textTree, true, pos)
 	if nextWordStart < endOfLine {
 		return nextWordStart
@@ -85,18 +57,7 @@ func NextWordStartInLine(textTree *text.Tree, tokenTree *parser.TokenTree, pos u
 
 // PrevWordStart locates the start of the word before the cursor.
 // It uses the same word break rules as NextWordStart.
-func PrevWordStart(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	newPos := findPrevWordStartFromWhitespace(textTree, pos)
-	if tokenTree != nil {
-		prevTokenPos := findPrevWordStartFromSyntaxTokens(tokenTree, pos)
-		if prevTokenPos > newPos && !isWhitespaceAtPos(textTree, prevTokenPos) {
-			newPos = prevTokenPos
-		}
-	}
-	return newPos
-}
-
-func findPrevWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
+func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	var nonwhitespaceFlag, newlineFlag bool
@@ -126,35 +87,10 @@ func findPrevWordStartFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	}
 }
 
-func findPrevWordStartFromSyntaxTokens(tokenTree *parser.TokenTree, pos uint64) uint64 {
-	startPos := pos
-	iter := tokenTree.IterFromPosition(startPos, parser.IterDirectionBackward)
-	var tok parser.Token
-	for iter.Get(&tok) {
-		pos = tok.StartPos
-		if tok.Role != parser.TokenRoleNone && pos < startPos {
-			break
-		}
-		iter.Advance()
-	}
-	return pos
-}
-
 // NextWordEnd locates the next word-end boundary after the cursor.
 // The word break rules are the same as for NextWordStart, except
 // that empty lines are NOT treated as word boundaries.
-func NextWordEnd(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	newPos := findNextWordEndFromWhitespace(textTree, pos)
-	if tokenTree != nil {
-		nextTokenPos := findNextWordEndFromSyntaxTokens(tokenTree, pos)
-		if nextTokenPos < newPos && !isWhitespaceAtPos(textTree, nextTokenPos) {
-			newPos = nextTokenPos
-		}
-	}
-	return newPos
-}
-
-func findNextWordEndFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
+func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
 	var prevWasNonwhitespace bool
@@ -181,46 +117,17 @@ func findNextWordEndFromWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	}
 }
 
-func findNextWordEndFromSyntaxTokens(tokenTree *parser.TokenTree, pos uint64) uint64 {
-	startPos := pos
-	iter := tokenTree.IterFromPosition(startPos, parser.IterDirectionForward)
-	var tok parser.Token
-	for iter.Get(&tok) {
-		// tok.EndPos should always be greater than zero,
-		// but check anyway to protect against underflow.
-		if tok.EndPos > 0 {
-			pos = tok.EndPos - 1
-		}
-		if tok.Role != parser.TokenRoleNone && pos > startPos {
-			break
-		}
-		iter.Advance()
-	}
-	return pos
-}
-
 // CurrentWordStart locates the start of the word or whitespace under the cursor.
-// Word boundaries are determined by both whitespace and syntax tokens.
-func CurrentWordStart(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
+// Word boundaries are determined by whitespace.
+func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
-		return findEndOfWordBeforeWhitespace(textTree, tokenTree, pos)
+		return findEndOfWordBeforeWhitespace(textTree, pos)
 	} else {
-		return findStartOfCurrentWord(textTree, tokenTree, pos)
+		return findStartOfCurrentWord(textTree, pos)
 	}
 }
 
-func findEndOfWordBeforeWhitespace(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	newPos := findStartOfWhitespace(textTree, pos)
-	if tokenTree != nil {
-		tokenPos := findEndOfPrevNonEmptyToken(tokenTree, pos)
-		if tokenPos > pos {
-			newPos = tokenPos
-		}
-	}
-	return newPos
-}
-
-func findStartOfWhitespace(textTree *text.Tree, pos uint64) uint64 {
+func findEndOfWordBeforeWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	var offset uint64
@@ -235,30 +142,7 @@ func findStartOfWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	}
 }
 
-func findEndOfPrevNonEmptyToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
-	iter := tokenTree.IterFromPosition(pos, parser.IterDirectionBackward)
-	var tok parser.Token
-	for iter.Get(&tok) {
-		if tok.Role != parser.TokenRoleNone && tok.EndPos < pos {
-			return tok.EndPos
-		}
-		iter.Advance()
-	}
-	return 0
-}
-
-func findStartOfCurrentWord(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	newPos := findLastNonWhitspaceBeforePos(textTree, pos)
-	if tokenTree != nil {
-		tokenPos := findStartOfCurrentToken(tokenTree, pos)
-		if tokenPos > newPos {
-			newPos = tokenPos
-		}
-	}
-	return newPos
-}
-
-func findLastNonWhitspaceBeforePos(textTree *text.Tree, pos uint64) uint64 {
+func findStartOfCurrentWord(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
 	seg := segment.Empty()
 	var offset uint64
@@ -273,29 +157,20 @@ func findLastNonWhitspaceBeforePos(textTree *text.Tree, pos uint64) uint64 {
 	}
 }
 
-func findStartOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) uint64 {
-	iter := tokenTree.IterFromPosition(pos, parser.IterDirectionBackward)
-	var tok parser.Token
-	if iter.Get(&tok) && tok.Role != parser.TokenRoleNone {
-		return tok.StartPos
-	}
-	return 0
-}
-
 // CurrentWordEnd locates the end of the word or whitespace under the cursor.
 // The returned position is one past the last character in the word or whitespace,
 // so this can be used to delete all the characters in the word.
-// Word boundaries are determined by whitespace and syntax tokens.
-func CurrentWordEnd(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
+// Word boundaries are determined by whitespace.
+func CurrentWordEnd(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
-		return findStartOfWordAfterWhitespace(textTree, tokenTree, pos)
+		return findStartOfWordAfterWhitespace(textTree, pos)
 	} else {
-		return findEndOfCurrentWord(textTree, tokenTree, pos)
+		return findEndOfCurrentWord(textTree, pos)
 	}
 }
 
-func findStartOfWordAfterWhitespace(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	nextWordStartPos := NextWordStart(textTree, tokenTree, pos, false)
+func findStartOfWordAfterWhitespace(textTree *text.Tree, pos uint64) uint64 {
+	nextWordStartPos := NextWordStart(textTree, pos, false)
 	nextLineBoundaryPos := NextLineBoundary(textTree, true, pos)
 	if nextWordStartPos < nextLineBoundaryPos {
 		return nextWordStartPos
@@ -304,18 +179,7 @@ func findStartOfWordAfterWhitespace(textTree *text.Tree, tokenTree *parser.Token
 	}
 }
 
-func findEndOfCurrentWord(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	newPos := findFirstWhitespaceAfterPos(textTree, pos)
-	if tokenTree != nil {
-		tokenPos, foundToken := findEndOfCurrentToken(tokenTree, pos)
-		if foundToken && tokenPos < newPos {
-			newPos = tokenPos
-		}
-	}
-	return newPos
-}
-
-func findFirstWhitespaceAfterPos(textTree *text.Tree, pos uint64) uint64 {
+func findEndOfCurrentWord(textTree *text.Tree, pos uint64) uint64 {
 	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
 	seg := segment.Empty()
 	var offset uint64
@@ -331,19 +195,10 @@ func findFirstWhitespaceAfterPos(textTree *text.Tree, pos uint64) uint64 {
 	return pos + offset
 }
 
-func findEndOfCurrentToken(tokenTree *parser.TokenTree, pos uint64) (uint64, bool) {
-	iter := tokenTree.IterFromPosition(pos, parser.IterDirectionBackward)
-	var tok parser.Token
-	if iter.Get(&tok) && tok.Role != parser.TokenRoleNone {
-		return tok.EndPos, true
-	}
-	return 0, false
-}
-
 // CurrentWordEndWithTrailingWhitespace returns the end of the whitespace after current word.
 // It uses the same word break rules as NextWordStart.
-func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, tokenTree *parser.TokenTree, pos uint64) uint64 {
-	nextWordPos := NextWordStart(textTree, tokenTree, pos, false)
+func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint64 {
+	nextWordPos := NextWordStart(textTree, pos, false)
 	endOfLinePos := NextLineBoundary(textTree, true, pos)
 	onLastWordInDocument := bool(nextWordPos+1 == textTree.NumChars())
 	if onLastWordInDocument || endOfLinePos < nextWordPos {

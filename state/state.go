@@ -52,7 +52,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		},
 		search:         searchState{},
 		undoLog:        undo.NewLog(),
-		syntaxLanguage: syntax.LanguageUndefined,
+		syntaxLanguage: syntax.LanguagePlaintext,
 		tokenTree:      nil,
 		tokenizer:      nil,
 		tabSize:        uint64(config.DefaultTabSize),

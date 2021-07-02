@@ -11,8 +11,7 @@ import (
 type Language int
 
 const (
-	LanguageUndefined = Language(iota)
-	LanguagePlaintext
+	LanguagePlaintext = Language(iota)
 	LanguageJson
 	LanguageYaml
 	LanguageGo
@@ -22,7 +21,6 @@ const (
 )
 
 var AllLanguages = []Language{
-	LanguagePlaintext,
 	LanguageJson,
 	LanguageYaml,
 	LanguageGo,
@@ -33,8 +31,6 @@ var AllLanguages = []Language{
 
 func (language Language) String() string {
 	switch language {
-	case LanguageUndefined:
-		return "undefined"
 	case LanguagePlaintext:
 		return "plaintext"
 	case LanguageJson:
@@ -56,8 +52,6 @@ func (language Language) String() string {
 
 func LanguageFromString(s string) Language {
 	switch s {
-	case "undefined":
-		return LanguageUndefined
 	case "plaintext":
 		return LanguagePlaintext
 	case "json":
@@ -74,16 +68,14 @@ func LanguageFromString(s string) Language {
 		return LanguageDevlog
 	default:
 		log.Printf("Unrecognized syntax language '%s'\n", s)
-		return LanguageUndefined
+		return LanguagePlaintext
 	}
 }
 
 // TokenizerForLanguage returns a tokenizer for the specified language.
-// If no tokenizer is available (e.g. for LanguageUndefined), this returns nil.
+// If no tokenizer is available (e.g. for LanguagePlaintext) this returns nil.
 func TokenizerForLanguage(language Language) *parser.Tokenizer {
 	switch language {
-	case LanguagePlaintext:
-		return PlaintextTokenizer
 	case LanguageJson:
 		return JsonTokenizer
 	case LanguageYaml:

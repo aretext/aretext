@@ -198,9 +198,9 @@ func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 		return p.tokenKeywordStyle
 	case parser.TokenRoleNumber:
 		return p.tokenNumberStyle
-	case parser.TokenRoleString, parser.TokenRoleStringQuote:
+	case parser.TokenRoleString:
 		return p.tokenStringStyle
-	case parser.TokenRoleComment, parser.TokenRoleCommentDelimiter:
+	case parser.TokenRoleComment:
 		return p.tokenCommentStyle
 	case parser.TokenRoleCustom1:
 		return p.tokenCustom1Style

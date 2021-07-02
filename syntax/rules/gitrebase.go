@@ -33,6 +33,11 @@ func GitRebaseRules() []parser.TokenizerRule {
 				},
 			},
 		},
+		// This prevents the keyword rule from matching substrings of a symbol.
+		{
+			Regexp:    `-?([a-zA-Z0-9._\-])+`,
+			TokenRole: parser.TokenRoleNone,
+		},
 	}
 	return append(gitRebaseRules, gitCommitRules...)
 }

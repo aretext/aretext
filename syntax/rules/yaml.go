@@ -10,16 +10,6 @@ func YamlRules() []parser.TokenizerRule {
 		{
 			Regexp:    singleQuoteStringPattern,
 			TokenRole: parser.TokenRoleString,
-			SubRules: []parser.TokenizerRule{
-				{
-					Regexp:    `^'`,
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-				{
-					Regexp:    `'$`,
-					TokenRole: parser.TokenRoleStringQuote,
-				},
-			},
 		},
 		{
 			Regexp:    singleQuoteStringPattern + `[ \t]*:`,

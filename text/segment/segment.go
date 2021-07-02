@@ -75,5 +75,5 @@ func (seg *Segment) IsWhitespace() bool {
 			return false
 		}
 	}
-	return true
+	return len(seg.runes) > 0
 }

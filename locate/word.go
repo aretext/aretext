@@ -10,38 +10,7 @@ import (
 //  1) at the first non-whitespace after a whitespace
 //  2) at the start of an empty line
 func NextWordStart(textTree *text.Tree, pos uint64, includeEndOfFile bool) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.Empty()
-	var whitespaceFlag, newlineFlag bool
-	var offset, prevOffset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			if includeEndOfFile {
-				// Stop after the last character in the document.
-				return pos + offset
-			} else {
-				// Stop on (not after) the last character in the document.
-				return pos + prevOffset
-			}
-		}
-		if seg.HasNewline() {
-			if newlineFlag {
-				// An empty line is a word boundary.
-				break
-			}
-			newlineFlag = true
-		}
-		if seg.IsWhitespace() {
-			whitespaceFlag = true
-		} else if whitespaceFlag {
-			// Non-whitespace after whitespace is a word boundary.
-			break
-		}
-		prevOffset = offset
-		offset += seg.NumRunes()
-	}
-	return pos + offset
+	return nextWordBoundary(textTree, pos, includeEndOfFile, true, wordStartBoundary)
 }
 
 // NextWordStartInLine locates the start of the next word or the end of the line, whichever comes first.
@@ -58,102 +27,23 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 // PrevWordStart locates the start of the word before the cursor.
 // It uses the same word break rules as NextWordStart.
 func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.Empty()
-	var nonwhitespaceFlag, newlineFlag bool
-	var offset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			// Start of the document.
-			return 0
-		}
-		if seg.HasNewline() {
-			if newlineFlag {
-				// An empty line is a word boundary.
-				return pos - offset
-			}
-			newlineFlag = true
-		}
-		if seg.IsWhitespace() {
-			if nonwhitespaceFlag {
-				// A whitespace after a nonwhitespace is a word boundary.
-				return pos - offset
-			}
-		} else {
-			nonwhitespaceFlag = true
-		}
-		offset += seg.NumRunes()
-	}
+	return prevWordBoundary(textTree, pos, true, wordStartBoundary)
 }
 
 // NextWordEnd locates the next word-end boundary after the cursor.
 // The word break rules are the same as for NextWordStart, except
 // that empty lines are NOT treated as word boundaries.
 func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.Empty()
-	var prevWasNonwhitespace bool
-	var offset, prevOffset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			// Stop on (not after) the last character in the document.
-			return pos + prevOffset
-		}
-
-		if seg.IsWhitespace() {
-			if prevWasNonwhitespace && offset > 1 {
-				// Nonwhitespace followed by whitespace should stop at the nonwhitespace.
-				return pos + prevOffset
-			}
-			prevWasNonwhitespace = false
-		} else {
-			prevWasNonwhitespace = true
-		}
-
-		prevOffset = offset
-		offset += seg.NumRunes()
-	}
+	return nextWordBoundary(textTree, pos, false, false, wordEndBoundary)
 }
 
 // CurrentWordStart locates the start of the word or whitespace under the cursor.
 // Word boundaries are determined by whitespace.
 func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
-		return findEndOfWordBeforeWhitespace(textTree, pos)
+		return prevWordBoundary(textTree, pos, false, whitespaceStartBoundary)
 	} else {
-		return findStartOfCurrentWord(textTree, pos)
-	}
-}
-
-func findEndOfWordBeforeWhitespace(textTree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.Empty()
-	var offset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			return 0
-		} else if seg.HasNewline() || !seg.IsWhitespace() {
-			return pos - offset
-		}
-		offset += seg.NumRunes()
-	}
-}
-
-func findStartOfCurrentWord(textTree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg := segment.Empty()
-	var offset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			return 0
-		} else if seg.HasNewline() || seg.IsWhitespace() {
-			return pos - offset
-		}
-		offset += seg.NumRunes()
+		return prevWordBoundary(textTree, pos, false, currentWordStartBoundary)
 	}
 }
 
@@ -165,7 +55,7 @@ func CurrentWordEnd(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
 		return findStartOfWordAfterWhitespace(textTree, pos)
 	} else {
-		return findEndOfCurrentWord(textTree, pos)
+		return nextWordBoundary(textTree, pos, true, true, currentWordEndBoundary)
 	}
 }
 
@@ -179,22 +69,6 @@ func findStartOfWordAfterWhitespace(textTree *text.Tree, pos uint64) uint64 {
 	}
 }
 
-func findEndOfCurrentWord(textTree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg := segment.Empty()
-	var offset uint64
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			break
-		} else if seg.HasNewline() || seg.IsWhitespace() {
-			break
-		}
-		offset += seg.NumRunes()
-	}
-	return pos + offset
-}
-
 // CurrentWordEndWithTrailingWhitespace returns the end of the whitespace after current word.
 // It uses the same word break rules as NextWordStart.
 func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint64 {
@@ -206,6 +80,104 @@ func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint6
 	} else {
 		return nextWordPos
 	}
+}
+
+// wordBoundaryFunc returns whether a word boundary occurs between two grapheme clusters.
+// The segments s1 and s2 are given in the order they appear in the text, even when reading backwards.
+type wordBoundaryFunc func(s1, s2 *segment.Segment) bool
+
+// nextWordBoundary finds the next word boundary after the current position.
+func nextWordBoundary(textTree *text.Tree, pos uint64, includeEndOfFile bool, includeBoundary bool, f wordBoundaryFunc) uint64 {
+	var offset, prevOffset uint64
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+	seg, prevSeg := segment.Empty(), segment.Empty()
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof {
+			if includeEndOfFile {
+				// Stop after the last character in the document.
+				return pos + offset
+			} else {
+				// Stop on (not after) the last character in the document.
+				return pos + prevOffset
+			}
+		}
+
+		if f(prevSeg, seg) {
+			if includeBoundary && offset > 0 {
+				// Stop at the position after the boundary.
+				return pos + offset
+			} else if prevOffset > 0 {
+				// Stop at the position before the boundary.
+				return pos + prevOffset
+			}
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+		seg, prevSeg = prevSeg, seg
+	}
+}
+
+// prevWordBoundary finds the word boundary on or before the current position.
+func prevWordBoundary(textTree *text.Tree, pos uint64, skipStartPos bool, f wordBoundaryFunc) uint64 {
+	var offset uint64
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
+	seg, prevSeg := segment.Empty(), segment.Empty()
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof {
+			// Start of the document.
+			return 0
+		}
+
+		if f(seg, prevSeg) && !(skipStartPos && offset == 0) {
+			return pos - offset
+		}
+
+		offset += seg.NumRunes()
+		seg, prevSeg = prevSeg, seg
+	}
+}
+
+func wordStartBoundary(s1, s2 *segment.Segment) bool {
+	if s1.NumRunes() == 0 || s2.NumRunes() == 0 {
+		return false
+	}
+
+	if s1.HasNewline() && s2.HasNewline() {
+		return true
+	}
+
+	if s1.IsWhitespace() && !s2.IsWhitespace() {
+		return true
+	}
+
+	return false
+}
+
+func wordEndBoundary(s1, s2 *segment.Segment) bool {
+	if s1.NumRunes() == 0 || s2.NumRunes() == 0 {
+		return false
+	}
+
+	if !s1.IsWhitespace() && s2.IsWhitespace() {
+		return true
+	}
+
+	return false
+}
+
+func whitespaceStartBoundary(s1, s2 *segment.Segment) bool {
+	return s1.HasNewline() || !s1.IsWhitespace()
+}
+
+func currentWordStartBoundary(s1, s2 *segment.Segment) bool {
+	return s1.HasNewline() || s1.IsWhitespace()
+}
+
+func currentWordEndBoundary(s1, s2 *segment.Segment) bool {
+	return s2.HasNewline() || s2.IsWhitespace()
 }
 
 // isWhitespace returns whether the character at the position is whitespace.

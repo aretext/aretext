@@ -9,6 +9,7 @@ import (
 // Word boundaries occur:
 //  1) at the first non-whitespace after a whitespace
 //  2) at the start of an empty line
+//  3) between punctuation and non-punctuation
 func NextWordStart(textTree *text.Tree, pos uint64, includeEndOfFile bool) uint64 {
 	return nextWordBoundary(textTree, pos, includeEndOfFile, true, wordStartBoundary)
 }
@@ -38,7 +39,7 @@ func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
 }
 
 // CurrentWordStart locates the start of the word or whitespace under the cursor.
-// Word boundaries are determined by whitespace.
+// Word boundaries are determined by whitespace and punctuation.
 func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
 		return prevWordBoundary(textTree, pos, false, whitespaceStartBoundary)
@@ -50,7 +51,7 @@ func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
 // CurrentWordEnd locates the end of the word or whitespace under the cursor.
 // The returned position is one past the last character in the word or whitespace,
 // so this can be used to delete all the characters in the word.
-// Word boundaries are determined by whitespace.
+// Word boundaries are determined by whitespace and punctuation.
 func CurrentWordEnd(textTree *text.Tree, pos uint64) uint64 {
 	if isWhitespaceAtPos(textTree, pos) {
 		return findStartOfWordAfterWhitespace(textTree, pos)
@@ -149,7 +150,12 @@ func wordStartBoundary(s1, s2 *segment.Segment) bool {
 		return true
 	}
 
-	if s1.IsWhitespace() && !s2.IsWhitespace() {
+	s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+	if s1ws && !s2ws {
+		return true
+	}
+
+	if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
 		return true
 	}
 
@@ -161,7 +167,13 @@ func wordEndBoundary(s1, s2 *segment.Segment) bool {
 		return false
 	}
 
-	if !s1.IsWhitespace() && s2.IsWhitespace() {
+	s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+
+	if !s1ws && s2ws {
+		return true
+	}
+
+	if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
 		return true
 	}
 
@@ -173,11 +185,25 @@ func whitespaceStartBoundary(s1, s2 *segment.Segment) bool {
 }
 
 func currentWordStartBoundary(s1, s2 *segment.Segment) bool {
-	return s1.HasNewline() || s1.IsWhitespace()
+	return s1.HasNewline() || s1.IsWhitespace() || isPunct(s1)
 }
 
 func currentWordEndBoundary(s1, s2 *segment.Segment) bool {
-	return s2.HasNewline() || s2.IsWhitespace()
+	return s2.HasNewline() || s2.IsWhitespace() || isPunct(s2)
+}
+
+// isPunct returns whether a grapheme cluster should be treated as punctuation for determining word boundaries.
+func isPunct(seg *segment.Segment) bool {
+	if seg.NumRunes() != 1 {
+		return false
+	}
+
+	r := seg.Runes()[0]
+
+	// These ranges are the same as the unicode punctuation class for ASCII characters, except that:
+	// * underscores ('_') are NOT treated as punctuation
+	// * the following chars ARE treated as punctuation: '$', '+', '<', '=', '>', '^', '`', '|', '~'
+	return (r >= '!' && r <= '/') || (r >= ':' && r <= '@') || (r >= '[' && r <= '^') || (r == '`' || r >= '{' && r <= '~')
 }
 
 // isWhitespace returns whether the character at the position is whitespace.

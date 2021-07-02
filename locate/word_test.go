@@ -1,12 +1,14 @@
 package locate
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/text/segment"
 )
 
 func TestNextWordStart(t *testing.T) {
@@ -72,6 +74,30 @@ func TestNextWordStart(t *testing.T) {
 			includeEndOfFile: true,
 			pos:              1,
 			expectedPos:      3,
+		},
+		{
+			name:        "non-punctuation to punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			expectedPos: 3,
+		},
+		{
+			name:        "punctuation to non-punctuation",
+			inputString: "abc/def/ghi",
+			pos:         3,
+			expectedPos: 4,
+		},
+		{
+			name:        "repeated punctuation",
+			inputString: "abc////cde",
+			pos:         3,
+			expectedPos: 7,
+		},
+		{
+			name:        "underscores treated as non-punctuation",
+			inputString: "abc_def ghi",
+			pos:         0,
+			expectedPos: 8,
 		},
 	}
 
@@ -261,6 +287,12 @@ func TestNextWordEnd(t *testing.T) {
 			pos:         4,
 			expectedPos: 10,
 		},
+		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			expectedPos: 2,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -321,6 +353,12 @@ func TestPrevWordStart(t *testing.T) {
 			inputString: "\n\n\n\n",
 			pos:         2,
 			expectedPos: 1,
+		},
+		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         5,
+			expectedPos: 4,
 		},
 	}
 
@@ -407,6 +445,12 @@ func TestCurrentWordStart(t *testing.T) {
 			pos:         4,
 			expectedPos: 4,
 		},
+		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         5,
+			expectedPos: 4,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -491,6 +535,12 @@ func TestCurrentWordEnd(t *testing.T) {
 			inputString: "abc\n\n   123",
 			pos:         4,
 			expectedPos: 4,
+		},
+		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         5,
+			expectedPos: 7,
 		},
 	}
 
@@ -591,6 +641,150 @@ func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
 			require.NoError(t, err)
 			actualPos := CurrentWordEndWithTrailingWhitespace(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
+		})
+	}
+}
+
+func TestIsPunct(t *testing.T) {
+	testCases := []struct {
+		r           rune
+		expectPunct bool
+	}{
+		{r: '\x00', expectPunct: false},
+		{r: '\x01', expectPunct: false},
+		{r: '\x02', expectPunct: false},
+		{r: '\x03', expectPunct: false},
+		{r: '\x04', expectPunct: false},
+		{r: '\x05', expectPunct: false},
+		{r: '\x06', expectPunct: false},
+		{r: '\a', expectPunct: false},
+		{r: '\b', expectPunct: false},
+		{r: '\t', expectPunct: false},
+		{r: '\n', expectPunct: false},
+		{r: '\v', expectPunct: false},
+		{r: '\f', expectPunct: false},
+		{r: '\r', expectPunct: false},
+		{r: '\x0e', expectPunct: false},
+		{r: '\x0f', expectPunct: false},
+		{r: '\x10', expectPunct: false},
+		{r: '\x11', expectPunct: false},
+		{r: '\x12', expectPunct: false},
+		{r: '\x13', expectPunct: false},
+		{r: '\x14', expectPunct: false},
+		{r: '\x15', expectPunct: false},
+		{r: '\x16', expectPunct: false},
+		{r: '\x17', expectPunct: false},
+		{r: '\x18', expectPunct: false},
+		{r: '\x19', expectPunct: false},
+		{r: '\x1a', expectPunct: false},
+		{r: '\x1b', expectPunct: false},
+		{r: '\x1c', expectPunct: false},
+		{r: '\x1d', expectPunct: false},
+		{r: '\x1e', expectPunct: false},
+		{r: '\x1f', expectPunct: false},
+		{r: ' ', expectPunct: false},
+		{r: '!', expectPunct: true},
+		{r: '"', expectPunct: true},
+		{r: '#', expectPunct: true},
+		{r: '$', expectPunct: true},
+		{r: '%', expectPunct: true},
+		{r: '&', expectPunct: true},
+		{r: '\'', expectPunct: true},
+		{r: '(', expectPunct: true},
+		{r: ')', expectPunct: true},
+		{r: '*', expectPunct: true},
+		{r: '+', expectPunct: true},
+		{r: ',', expectPunct: true},
+		{r: '-', expectPunct: true},
+		{r: '.', expectPunct: true},
+		{r: '/', expectPunct: true},
+		{r: '0', expectPunct: false},
+		{r: '1', expectPunct: false},
+		{r: '2', expectPunct: false},
+		{r: '3', expectPunct: false},
+		{r: '4', expectPunct: false},
+		{r: '5', expectPunct: false},
+		{r: '6', expectPunct: false},
+		{r: '7', expectPunct: false},
+		{r: '8', expectPunct: false},
+		{r: '9', expectPunct: false},
+		{r: ':', expectPunct: true},
+		{r: ';', expectPunct: true},
+		{r: '<', expectPunct: true},
+		{r: '=', expectPunct: true},
+		{r: '>', expectPunct: true},
+		{r: '?', expectPunct: true},
+		{r: '@', expectPunct: true},
+		{r: 'A', expectPunct: false},
+		{r: 'B', expectPunct: false},
+		{r: 'C', expectPunct: false},
+		{r: 'D', expectPunct: false},
+		{r: 'E', expectPunct: false},
+		{r: 'F', expectPunct: false},
+		{r: 'G', expectPunct: false},
+		{r: 'H', expectPunct: false},
+		{r: 'I', expectPunct: false},
+		{r: 'J', expectPunct: false},
+		{r: 'K', expectPunct: false},
+		{r: 'L', expectPunct: false},
+		{r: 'M', expectPunct: false},
+		{r: 'N', expectPunct: false},
+		{r: 'O', expectPunct: false},
+		{r: 'P', expectPunct: false},
+		{r: 'Q', expectPunct: false},
+		{r: 'R', expectPunct: false},
+		{r: 'S', expectPunct: false},
+		{r: 'T', expectPunct: false},
+		{r: 'U', expectPunct: false},
+		{r: 'V', expectPunct: false},
+		{r: 'W', expectPunct: false},
+		{r: 'X', expectPunct: false},
+		{r: 'Y', expectPunct: false},
+		{r: 'Z', expectPunct: false},
+		{r: '[', expectPunct: true},
+		{r: '\\', expectPunct: true},
+		{r: ']', expectPunct: true},
+		{r: '^', expectPunct: true},
+		{r: '_', expectPunct: false},
+		{r: '`', expectPunct: true},
+		{r: 'a', expectPunct: false},
+		{r: 'b', expectPunct: false},
+		{r: 'c', expectPunct: false},
+		{r: 'd', expectPunct: false},
+		{r: 'e', expectPunct: false},
+		{r: 'f', expectPunct: false},
+		{r: 'g', expectPunct: false},
+		{r: 'h', expectPunct: false},
+		{r: 'i', expectPunct: false},
+		{r: 'j', expectPunct: false},
+		{r: 'k', expectPunct: false},
+		{r: 'l', expectPunct: false},
+		{r: 'm', expectPunct: false},
+		{r: 'n', expectPunct: false},
+		{r: 'o', expectPunct: false},
+		{r: 'p', expectPunct: false},
+		{r: 'q', expectPunct: false},
+		{r: 'r', expectPunct: false},
+		{r: 's', expectPunct: false},
+		{r: 't', expectPunct: false},
+		{r: 'u', expectPunct: false},
+		{r: 'v', expectPunct: false},
+		{r: 'w', expectPunct: false},
+		{r: 'x', expectPunct: false},
+		{r: 'y', expectPunct: false},
+		{r: 'z', expectPunct: false},
+		{r: '{', expectPunct: true},
+		{r: '|', expectPunct: true},
+		{r: '}', expectPunct: true},
+		{r: '~', expectPunct: true},
+		{r: '\u007f', expectPunct: false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%q", tc.r), func(t *testing.T) {
+			seg := segment.Empty()
+			seg.Extend([]rune{tc.r})
+			assert.Equal(t, tc.expectPunct, isPunct(seg))
 		})
 	}
 }

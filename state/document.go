@@ -52,6 +52,9 @@ func ReloadDocument(state *EditorState) {
 	// Store the configuration we want to preserve.
 	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
 	oldCursorPos := state.documentBuffer.cursor.position
+	oldAutoIndent := state.documentBuffer.autoIndent
+	oldShowTabs := state.documentBuffer.showTabs
+	oldShowLineNum := state.documentBuffer.showLineNum
 
 	// Reload the document.
 	_, err := loadDocumentAndResetState(state, path, true)
@@ -70,6 +73,11 @@ func ReloadDocument(state *EditorState) {
 	setCursorAfterLoad(state, func(LocatorParams) uint64 {
 		return oldCursorPos
 	})
+
+	// Restore other configuration that might have been toggled with menu commands.
+	state.documentBuffer.autoIndent = oldAutoIndent
+	state.documentBuffer.showTabs = oldShowTabs
+	state.documentBuffer.showLineNum = oldShowLineNum
 
 	reportReloadSuccess(state, path)
 }

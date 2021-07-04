@@ -76,7 +76,7 @@ func CursorDown(s *state.EditorState) {
 
 func CursorNextWordStart(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordStart(params.TextTree, params.CursorPos, false)
+		return locate.NextWordStart(params.TextTree, params.CursorPos)
 	})
 }
 

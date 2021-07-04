@@ -10,42 +10,154 @@ import (
 //  1) at the first non-whitespace after a whitespace
 //  2) at the start of an empty line
 //  3) between punctuation and non-punctuation
-func NextWordStart(textTree *text.Tree, pos uint64, includeEndOfFile bool) uint64 {
-	return nextWordBoundary(textTree, pos, includeEndOfFile, true, wordStartBoundary)
+func NextWordStart(textTree *text.Tree, pos uint64) uint64 {
+	return nextWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s2.NumRunes() == 0 {
+			// Stop before EOF.
+			return boundaryBefore
+		}
+
+		if gcOffset == 0 {
+			// Skip the first boundary so the cursor doesn't get stuck
+			// at the start of the current word.
+			return noBoundary
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if s1ws && !s2ws {
+			// Stop on first non-whitespace after whitespace.
+			return boundaryAfter
+		}
+
+		if s1.HasNewline() && s2.HasNewline() {
+			// Stop on empty line.
+			return boundaryAfter
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop after punctuation -> non-punctuation
+			// and non-punctuation -> punctuation.
+			return boundaryAfter
+		}
+
+		return noBoundary
+	})
 }
 
 // NextWordStartInLine locates the start of the next word or the end of the line, whichever comes first.
 func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
-	nextWordStart := NextWordStart(textTree, pos, true)
-	endOfLine := NextLineBoundary(textTree, true, pos)
-	if nextWordStart < endOfLine {
-		return nextWordStart
-	} else {
-		return endOfLine
-	}
+	return nextWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s2.NumRunes() == 0 {
+			// Stop after EOF.
+			return boundaryAfter
+		}
+
+		if s2.HasNewline() {
+			// Stop at end of line.
+			return boundaryAfter
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if s1ws && !s2ws {
+			// Stop on first non-whitespace after whitespace.
+			return boundaryAfter
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop after punctuation -> non-punctuation
+			// and non-punctuation -> punctuation.
+			return boundaryAfter
+		}
+
+		return noBoundary
+	})
 }
 
 // PrevWordStart locates the start of the word before the cursor.
 // It uses the same word break rules as NextWordStart.
 func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
-	return prevWordBoundary(textTree, pos, true, wordStartBoundary)
+	return prevWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if gcOffset == 0 {
+			// Skip the first boundary so the cursor doesn't get stuck
+			// at the start of the current word.
+			return noBoundary
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if s1ws && !s2ws {
+			// Stop on last non-whitespace before whitespace.
+			return boundaryAfter
+		}
+
+		if s1.HasNewline() && s2.HasNewline() {
+			// Stop on empty line.
+			return boundaryAfter
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop after punctuation -> non-punctuation
+			// and non-punctuation -> punctuation.
+			return boundaryAfter
+		}
+
+		return noBoundary
+	})
 }
 
 // NextWordEnd locates the next word-end boundary after the cursor.
 // The word break rules are the same as for NextWordStart, except
 // that empty lines are NOT treated as word boundaries.
 func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
-	return nextWordBoundary(textTree, pos, false, false, wordEndBoundary)
+	return nextWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s2.NumRunes() == 0 {
+			// Stop before EOF.
+			return boundaryBefore
+		}
+
+		if gcOffset <= 1 {
+			// Skip the first boundary so the cursor doesn't get stuck
+			// at the end of the current word.
+			return noBoundary
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if !s1ws && s2ws {
+			// Stop on last non-whitespace before whitespace.
+			return boundaryBefore
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop after punctuation -> non-punctuation
+			// and non-punctuation -> punctuation.
+			return boundaryBefore
+		}
+
+		return noBoundary
+	})
 }
 
 // CurrentWordStart locates the start of the word or whitespace under the cursor.
 // Word boundaries are determined by whitespace and punctuation.
 func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
-	if isWhitespaceAtPos(textTree, pos) {
-		return prevWordBoundary(textTree, pos, false, whitespaceStartBoundary)
-	} else {
-		return prevWordBoundary(textTree, pos, false, currentWordStartBoundary)
-	}
+	return prevWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s1.HasNewline() {
+			// Stop at end of line.
+			return boundaryAfter
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if s1ws != s2ws {
+			// Stop at whitespace / non-whitespace boundary.
+			return boundaryAfter
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop at punctuation boundary.
+			return boundaryAfter
+		}
+
+		return noBoundary
+	})
 }
 
 // CurrentWordEnd locates the end of the word or whitespace under the cursor.
@@ -53,143 +165,62 @@ func CurrentWordStart(textTree *text.Tree, pos uint64) uint64 {
 // so this can be used to delete all the characters in the word.
 // Word boundaries are determined by whitespace and punctuation.
 func CurrentWordEnd(textTree *text.Tree, pos uint64) uint64 {
-	if isWhitespaceAtPos(textTree, pos) {
-		return findStartOfWordAfterWhitespace(textTree, pos)
-	} else {
-		return nextWordBoundary(textTree, pos, true, true, currentWordEndBoundary)
-	}
-}
+	return nextWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s2.NumRunes() == 0 {
+			// Stop after EOF.
+			return boundaryAfter
+		}
 
-func findStartOfWordAfterWhitespace(textTree *text.Tree, pos uint64) uint64 {
-	nextWordStartPos := NextWordStart(textTree, pos, false)
-	nextLineBoundaryPos := NextLineBoundary(textTree, true, pos)
-	if nextWordStartPos < nextLineBoundaryPos {
-		return nextWordStartPos
-	} else {
-		return nextLineBoundaryPos
-	}
+		if s2.HasNewline() {
+			// Stop at newline.
+			return boundaryAfter
+		}
+
+		if gcOffset == 0 {
+			// Skip the first boundary check (character before and the initial cursor)
+			// to avoid getting stuck at the current position.
+			return noBoundary
+		}
+
+		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
+		if s1ws != s2ws {
+			// Stop after non-whitespace followed by whitespace.
+			return boundaryAfter
+		}
+
+		if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
+			// Stop at punctuation boundary.
+			return boundaryAfter
+		}
+
+		return noBoundary
+	})
 }
 
 // CurrentWordEndWithTrailingWhitespace returns the end of the whitespace after current word.
-// It uses the same word break rules as NextWordStart.
 func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint64 {
-	nextWordPos := NextWordStart(textTree, pos, false)
-	endOfLinePos := NextLineBoundary(textTree, true, pos)
-	onLastWordInDocument := bool(nextWordPos+1 == textTree.NumChars())
-	if onLastWordInDocument || endOfLinePos < nextWordPos {
-		return endOfLinePos
-	} else {
-		return nextWordPos
-	}
-}
+	// Find the end of the current word.
+	endOfWordPos := CurrentWordEnd(textTree, pos)
 
-// wordBoundaryFunc returns whether a word boundary occurs between two grapheme clusters.
-// The segments s1 and s2 are given in the order they appear in the text, even when reading backwards.
-type wordBoundaryFunc func(s1, s2 *segment.Segment) bool
-
-// nextWordBoundary finds the next word boundary after the current position.
-func nextWordBoundary(textTree *text.Tree, pos uint64, includeEndOfFile bool, includeBoundary bool, f wordBoundaryFunc) uint64 {
-	var offset, prevOffset uint64
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
-	seg, prevSeg := segment.Empty(), segment.Empty()
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			if includeEndOfFile {
-				// Stop after the last character in the document.
-				return pos + offset
-			} else {
-				// Stop on (not after) the last character in the document.
-				return pos + prevOffset
-			}
+	// Continue to the next non-whitespace or line boundary.
+	return nextWordBoundary(textTree, endOfWordPos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+		if s2.NumRunes() == 0 {
+			// Stop after EOF.
+			return boundaryAfter
 		}
 
-		if f(prevSeg, seg) {
-			if includeBoundary && offset > 0 {
-				// Stop at the position after the boundary.
-				return pos + offset
-			} else if prevOffset > 0 {
-				// Stop at the position before the boundary.
-				return pos + prevOffset
-			}
+		if s2.HasNewline() {
+			// Stop at newline.
+			return boundaryAfter
 		}
 
-		prevOffset = offset
-		offset += seg.NumRunes()
-		seg, prevSeg = prevSeg, seg
-	}
-}
-
-// prevWordBoundary finds the word boundary on or before the current position.
-func prevWordBoundary(textTree *text.Tree, pos uint64, skipStartPos bool, f wordBoundaryFunc) uint64 {
-	var offset uint64
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	seg, prevSeg := segment.Empty(), segment.Empty()
-	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
-			// Start of the document.
-			return 0
+		if !s2.IsWhitespace() {
+			// Stop at first non-whitespace.
+			return boundaryAfter
 		}
 
-		if f(seg, prevSeg) && !(skipStartPos && offset == 0) {
-			return pos - offset
-		}
-
-		offset += seg.NumRunes()
-		seg, prevSeg = prevSeg, seg
-	}
-}
-
-func wordStartBoundary(s1, s2 *segment.Segment) bool {
-	if s1.NumRunes() == 0 || s2.NumRunes() == 0 {
-		return false
-	}
-
-	if s1.HasNewline() && s2.HasNewline() {
-		return true
-	}
-
-	s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
-	if s1ws && !s2ws {
-		return true
-	}
-
-	if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
-		return true
-	}
-
-	return false
-}
-
-func wordEndBoundary(s1, s2 *segment.Segment) bool {
-	if s1.NumRunes() == 0 || s2.NumRunes() == 0 {
-		return false
-	}
-
-	s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
-
-	if !s1ws && s2ws {
-		return true
-	}
-
-	if !s1ws && !s2ws && isPunct(s1) != isPunct(s2) {
-		return true
-	}
-
-	return false
-}
-
-func whitespaceStartBoundary(s1, s2 *segment.Segment) bool {
-	return s1.HasNewline() || !s1.IsWhitespace()
-}
-
-func currentWordStartBoundary(s1, s2 *segment.Segment) bool {
-	return s1.HasNewline() || s1.IsWhitespace() || isPunct(s1)
-}
-
-func currentWordEndBoundary(s1, s2 *segment.Segment) bool {
-	return s2.HasNewline() || s2.IsWhitespace() || isPunct(s2)
+		return noBoundary
+	})
 }
 
 // isPunct returns whether a grapheme cluster should be treated as punctuation for determining word boundaries.
@@ -206,10 +237,102 @@ func isPunct(seg *segment.Segment) bool {
 	return (r >= '!' && r <= '/') || (r >= ':' && r <= '@') || (r >= '[' && r <= '^') || (r == '`' || r >= '{' && r <= '~')
 }
 
-// isWhitespace returns whether the character at the position is whitespace.
-func isWhitespaceAtPos(tree *text.Tree, pos uint64) bool {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+type wordBoundaryDecision int
+
+const (
+	// noBoundary means that there is NO boundary between two grapheme clusters.
+	noBoundary = wordBoundaryDecision(iota)
+
+	// boundaryBefore means that the cursor should be placed on the FIRST grapheme cluster (before the boundary).
+	boundaryBefore
+
+	// boundaryAfter means that the cursor should be placed on the SECOND grapheme cluster (after the boundary).
+	boundaryAfter
+)
+
+// wordBoundaryFunc decides whether a boundary exists between two grapheme clusters.
+// The grapheme clusters are passed in the order they appear in the text,
+// regardless of the read direction.
+type wordBoundaryFunc func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision
+
+// nextWordBoundary finds a position based on the next word boundary after a given position.
+// It starts with the boundary between the grapheme clusters before and after the given position.
+func nextWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint64 {
+	var offset, prevOffset, gcOffset uint64
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+	seg := segment.Empty()
+	prevSeg := adjacentGraphemeCluster(textTree, pos, text.ReadDirectionBackward)
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof {
+			// Let the wordBoundaryFunc decide whether to place the cursor
+			// on or after the last position in the document.
+			seg = segment.Empty()
+		}
+
+		switch f(gcOffset, prevSeg, seg) {
+		case noBoundary:
+			if eof {
+				// Can't go past the end of the text.
+				return pos + offset
+			}
+			break
+		case boundaryBefore:
+			return pos + prevOffset
+		case boundaryAfter:
+			return pos + offset
+		}
+
+		prevOffset = offset
+		offset += seg.NumRunes()
+		gcOffset++
+		seg, prevSeg = prevSeg, seg
+	}
+}
+
+// prevWordBoundary finds a position based on the word boundary before a given position.
+// It starts with the boundary between the grapheme clusters before and after the given position.
+func prevWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint64 {
+	var offset, gcOffset uint64
+	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
+	seg := segment.Empty()
+	prevSeg := adjacentGraphemeCluster(textTree, pos, text.ReadDirectionForward)
+	for {
+		eof := segment.NextOrEof(segmentIter, seg)
+		if eof {
+			// Start of document
+			return 0
+		}
+
+		// Pass the grapheme clusters in the order they appear in the text
+		// (reverse of the order in which we read them).
+		switch f(gcOffset, seg, prevSeg) {
+		case noBoundary:
+			if eof {
+				// Can't go past the start of the text.
+				return pos - offset
+			}
+			break
+		case boundaryBefore:
+			return pos - offset - seg.NumRunes()
+		case boundaryAfter:
+			return pos - offset
+		}
+
+		offset += seg.NumRunes()
+		gcOffset++
+		seg, prevSeg = prevSeg, seg
+	}
+}
+
+// adjacentGraphemeCluster finds a grapheme cluster before or after a position.
+// If at the start/end of the text, this returns an empty segment.
+func adjacentGraphemeCluster(tree *text.Tree, pos uint64, direction text.ReadDirection) *segment.Segment {
+	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, direction)
 	seg := segment.Empty()
 	eof := segment.NextOrEof(segmentIter, seg)
-	return !eof && seg.IsWhitespace()
+	if eof {
+		return segment.Empty()
+	}
+	return seg
 }

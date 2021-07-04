@@ -13,11 +13,10 @@ import (
 
 func TestNextWordStart(t *testing.T) {
 	testCases := []struct {
-		name             string
-		inputString      string
-		includeEndOfFile bool
-		pos              uint64
-		expectedPos      uint64
+		name        string
+		inputString string
+		pos         uint64
+		expectedPos uint64
 	}{
 		{
 			name:        "empty",
@@ -62,20 +61,6 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 2,
 		},
 		{
-			name:             "last word, do not include eof",
-			inputString:      "abc",
-			includeEndOfFile: false,
-			pos:              1,
-			expectedPos:      2,
-		},
-		{
-			name:             "last word, include eof",
-			inputString:      "abc",
-			includeEndOfFile: true,
-			pos:              1,
-			expectedPos:      3,
-		},
-		{
 			name:        "non-punctuation to punctuation",
 			inputString: "abc/def/ghi",
 			pos:         1,
@@ -105,7 +90,7 @@ func TestNextWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.includeEndOfFile)
+			actualPos := NextWordStart(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -446,10 +431,22 @@ func TestCurrentWordStart(t *testing.T) {
 			expectedPos: 4,
 		},
 		{
-			name:        "punctuation",
+			name:        "from non-punctuation, stop at punctuation",
 			inputString: "abc/def/ghi",
 			pos:         5,
 			expectedPos: 4,
+		},
+		{
+			name:        "on single punctuation char",
+			inputString: "abc/ghi",
+			pos:         3,
+			expectedPos: 3,
+		},
+		{
+			name:        "on multiple punctuation chars",
+			inputString: "abc///ghi",
+			pos:         4,
+			expectedPos: 3,
 		},
 	}
 
@@ -542,6 +539,24 @@ func TestCurrentWordEnd(t *testing.T) {
 			pos:         5,
 			expectedPos: 7,
 		},
+		{
+			name:        "from non-punctuation, stop at punctuation",
+			inputString: "abc/def/ghi",
+			pos:         5,
+			expectedPos: 7,
+		},
+		{
+			name:        "on single punctuation char",
+			inputString: "abc/ghi",
+			pos:         3,
+			expectedPos: 4,
+		},
+		{
+			name:        "on multiple punctuation chars",
+			inputString: "abc///ghi",
+			pos:         4,
+			expectedPos: 6,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -632,6 +647,18 @@ func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
 			inputString: "ab\n\ncd",
 			pos:         2,
 			expectedPos: 2,
+		},
+		{
+			name:        "on punctuation followed by non-whitespace",
+			inputString: "ab,cd",
+			pos:         2,
+			expectedPos: 3,
+		},
+		{
+			name:        "on punctuation followed by whitespace",
+			inputString: "ab,  cd",
+			pos:         2,
+			expectedPos: 5,
 		},
 	}
 

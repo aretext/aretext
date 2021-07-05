@@ -176,7 +176,7 @@ func GolangRules() []parser.TokenizerRule {
 
 		// Rune literal
 		{
-			Regexp:    "'[^']*'",
+			Regexp:    `''|'([^\'\n]|\\')*(\\\\|[^\\\n])'`,
 			TokenRole: parser.TokenRoleString,
 		},
 

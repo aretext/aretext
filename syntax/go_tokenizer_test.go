@@ -107,6 +107,32 @@ func TestGoTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:        "rune with escaped newline",
+			inputString: `'\n'`,
+			expectedTokens: []TokenWithText{
+				{Text: `'\n'`, Role: parser.TokenRoleString},
+			},
+		},
+		{
+			name:        "rune with escaped quote",
+			inputString: `'\''`,
+			expectedTokens: []TokenWithText{
+				{Text: `'\''`, Role: parser.TokenRoleString},
+			},
+		},
+		{
+			name:        "rune with escaped backslash",
+			inputString: `'\\'`,
+			expectedTokens: []TokenWithText{
+				{Text: `'\\'`, Role: parser.TokenRoleString},
+			},
+		},
+		{
+			name:           "incomplete rune with newline before quote",
+			inputString:    "'\n'",
+			expectedTokens: []TokenWithText{},
+		},
+		{
 			name:        "identifier with underscore prefix",
 			inputString: "_x9",
 			expectedTokens: []TokenWithText{

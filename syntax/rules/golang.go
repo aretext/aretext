@@ -188,7 +188,7 @@ func GolangRules() []parser.TokenizerRule {
 
 		// Interpreted string literal
 		{
-			Regexp:    `""|"([^\"\n]|\\")*[^\\\n]"`,
+			Regexp:    `""|"([^\"\n]|\\")*(\\\\|[^\\\n])"`,
 			TokenRole: parser.TokenRoleString,
 		},
 	}

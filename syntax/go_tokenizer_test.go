@@ -78,6 +78,13 @@ func TestGoTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name:        "interpreted string ending with escaped backslash",
+			inputString: `"abc\\"`,
+			expectedTokens: []TokenWithText{
+				{Text: `"abc\\"`, Role: parser.TokenRoleString},
+			},
+		},
+		{
 			name:        "incomplete interpreted string ending with escaped quote",
 			inputString: `"abc\" 123`,
 			expectedTokens: []TokenWithText{

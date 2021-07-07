@@ -5,7 +5,7 @@ type TokenTree struct {
 	StartPos     uint64
 	EndPos       uint64
 	LookaheadPos uint64
-	TokenRole    TokenRole // TODO: only leaf
+	TokenRole    TokenRole
 
 	MinStartPos uint64
 	LeftChild   *TokenTree // TODO: only inner
@@ -63,25 +63,62 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
-	// TODO
-	return nil
+	stack := make([]*TokenTree, 0)
+	for t != nil {
+		if pos < t.StartPos {
+			stack = append(stack, t)
+			t = t.LeftChild
+		} else if pos > t.StartPos {
+			if t.RightChild == nil {
+				stack = append(stack, t)
+			}
+			t = t.RightChild
+		} else {
+			stack = append(stack, t)
+			break
+		}
+	}
+	return &TokenIter{stack}
 }
 
 // TokenIter iterates over tokens.
 type TokenIter struct {
-	// TODO
+	stack []*TokenTree
 }
 
 // Get retrieves the current token, if it exists.
 func (iter *TokenIter) Get(tok *Token) bool {
-	// TODO
-	return false
+	if len(iter.stack) == 0 {
+		return false
+	}
+
+	t := iter.stack[len(iter.stack)-1]
+	*tok = Token{
+		StartPos:     t.StartPos,
+		EndPos:       t.EndPos,
+		LookaheadPos: t.LookaheadPos,
+		Role:         t.TokenRole,
+	}
+	return true
 }
 
 // Advance moves the iterator to the next token.
 // If there are no more tokens, this is a no-op.
 func (iter *TokenIter) Advance() {
-	// TODO
+	if len(iter.stack) == 0 {
+		return
+	}
+
+	iter.stack = iter.stack[0 : len(iter.stack)-1]
+	if len(iter.stack) == 0 {
+		return
+	}
+
+	t := iter.stack[len(iter.stack)-1].RightChild
+	for t != nil {
+		iter.stack = append(iter.stack, t)
+		t = t.LeftChild
+	}
 }
 
 // Collect retrieves all tokens from the iterator and returns them as a slice.

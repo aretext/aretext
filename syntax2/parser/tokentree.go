@@ -14,6 +14,13 @@ type TokenTree struct {
 
 // TODO
 func (t *TokenTree) Insert(token Token) *TokenTree {
+	if token.StartPos >= token.EndPos {
+		panic("Token length must be positive")
+	}
+	if token.EndPos >= token.LookaheadPos {
+		panic("Token lookahead must be greater than token length")
+	}
+
 	if t == nil {
 		return treeFromToken(token)
 	} else if token.StartPos < t.StartPos {
@@ -71,6 +78,7 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 		} else if pos > t.StartPos {
 			if t.RightChild == nil {
 				stack = append(stack, t)
+				break
 			}
 			t = t.RightChild
 		} else {

@@ -1,20 +1,50 @@
 package parser
 
 // TokenTree represents a set of non-overlapping tokens ordered by start position.
-// The zero value represents an empty set.
 type TokenTree struct {
 	StartPos     uint64
 	EndPos       uint64
 	LookaheadPos uint64
+	TokenRole    TokenRole // TODO: only leaf
 
-	LeftChild  *TokenTree // TODO: only inner
-	RightChild *TokenTree // TODO: only inner
-	TokenRole  TokenRole  // TODO: only leaf
+	MinStartPos uint64
+	LeftChild   *TokenTree // TODO: only inner
+	RightChild  *TokenTree // TODO: only inner
 }
 
 // TODO
 func (t *TokenTree) Insert(token Token) *TokenTree {
-	return nil
+	if t == nil {
+		return &TokenTree{
+			MinStartPos:  token.StartPos,
+			StartPos:     token.StartPos,
+			EndPos:       token.EndPos,
+			LookaheadPos: token.LookaheadPos,
+			TokenRole:    token.Role,
+		}
+	}
+
+	if token.StartPos < t.StartPos {
+		return &TokenTree{
+			MinStartPos:  minUint64(token.StartPos, t.MinStartPos),
+			StartPos:     t.StartPos,
+			EndPos:       t.EndPos,
+			LookaheadPos: t.LookaheadPos,
+			TokenRole:    t.TokenRole,
+			LeftChild:    t.LeftChild.Insert(token),
+		}
+	} else if token.StartPos > t.StartPos {
+		return &TokenTree{
+			MinStartPos:  t.MinStartPos,
+			StartPos:     t.StartPos,
+			EndPos:       t.EndPos,
+			LookaheadPos: t.LookaheadPos,
+			TokenRole:    t.TokenRole,
+			RightChild:   t.RightChild.Insert(token),
+		}
+	} else {
+		panic("Cannot insert a token with the same start position as an existing token")
+	}
 }
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.

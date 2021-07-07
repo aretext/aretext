@@ -1,8 +1,7 @@
 package parser
 
-// TokenTree represents a collection of tokens.
-// The zero value represents an empty tree.
-// It supports efficient lookups by position and "shifting" token positions to account for insertions/deletions.
+// TokenTree represents a set of non-overlapping tokens ordered by start position.
+// The zero value represents an empty set.
 type TokenTree struct {
 	StartPos     uint64
 	EndPos       uint64
@@ -15,21 +14,6 @@ type TokenTree struct {
 
 // TODO
 func (t *TokenTree) Insert(token Token) *TokenTree {
-	return nil
-}
-
-// TODO
-func (t *TokenTree) Join(other *TokenTree) *TokenTree {
-	return nil
-}
-
-// TODO
-func (t *TokenTree) ShiftPositionsForward(offset uint64) *TokenTree {
-	return nil
-}
-
-// TODO
-func (t *TokenTree) ShiftPositionsBackward(offset uint64) *TokenTree {
 	return nil
 }
 

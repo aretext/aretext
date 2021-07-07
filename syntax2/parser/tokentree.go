@@ -48,16 +48,19 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 
 // TokenIter iterates over tokens.
 type TokenIter struct {
+	// TODO
 }
 
 // Get retrieves the current token, if it exists.
 func (iter *TokenIter) Get(tok *Token) bool {
+	// TODO
 	return false
 }
 
 // Advance moves the iterator to the next token.
 // If there are no more tokens, this is a no-op.
 func (iter *TokenIter) Advance() {
+	// TODO
 }
 
 // Collect retrieves all tokens from the iterator and returns them as a slice.

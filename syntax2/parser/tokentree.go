@@ -15,35 +15,49 @@ type TokenTree struct {
 // TODO
 func (t *TokenTree) Insert(token Token) *TokenTree {
 	if t == nil {
-		return &TokenTree{
-			MinStartPos:  token.StartPos,
-			StartPos:     token.StartPos,
-			EndPos:       token.EndPos,
-			LookaheadPos: token.LookaheadPos,
-			TokenRole:    token.Role,
-		}
-	}
-
-	if token.StartPos < t.StartPos {
-		return &TokenTree{
-			MinStartPos:  minUint64(token.StartPos, t.MinStartPos),
-			StartPos:     t.StartPos,
-			EndPos:       t.EndPos,
-			LookaheadPos: t.LookaheadPos,
-			TokenRole:    t.TokenRole,
-			LeftChild:    t.LeftChild.Insert(token),
-		}
+		return treeFromToken(token)
+	} else if token.StartPos < t.StartPos {
+		return t.withLeftChild(t.LeftChild.Insert(token))
 	} else if token.StartPos > t.StartPos {
-		return &TokenTree{
-			MinStartPos:  t.MinStartPos,
-			StartPos:     t.StartPos,
-			EndPos:       t.EndPos,
-			LookaheadPos: t.LookaheadPos,
-			TokenRole:    t.TokenRole,
-			RightChild:   t.RightChild.Insert(token),
-		}
+		return t.withRightChild(t.RightChild.Insert(token))
 	} else {
 		panic("Cannot insert a token with the same start position as an existing token")
+	}
+}
+
+func treeFromToken(token Token) *TokenTree {
+	return &TokenTree{
+		MinStartPos:  token.StartPos,
+		StartPos:     token.StartPos,
+		EndPos:       token.EndPos,
+		LookaheadPos: token.LookaheadPos,
+		TokenRole:    token.Role,
+	}
+}
+
+func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
+	minStartPos := t.MinStartPos
+	if child.StartPos < minStartPos {
+		minStartPos = child.StartPos
+	}
+	return &TokenTree{
+		MinStartPos:  minStartPos,
+		StartPos:     t.StartPos,
+		EndPos:       t.EndPos,
+		LookaheadPos: t.LookaheadPos,
+		TokenRole:    t.TokenRole,
+		LeftChild:    child,
+	}
+}
+
+func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
+	return &TokenTree{
+		MinStartPos:  t.MinStartPos,
+		StartPos:     t.StartPos,
+		EndPos:       t.EndPos,
+		LookaheadPos: t.LookaheadPos,
+		TokenRole:    t.TokenRole,
+		RightChild:   child,
 	}
 }
 

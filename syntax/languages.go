@@ -21,6 +21,7 @@ const (
 )
 
 var AllLanguages = []Language{
+	LanguagePlaintext,
 	LanguageJson,
 	LanguageYaml,
 	LanguageGo,

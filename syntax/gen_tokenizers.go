@@ -133,6 +133,7 @@ const (
 )
 
 var AllLanguages = []Language{
+	LanguagePlaintext,
 	{{ range .Specs -}}
 	{{ .LanguageConst }},
 	{{ end }}

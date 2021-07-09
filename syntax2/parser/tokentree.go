@@ -20,6 +20,9 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.EndPos >= token.LookaheadPos {
 		panic("Token lookahead must be greater than token length")
 	}
+	if !(token.EndPos <= t.StartPos || token.StartPos >= t.EndPos) {
+		panic("Token overlaps existing token")
+	}
 
 	if t == nil {
 		return treeFromToken(token)

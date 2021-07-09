@@ -1,6 +1,8 @@
 package parser
 
 // TokenTree represents a set of non-overlapping tokens ordered by start position.
+// The tree is immutable; all modifications are made by copying/adding new nodes
+// rather than mutating existing nodes.
 type TokenTree struct {
 	StartPos     uint64
 	EndPos       uint64
@@ -12,7 +14,8 @@ type TokenTree struct {
 	RightChild  *TokenTree // TODO: only inner
 }
 
-// TODO
+// Insert inserts a new token into the tree.
+// The token must have non-zero length and must not overlap existing tokens.
 func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.StartPos >= token.EndPos {
 		panic("Token length must be positive")

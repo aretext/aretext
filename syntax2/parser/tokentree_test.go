@@ -1,28 +1,33 @@
 package parser
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func sortedTokens(tokens []Token) []Token {
+	result := make([]Token, len(tokens))
+	copy(result, tokens)
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].StartPos < result[j].StartPos
+	})
+	return result
+}
+
 func TestTokenTreeInsert(t *testing.T) {
 	testCases := []struct {
-		name           string
-		tokens         []Token
-		expectedTokens []Token
+		name   string
+		tokens []Token
 	}{
 		{
-			name:           "empty",
-			tokens:         []Token{},
-			expectedTokens: []Token{},
+			name:   "empty",
+			tokens: []Token{},
 		},
 		{
 			name: "single token",
 			tokens: []Token{
-				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
-			},
-			expectedTokens: []Token{
 				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
 			},
 		},
@@ -32,9 +37,12 @@ func TestTokenTreeInsert(t *testing.T) {
 				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
 				{StartPos: 2, EndPos: 3, LookaheadPos: 4},
 			},
-			expectedTokens: []Token{
-				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
+		},
+		{
+			name: "two tokens, in descending order",
+			tokens: []Token{
 				{StartPos: 2, EndPos: 3, LookaheadPos: 4},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
 			},
 		},
 	}
@@ -46,7 +54,8 @@ func TestTokenTreeInsert(t *testing.T) {
 				tree = tree.Insert(tok)
 			}
 			tokens := tree.IterFromPosition(0).Collect()
-			assert.Equal(t, tc.expectedTokens, tokens)
+			expectedTokens := sortedTokens(tc.tokens)
+			assert.Equal(t, expectedTokens, tokens)
 		})
 	}
 }

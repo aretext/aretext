@@ -4,14 +4,10 @@ package parser
 // The tree is immutable; all modifications are made by copying/adding new nodes
 // rather than mutating existing nodes.
 type TokenTree struct {
-	StartPos     uint64
-	EndPos       uint64
-	LookaheadPos uint64
-	TokenRole    TokenRole
-
+	Token       Token
 	MinStartPos uint64
-	LeftChild   *TokenTree // TODO: only inner
-	RightChild  *TokenTree // TODO: only inner
+	LeftChild   *TokenTree
+	RightChild  *TokenTree
 }
 
 // Insert inserts a new token into the tree.
@@ -23,54 +19,40 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.EndPos >= token.LookaheadPos {
 		panic("Token lookahead must be greater than token length")
 	}
-	if !(token.EndPos <= t.StartPos || token.StartPos >= t.EndPos) {
+	if !(token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
 		panic("Token overlaps existing token")
 	}
 
 	if t == nil {
-		return treeFromToken(token)
-	} else if token.StartPos < t.StartPos {
+		return &TokenTree{Token: token}
+	} else if token.StartPos < t.Token.StartPos {
 		return t.withLeftChild(t.LeftChild.Insert(token))
-	} else if token.StartPos > t.StartPos {
+	} else if token.StartPos > t.Token.StartPos {
 		return t.withRightChild(t.RightChild.Insert(token))
 	} else {
 		panic("Cannot insert a token with the same start position as an existing token")
 	}
 }
 
-func treeFromToken(token Token) *TokenTree {
-	return &TokenTree{
-		MinStartPos:  token.StartPos,
-		StartPos:     token.StartPos,
-		EndPos:       token.EndPos,
-		LookaheadPos: token.LookaheadPos,
-		TokenRole:    token.Role,
-	}
-}
-
 func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
 	minStartPos := t.MinStartPos
-	if child.StartPos < minStartPos {
-		minStartPos = child.StartPos
+	if child.Token.StartPos < minStartPos {
+		minStartPos = child.Token.StartPos
 	}
 	return &TokenTree{
-		MinStartPos:  minStartPos,
-		StartPos:     t.StartPos,
-		EndPos:       t.EndPos,
-		LookaheadPos: t.LookaheadPos,
-		TokenRole:    t.TokenRole,
-		LeftChild:    child,
+		MinStartPos: minStartPos,
+		Token:       t.Token,
+		LeftChild:   child,
+		RightChild:  t.RightChild,
 	}
 }
 
 func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 	return &TokenTree{
-		MinStartPos:  t.MinStartPos,
-		StartPos:     t.StartPos,
-		EndPos:       t.EndPos,
-		LookaheadPos: t.LookaheadPos,
-		TokenRole:    t.TokenRole,
-		RightChild:   child,
+		MinStartPos: t.MinStartPos,
+		Token:       t.Token,
+		LeftChild:   t.LeftChild,
+		RightChild:  child,
 	}
 }
 
@@ -84,10 +66,10 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 func (t *TokenTree) buildIter(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
-		if pos < t.StartPos {
+		if pos < t.Token.StartPos {
 			stack = append(stack, t)
 			t = t.LeftChild
-		} else if pos > t.StartPos {
+		} else if pos > t.Token.StartPos {
 			if t.RightChild == nil {
 				stack = append(stack, t)
 				break
@@ -123,12 +105,7 @@ func (iter *TokenIter) Get(tok *Token) bool {
 	}
 
 	t := iter.stack[len(iter.stack)-1]
-	*tok = Token{
-		StartPos:     t.StartPos,
-		EndPos:       t.EndPos,
-		LookaheadPos: t.LookaheadPos,
-		Role:         t.TokenRole,
-	}
+	*tok = t.Token
 	return true
 }
 

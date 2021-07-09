@@ -125,6 +125,12 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 		expectNextToken Token
 	}{
 		{
+			name:          "empty",
+			tokens:        nil,
+			pos:           0,
+			expectHasNext: false,
+		},
+		{
 			name: "before first token",
 			tokens: []Token{
 				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
@@ -153,6 +159,16 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 			pos:             2,
 			expectHasNext:   true,
 			expectNextToken: Token{StartPos: 1, EndPos: 3, LookaheadPos: 3},
+		},
+		{
+			name: "end of first token",
+			tokens: []Token{
+				{StartPos: 1, EndPos: 3, LookaheadPos: 3},
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+			pos:             3,
+			expectHasNext:   true,
+			expectNextToken: Token{StartPos: 3, EndPos: 4, LookaheadPos: 4},
 		},
 	}
 

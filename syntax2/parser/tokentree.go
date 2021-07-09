@@ -69,7 +69,7 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 			// TODO: explain this
 			stack = append(stack, t)
 			t = t.LeftChild
-		} else if pos >= t.Token.EndPos {
+		} else if pos > t.Token.EndPos {
 			// TODO: explain this
 			if t.RightChild == nil {
 				stack = append(stack, t)

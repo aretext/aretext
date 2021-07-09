@@ -19,7 +19,7 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.EndPos >= token.LookaheadPos {
 		panic("Token lookahead must be greater than token length")
 	}
-	if !(token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
+	if !(t == nil || token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
 		panic("Token overlaps existing token")
 	}
 
@@ -58,9 +58,9 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
-	iter := t.buildIter(pos)
-	advanceIterEndPastPos(iter, pos)
-	return iter
+	return t.buildIter(pos).AdvanceUntil(func(tok Token) bool {
+		return tok.EndPos > pos
+	})
 }
 
 func (t *TokenTree) buildIter(pos uint64) *TokenIter {
@@ -126,6 +126,18 @@ func (iter *TokenIter) Advance() {
 		iter.stack = append(iter.stack, t)
 		t = t.LeftChild
 	}
+}
+
+// AdvanceUntil advances the iterator until a condition is met or there are no more tokens.
+func (iter *TokenIter) AdvanceUntil(f func(Token) bool) *TokenIter {
+	var tok *Token
+	for iter.Get(tok) {
+		if f(*tok) {
+			break
+		}
+		iter.Advance()
+	}
+	return iter
 }
 
 // Collect retrieves all tokens from the iterator and returns them as a slice.

@@ -27,8 +27,8 @@ func (t *TokenTree) validateNewToken(token Token) {
 	if token.StartPos >= token.EndPos {
 		panic("Token length must be positive")
 	}
-	if token.EndPos >= token.LookaheadPos {
-		panic("Token lookahead must be greater than token length")
+	if token.EndPos > token.LookaheadPos {
+		panic("Token lookahead must be greater than or equal to token length")
 	}
 	if !(t == nil || token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
 		panic("Token overlaps existing token")

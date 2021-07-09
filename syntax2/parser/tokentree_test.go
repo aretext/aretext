@@ -32,6 +32,12 @@ func TestTokenTreeInsert(t *testing.T) {
 			},
 		},
 		{
+			name: "single token from position zero",
+			tokens: []Token{
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1},
+			},
+		},
+		{
 			name: "two tokens, in ascending order",
 			tokens: []Token{
 				{StartPos: 1, EndPos: 2, LookaheadPos: 3},

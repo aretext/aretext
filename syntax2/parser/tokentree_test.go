@@ -51,6 +51,21 @@ func TestTokenTreeInsert(t *testing.T) {
 				{StartPos: 1, EndPos: 2, LookaheadPos: 3},
 			},
 		},
+		{
+			name: "many tokens, random order",
+			tokens: []Token{
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+				{StartPos: 8, EndPos: 9, LookaheadPos: 9},
+				{StartPos: 4, EndPos: 5, LookaheadPos: 5},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 6, EndPos: 7, LookaheadPos: 7},
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1},
+				{StartPos: 9, EndPos: 10, LookaheadPos: 10},
+				{StartPos: 7, EndPos: 8, LookaheadPos: 8},
+				{StartPos: 5, EndPos: 6, LookaheadPos: 6},
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

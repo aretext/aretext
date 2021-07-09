@@ -117,12 +117,8 @@ func (iter *TokenIter) Advance() {
 		return
 	}
 
-	iter.stack = iter.stack[0 : len(iter.stack)-1]
-	if len(iter.stack) == 0 {
-		return
-	}
-
 	t := iter.stack[len(iter.stack)-1].RightChild
+	iter.stack = iter.stack[0 : len(iter.stack)-1]
 	for t != nil {
 		iter.stack = append(iter.stack, t)
 		t = t.LeftChild

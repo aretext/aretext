@@ -133,9 +133,9 @@ func (iter *TokenIter) Advance() {
 
 // AdvanceUntil advances the iterator until a condition is met or there are no more tokens.
 func (iter *TokenIter) AdvanceUntil(f func(Token) bool) *TokenIter {
-	var tok *Token
-	for iter.Get(tok) {
-		if f(*tok) {
+	var tok Token
+	for iter.Get(&tok) {
+		if f(tok) {
 			break
 		}
 		iter.Advance()

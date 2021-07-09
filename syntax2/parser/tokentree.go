@@ -73,6 +73,12 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
+	iter := t.buildIter(pos)
+	advanceIterEndPastPos(iter, pos)
+	return iter
+}
+
+func (t *TokenTree) buildIter(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
 		if pos < t.StartPos {
@@ -89,9 +95,10 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 			break
 		}
 	}
+	return &TokenIter{stack}
+}
 
-	iter := &TokenIter{stack}
-
+func advanceIterEndPastPos(iter *TokenIter, pos uint64) {
 	var tok *Token
 	for iter.Get(tok) {
 		if tok.EndPos > pos {
@@ -99,8 +106,6 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 		}
 		iter.Advance()
 	}
-
-	return iter
 }
 
 // TokenIter iterates over tokens.

@@ -18,10 +18,8 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 		return &TokenTree{Token: token}
 	} else if token.StartPos < t.Token.StartPos {
 		return t.withLeftChild(t.LeftChild.Insert(token))
-	} else if token.StartPos > t.Token.StartPos {
-		return t.withRightChild(t.RightChild.Insert(token))
 	} else {
-		panic("Cannot insert a token with the same start position as an existing token")
+		return t.withRightChild(t.RightChild.Insert(token))
 	}
 }
 

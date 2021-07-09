@@ -13,16 +13,7 @@ type TokenTree struct {
 // Insert inserts a new token into the tree.
 // The token must have non-zero length and must not overlap existing tokens.
 func (t *TokenTree) Insert(token Token) *TokenTree {
-	if token.StartPos >= token.EndPos {
-		panic("Token length must be positive")
-	}
-	if token.EndPos >= token.LookaheadPos {
-		panic("Token lookahead must be greater than token length")
-	}
-	if !(t == nil || token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
-		panic("Token overlaps existing token")
-	}
-
+	t.validateNewToken(token)
 	if t == nil {
 		return &TokenTree{Token: token}
 	} else if token.StartPos < t.Token.StartPos {
@@ -31,6 +22,18 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 		return t.withRightChild(t.RightChild.Insert(token))
 	} else {
 		panic("Cannot insert a token with the same start position as an existing token")
+	}
+}
+
+func (t *TokenTree) validateNewToken(token Token) {
+	if token.StartPos >= token.EndPos {
+		panic("Token length must be positive")
+	}
+	if token.EndPos >= token.LookaheadPos {
+		panic("Token lookahead must be greater than token length")
+	}
+	if !(t == nil || token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
+		panic("Token overlaps existing token")
 	}
 }
 

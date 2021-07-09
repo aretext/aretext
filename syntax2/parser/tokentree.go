@@ -59,24 +59,25 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
-	return t.buildIter(pos).AdvanceUntil(func(tok Token) bool {
-		return tok.EndPos > pos
-	})
-}
-
-func (t *TokenTree) buildIter(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
-		if pos < t.Token.StartPos {
+		// Since tokens are non-overlapping and have non-zero length,
+		// the sort order by StartPos is the same as the sort order by EndPos.
+		// This means we can use EndPos as a sort key here even though
+		// we used StartPos as the sort key for insertions.
+		if pos < t.Token.EndPos {
+			// TODO: explain this
 			stack = append(stack, t)
 			t = t.LeftChild
-		} else if pos > t.Token.StartPos {
+		} else if pos >= t.Token.EndPos {
+			// TODO: explain this
 			if t.RightChild == nil {
 				stack = append(stack, t)
 				break
 			}
 			t = t.RightChild
 		} else {
+			// TODO: explain this
 			stack = append(stack, t)
 			break
 		}
@@ -84,18 +85,9 @@ func (t *TokenTree) buildIter(pos uint64) *TokenIter {
 	return &TokenIter{stack}
 }
 
-func advanceIterEndPastPos(iter *TokenIter, pos uint64) {
-	var tok *Token
-	for iter.Get(tok) {
-		if tok.EndPos > pos {
-			break
-		}
-		iter.Advance()
-	}
-}
-
 // TokenIter iterates over tokens.
 type TokenIter struct {
+	// TODO: explain what the stack represents
 	stack []*TokenTree
 }
 
@@ -117,24 +109,13 @@ func (iter *TokenIter) Advance() {
 		return
 	}
 
+	// TODO: explain this
 	t := iter.stack[len(iter.stack)-1].RightChild
 	iter.stack = iter.stack[0 : len(iter.stack)-1]
 	for t != nil {
 		iter.stack = append(iter.stack, t)
 		t = t.LeftChild
 	}
-}
-
-// AdvanceUntil advances the iterator until a condition is met or there are no more tokens.
-func (iter *TokenIter) AdvanceUntil(f func(Token) bool) *TokenIter {
-	var tok Token
-	for iter.Get(&tok) {
-		if f(tok) {
-			break
-		}
-		iter.Advance()
-	}
-	return iter
 }
 
 // Collect retrieves all tokens from the iterator and returns them as a slice.

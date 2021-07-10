@@ -16,7 +16,11 @@ type TokenTree struct {
 func (t *TokenTree) Insert(token Token) *TokenTree {
 	t.validateNewToken(token)
 	if t == nil {
-		return &TokenTree{token: token}
+		return &TokenTree{
+			token:       token,
+			minStartPos: token.StartPos,
+			maxEndPos:   token.EndPos,
+		}
 	} else if token.EndPos <= t.token.StartPos {
 		return t.withLeftChild(t.leftChild.Insert(token))
 	} else if token.StartPos >= t.token.EndPos {
@@ -79,7 +83,7 @@ func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 			token:       t.token,
 			minStartPos: other.minStartPos,
 			maxEndPos:   t.maxEndPos,
-			leftChild:   other,
+			leftChild:   t.leftChild.Join(other),
 			rightChild:  t.rightChild,
 		}
 	} else if other.minStartPos >= t.maxEndPos {
@@ -88,7 +92,7 @@ func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 			minStartPos: t.minStartPos,
 			maxEndPos:   other.maxEndPos,
 			leftChild:   t.leftChild,
-			rightChild:  other,
+			rightChild:  t.rightChild.Join(other),
 		}
 	} else {
 		panic("Span of other tree overlaps span of this tree")

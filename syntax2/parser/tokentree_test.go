@@ -176,8 +176,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 1, EndPos: 3, LookaheadPos: 3},
 				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
 			},
-			pos:             4,
-			expectHasNext:   false,
+			pos:           4,
+			expectHasNext: false,
 		},
 		{
 			name: "past end of last token",
@@ -185,8 +185,8 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 				{StartPos: 1, EndPos: 3, LookaheadPos: 3},
 				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
 			},
-			pos:             5,
-			expectHasNext:   false,
+			pos:           5,
+			expectHasNext: false,
 		},
 	}
 

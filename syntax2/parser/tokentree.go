@@ -16,10 +16,12 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	t.validateNewToken(token)
 	if t == nil {
 		return &TokenTree{Token: token}
-	} else if token.StartPos < t.Token.StartPos {
+	} else if token.EndPos <= t.Token.StartPos {
 		return t.withLeftChild(t.LeftChild.Insert(token))
-	} else {
+	} else if token.StartPos >= t.Token.EndPos {
 		return t.withRightChild(t.RightChild.Insert(token))
+	} else {
+		panic("Token overlaps existing token")
 	}
 }
 
@@ -29,9 +31,6 @@ func (t *TokenTree) validateNewToken(token Token) {
 	}
 	if token.EndPos > token.LookaheadPos {
 		panic("Token lookahead must be greater than or equal to token length")
-	}
-	if !(t == nil || token.EndPos <= t.Token.StartPos || token.StartPos >= t.Token.EndPos) {
-		panic("Token overlaps existing token")
 	}
 }
 
@@ -61,15 +60,11 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
-		// Since tokens are non-overlapping and have non-zero length,
-		// the sort order by StartPos is the same as the sort order by EndPos.
-		// This means we can use EndPos as a sort key here even though
-		// we used StartPos as the sort key for insertions.
-		if pos < t.Token.EndPos {
+		if pos < t.Token.StartPos {
 			// TODO: explain this
 			stack = append(stack, t)
 			t = t.LeftChild
-		} else if pos > t.Token.EndPos {
+		} else if pos >= t.Token.EndPos {
 			// TODO: explain this
 			if t.RightChild == nil {
 				stack = append(stack, t)

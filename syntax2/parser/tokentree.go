@@ -61,18 +61,19 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
 		if pos < t.Token.StartPos {
-			// TODO: explain this
+			// Position is before this token, so it must be in the left subtree.
+			// This node is *after* the left subtree in the in-order traversal,
+			// so append it to the stack.
 			stack = append(stack, t)
 			t = t.LeftChild
 		} else if pos >= t.Token.EndPos {
-			// TODO: explain this
-			if t.RightChild == nil {
-				stack = append(stack, t)
-				break
-			}
+			// Position is after this token, so it must be in the right subtree.
+			// This node is *before* the right subtree in the in-order traversal,
+			// so do NOT append it to the stack.
 			t = t.RightChild
 		} else {
-			// TODO: explain this
+			// Position intersects this token.  This node is the first one
+			// to visit in the in-order traversal, so append it to the stack.
 			stack = append(stack, t)
 			break
 		}

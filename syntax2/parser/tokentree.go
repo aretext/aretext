@@ -4,9 +4,11 @@ package parser
 // The tree is immutable; all modifications are made by copying/adding new nodes
 // rather than mutating existing nodes.
 type TokenTree struct {
-	token      Token
-	leftChild  *TokenTree
-	rightChild *TokenTree
+	token       Token
+	minStartPos uint64
+	maxEndPos   uint64
+	leftChild   *TokenTree
+	rightChild  *TokenTree
 }
 
 // Insert inserts a new token into the tree.
@@ -34,18 +36,62 @@ func (t *TokenTree) validateNewToken(token Token) {
 }
 
 func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
+	minStartPos := t.minStartPos
+	if child.minStartPos < minStartPos {
+		minStartPos = child.minStartPos
+	}
+
 	return &TokenTree{
-		token:      t.token,
-		leftChild:  child,
-		rightChild: t.rightChild,
+		token:       t.token,
+		minStartPos: minStartPos,
+		maxEndPos:   t.maxEndPos,
+		leftChild:   child,
+		rightChild:  t.rightChild,
 	}
 }
 
 func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
+	maxEndPos := t.maxEndPos
+	if child.maxEndPos > maxEndPos {
+		maxEndPos = child.maxEndPos
+	}
+
 	return &TokenTree{
-		token:      t.token,
-		leftChild:  t.leftChild,
-		rightChild: child,
+		token:       t.token,
+		minStartPos: t.minStartPos,
+		maxEndPos:   maxEndPos,
+		leftChild:   t.leftChild,
+		rightChild:  child,
+	}
+}
+
+// Join combines two trees into a single tree.
+// The tokens from the two trees must not overlap.
+func (t *TokenTree) Join(other *TokenTree) *TokenTree {
+	if t == nil && other == nil {
+		return nil
+	} else if t == nil {
+		return other
+	} else if other == nil {
+		return t
+	} else if other.maxEndPos <= t.minStartPos {
+		return &TokenTree{
+			token:       t.token,
+			minStartPos: other.minStartPos,
+			maxEndPos:   t.maxEndPos,
+			leftChild:   other,
+			rightChild:  t.rightChild,
+		}
+	} else if other.minStartPos >= t.maxEndPos {
+		return &TokenTree{
+			token:       t.token,
+			minStartPos: t.minStartPos,
+			maxEndPos:   other.maxEndPos,
+			leftChild:   t.leftChild,
+			rightChild:  other,
+		}
+	} else {
+		panic("Tokens in other tree overlap existing tokens")
 	}
 }
 

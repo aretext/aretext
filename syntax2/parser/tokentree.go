@@ -4,7 +4,7 @@ package parser
 // The tree is immutable; all modifications are made by copying/adding new nodes
 // rather than mutating existing nodes.
 type TokenTree struct {
-	Token       Token // Token.StartPos is the sort key.
+	Token       Token
 	MinStartPos uint64
 	LeftChild   *TokenTree
 	RightChild  *TokenTree

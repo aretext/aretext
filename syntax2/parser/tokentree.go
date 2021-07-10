@@ -30,45 +30,6 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	}
 }
 
-func (t *TokenTree) validateNewToken(token Token) {
-	if token.StartPos >= token.EndPos {
-		panic("Token length must be positive")
-	}
-	if token.EndPos > token.LookaheadPos {
-		panic("Token lookahead must be greater than or equal to token length")
-	}
-}
-
-func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
-	minStartPos := t.minStartPos
-	if child.minStartPos < minStartPos {
-		minStartPos = child.minStartPos
-	}
-
-	return &TokenTree{
-		token:       t.token,
-		minStartPos: minStartPos,
-		maxEndPos:   t.maxEndPos,
-		leftChild:   child,
-		rightChild:  t.rightChild,
-	}
-}
-
-func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
-	maxEndPos := t.maxEndPos
-	if child.maxEndPos > maxEndPos {
-		maxEndPos = child.maxEndPos
-	}
-
-	return &TokenTree{
-		token:       t.token,
-		minStartPos: t.minStartPos,
-		maxEndPos:   maxEndPos,
-		leftChild:   t.leftChild,
-		rightChild:  child,
-	}
-}
-
 // Join combines two trees into a single tree.
 // The spans (start of first token to end of last token) of the two trees must not overlap.
 func (t *TokenTree) Join(other *TokenTree) *TokenTree {
@@ -79,21 +40,9 @@ func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 	} else if other == nil {
 		return t
 	} else if other.maxEndPos <= t.minStartPos {
-		return &TokenTree{
-			token:       t.token,
-			minStartPos: other.minStartPos,
-			maxEndPos:   t.maxEndPos,
-			leftChild:   t.leftChild.Join(other),
-			rightChild:  t.rightChild,
-		}
+		return t.withLeftChild(t.leftChild.Join(other))
 	} else if other.minStartPos >= t.maxEndPos {
-		return &TokenTree{
-			token:       t.token,
-			minStartPos: t.minStartPos,
-			maxEndPos:   other.maxEndPos,
-			leftChild:   t.leftChild,
-			rightChild:  t.rightChild.Join(other),
-		}
+		return t.withRightChild(t.rightChild.Join(other))
 	} else {
 		panic("Span of other tree overlaps span of this tree")
 	}
@@ -123,6 +72,33 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 		}
 	}
 	return &TokenIter{stack}
+}
+
+func (t *TokenTree) validateNewToken(token Token) {
+	if token.StartPos >= token.EndPos {
+		panic("Token length must be positive")
+	}
+	if token.EndPos > token.LookaheadPos {
+		panic("Token lookahead must be greater than or equal to token length")
+	}
+}
+
+func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
+	newTree := *t
+	newTree.leftChild = child
+	if child.minStartPos < newTree.minStartPos {
+		newTree.minStartPos = child.minStartPos
+	}
+	return &newTree
+}
+
+func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
+	newTree := *t
+	newTree.rightChild = child
+	if child.maxEndPos > newTree.maxEndPos {
+		newTree.maxEndPos = child.maxEndPos
+	}
+	return &newTree
 }
 
 // TokenIter iterates over tokens.

@@ -4,9 +4,9 @@ package parser
 // The tree is immutable; all modifications are made by copying/adding new nodes
 // rather than mutating existing nodes.
 type TokenTree struct {
-	Token      Token
-	LeftChild  *TokenTree
-	RightChild *TokenTree
+	token      Token
+	leftChild  *TokenTree
+	rightChild *TokenTree
 }
 
 // Insert inserts a new token into the tree.
@@ -14,11 +14,11 @@ type TokenTree struct {
 func (t *TokenTree) Insert(token Token) *TokenTree {
 	t.validateNewToken(token)
 	if t == nil {
-		return &TokenTree{Token: token}
-	} else if token.EndPos <= t.Token.StartPos {
-		return t.withLeftChild(t.LeftChild.Insert(token))
-	} else if token.StartPos >= t.Token.EndPos {
-		return t.withRightChild(t.RightChild.Insert(token))
+		return &TokenTree{token: token}
+	} else if token.EndPos <= t.token.StartPos {
+		return t.withLeftChild(t.leftChild.Insert(token))
+	} else if token.StartPos >= t.token.EndPos {
+		return t.withRightChild(t.rightChild.Insert(token))
 	} else {
 		panic("Token overlaps existing token")
 	}
@@ -35,17 +35,17 @@ func (t *TokenTree) validateNewToken(token Token) {
 
 func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
 	return &TokenTree{
-		Token:      t.Token,
-		LeftChild:  child,
-		RightChild: t.RightChild,
+		token:      t.token,
+		leftChild:  child,
+		rightChild: t.rightChild,
 	}
 }
 
 func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 	return &TokenTree{
-		Token:      t.Token,
-		LeftChild:  t.LeftChild,
-		RightChild: child,
+		token:      t.token,
+		leftChild:  t.leftChild,
+		rightChild: child,
 	}
 }
 
@@ -53,17 +53,17 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 	stack := make([]*TokenTree, 0)
 	for t != nil {
-		if pos < t.Token.StartPos {
+		if pos < t.token.StartPos {
 			// Position is before this token, so it must be in the left subtree.
 			// This node is *after* the left subtree in the in-order traversal,
 			// so append it to the stack.
 			stack = append(stack, t)
-			t = t.LeftChild
-		} else if pos >= t.Token.EndPos {
+			t = t.leftChild
+		} else if pos >= t.token.EndPos {
 			// Position is after this token, so it must be in the right subtree.
 			// This node is *before* the right subtree in the in-order traversal,
 			// so do NOT append it to the stack.
-			t = t.RightChild
+			t = t.rightChild
 		} else {
 			// Position intersects this token.  This node is the first one
 			// to visit in the in-order traversal, so place it on the top
@@ -89,7 +89,7 @@ func (iter *TokenIter) Get(tok *Token) bool {
 	}
 
 	t := iter.stack[len(iter.stack)-1]
-	*tok = t.Token
+	*tok = t.token
 	return true
 }
 
@@ -102,11 +102,11 @@ func (iter *TokenIter) Advance() {
 
 	// Pop the current node from the stack,
 	// and push all the left children of the current node's right subtree.
-	t := iter.stack[len(iter.stack)-1].RightChild
+	t := iter.stack[len(iter.stack)-1].rightChild
 	iter.stack = iter.stack[0 : len(iter.stack)-1]
 	for t != nil {
 		iter.stack = append(iter.stack, t)
-		t = t.LeftChild
+		t = t.leftChild
 	}
 }
 

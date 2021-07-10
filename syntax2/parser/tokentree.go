@@ -66,7 +66,7 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 }
 
 // Join combines two trees into a single tree.
-// The tokens from the two trees must not overlap.
+// The spans (start of first token to end of last token) of the two trees must not overlap.
 func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 	if t == nil && other == nil {
 		return nil
@@ -91,7 +91,7 @@ func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 			rightChild:  other,
 		}
 	} else {
-		panic("Tokens in other tree overlap existing tokens")
+		panic("Span of other tree overlaps span of this tree")
 	}
 }
 

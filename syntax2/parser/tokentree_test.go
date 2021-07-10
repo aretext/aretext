@@ -295,3 +295,110 @@ func TestTokenTreeIterFromPosition(t *testing.T) {
 		})
 	}
 }
+
+func TestTokenTreeJoin(t *testing.T) {
+	testCases := []struct {
+		name             string
+		firstTreeTokens  []Token
+		secondTreeTokens []Token
+	}{
+		{
+			name:             "both empty",
+			firstTreeTokens:  nil,
+			secondTreeTokens: nil,
+		},
+		{
+			name: "first non-empty, second empty",
+			firstTreeTokens: []Token{
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+			},
+			secondTreeTokens: nil,
+		},
+		{
+			name:            "first empty, second non-empty",
+			firstTreeTokens: nil,
+			secondTreeTokens: []Token{
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+			},
+		},
+		{
+			name: "first before second",
+			firstTreeTokens: []Token{
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+			},
+			secondTreeTokens: []Token{
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+		},
+		{
+			name: "first after second",
+			firstTreeTokens: []Token{
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+			secondTreeTokens: []Token{
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+			},
+		},
+		{
+			name: "larger trees, first before second",
+			firstTreeTokens: []Token{
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+				{StartPos: 8, EndPos: 9, LookaheadPos: 9},
+				{StartPos: 4, EndPos: 5, LookaheadPos: 5},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 6, EndPos: 7, LookaheadPos: 7},
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1},
+				{StartPos: 9, EndPos: 10, LookaheadPos: 10},
+				{StartPos: 7, EndPos: 8, LookaheadPos: 8},
+				{StartPos: 5, EndPos: 6, LookaheadPos: 6},
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+			secondTreeTokens: []Token{
+				{StartPos: 103, EndPos: 104, LookaheadPos: 104},
+				{StartPos: 102, EndPos: 103, LookaheadPos: 103},
+				{StartPos: 105, EndPos: 106, LookaheadPos: 106},
+				{StartPos: 101, EndPos: 102, LookaheadPos: 102},
+				{StartPos: 100, EndPos: 101, LookaheadPos: 101},
+				{StartPos: 104, EndPos: 105, LookaheadPos: 105},
+			},
+		},
+		{
+			name: "larger trees, first after second",
+			firstTreeTokens: []Token{
+				{StartPos: 103, EndPos: 104, LookaheadPos: 104},
+				{StartPos: 102, EndPos: 103, LookaheadPos: 103},
+				{StartPos: 105, EndPos: 106, LookaheadPos: 106},
+				{StartPos: 101, EndPos: 102, LookaheadPos: 102},
+				{StartPos: 100, EndPos: 101, LookaheadPos: 101},
+				{StartPos: 104, EndPos: 105, LookaheadPos: 105},
+			},
+			secondTreeTokens: []Token{
+				{StartPos: 2, EndPos: 3, LookaheadPos: 3},
+				{StartPos: 8, EndPos: 9, LookaheadPos: 9},
+				{StartPos: 4, EndPos: 5, LookaheadPos: 5},
+				{StartPos: 1, EndPos: 2, LookaheadPos: 2},
+				{StartPos: 6, EndPos: 7, LookaheadPos: 7},
+				{StartPos: 0, EndPos: 1, LookaheadPos: 1},
+				{StartPos: 9, EndPos: 10, LookaheadPos: 10},
+				{StartPos: 7, EndPos: 8, LookaheadPos: 8},
+				{StartPos: 5, EndPos: 6, LookaheadPos: 6},
+				{StartPos: 3, EndPos: 4, LookaheadPos: 4},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			firstTree := treeForTokens(tc.firstTreeTokens)
+			secondTree := treeForTokens(tc.secondTreeTokens)
+			tree := firstTree.Join(secondTree)
+			tokens := tree.IterFromPosition(0).Collect()
+			expectedTokens := sortedTokens(append(tc.firstTreeTokens, tc.secondTreeTokens...))
+			assert.Equal(t, expectedTokens, tokens)
+		})
+	}
+}

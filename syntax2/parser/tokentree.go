@@ -5,6 +5,7 @@ package parser
 // rather than mutating existing nodes.
 type TokenTree struct {
 	token       Token
+	shift       Shift
 	minStartPos uint64
 	maxEndPos   uint64
 	leftChild   *TokenTree
@@ -17,20 +18,26 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.StartPos >= token.EndPos {
 		panic("Token length must be positive")
 	}
-	return t.insert(token)
+	return t.insertWithShift(token, Shift{})
 }
 
-func (t *TokenTree) insert(token Token) *TokenTree {
+func (t *TokenTree) insertWithShift(token Token, ancestorShift Shift) *TokenTree {
 	if t == nil {
 		return &TokenTree{
 			token:       token,
+			shift:       ancestorShift.Negate(), // TODO: explain
 			minStartPos: token.StartPos,
 			maxEndPos:   token.EndPos,
 		}
-	} else if token.EndPos <= t.token.StartPos {
-		return t.withLeftChild(t.leftChild.Insert(token))
-	} else if token.StartPos >= t.token.EndPos {
-		return t.withRightChild(t.rightChild.Insert(token))
+	}
+
+	shift := ancestorShift.Add(t.shift)
+	if token.EndPos <= shift.Resolve(t.token.StartPos) {
+		child := t.leftChild.insertWithShift(token, shift)
+		return t.withLeftChild(child)
+	} else if token.StartPos >= shift.Resolve(t.token.EndPos) {
+		child := t.rightChild.insertWithShift(token, shift)
+		return t.withRightChild(child)
 	} else {
 		panic("Token overlaps existing token")
 	}
@@ -41,44 +48,55 @@ func (t *TokenTree) insert(token Token) *TokenTree {
 func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 	if t == nil && other == nil {
 		return nil
-	} else if t == nil {
-		return other
 	} else if other == nil {
 		return t
-	} else if other.maxEndPos <= t.minStartPos {
-		return t.joinBefore(other)
-	} else if other.minStartPos >= t.maxEndPos {
-		return t.joinAfter(other)
+	} else if t == nil {
+		return other
+	} else if other.shift.Resolve(other.maxEndPos) <= t.shift.Resolve(t.minStartPos) {
+		return t.joinBefore(other, Shift{})
+	} else if other.shift.Resolve(other.minStartPos) >= t.shift.Resolve(t.maxEndPos) {
+		return t.joinAfter(other, Shift{})
 	} else {
 		panic("Span of other tree overlaps span of this tree")
 	}
 }
 
-func (t *TokenTree) joinBefore(other *TokenTree) *TokenTree {
+func (t *TokenTree) joinBefore(other *TokenTree, ancestorShift Shift) *TokenTree {
 	if t == nil {
-		return other
+		return other.ShiftPositions(ancestorShift.Negate())
 	}
-	child := t.leftChild.joinBefore(other)
+	shift := ancestorShift.Add(t.shift)
+	child := t.leftChild.joinBefore(other, shift)
 	return t.withLeftChild(child)
 }
 
-func (t *TokenTree) joinAfter(other *TokenTree) *TokenTree {
+func (t *TokenTree) joinAfter(other *TokenTree, ancestorShift Shift) *TokenTree {
 	if t == nil {
-		return other
+		return other.ShiftPositions(ancestorShift.Negate())
 	}
-	child := t.rightChild.joinAfter(other)
+	shift := ancestorShift.Add(t.shift)
+	child := t.rightChild.joinAfter(other, shift)
 	return t.withRightChild(child)
+}
+
+// ShiftPositions moves all the tokens in the tree forward or backward in O(1) time.
+func (t *TokenTree) ShiftPositions(shift Shift) *TokenTree {
+	newTree := *t
+	newTree.shift = t.shift.Add(shift)
+	return &newTree
 }
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.
 func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
-	stack := make([]*TokenTree, 0)
+	var shift Shift
+	stack := make([]iterStackItem, 0)
 	for t != nil {
+		shift = shift.Add(t.shift)
 		if pos < t.token.StartPos {
 			// Position is before this token, so it must be in the left subtree.
 			// This node is *after* the left subtree in the in-order traversal,
 			// so append it to the stack.
-			stack = append(stack, t)
+			stack = append(stack, iterStackItem{tree: t, shift: shift})
 			t = t.leftChild
 		} else if pos >= t.token.EndPos {
 			// Position is after this token, so it must be in the right subtree.
@@ -89,7 +107,7 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 			// Position intersects this token.  This node is the first one
 			// to visit in the in-order traversal, so place it on the top
 			// of the stack.
-			stack = append(stack, t)
+			stack = append(stack, iterStackItem{tree: t, shift: shift})
 			break
 		}
 	}
@@ -114,11 +132,17 @@ func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 	return &newTree
 }
 
+// TODO
+type iterStackItem struct {
+	tree  *TokenTree
+	shift Shift
+}
+
 // TokenIter iterates over tokens.
 type TokenIter struct {
-	// Stack of nodes to visit next.
+	// Stack of tree nodes to visit next.
 	// The last element (top of the stack) is the current node.
-	stack []*TokenTree
+	stack []iterStackItem
 }
 
 // Get retrieves the current token, if it exists.
@@ -127,8 +151,10 @@ func (iter *TokenIter) Get(tok *Token) bool {
 		return false
 	}
 
-	t := iter.stack[len(iter.stack)-1]
-	*tok = t.token
+	item := iter.stack[len(iter.stack)-1]
+	*tok = item.tree.token
+	tok.StartPos = item.shift.Resolve(tok.StartPos)
+	tok.EndPos = item.shift.Resolve(tok.EndPos)
 	return true
 }
 
@@ -141,10 +167,13 @@ func (iter *TokenIter) Advance() {
 
 	// Pop the current node from the stack,
 	// and push all the left children of the current node's right subtree.
-	t := iter.stack[len(iter.stack)-1].rightChild
+	item := iter.stack[len(iter.stack)-1]
 	iter.stack = iter.stack[0 : len(iter.stack)-1]
+	shift := item.shift
+	t := item.tree.rightChild
 	for t != nil {
-		iter.stack = append(iter.stack, t)
+		shift = shift.Add(t.shift)
+		iter.stack = append(iter.stack, iterStackItem{tree: t, shift: shift})
 		t = t.leftChild
 	}
 }

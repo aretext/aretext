@@ -4,10 +4,9 @@ package parser
 // The tree is immutable; all modifications are made by copying/adding new nodes
 // rather than mutating existing nodes.
 type TokenTree struct {
-	Token       Token
-	MinStartPos uint64
-	LeftChild   *TokenTree
-	RightChild  *TokenTree
+	Token      Token
+	LeftChild  *TokenTree
+	RightChild *TokenTree
 }
 
 // Insert inserts a new token into the tree.
@@ -35,24 +34,18 @@ func (t *TokenTree) validateNewToken(token Token) {
 }
 
 func (t *TokenTree) withLeftChild(child *TokenTree) *TokenTree {
-	minStartPos := t.MinStartPos
-	if child.Token.StartPos < minStartPos {
-		minStartPos = child.Token.StartPos
-	}
 	return &TokenTree{
-		MinStartPos: minStartPos,
-		Token:       t.Token,
-		LeftChild:   child,
-		RightChild:  t.RightChild,
+		Token:      t.Token,
+		LeftChild:  child,
+		RightChild: t.RightChild,
 	}
 }
 
 func (t *TokenTree) withRightChild(child *TokenTree) *TokenTree {
 	return &TokenTree{
-		MinStartPos: t.MinStartPos,
-		Token:       t.Token,
-		LeftChild:   t.LeftChild,
-		RightChild:  child,
+		Token:      t.Token,
+		LeftChild:  t.LeftChild,
+		RightChild: child,
 	}
 }
 
@@ -83,7 +76,8 @@ func (t *TokenTree) IterFromPosition(pos uint64) *TokenIter {
 
 // TokenIter iterates over tokens.
 type TokenIter struct {
-	// TODO: explain what the stack represents
+	// Stack of nodes to visit next.
+	// The last element (top of the stack) is the current node.
 	stack []*TokenTree
 }
 
@@ -105,7 +99,8 @@ func (iter *TokenIter) Advance() {
 		return
 	}
 
-	// TODO: explain this
+	// Pop the current node from the stack,
+	// and push all the left children of the current node's right subtree.
 	t := iter.stack[len(iter.stack)-1].RightChild
 	iter.stack = iter.stack[0 : len(iter.stack)-1]
 	for t != nil {

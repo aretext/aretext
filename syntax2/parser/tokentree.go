@@ -43,12 +43,28 @@ func (t *TokenTree) Join(other *TokenTree) *TokenTree {
 	} else if other == nil {
 		return t
 	} else if other.maxEndPos <= t.minStartPos {
-		return t.withLeftChild(t.leftChild.Join(other))
+		return t.joinBefore(other)
 	} else if other.minStartPos >= t.maxEndPos {
-		return t.withRightChild(t.rightChild.Join(other))
+		return t.joinAfter(other)
 	} else {
 		panic("Span of other tree overlaps span of this tree")
 	}
+}
+
+func (t *TokenTree) joinBefore(other *TokenTree) *TokenTree {
+	if t == nil {
+		return other
+	}
+	child := t.leftChild.joinBefore(other)
+	return t.withLeftChild(child)
+}
+
+func (t *TokenTree) joinAfter(other *TokenTree) *TokenTree {
+	if t == nil {
+		return other
+	}
+	child := t.rightChild.joinAfter(other)
+	return t.withRightChild(child)
 }
 
 // IterFromPosition returns a token iterator from the first token ending after the given position.

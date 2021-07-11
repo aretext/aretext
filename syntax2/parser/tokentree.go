@@ -152,9 +152,10 @@ func (iter *TokenIter) Get(tok *Token) bool {
 	}
 
 	item := iter.stack[len(iter.stack)-1]
+	shift := item.shift
 	*tok = item.tree.token
-	tok.StartPos = item.shift.Resolve(tok.StartPos)
-	tok.EndPos = item.shift.Resolve(tok.EndPos)
+	tok.StartPos = shift.Resolve(tok.StartPos)
+	tok.EndPos = shift.Resolve(tok.EndPos)
 	return true
 }
 

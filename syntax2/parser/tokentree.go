@@ -17,7 +17,10 @@ func (t *TokenTree) Insert(token Token) *TokenTree {
 	if token.StartPos >= token.EndPos {
 		panic("Token length must be positive")
 	}
+	return t.insert(token)
+}
 
+func (t *TokenTree) insert(token Token) *TokenTree {
 	if t == nil {
 		return &TokenTree{
 			token:       token,

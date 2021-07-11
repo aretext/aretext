@@ -9,11 +9,17 @@ type ComputedToken struct {
 
 // TODO
 type Computation struct {
-	ReadLength     uint64
-	ConsumedLength uint64
-	Tokens         []ComputedTokens // Only in leaves.
+	readLength     uint64
+	consumedLength uint64
+	tokens         []ComputedTokens // Only in leaves.
 	leftChild      *Computation
 	rightChild     *Computation
+}
+
+func NewComputation(readLen uint64, consumedLen uint64, tokens []ComputedTokens) *Computation {
+	// TODO
+	return nil
+
 }
 
 // TODO

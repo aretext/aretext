@@ -27,8 +27,7 @@ const (
 
 // Token represents a distinct element in a document.
 type Token struct {
-	Role         TokenRole
-	StartPos     uint64
-	EndPos       uint64
-	LookaheadPos uint64
+	Role     TokenRole
+	StartPos uint64
+	EndPos   uint64
 }

@@ -36,8 +36,12 @@ func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedT
 
 // TODO
 func (c *Computation) Append(other *Computation) *Computation {
-	// TODO
-	return nil
+	return &Computation{
+		readLength:     c.readLength + other.readLength,
+		consumedLength: c.consumedLength + other.consumedLength,
+		leftChild:      c,
+		rightChild:     other,
+	}
 }
 
 // TODO

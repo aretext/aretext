@@ -71,7 +71,13 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 }
 
 func maxTreeHeight(c1, c2 *Computation) uint64 {
-	if c1.treeHeight > c2.treeHeight {
+	if c1 == nil && c2 == nil {
+		return 0
+	} else if c1 == nil {
+		return c2.treeHeight
+	} else if c2 == nil {
+		return c1.treeHeight
+	} else if c1.treeHeight > c2.treeHeight {
 		return c1.treeHeight
 	} else {
 		return c2.treeHeight

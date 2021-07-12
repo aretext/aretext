@@ -61,34 +61,39 @@ func (c *Computation) appendSubtree(other *Computation) *Computation {
 }
 
 func computationFromChildren(leftChild, rightChild *Computation) *Computation {
+	maxChildTreeHeight := leftChild.treeHeight
+	if rightChild.treeHeight > maxChildTreeHeight {
+		maxChildTreeHeight = rightChild.treeHeight
+	}
+
 	return &Computation{
 		readLength:     leftChild.readLength + rightChild.readLength,
 		consumedLength: leftChild.consumedLength + rightChild.consumedLength,
-		treeHeight:     maxTreeHeight(leftChild, rightChild) + 1,
+		treeHeight:     maxChildTreeHeight + 1,
 		leftChild:      leftChild,
 		rightChild:     rightChild,
 	}
 }
 
-func maxTreeHeight(c1, c2 *Computation) uint64 {
-	if c1 == nil && c2 == nil {
-		return 0
-	} else if c1 == nil {
-		return c2.treeHeight
-	} else if c2 == nil {
-		return c1.treeHeight
-	} else if c1.treeHeight > c2.treeHeight {
-		return c1.treeHeight
-	} else {
-		return c2.treeHeight
-	}
-}
-
 // TODO
 func (c *Computation) LargestSubComputationInRange(readStartPosEquals, readEndPosLessThan uint64) *Computation {
+	return c.largestSubComputationInRange(0, 0, readStartPosEquals, readEndPosLessThan)
+}
+
+func (c *Computation) largestSubComputationInRange(
+	readStartPos,
+	readEndPos uint64,
+	readStartPosEquals,
+	readEndPosLessThan,
+) *Computation {
+	if readStartPos != readStartPosEquals {
+		// Binary search for start pos.
+
+	}
+
+
 	// TODO: binary search for start pos
 	// TODO: search down left spine until computation with readEndPos < readEndPosLessThan
-	return nil
 }
 
 // TODO

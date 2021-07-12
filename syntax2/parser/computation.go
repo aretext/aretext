@@ -28,7 +28,7 @@ func (c *Computation) Append(other *Computation) *Computation {
 }
 
 // TODO
-func (c *Computation) Search(readStartPosEquals, readEndPosLessThan uint64) *Computation {
+func (c *Computation) LargestSubComputationInRange(readStartPosEquals, readEndPosLessThan uint64) *Computation {
 	// TODO
 	return nil
 }

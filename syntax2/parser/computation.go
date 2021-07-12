@@ -29,22 +29,13 @@ func (c *Computation) Append(other *Computation) *Computation {
 }
 
 // TODO
+func (c *Computation) Search(readStartPosEquals, readEndPosLessThan uint64) *Computation {
+	// TODO
+	return nil
+}
+
+// TODO
 func (c *Computation) TokenIterFromPos(pos uint64) *TokenIter {
 	// TODO
 	return nil
 }
-
-type SearchAction int
-
-const (
-	SearchBefore = SearchAction(iota)
-	SearchAfter
-	SearchTerminate
-)
-
-// TODO
-func (c *Computation) Search(f func(startPos, readLen uint64) SearchAction) *Computation {
-	// TODO
-	return nil
-}
-

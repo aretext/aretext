@@ -130,7 +130,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, rea
 		)
 	}
 
-	return c
+	return nil
 }
 
 // TODO

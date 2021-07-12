@@ -19,7 +19,6 @@ type Computation struct {
 func NewComputation(readLen uint64, consumedLen uint64, tokens []ComputedToken) *Computation {
 	// TODO
 	return nil
-
 }
 
 // TODO

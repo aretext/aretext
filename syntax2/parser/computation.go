@@ -16,6 +16,7 @@ type Computation struct {
 	rightChild     *Computation
 }
 
+// TODO
 func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedToken) *Computation {
 	if consumedLength > readLength {
 		panic("Consumed length must be less than or equal to read length")

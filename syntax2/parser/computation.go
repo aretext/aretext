@@ -16,9 +16,22 @@ type Computation struct {
 	rightChild     *Computation
 }
 
-func NewComputation(readLen uint64, consumedLen uint64, tokens []ComputedToken) *Computation {
-	// TODO
-	return nil
+func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedToken) *Computation {
+	if consumedLength > readLength {
+		panic("Consumed length must be less than or equal to read length")
+	}
+
+	for _, tok := range tokens {
+		if tok.offset+tok.Length > consumedLength {
+			panic("Token length must be less tha consumed length")
+		}
+	}
+
+	return &Computation{
+		readLength:     readLength,
+		consumedLength: consumedLength,
+		tokens:         tokens,
+	}
 }
 
 // TODO

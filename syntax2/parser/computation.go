@@ -48,14 +48,14 @@ func (c *Computation) Append(other *Computation) *Computation {
 
 func (c *Computation) prependSubtree(other *Computation) *Computation {
 	if c.leftChild == nil || c.treeHeight <= other.treeHeight {
-		return computationFromChildren(other.Append(c.leftChild), c)
+		return computationFromChildren(other, c)
 	}
 	return computationFromChildren(c.leftChild.prependSubtree(other), c.rightChild)
 }
 
 func (c *Computation) appendSubtree(other *Computation) *Computation {
 	if c.rightChild == nil || c.treeHeight <= other.treeHeight {
-		return computationFromChildren(c, other.Append(c.rightChild))
+		return computationFromChildren(c, other)
 	}
 	return computationFromChildren(c.leftChild, c.rightChild.appendSubtree(other))
 }

@@ -77,23 +77,60 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 
 // TODO
 func (c *Computation) LargestSubComputationInRange(readStartPosEquals, readEndPosLessThan uint64) *Computation {
-	return c.largestSubComputationInRange(0, 0, readStartPosEquals, readEndPosLessThan)
+	return c.largestSubComputationInRange(0, c.readLength, readStartPosEquals, readEndPosLessThan)
 }
 
-func (c *Computation) largestSubComputationInRange(
-	readStartPos,
-	readEndPos uint64,
-	readStartPosEquals,
-	readEndPosLessThan,
-) *Computation {
-	if readStartPos != readStartPosEquals {
-		// Binary search for start pos.
-
+func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, readStartPosEquals, readEndPosLessThan uint64) *Computation {
+	if c.leftChild == nil && c.rightChild == nil {
+		return nil
 	}
 
+	if c.leftChild == nil {
+		return c.rightChild.largestSubComputationInRange(
+			readStartPos,
+			readEndPos,
+			readStartPosEquals,
+			readEndPosLessThan,
+		)
+	}
 
-	// TODO: binary search for start pos
-	// TODO: search down left spine until computation with readEndPos < readEndPosLessThan
+	if c.rightChild == nil {
+		return c.leftChild.largestSubComputationInRange(
+			readStartPos,
+			readEndPos,
+			readStartPosEquals,
+			readEndPosLessThan,
+		)
+	}
+
+	if readStartPos != readStartPosEquals {
+		if readStartPosEquals < readStartPos+c.leftChild.readLength {
+			return c.leftChild.largestSubComputationInRange(
+				readStartPos,
+				readEndPos-c.rightChild.readLength,
+				readStartPosEquals,
+				readEndPosLessThan,
+			)
+		} else {
+			return c.rightChild.largestSubComputationInRange(
+				readStartPos+c.leftChild.readLength,
+				readEndPos,
+				readStartPosEquals,
+				readEndPosLessThan,
+			)
+		}
+	}
+
+	if readEndPos >= readEndPosLessThan {
+		return c.leftChild.largestSubComputationInRange(
+			readStartPos,
+			readEndPos-c.rightChild.readLength,
+			readStartPosEquals,
+			readEndPosLessThan,
+		)
+	}
+
+	return c
 }
 
 // TODO

@@ -12,8 +12,15 @@ type TokenIter struct {
 }
 
 func NewTokenIter(c *Computation, pos uint64) *TokenIter {
+	stack := stackForSmallestSubComputationContainingPos(c, pos)
+	iter := TokenIter{stack}
+	iter.advanceToNextNonEmptyLeaf()
+	return iter
+}
+
+func stackForSmallestSubComputationContainingPos(c *Computation, pos uint64) []tokenIterStackItem {
 	if c == nil || pos >= c.consumedLength {
-		return &TokenIter{}
+		return nil
 	}
 
 	stack := make([]tokenIterStackItem, 0)
@@ -35,6 +42,12 @@ func NewTokenIter(c *Computation, pos uint64) *TokenIter {
 			c = c.leftChild
 		}
 	}
+
+	return stack
+}
+
+func (iter *TokenIter) advanceToNextNonEmptyLeaf() {
+	// TODO
 }
 
 func (iter *TokenIter) Get(tok *Token) bool {

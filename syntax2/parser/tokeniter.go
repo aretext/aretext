@@ -1,16 +1,47 @@
 package parser
 
+type tokenIterStackItem struct {
+	startPos uint64
+	c        *Computation
+}
+
 // TODO
 type TokenIter struct {
+	stack    []tokenIterStackItem
+	tokenIdx int
+}
+
+func NewTokenIter(c *Computation, pos uint64) *TokenIter {
+	if c == nil || pos >= c.consumedLength {
+		return &TokenIter{}
+	}
+
+	stack := make([]tokenIterStackItem, 0)
+	startPos, endPos := 0, c.consumedLength
+	for c != nil {
+		if c.leftChild == nil && c.rightChild == nil {
+			stack = append(stack, tokenIterStackItem{startPos, computation})
+			break
+		} else if c.leftChild == nil || pos >= startPos+c.leftChild.consumedLength {
+			if c.leftChild != nil {
+				startPos += c.leftChild.consumedLength
+			}
+			c = c.rightChild
+		} else {
+			if c.rightChild != nil {
+				endPos -= c.rightChild.consumedLength
+			}
+			stack = append(stack, tokenIterStackItem{startPos, computation})
+			c = c.leftChild
+		}
+	}
 }
 
 func (iter *TokenIter) Get(tok *Token) bool {
-	// TODO
 	return false
 }
 
 func (iter *TokenIter) Advance() {
-	// TODO
 }
 
 func (iter *TokenIter) Collect() []Token {

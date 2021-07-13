@@ -23,6 +23,7 @@ func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedT
 		panic("Consumed length must be less than or equal to read length")
 	}
 
+	// TODO: ensure tokens are ordered, non-overlapping, and have nonzero length?
 	for _, tok := range tokens {
 		if tok.Offset+tok.Length > consumedLength {
 			panic("Token length must be less tha consumed length")
@@ -130,11 +131,5 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, rea
 		)
 	}
 
-	return nil
-}
-
-// TODO
-func (c *Computation) TokenIterFromPos(pos uint64) *TokenIter {
-	// TODO
 	return nil
 }

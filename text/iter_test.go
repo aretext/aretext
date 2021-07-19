@@ -61,7 +61,7 @@ func TestForwardRuneIter(t *testing.T) {
 			reader := NewCloneableReaderFromString(tc.inputString)
 			iter := NewCloneableForwardRuneIter(reader)
 			runes := collectRunes(t, iter)
-			assert.Equal(t, runes, tc.expectedRunes)
+			assert.Equal(t, tc.expectedRunes, runes)
 		})
 	}
 }
@@ -119,7 +119,7 @@ func TestBackwardRuneIter(t *testing.T) {
 			reader := NewCloneableReaderFromString(tc.inputString)
 			iter := NewCloneableBackwardRuneIter(reader)
 			runes := collectRunes(t, iter)
-			assert.Equal(t, runes, tc.expectedRunes)
+			assert.Equal(t, tc.expectedRunes, runes)
 		})
 	}
 }
@@ -128,7 +128,7 @@ func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
 	reader := NewSingleByteReader("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC")
 	iter := NewCloneableForwardRuneIter(reader)
 	runes := collectRunes(t, iter)
-	assert.Equal(t, runes, []rune{
+	assert.Equal(t, []rune{
 		'£',
 		'ô',
 		'Ɗ',
@@ -138,14 +138,14 @@ func TestForwardRuneIterSplitMultibyteRunes(t *testing.T) {
 		'\U0010AAAA',
 		'\U0010BBBB',
 		'\U0010CCCC',
-	})
+	}, runes)
 }
 
 func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
 	reader := NewSingleByteReader(Reverse("£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC"))
 	iter := NewCloneableBackwardRuneIter(reader)
 	runes := collectRunes(t, iter)
-	assert.Equal(t, runes, []rune{
+	assert.Equal(t, []rune{
 		'\U0010CCCC',
 		'\U0010BBBB',
 		'\U0010AAAA',
@@ -155,7 +155,7 @@ func TestBackwardRuneIterSplitMultibyteRunes(t *testing.T) {
 		'Ɗ',
 		'ô',
 		'£',
-	})
+	}, runes)
 }
 
 func TestForwardRuneIterLookahead(t *testing.T) {

@@ -2,7 +2,6 @@ package text
 
 import (
 	"io"
-	"log"
 	"unicode/utf8"
 
 	textUtf8 "github.com/aretext/aretext/text/utf8"
@@ -56,153 +55,100 @@ func (iter *runeIterForSlice) Clone() CloneableRuneIter {
 
 // decodingRuneIter implements CloneableRuneIter for a stream of UTF-8 bytes.
 type decodingRuneIter struct {
-	inputReversed      bool
-	in                 CloneableReader
-	pendingRunes       []rune
-	pendingRunesOffset int
-	overflow           [3]byte
-	overflowLen        int
-	eof                bool
-	buf                [64]byte
+	in            CloneableReader
+	inputReversed bool
+	buf           [64]byte
+	buflen        int
+	offset        int
 }
 
 // NewCloneableForwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes.
 // It assumes the provided reader produces a stream of valid UTF-8 bytes.
 func NewCloneableForwardRuneIter(in CloneableReader) CloneableRuneIter {
-	return &decodingRuneIter{
-		inputReversed: false,
-		in:            in,
-		pendingRunes:  make([]rune, 0),
-	}
+	return &decodingRuneIter{in: in}
 }
 
-// If inputReversed is true, then it interprets the reader output in reverse order.
+// NewCloneableBackwardRuneIter creates a CloneableRuneIter for a stream of UTF-8 bytes in reverse order.
 func NewCloneableBackwardRuneIter(in CloneableReader) CloneableRuneIter {
-	return &decodingRuneIter{
-		inputReversed: true,
-		in:            in,
-		pendingRunes:  make([]rune, 0),
-	}
+	return &decodingRuneIter{in: in, inputReversed: true}
 }
 
 // NextRune implements RuneIter#NextRune.
 // It exits with an error if the input bytes contain invalid UTF-8 codepoints.
 func (ri *decodingRuneIter) NextRune() (rune, error) {
-	if ri.pendingRunesOffset >= len(ri.pendingRunes) && !ri.eof {
-		ri.pendingRunesOffset = 0
-		ri.pendingRunes = ri.pendingRunes[:0]
-		if err := ri.loadRunesFromReader(); err != nil {
+	// Assuming that well-behaved readers produce at least one byte
+	// for each read, and a UTF-8 encoded rune occupies at most 4 bytes,
+	// we need at most 4 reads, plus one more iteration
+	// to decode the bytes into a rune.
+	for i := 0; i < 5; i++ {
+		// Try to decode a rune from the current buffer.
+		if ri.offset < ri.buflen {
+			r, size := ri.decodeNextRuneFromBuffer()
+			if size == 0 || (r == utf8.RuneError && size == 1) {
+				// We're assuming that the reader provides valid UTF-8 bytes,
+				// so if there's a decoding error we retry after reading more bytes.
+			} else {
+				ri.offset += size
+				return r, nil
+			}
+		}
+
+		// Refill the buffer.
+		ri.buflen = copy(ri.buf[:], ri.buf[ri.offset:ri.buflen])
+		ri.offset = 0
+		n, err := ri.in.Read(ri.buf[ri.buflen:len(ri.buf)])
+		ri.buflen += n
+		if err == io.EOF && ri.buflen > 0 {
+			continue
+		} else if err != nil {
 			return '\x00', err
 		}
 	}
 
-	if ri.pendingRunesOffset >= len(ri.pendingRunes) && ri.eof {
-		return '\x00', io.EOF
-	}
-
-	r := ri.pendingRunes[ri.pendingRunesOffset]
-	ri.pendingRunesOffset++
-	return r, nil
+	return '\x00', io.EOF
 }
 
-func (ri *decodingRuneIter) loadRunesFromReader() error {
-	for len(ri.pendingRunes) == 0 && !ri.eof {
-		n := copy(ri.buf[:], ri.overflow[:ri.overflowLen])
-
-		numRead, err := ri.in.Read(ri.buf[ri.overflowLen:])
-		if err == io.EOF {
-			ri.eof = true
-		} else if err != nil {
-			return err
-		}
-
-		n += numRead
-
-		var bytesConsumed int
-		if ri.inputReversed {
-			bytesConsumed = ri.loadRunesFromBufferReverseOrder(ri.buf[:n])
-		} else {
-			bytesConsumed = ri.loadRunesFromBuffer(ri.buf[:n])
-		}
-
-		ri.overflowLen = copy(ri.overflow[:], ri.buf[bytesConsumed:n])
+func (ri *decodingRuneIter) decodeNextRuneFromBuffer() (rune, int) {
+	bytes := ri.buf[ri.offset:ri.buflen]
+	if ri.inputReversed {
+		return decodeRuneInputReversed(bytes)
+	} else {
+		return utf8.DecodeRune(bytes)
 	}
-
-	return nil
 }
 
-func (ri *decodingRuneIter) loadRunesFromBuffer(buf []byte) (bytesConsumed int) {
-	for bytesConsumed < len(buf) {
-		r, size := utf8.DecodeRune(buf[bytesConsumed:])
-		if r == utf8.RuneError && size == 1 {
-			// We're assuming that the reader provides valid UTF-8 bytes,
-			// so if there's a decoding error it means we need to read more bytes and try again.
+func decodeRuneInputReversed(bytes []byte) (rune, int) {
+	var size int
+	for i := 0; i < 4 && i < len(bytes); i++ {
+		b := bytes[i]
+		if textUtf8.StartByteIndicator[b] > 0 {
+			// Found a start byte.
+			size = i + 1
 			break
 		}
-
-		ri.pendingRunes = append(ri.pendingRunes, r)
-		bytesConsumed += size
-	}
-	return bytesConsumed
-}
-
-func (ri *decodingRuneIter) loadRunesFromBufferReverseOrder(buf []byte) (bytesConsumed int) {
-	for bytesConsumed < len(buf) {
-		var charWidth int
-		var nextRuneBytes [4]byte
-		for i := 0; i < len(nextRuneBytes) && i+bytesConsumed < len(buf); i++ {
-			b := buf[i+bytesConsumed]
-			nextRuneBytes[i] = b
-			charWidth = int(textUtf8.CharWidth[b])
-			if charWidth > 0 {
-				// found a start byte
-				bytesConsumed += charWidth
-				break
-			}
-		}
-
-		if charWidth == 0 {
-			// failed to find a start byte, so wait for more bytes
-			break
-		}
-
-		// Bytes were read in reverse order, so reverse them before decoding the rune.
-		switch charWidth {
-		case 4:
-			nextRuneBytes[0], nextRuneBytes[3] = nextRuneBytes[3], nextRuneBytes[0]
-			nextRuneBytes[1], nextRuneBytes[2] = nextRuneBytes[2], nextRuneBytes[1]
-
-		case 3:
-			nextRuneBytes[0], nextRuneBytes[2] = nextRuneBytes[2], nextRuneBytes[0]
-
-		case 2:
-			nextRuneBytes[0], nextRuneBytes[1] = nextRuneBytes[1], nextRuneBytes[0]
-		}
-
-		// Now that the rune bytes are in sequential order, we can decode the rune.
-		r, size := utf8.DecodeRune(nextRuneBytes[:charWidth])
-		if r == utf8.RuneError && size == 1 {
-			log.Fatalf("Invalid UTF-8")
-		}
-
-		ri.pendingRunes = append(ri.pendingRunes, r)
 	}
 
-	return bytesConsumed
+	// Bytes were read in reverse order, so swap them before decoding.
+	switch size {
+	case 4:
+		bytes[0], bytes[3] = bytes[3], bytes[0]
+		bytes[1], bytes[2] = bytes[2], bytes[1]
+	case 3:
+		bytes[0], bytes[2] = bytes[2], bytes[0]
+	case 2:
+		bytes[0], bytes[1] = bytes[1], bytes[0]
+	}
+
+	return utf8.DecodeRune(bytes[:size])
 }
 
 // Clone implements CloneableRuneIter#Clone
 func (ri *decodingRuneIter) Clone() CloneableRuneIter {
-	pendingRunes := make([]rune, len(ri.pendingRunes))
-	copy(pendingRunes, ri.pendingRunes)
-
 	return &decodingRuneIter{
-		in:                 ri.in.Clone(),
-		inputReversed:      ri.inputReversed,
-		pendingRunes:       pendingRunes,
-		pendingRunesOffset: ri.pendingRunesOffset,
-		overflow:           ri.overflow,
-		overflowLen:        ri.overflowLen,
-		eof:                ri.eof,
+		in:            ri.in.Clone(),
+		inputReversed: ri.inputReversed,
+		buf:           ri.buf,
+		buflen:        ri.buflen,
+		offset:        ri.offset,
 	}
 }

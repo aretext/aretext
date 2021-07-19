@@ -8,7 +8,7 @@ import (
 	textUtf8 "github.com/aretext/aretext/text/utf8"
 )
 
-// RuneIter iterates over UTF-8 codepoints (runes).
+// RuneIter iterates over unicode codepoints (runes).
 type RuneIter interface {
 	// NextRune returns the next available rune.  If no rune is available, it returns the error io.EOF.
 	NextRune() (rune, error)

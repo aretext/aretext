@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// CloneableReader is an io.Read that can be cloned to produce a new, independent reader at the same position.
+// CloneableReader is an io.Reader that can be cloned to produce a new, independent reader at the same position.
 type CloneableReader interface {
 	io.Reader
 

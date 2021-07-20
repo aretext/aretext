@@ -183,3 +183,27 @@ func TestBackwardRuneIterLookahead(t *testing.T) {
 	assert.Equal(t, "ô£", string(originalRunes))
 	assert.Equal(t, "ô£", string(clonedRunes))
 }
+
+func BenchmarkForwardRuneIter(b *testing.B) {
+	s := "abcdefghijklmnopqrstuv"
+	for i := 0; i < b.N; i++ {
+		reader := NewCloneableReaderFromString(s)
+		iter := NewCloneableForwardRuneIter(reader)
+		_, err := iter.NextRune()
+		if err != nil {
+			b.Fatalf("Error: %v", err)
+		}
+	}
+}
+
+func BenchmarkBackwardRuneIter(b *testing.B) {
+	s := "abcdefghijklmnopqrstuv"
+	for i := 0; i < b.N; i++ {
+		reader := NewCloneableReaderFromString(s)
+		iter := NewCloneableBackwardRuneIter(reader)
+		_, err := iter.NextRune()
+		if err != nil {
+			b.Fatalf("Error: %v", err)
+		}
+	}
+}

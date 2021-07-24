@@ -28,6 +28,10 @@ type Computation struct {
 // these must have non-zero length, be ordered sequentially by start position,
 // and be non-overlapping.
 func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedToken) *Computation {
+	if consumedLength == 0 {
+		panic("Computation must consume at least one rune")
+	}
+
 	if consumedLength > readLength {
 		panic("Consumed length must be less than or equal to read length")
 	}

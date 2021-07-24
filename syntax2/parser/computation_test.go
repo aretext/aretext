@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -299,6 +300,76 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 			c := tc.builder()
 			tokens := c.TokensIntersectingRange(tc.startPos, tc.endPos)
 			assert.Equal(t, tc.expectedTokens, tokens)
+		})
+	}
+}
+
+func TestConcatLeafComputations(t *testing.T) {
+	testCases := []struct {
+		name         string
+		computations []*Computation
+	}{
+		{
+			name:         "empty",
+			computations: nil,
+		},
+		{
+			name: "single computation",
+			computations: []*Computation{
+				NewComputation(5, 5, []ComputedToken{
+					{Length: 3},
+				}),
+			},
+		},
+		{
+			name: "two computations",
+			computations: []*Computation{
+				NewComputation(5, 5, []ComputedToken{
+					{Length: 3},
+				}),
+				NewComputation(8, 8, []ComputedToken{
+					{Length: 8},
+				}),
+			},
+		},
+		{
+			name: "many computations",
+			computations: []*Computation{
+				NewComputation(5, 5, []ComputedToken{
+					{Length: 3},
+				}),
+				NewComputation(8, 8, []ComputedToken{
+					{Length: 8},
+				}),
+				NewComputation(2, 2, []ComputedToken{
+					{Length: 2},
+				}),
+				NewComputation(7, 7, []ComputedToken{
+					{Length: 7},
+				}),
+				NewComputation(3, 3, []ComputedToken{
+					{Length: 3},
+				}),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c1 := ConcatLeafComputations(tc.computations)
+
+			var c2 *Computation
+			for _, leaf := range tc.computations {
+				c2 = c2.Append(leaf)
+			}
+
+			assert.Equal(t, c1.ReadLength(), c2.ReadLength())
+			assert.Equal(t, c1.ConsumedLength(), c2.ConsumedLength())
+			assert.Equal(t, c1.TreeHeight(), c2.TreeHeight())
+
+			actualTokens := c1.TokensIntersectingRange(0, math.MaxUint64)
+			expectedTokens := c2.TokensIntersectingRange(0, math.MaxUint64)
+			assert.Equal(t, actualTokens, expectedTokens)
 		})
 	}
 }

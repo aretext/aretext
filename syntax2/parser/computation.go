@@ -401,3 +401,44 @@ func (c *Computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
 
 	return result
 }
+
+// ConcatLeafComputations combines leaf computations into a single computation.
+// A leaf computation is a computation constructed by NewComputation
+// without any other computations appended.
+// This produces the same result as sequentially appending the computations,
+// but does so more efficiently.
+func ConcatLeafComputations(computations []*Computation) *Computation {
+	if len(computations) == 0 {
+		return nil
+	}
+
+	for _, c := range computations {
+		if c.TreeHeight() > 1 {
+			panic("Expected computation to be a leaf")
+		}
+	}
+
+	// Construct the tree layer-by-layer.  This is cheaper than
+	// calling Append repeatedly, because every node we allocate
+	// will be used in the final tree.  Additionally, we avoid
+	// the cost of rebalancing the tree since it's balanced by construction.
+	nextComputations := make([]*Computation, 0, len(computations)/2+1)
+	for len(computations) > 1 {
+		var i int
+		for i < len(computations) {
+			if i+1 < len(computations) {
+				c1, c2 := computations[i], computations[i+1]
+				nextComputations = append(nextComputations, c1.Append(c2))
+				i += 2
+			} else {
+				c := computations[i]
+				nextComputations = append(nextComputations, c)
+				i++
+			}
+		}
+		computations = nextComputations
+		nextComputations = nextComputations[:0]
+	}
+
+	return computations[0]
+}

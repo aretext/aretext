@@ -235,8 +235,14 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 		maxChildTreeHeight = rightChild.TreeHeight()
 	}
 
+	// Right child starts reading after last character consumed by left child.
+	maxReadLength := leftChild.ConsumedLength() + rightChild.ReadLength()
+	if leftChild.ReadLength() > maxReadLength {
+		maxReadLength = leftChild.ReadLength()
+	}
+
 	return &Computation{
-		readLength:     leftChild.ReadLength() + rightChild.ReadLength(),
+		readLength:     maxReadLength,
 		consumedLength: leftChild.ConsumedLength() + rightChild.ConsumedLength(),
 		treeHeight:     maxChildTreeHeight + 1,
 		leftChild:      leftChild,
@@ -275,17 +281,20 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				rangeStartPos,
 				rangeEndPos,
 			)
-		} else if rangeStartPos < readStartPos+c.leftChild.readLength {
+		} else if rangeStartPos < readStartPos+c.leftChild.consumedLength {
 			return c.leftChild.largestSubComputationInRange(
 				readStartPos,
-				readEndPos-c.rightChild.readLength,
+				readStartPos+c.leftChild.readLength,
 				rangeStartPos,
 				rangeEndPos,
 			)
 		} else {
+			// Right child starts reading after last character consumed by left child.
+			newReadStartPos := readStartPos + c.leftChild.consumedLength
+			newReadEndPos := newReadStartPos + c.rightChild.readLength
 			return c.rightChild.largestSubComputationInRange(
-				readStartPos+c.leftChild.readLength,
-				readEndPos,
+				newReadStartPos,
+				newReadEndPos,
 				rangeStartPos,
 				rangeEndPos,
 			)
@@ -316,7 +325,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 		} else {
 			return c.leftChild.largestSubComputationInRange(
 				readStartPos,
-				readEndPos-c.rightChild.readLength,
+				readStartPos+c.leftChild.readLength,
 				rangeStartPos,
 				rangeEndPos,
 			)

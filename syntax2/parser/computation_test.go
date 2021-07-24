@@ -72,6 +72,28 @@ func TestComputationLargestSubComputationInRange(t *testing.T) {
 			readEndPos:         8,
 			expectedReadLength: 5,
 		},
+		{
+			name: "multiple computations, match left child with lookahead",
+			builder: func() *Computation {
+				left := NewComputation(10, 3, nil)
+				right := NewComputation(5, 5, nil)
+				return left.Append(right)
+			},
+			readStartPos:       0,
+			readEndPos:         15,
+			expectedReadLength: 10,
+		},
+		{
+			name: "multiple computations, match right child with lookahead",
+			builder: func() *Computation {
+				left := NewComputation(10, 3, nil)
+				right := NewComputation(9, 8, nil)
+				return left.Append(right)
+			},
+			readStartPos:       3,
+			readEndPos:         20,
+			expectedReadLength: 9,
+		},
 	}
 
 	for _, tc := range testCases {

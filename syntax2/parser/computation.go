@@ -9,7 +9,7 @@ type ComputedToken struct {
 	Role   TokenRole
 }
 
-// Computation is a result produced by a tokenizer.
+// Computation is a result produced by a parser.
 // Computations are composable, so part of one computation
 // can be re-used when re-parsing an edited text.
 type Computation struct {
@@ -22,9 +22,9 @@ type Computation struct {
 }
 
 // NewComputation constructs a computation.
-// readLength is the number of runes read by the tokenizer,
-// and consumedLength is the number of runes consumed by the tokenizer.
-// The tokens slice contains any tokens recognized by the tokenizer;
+// readLength is the number of runes read by the parser,
+// and consumedLength is the number of runes consumed by the parser.
+// The tokens slice contains any tokens recognized by the parser;
 // these must have non-zero length, be ordered sequentially by start position,
 // and be non-overlapping.
 func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedToken) *Computation {

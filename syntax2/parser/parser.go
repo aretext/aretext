@@ -96,7 +96,7 @@ func (p *Parser) findReusableComputation(pos uint64, edit Edit, state State) *Co
 	if pos < edit.pos {
 		// If the parser is starting before the edit, look for a subcomputation
 		// from that position up to the start of the edit.
-		return p.prevComputation.LargestSubComputationInRange(
+		return p.prevComputation.LargestMatchingSubComputation(
 			pos,
 			edit.pos,
 			state,
@@ -107,7 +107,7 @@ func (p *Parser) findReusableComputation(pos uint64, edit Edit, state State) *Co
 		// If the parser is past the last character inserted,
 		// translate the position to the previous document by subtracting
 		// the number of inserted characters.
-		return p.prevComputation.LargestSubComputationInRange(
+		return p.prevComputation.LargestMatchingSubComputation(
 			pos-edit.numInserted,
 			math.MaxUint64,
 			state,
@@ -118,7 +118,7 @@ func (p *Parser) findReusableComputation(pos uint64, edit Edit, state State) *Co
 		// If the parser is past a deletion,
 		// translate the position to the previous document by adding
 		// the number of deleted characters.
-		return p.prevComputation.LargestSubComputationInRange(
+		return p.prevComputation.LargestMatchingSubComputation(
 			pos+edit.numDeleted,
 			math.MaxUint64,
 			state,

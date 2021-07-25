@@ -290,12 +290,13 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 	}
 }
 
-// LargestSubComputationInRange returns the largest sub-computation with a read range
-// contained within the range that has a matching start state.
+// LargestMatchingSubComputation returns the largest sub-computation that has both
+// (1) a read range contained within the requested range and (2) a start state
+// that matches the requested state.
 // This is used to find a re-usable computation that is still valid after an edit.
 // A computation is considered *invalid* if it read some text that was edited,
 // so if the computation did *not* read any edited text, it's definitely still valid.
-func (c *Computation) LargestSubComputationInRange(
+func (c *Computation) LargestMatchingSubComputation(
 	rangeStartPos, rangeEndPos uint64,
 	state State,
 ) *Computation {

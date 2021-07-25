@@ -14,7 +14,7 @@ func (s stubState) Equals(other State) bool {
 	return ok && s.x == otherStubState.x
 }
 
-func TestComputationLargestSubComputationInRange(t *testing.T) {
+func TestComputationLargestMatchingSubComputation(t *testing.T) {
 	testCases := []struct {
 		name               string
 		builder            func() *Computation
@@ -164,7 +164,7 @@ func TestComputationLargestSubComputationInRange(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			c := tc.builder()
-			sub := c.LargestSubComputationInRange(tc.readStartPos, tc.readEndPos, tc.state)
+			sub := c.LargestMatchingSubComputation(tc.readStartPos, tc.readEndPos, tc.state)
 			assert.Equal(t, tc.expectedReadLength, sub.ReadLength())
 		})
 	}

@@ -151,6 +151,17 @@ func TestReparseAfterEditInsertion(t *testing.T) {
 				{StartPos: 7, EndPos: 19, Role: TokenRoleString},
 			},
 		},
+		{
+			name:         "affect some tokens but not others",
+			text:         `"foo" "bar" "baz"`,
+			editPos:      7,
+			insertString: `x`,
+			expectedTokens: []Token{
+				{StartPos: 0, EndPos: 5, Role: TokenRoleString},
+				{StartPos: 6, EndPos: 12, Role: TokenRoleString},
+				{StartPos: 13, EndPos: 18, Role: TokenRoleString},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -209,13 +220,24 @@ func TestReparseAfterEditDeletion(t *testing.T) {
 			},
 		},
 		{
-			name:       "delete affects some tokens but not others",
+			name:       "delete affects multiple tokens",
 			text:       `"foo" "bar" "baz"`,
 			editPos:    4,
 			numDeleted: 1,
 			expectedTokens: []Token{
 				{StartPos: 0, EndPos: 6, Role: TokenRoleString},
 				{StartPos: 9, EndPos: 12, Role: TokenRoleString},
+			},
+		},
+		{
+			name:       "delete affects some tokens but not others",
+			text:       `"foo" "bar" "baz"`,
+			editPos:    8,
+			numDeleted: 1,
+			expectedTokens: []Token{
+				{StartPos: 0, EndPos: 5, Role: TokenRoleString},
+				{StartPos: 6, EndPos: 10, Role: TokenRoleString},
+				{StartPos: 11, EndPos: 16, Role: TokenRoleString},
 			},
 		},
 	}

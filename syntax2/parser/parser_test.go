@@ -11,11 +11,11 @@ import (
 )
 
 // simpleParseFunc recognizes strings prefixed and suffixed with a double-quote.
-func simpleParseFunc(iter text.CloneableRuneIter) (uint64, []ComputedToken) {
+func simpleParseFunc(iter text.CloneableRuneIter, state State) (uint64, []ComputedToken, State) {
 	// Consume the first character in the text.
 	r, err := iter.NextRune()
 	if err != nil {
-		return 0, nil
+		return 0, nil, state
 	}
 	n := uint64(1)
 
@@ -25,14 +25,14 @@ func simpleParseFunc(iter text.CloneableRuneIter) (uint64, []ComputedToken) {
 			r, err = iter.NextRune()
 			if err != nil {
 				// No double-quote found before EOF, so consume without producing any tokens.
-				return n, nil
+				return n, nil, state
 			} else if r == '"' {
 				// Found matching double-quote at end, so produce a string token.
 				token := ComputedToken{
 					Length: n + 1,
 					Role:   TokenRoleString,
 				}
-				return token.Length, []ComputedToken{token}
+				return token.Length, []ComputedToken{token}, state
 			}
 			n++
 		}
@@ -42,7 +42,7 @@ func simpleParseFunc(iter text.CloneableRuneIter) (uint64, []ComputedToken) {
 		for {
 			r, err = iter.NextRune()
 			if err != nil || r == '"' {
-				return n, nil
+				return n, nil, state
 			}
 			n++
 		}

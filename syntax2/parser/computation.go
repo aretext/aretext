@@ -16,6 +16,8 @@ type Computation struct {
 	readLength     uint64
 	consumedLength uint64
 	treeHeight     uint64
+	startState     State
+	endState       State
 	tokens         []ComputedToken // Only in leaves.
 	leftChild      *Computation
 	rightChild     *Computation
@@ -27,7 +29,13 @@ type Computation struct {
 // The tokens slice contains any tokens recognized by the parser;
 // these must have non-zero length, be ordered sequentially by start position,
 // and be non-overlapping.
-func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedToken) *Computation {
+func NewComputation(
+	readLength uint64,
+	consumedLength uint64,
+	startState State,
+	endState State,
+	tokens []ComputedToken,
+) *Computation {
 	if consumedLength == 0 {
 		panic("Computation must consume at least one rune")
 	}
@@ -58,6 +66,8 @@ func NewComputation(readLength uint64, consumedLength uint64, tokens []ComputedT
 		readLength:     readLength,
 		consumedLength: consumedLength,
 		treeHeight:     1,
+		startState:     startState,
+		endState:       endState,
 		tokens:         tokens,
 	}
 }
@@ -87,6 +97,22 @@ func (c *Computation) TreeHeight() uint64 {
 	} else {
 		return c.treeHeight
 	}
+}
+
+// StartState returns the parse state at the start of the computation.
+func (c *Computation) StartState() State {
+	if c == nil {
+		return EmptyState{}
+	}
+	return c.startState
+}
+
+// EndState returns the parse state at the end of the computation.
+func (c *Computation) EndState() State {
+	if c == nil {
+		return EmptyState{}
+	}
+	return c.endState
 }
 
 // Append appends one computation after another computation.
@@ -230,8 +256,16 @@ func (c *Computation) rotateRight() *Computation {
 }
 
 func computationFromChildren(leftChild, rightChild *Computation) *Computation {
+	var startState, endState State
+
 	if leftChild == nil && rightChild == nil {
 		return nil
+	} else if leftChild == nil {
+		startState, endState = rightChild.StartState(), rightChild.EndState()
+	} else if rightChild == nil {
+		startState, endState = leftChild.StartState(), leftChild.EndState()
+	} else {
+		startState, endState = leftChild.StartState(), rightChild.EndState()
 	}
 
 	maxChildTreeHeight := leftChild.TreeHeight()
@@ -249,21 +283,30 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 		readLength:     maxReadLength,
 		consumedLength: leftChild.ConsumedLength() + rightChild.ConsumedLength(),
 		treeHeight:     maxChildTreeHeight + 1,
+		startState:     startState,
+		endState:       endState,
 		leftChild:      leftChild,
 		rightChild:     rightChild,
 	}
 }
 
 // LargestSubComputationInRange returns the largest sub-computation with a read range
-// contained within the range.
+// contained within the range that has a matching start state.
 // This is used to find a re-usable computation that is still valid after an edit.
 // A computation is considered *invalid* if it read some text that was edited,
 // so if the computation did *not* read any edited text, it's definitely still valid.
-func (c *Computation) LargestSubComputationInRange(rangeStartPos, rangeEndPos uint64) *Computation {
-	return c.largestSubComputationInRange(0, c.readLength, rangeStartPos, rangeEndPos)
+func (c *Computation) LargestSubComputationInRange(
+	rangeStartPos, rangeEndPos uint64,
+	state State,
+) *Computation {
+	return c.largestSubComputationInRange(0, c.readLength, rangeStartPos, rangeEndPos, state)
 }
 
-func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, rangeStartPos, rangeEndPos uint64) *Computation {
+func (c *Computation) largestSubComputationInRange(
+	readStartPos, readEndPos uint64,
+	rangeStartPos, rangeEndPos uint64,
+	state State,
+) *Computation {
 
 	// First, search until we find a sub-computation with the requested start position.
 	if readStartPos != rangeStartPos {
@@ -276,6 +319,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readEndPos,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		} else if c.rightChild == nil {
 			// Left child has no sibling, so there's only one direction to search.
@@ -284,6 +328,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readEndPos,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		} else if rangeStartPos < readStartPos+c.leftChild.consumedLength {
 			return c.leftChild.largestSubComputationInRange(
@@ -291,6 +336,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readStartPos+c.leftChild.readLength,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		} else {
 			// Right child starts reading after last character consumed by left child.
@@ -301,6 +347,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				newReadEndPos,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		}
 	}
@@ -317,6 +364,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readEndPos,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		} else if c.rightChild == nil {
 			// Left child has no sibling, so there's only one direction to search.
@@ -325,6 +373,7 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readEndPos,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		} else {
 			return c.leftChild.largestSubComputationInRange(
@@ -332,8 +381,14 @@ func (c *Computation) largestSubComputationInRange(readStartPos, readEndPos, ran
 				readStartPos+c.leftChild.readLength,
 				rangeStartPos,
 				rangeEndPos,
+				state,
 			)
 		}
+	}
+
+	// If the start state doesn't match, we can't re-use this computation.
+	if !c.StartState().Equals(state) {
+		return nil
 	}
 
 	return c

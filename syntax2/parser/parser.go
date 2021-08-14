@@ -36,13 +36,13 @@ type Result struct {
 var FailedResult = Result{}
 
 // IsSuccess returns whether the parse succeeded.
-func (p Result) IsSuccess() bool {
-	return p.NumConsumed > 0
+func (r Result) IsSuccess() bool {
+	return r.NumConsumed > 0
 }
 
 // IsFailure returns whether the parse failed.
-func (p Result) IsFailure() bool {
-	return !p.IsSuccess()
+func (r Result) IsFailure() bool {
+	return !r.IsSuccess()
 }
 
 // P parses a document into tokens.

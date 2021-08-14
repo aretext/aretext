@@ -6,7 +6,7 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
-// ParseFunc incrementally parses a document into tokens.
+// Func incrementally parses a document into tokens.
 //
 // It returns the number of tokens consumed and a slice of tokens.
 // The output MUST be deterministic based solely on the input args.
@@ -23,18 +23,18 @@ import (
 // The state parameter allows the parse func to track state across invocations.
 // The initial state is always EmptyState.  The parse func must return a non-nil
 // state, which will be passed back to the parse func on the next invocation.
-type ParseFunc func(text.CloneableRuneIter, State) (uint64, []ComputedToken, State)
+type Func func(text.CloneableRuneIter, State) (uint64, []ComputedToken, State)
 
 // Parser parses a document into tokens.
 // It caches the results from the last parse so it can efficiently
 // reparse a document after an edit (insertion/deletion).
 type Parser struct {
-	parseFunc       ParseFunc
+	parseFunc       Func
 	prevComputation *Computation
 }
 
 // NewParser constructs a new parser for the language recognized by parseFunc.
-func NewParser(parseFunc ParseFunc) *Parser {
+func NewParser(parseFunc Func) *Parser {
 	return &Parser{parseFunc: parseFunc}
 }
 
@@ -45,7 +45,7 @@ func (p *Parser) ParseAll(tree *text.Tree) *Computation {
 	leafComputations := make([]*Computation, 0)
 	n := tree.NumChars()
 	for pos < n {
-		c := p.runParseFunc(tree, pos, state)
+		c := p.runFunc(tree, pos, state)
 		pos += c.ConsumedLength()
 		state = c.EndState()
 		leafComputations = append(leafComputations, c)
@@ -68,7 +68,7 @@ func (p *Parser) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 	for pos < n {
 		nextComputation := p.findReusableComputation(pos, edit, state)
 		if nextComputation == nil {
-			nextComputation = p.runParseFunc(tree, pos, state)
+			nextComputation = p.runFunc(tree, pos, state)
 		}
 		state = nextComputation.EndState()
 		pos += nextComputation.ConsumedLength()
@@ -78,7 +78,7 @@ func (p *Parser) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 	return c
 }
 
-func (p *Parser) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation {
+func (p *Parser) runFunc(tree *text.Tree, pos uint64, state State) *Computation {
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	trackingIter := NewTrackingRuneIter(runeIter)

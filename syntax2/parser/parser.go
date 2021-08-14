@@ -23,7 +23,27 @@ import (
 // The state parameter allows the parse func to track state across invocations.
 // The initial state is always EmptyState.  The parse func must return a non-nil
 // state, which will be passed back to the parse func on the next invocation.
-type Func func(text.CloneableRuneIter, State) (uint64, []ComputedToken, State)
+type Func func(text.CloneableRuneIter, State) Result
+
+// Result represents the result of a single execution of a parse function.
+type Result struct {
+	NumConsumed    uint64
+	ComputedTokens []ComputedToken
+	NextState      State
+}
+
+// FailedResult represents a failed parse.
+var FailedResult = Result{}
+
+// IsSuccess returns whether the parse succeeded.
+func (p Result) IsSuccess() bool {
+	return p.NumConsumed > 0
+}
+
+// IsFailure returns whether the parse failed.
+func (p Result) IsFailure() bool {
+	return !p.IsSuccess()
+}
 
 // P parses a document into tokens.
 // It caches the results from the last parse so it can efficiently
@@ -82,13 +102,13 @@ func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation 
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	trackingIter := NewTrackingRuneIter(runeIter)
-	numConsumed, computedTokens, nextState := p.parseFunc(trackingIter, state)
+	result := p.parseFunc(trackingIter, state)
 	return NewComputation(
 		trackingIter.MaxRead(),
-		numConsumed,
+		result.NumConsumed,
 		state,
-		nextState,
-		computedTokens,
+		result.NextState,
+		result.ComputedTokens,
 	)
 }
 

@@ -54,8 +54,10 @@ type P struct {
 }
 
 // New constructs a new parser for the language recognized by parseFunc.
-func New(parseFunc Func) *P {
-	return &P{parseFunc: parseFunc}
+func New(f Func) *P {
+	// This ensures that the parse func always makes progress.
+	f = f.recoverFromFailure()
+	return &P{parseFunc: f}
 }
 
 // ParseAll parses the entire document.

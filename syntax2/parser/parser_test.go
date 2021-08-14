@@ -105,6 +105,19 @@ func TestParseAll(t *testing.T) {
 	}
 }
 
+func TestRecoverFromFailure(t *testing.T) {
+	failingParseFunc := func(iter text.CloneableRuneIter, state State) Result {
+		return FailedResult
+	}
+	tree, err := text.NewTreeFromString("abcd")
+	require.NoError(t, err)
+	p := New(failingParseFunc)
+	c := p.ParseAll(tree)
+	assert.Equal(t, uint64(4), c.ConsumedLength())
+	tokens := c.TokensIntersectingRange(0, math.MaxUint64)
+	assert.Equal(t, 0, len(tokens))
+}
+
 func TestReparseAfterEditInsertion(t *testing.T) {
 	testCases := []struct {
 		name           string

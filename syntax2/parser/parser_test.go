@@ -93,7 +93,7 @@ func TestParseAll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			p := NewParser(simpleParseFunc)
+			p := New(simpleParseFunc)
 			c := p.ParseAll(tree)
 			tokens := c.TokensIntersectingRange(0, math.MaxUint64)
 			assert.Equal(t, tc.expectedTokens, tokens)
@@ -168,7 +168,7 @@ func TestReparseAfterEditInsertion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			p := NewParser(simpleParseFunc)
+			p := New(simpleParseFunc)
 			p.ParseAll(tree)
 
 			var n uint64
@@ -246,7 +246,7 @@ func TestReparseAfterEditDeletion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			p := NewParser(simpleParseFunc)
+			p := New(simpleParseFunc)
 			p.ParseAll(tree)
 
 			for i := uint64(0); i < tc.numDeleted; i++ {

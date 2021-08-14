@@ -25,27 +25,27 @@ import (
 // state, which will be passed back to the parse func on the next invocation.
 type Func func(text.CloneableRuneIter, State) (uint64, []ComputedToken, State)
 
-// Parser parses a document into tokens.
+// P parses a document into tokens.
 // It caches the results from the last parse so it can efficiently
 // reparse a document after an edit (insertion/deletion).
-type Parser struct {
+type P struct {
 	parseFunc       Func
 	prevComputation *Computation
 }
 
-// NewParser constructs a new parser for the language recognized by parseFunc.
-func NewParser(parseFunc Func) *Parser {
-	return &Parser{parseFunc: parseFunc}
+// New constructs a new parser for the language recognized by parseFunc.
+func New(parseFunc Func) *P {
+	return &P{parseFunc: parseFunc}
 }
 
 // ParseAll parses the entire document.
-func (p *Parser) ParseAll(tree *text.Tree) *Computation {
+func (p *P) ParseAll(tree *text.Tree) *Computation {
 	var pos uint64
 	state := State(EmptyState{})
 	leafComputations := make([]*Computation, 0)
 	n := tree.NumChars()
 	for pos < n {
-		c := p.runFunc(tree, pos, state)
+		c := p.runParseFunc(tree, pos, state)
 		pos += c.ConsumedLength()
 		state = c.EndState()
 		leafComputations = append(leafComputations, c)
@@ -60,7 +60,7 @@ func (p *Parser) ParseAll(tree *text.Tree) *Computation {
 // This should be called *after* at least one invocation of ParseAll().
 // It must be called for *every* edit to the document, otherwise the
 // tokens may not match the current state of the document.
-func (p *Parser) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
+func (p *P) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 	var pos uint64
 	var c *Computation
 	state := State(EmptyState{})
@@ -68,7 +68,7 @@ func (p *Parser) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 	for pos < n {
 		nextComputation := p.findReusableComputation(pos, edit, state)
 		if nextComputation == nil {
-			nextComputation = p.runFunc(tree, pos, state)
+			nextComputation = p.runParseFunc(tree, pos, state)
 		}
 		state = nextComputation.EndState()
 		pos += nextComputation.ConsumedLength()
@@ -78,7 +78,7 @@ func (p *Parser) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 	return c
 }
 
-func (p *Parser) runFunc(tree *text.Tree, pos uint64, state State) *Computation {
+func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation {
 	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
 	runeIter := text.NewCloneableForwardRuneIter(reader)
 	trackingIter := NewTrackingRuneIter(runeIter)
@@ -92,7 +92,7 @@ func (p *Parser) runFunc(tree *text.Tree, pos uint64, state State) *Computation 
 	)
 }
 
-func (p *Parser) findReusableComputation(pos uint64, edit Edit, state State) *Computation {
+func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *Computation {
 	if pos < edit.pos {
 		// If the parser is starting before the edit, look for a subcomputation
 		// from that position up to the start of the edit.

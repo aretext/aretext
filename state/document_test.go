@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 )
 
@@ -178,6 +179,29 @@ func TestLoadDocumentIncrementConfigVersion(t *testing.T) {
 
 	// Expect that the config version was bumped.
 	assert.Equal(t, state.ConfigVersion(), 1)
+}
+
+func TestReloadDocumentWithMenuOpen(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+	defer cleanup()
+	state := NewEditorState(5, 3, nil, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	// Open the command menu
+	ShowMenu(state, MenuStyleCommand, func() []menu.Item { return nil })
+	assert.Equal(t, state.InputMode(), InputModeMenu)
+
+	// Update the file with shorter text and reload.
+	err := ioutil.WriteFile(path, []byte("ab"), 0644)
+	require.NoError(t, err)
+	ReloadDocument(state)
+	defer state.fileWatcher.Stop()
+
+	// Expect that the input mode is normal and the menu is hidden.
+	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
+	assert.Equal(t, InputModeNormal, state.InputMode())
+	assert.False(t, state.Menu().Visible())
 }
 
 func TestSaveDocument(t *testing.T) {

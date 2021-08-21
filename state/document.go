@@ -174,6 +174,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.autoIndent = config.AutoIndent
 	state.documentBuffer.showLineNum = config.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()
+	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(config)
 	state.dirPatternsToHide = config.HideDirectories
 	state.styles = config.Styles

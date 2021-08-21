@@ -609,9 +609,9 @@ var DfaMatchResultNone = DfaMatchResult{}
 // of a tie, it returns an accepting match with the actions from both matches.
 func (m DfaMatchResult) consolidate(other DfaMatchResult) DfaMatchResult {
 	if m.Accepted && other.Accepted {
-		if m.EndPos > other.EndPos {
+		if m.NumBytesReadAtLastAccept > other.NumBytesReadAtLastAccept {
 			return m
-		} else if other.EndPos > m.EndPos {
+		} else if other.NumBytesReadAtLastAccept > m.NumBytesReadAtLastAccept {
 			return other
 		} else {
 			return DfaMatchResult{

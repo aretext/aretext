@@ -527,6 +527,23 @@ func TestGoTokenizer(t *testing.T) {
 				{Text: `0x1p-2i`, Role: parser.TokenRoleNumber},
 			},
 		},
+		{
+			name: "division sign in comment",
+			inputString: `
+// ÷
+if true {
+	fmt.Printf("hello")
+}
+`,
+			expectedTokens: []TokenWithText{
+				{Text: `// ÷`, Role: parser.TokenRoleComment},
+				{Text: `if`, Role: parser.TokenRoleKeyword},
+				{Text: `true`, Role: parser.TokenRoleKeyword},
+				{Text: `fmt`, Role: parser.TokenRoleIdentifier},
+				{Text: `Printf`, Role: parser.TokenRoleIdentifier},
+				{Text: `"hello"`, Role: parser.TokenRoleString},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

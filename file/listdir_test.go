@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -40,7 +39,7 @@ func TestListDir(t *testing.T) {
 		fullPath := filepath.Join(tmpDir, p)
 		err = os.MkdirAll(filepath.Dir(fullPath), 0755)
 		require.NoError(t, err)
-		err = ioutil.WriteFile(fullPath, []byte("test"), 0644)
+		err = os.WriteFile(fullPath, []byte("test"), 0644)
 		require.NoError(t, err)
 	}
 

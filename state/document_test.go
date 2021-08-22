@@ -74,7 +74,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
 
 	// Update the file with shorter text and reload.
-	err := ioutil.WriteFile(path, []byte("ab"), 0644)
+	err := os.WriteFile(path, []byte("ab"), 0644)
 	require.NoError(t, err)
 	ReloadDocument(state)
 	defer state.fileWatcher.Stop()
@@ -193,7 +193,7 @@ func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	assert.Equal(t, state.InputMode(), InputModeMenu)
 
 	// Update the file with shorter text and reload.
-	err := ioutil.WriteFile(path, []byte("ab"), 0644)
+	err := os.WriteFile(path, []byte("ab"), 0644)
 	require.NoError(t, err)
 	ReloadDocument(state)
 	defer state.fileWatcher.Stop()

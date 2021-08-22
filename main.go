@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -43,7 +43,7 @@ func main() {
 		defer logFile.Close()
 		log.SetOutput(logFile)
 	} else {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}
 
 	if *cpuprofile != "" {

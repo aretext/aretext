@@ -1,7 +1,7 @@
 package syntax
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -243,7 +243,7 @@ func TestJsonTokenizer(t *testing.T) {
 }
 
 func BenchmarkJsonTokenizer(b *testing.B) {
-	data, err := ioutil.ReadFile("testdata/test.json")
+	data, err := os.ReadFile("testdata/test.json")
 	require.NoError(b, err)
 	text := string(data)
 

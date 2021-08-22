@@ -224,7 +224,7 @@ func TestSaveDocument(t *testing.T) {
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
 
 	// Check that the changes were persisted
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	require.NoError(t, err)
 	assert.Equal(t, "x\n", string(contents))
 }

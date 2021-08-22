@@ -39,7 +39,7 @@ func saveAndAssertContents(t *testing.T, path string, contents string) {
 	assert.Equal(t, path, watcher.Path())
 	defer watcher.Stop()
 
-	fileBytes, err := ioutil.ReadFile(path)
+	fileBytes, err := os.ReadFile(path)
 	require.NoError(t, err)
 
 	expectedContents := contents + "\n" // Append POSIX EOF

@@ -1,7 +1,7 @@
 package utf8
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +46,7 @@ func TestValidateBytesIndividually(t *testing.T) {
 
 func TestValidateFile(t *testing.T) {
 	v := NewValidator()
-	data, err := ioutil.ReadFile("testdata/utf8.txt")
+	data, err := os.ReadFile("testdata/utf8.txt")
 	require.NoError(t, err)
 	assert.True(t, v.ValidateBytes(data))
 }

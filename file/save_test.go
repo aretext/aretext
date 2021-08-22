@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -13,7 +12,7 @@ import (
 )
 
 func TestSaveNewFile(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	defer func() {
 		err := os.RemoveAll(tmpDir)

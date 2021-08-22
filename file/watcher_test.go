@@ -2,7 +2,6 @@ package file
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -15,7 +14,7 @@ import (
 const testWatcherPollInterval time.Duration = time.Millisecond * 50
 
 func createTestFile(t *testing.T, s string) (string, func()) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 
 	filePath := path.Join(tmpDir, "test.txt")

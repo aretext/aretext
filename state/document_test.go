@@ -2,7 +2,6 @@ package state
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 func createTestFile(t *testing.T, contents string) (path string, cleanup func()) {
-	f, err := ioutil.TempFile(os.TempDir(), "aretext-")
+	f, err := os.CreateTemp(os.TempDir(), "aretext-")
 	require.NoError(t, err)
 	defer f.Close()
 

@@ -2,7 +2,6 @@ package text
 
 import (
 	"io"
-	"io/ioutil"
 	"strings"
 	"unicode/utf8"
 
@@ -201,7 +200,7 @@ func (t *Tree) LineNumForPosition(charPos uint64) uint64 {
 // String returns the text in the tree as a string.
 func (t *Tree) String() string {
 	reader := t.ReaderAtPosition(0, ReadDirectionForward)
-	retrievedBytes, err := ioutil.ReadAll(reader)
+	retrievedBytes, err := io.ReadAll(reader)
 	if err != nil {
 		panic("Unexpected error reading bytes from text.Tree")
 	}

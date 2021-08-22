@@ -1,7 +1,7 @@
 package text
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -112,7 +112,7 @@ func TestReaderStartLocation(t *testing.T) {
 			// Check a reader starting from each character position to the end
 			for i := 0; i < len(tc.runes); i++ {
 				reader := tree.ReaderAtPosition(uint64(i), ReadDirectionForward)
-				retrieved, err := ioutil.ReadAll(reader)
+				retrieved, err := io.ReadAll(reader)
 				require.NoError(t, err)
 				require.Equal(t, string(tc.runes[i:]), string(retrieved), "invalid substring starting from character at position %d (expect len = %d, actual len = %d)", i, len(string(tc.runes[i:])), len(string(retrieved)))
 			}
@@ -163,7 +163,7 @@ func TestReaderPastLastCharacter(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			reader := tree.ReaderAtPosition(tc.pos, ReadDirectionForward)
-			retrieved, err := ioutil.ReadAll(reader)
+			retrieved, err := io.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
 		})
@@ -453,7 +453,7 @@ func TestReadBackwards(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := tree.ReaderAtPosition(tc.position, ReadDirectionBackward)
-			retrieved, err := ioutil.ReadAll(reader)
+			retrieved, err := io.ReadAll(reader)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, string(retrieved))
 		})
@@ -528,7 +528,7 @@ func TestReaderSeekBackward(t *testing.T) {
 			err = reader.SeekBackward(tc.seekOffset)
 			require.NoError(t, err)
 
-			retrieved, err := ioutil.ReadAll(reader)
+			retrieved, err := io.ReadAll(reader)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, string(retrieved))
 		})
@@ -541,13 +541,13 @@ func TestReadToEndThenSeekBackward(t *testing.T) {
 	require.NoError(t, err)
 
 	reader := tree.ReaderAtPosition(0, ReadDirectionForward)
-	_, err = ioutil.ReadAll(reader)
+	_, err = io.ReadAll(reader)
 	require.NoError(t, err)
 
 	err = reader.SeekBackward(100)
 	require.NoError(t, err)
 
-	retrieved, err := ioutil.ReadAll(reader)
+	retrieved, err := io.ReadAll(reader)
 	require.NoError(t, err)
 
 	expect := Repeat('a', 100)
@@ -936,7 +936,7 @@ func TestInsertNewline(t *testing.T) {
 
 			lineStartPos := tree.LineStartPosition(tc.retrieveLineNum)
 			reader := tree.ReaderAtPosition(lineStartPos, ReadDirectionForward)
-			text, err := ioutil.ReadAll(reader)
+			text, err := io.ReadAll(reader)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectLine, string(text))
 		})
@@ -1175,7 +1175,7 @@ func BenchmarkRead(b *testing.B) {
 
 			for n := 0; n < b.N; n++ {
 				reader := tree.ReaderAtPosition(0, ReadDirectionForward)
-				_, err := ioutil.ReadAll(reader)
+				_, err := io.ReadAll(reader)
 				if err != nil {
 					b.Fatalf("err = %v", err)
 				}

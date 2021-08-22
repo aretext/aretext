@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 	"unicode"
@@ -421,7 +421,7 @@ func TestMatchLongestTruncatedText(t *testing.T) {
 	assert.Equal(t, []int{99}, matchResult.Actions)
 
 	// Verify that the reader is reset to the end of the match.
-	remaining, err := ioutil.ReadAll(r)
+	remaining, err := io.ReadAll(r)
 	require.NoError(t, err)
 	assert.Equal(t, []byte("βββδδδ"), remaining)
 }

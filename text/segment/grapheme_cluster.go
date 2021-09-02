@@ -145,17 +145,15 @@ func (g *GraphemeClusterIter) processRune(r rune) (canBreakBefore bool) {
 
 // ReverseGraphemeClusterIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.
 type ReverseGraphemeClusterIter struct {
-	runeIter text.CloneableRuneIter
-	buffer   []rune
-	lastProp gbProp
+	runeIter         text.CloneableRuneIter
+	hasCarryoverRune bool
+	carryoverRune    rune
+	lastProp         gbProp
 }
 
 // NewReverseGraphemeClusterIter constructs a new BreakIter from a runeIter that yields runes in reverse order.
 func NewReverseGraphemeClusterIter(runeIter text.CloneableRuneIter) *ReverseGraphemeClusterIter {
-	return &ReverseGraphemeClusterIter{
-		runeIter: runeIter,
-		buffer:   make([]rune, 0, 1),
-	}
+	return &ReverseGraphemeClusterIter{runeIter: runeIter}
 }
 
 // Clone implements CloneableIter#Clone()
@@ -163,8 +161,6 @@ func (g *ReverseGraphemeClusterIter) Clone() CloneableIter {
 	var clone ReverseGraphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
-	clone.buffer = make([]rune, len(g.buffer))
-	copy(clone.buffer, g.buffer)
 	return &clone
 }
 
@@ -172,6 +168,12 @@ func (g *ReverseGraphemeClusterIter) Clone() CloneableIter {
 // The returned locations are relative to the end of the text.
 func (g *ReverseGraphemeClusterIter) NextSegment(segment *Segment) error {
 	segment.Clear()
+
+	if g.hasCarryoverRune {
+		segment.Append(g.carryoverRune)
+		g.hasCarryoverRune = false
+	}
+
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
@@ -183,18 +185,18 @@ func (g *ReverseGraphemeClusterIter) NextSegment(segment *Segment) error {
 		// "After" is relative to the original (non-reversed) rune order.
 		// So if the original string was "abcd" and we're iterating through it backwards,
 		// then the break between "b" and "c" would be *after* "b".
-		if canBreakAfter := g.processRune(r); canBreakAfter && len(g.buffer) > 0 {
-			segment.Extend(g.buffer).ReverseRunes()
-			g.buffer = append(g.buffer[:0], r)
+		if canBreakAfter := g.processRune(r); canBreakAfter && segment.NumRunes() > 0 {
+			segment.ReverseRunes()
+			g.hasCarryoverRune = true
+			g.carryoverRune = r
 			return nil
 		}
 
-		g.buffer = append(g.buffer, r)
+		segment.Append(r)
 	}
 
-	if len(g.buffer) > 0 {
-		segment.Extend(g.buffer).ReverseRunes()
-		g.buffer = g.buffer[:0]
+	if segment.NumRunes() > 0 {
+		segment.ReverseRunes()
 		return nil
 	}
 

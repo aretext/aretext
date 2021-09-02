@@ -20,6 +20,12 @@ func (seg *Segment) Clear() *Segment {
 	return seg
 }
 
+// Append appends a single rune to the end of the segment.
+func (seg *Segment) Append(r rune) *Segment {
+	seg.runes = append(seg.runes, r)
+	return seg
+}
+
 // Extend appends all runes from the slice.
 func (seg *Segment) Extend(runes []rune) *Segment {
 	for _, r := range runes {

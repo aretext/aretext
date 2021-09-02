@@ -13,7 +13,8 @@ import (
 // For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
 type GraphemeClusterIter struct {
 	runeIter                         text.CloneableRuneIter
-	buffer                           []rune
+	hasCarryoverRune                 bool
+	carryoverRune                    rune
 	lastProp                         gbProp
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
@@ -26,10 +27,7 @@ type GraphemeClusterIter struct {
 // (either the start of the text or the beginning of a new grapheme cluster).
 // The input reader MUST produce valid UTF-8 codepoints.
 func NewGraphemeClusterIter(runeIter text.CloneableRuneIter) *GraphemeClusterIter {
-	return &GraphemeClusterIter{
-		runeIter: runeIter,
-		buffer:   make([]rune, 0, 1),
-	}
+	return &GraphemeClusterIter{runeIter: runeIter}
 }
 
 // NewGraphemeClusterIterForTree constructs a grapheme cluster iterator for a text tree.
@@ -49,14 +47,18 @@ func (g *GraphemeClusterIter) Clone() CloneableIter {
 	var clone GraphemeClusterIter
 	clone = *g
 	clone.runeIter = g.runeIter.Clone()
-	clone.buffer = make([]rune, len(g.buffer))
-	copy(clone.buffer, g.buffer)
 	return &clone
 }
 
 // NextSegment implements Iter#NextSegment()
 func (g *GraphemeClusterIter) NextSegment(segment *Segment) error {
 	segment.Clear()
+
+	if g.hasCarryoverRune {
+		segment.Append(g.carryoverRune)
+		g.hasCarryoverRune = false
+	}
+
 	for {
 		r, err := g.runeIter.NextRune()
 		if err == io.EOF {
@@ -65,18 +67,16 @@ func (g *GraphemeClusterIter) NextSegment(segment *Segment) error {
 			return err
 		}
 
-		if canBreakBefore := g.processRune(r); canBreakBefore && len(g.buffer) > 0 {
-			segment.Extend(g.buffer)
-			g.buffer = append(g.buffer[:0], r)
+		if canBreakBefore := g.processRune(r); canBreakBefore && segment.NumRunes() > 0 {
+			g.hasCarryoverRune = true
+			g.carryoverRune = r
 			return nil
 		}
 
-		g.buffer = append(g.buffer, r)
+		segment.Append(r)
 	}
 
-	if len(g.buffer) > 0 {
-		segment.Extend(g.buffer)
-		g.buffer = g.buffer[:0]
+	if segment.NumRunes() > 0 {
 		return nil
 	}
 

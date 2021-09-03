@@ -58,7 +58,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			lineNum,
 			lineNumMargin,
 			lineStartPos,
-			wrappedLine,
+			wrappedLine.Runes(),
 			tokenIter,
 			cursorPos,
 			selectedRegion,
@@ -91,7 +91,7 @@ func drawLineAndSetCursor(
 	lineNum uint64,
 	lineNumMargin uint64,
 	lineStartPos uint64,
-	wrappedLine *segment.Segment,
+	wrappedLineRunes []rune,
 	tokenIter *parser.TokenIter,
 	cursorPos uint64,
 	selectedRegion selection.Region,
@@ -100,11 +100,10 @@ func drawLineAndSetCursor(
 	showTabs bool,
 ) {
 	startPos := pos
-	runeIter := text.NewRuneIterForSlice(wrappedLine.Runes())
-	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	gc := segment.Empty()
+	gcRunes := []rune{'\x00', '\x00', '\x00', '\x00'}[:0] // Stack-allocate runes for the last grapheme cluster.
 	totalWidth := uint64(0)
 	col := 0
+	var gcBreaker segment.GraphemeClusterBreaker
 	var lastGcWasNewline bool
 
 	if startPos == lineStartPos {
@@ -112,16 +111,16 @@ func drawLineAndSetCursor(
 	}
 	col += int(lineNumMargin)
 
-	for {
-		err := gcIter.NextSegment(gc)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatalf("%s", err)
+	var i int
+	for i < len(wrappedLineRunes) || len(gcRunes) > 0 {
+		for _, r := range wrappedLineRunes[i:] {
+			canBreakBefore := gcBreaker.ProcessRune(r)
+			if canBreakBefore && len(gcRunes) > 0 {
+				break
+			}
+			lastGcWasNewline = (r == '\n')
+			gcRunes = append(gcRunes, r)
 		}
-
-		gcRunes := gc.Runes()
-		lastGcWasNewline = gc.HasNewline()
 		gcWidth := gcWidthFunc(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
@@ -142,17 +141,19 @@ func drawLineAndSetCursor(
 			sr.ShowCursor(col, row)
 		}
 
-		pos += gc.NumRunes()
+		i += len(gcRunes)
+		pos += uint64(len(gcRunes))
 		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
+		gcRunes = gcRunes[:0]
 	}
 
-	if gc != nil && lastGcWasNewline {
+	if lastGcWasNewline {
 		// Draw line number for an empty final line.
 		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin)
 	}
 
 	if pos == cursorPos {
-		if gc != nil && (lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth)) {
+		if lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
 			sr.ShowCursor(int(lineNumMargin), row+1)
 		} else if pos == cursorPos {

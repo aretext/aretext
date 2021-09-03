@@ -1,39 +1,42 @@
 package display
 
 import (
-	"io"
-	"log"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
-	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
 
 func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.Style) int {
 	maxLineWidth, _ := sr.Size()
-	runeIter := text.NewRuneIterForSlice([]rune(s))
-	gcIter := segment.NewGraphemeClusterIter(runeIter)
-	gc := segment.Empty()
+	var gcBreaker segment.GraphemeClusterBreaker
+	gcRunes := []rune{'\x00', '\x00', '\x00', '\x00'}[:0] // Stack-allocate runes for the last grapheme cluster.
+	var i int
 	for {
-		err := gcIter.NextSegment(gc)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatalf("%s", err)
-		}
-
-		gcRunes := gc.Runes()
-		gcWidth := cellwidth.GraphemeClusterWidth(gcRunes, uint64(col), config.DefaultTabSize)
-		if uint64(col)+gcWidth > uint64(maxLineWidth) {
+		if i >= len(s) && len(gcRunes) == 0 {
 			break
 		}
 
-		drawGraphemeCluster(sr, col, row, gc.Runes(), int(gcWidth), style, false)
-		col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
+		r, rsize := utf8.DecodeRuneInString(s[i:])
+		i += rsize
+		canBreakBefore := gcBreaker.ProcessRune(r)
+		if canBreakBefore && len(gcRunes) > 0 {
+			gcWidth := cellwidth.GraphemeClusterWidth(gcRunes, uint64(col), config.DefaultTabSize)
+			if uint64(col)+gcWidth > uint64(maxLineWidth) {
+				break
+			}
+			drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, false)
+			col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
+			gcRunes = gcRunes[:0]
+		}
+
+		if rsize > 0 {
+			gcRunes = append(gcRunes, r)
+		}
 	}
 
 	return col

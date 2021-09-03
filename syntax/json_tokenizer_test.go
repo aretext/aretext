@@ -2,6 +2,7 @@ package syntax
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -246,9 +247,12 @@ func BenchmarkJsonTokenizer(b *testing.B) {
 	data, err := os.ReadFile("testdata/test.json")
 	require.NoError(b, err)
 	text := string(data)
+	textlen := uint64(len(text))
 
+	tokenizer := TokenizerForLanguage(LanguageJson)
 	for i := 0; i < b.N; i++ {
-		_, err := ParseTokensWithText(LanguageJson, text)
+		r := &parser.ReadSeekerInput{R: strings.NewReader(text)}
+		_, err := tokenizer.TokenizeAll(r, textlen)
 		require.NoError(b, err)
 	}
 }

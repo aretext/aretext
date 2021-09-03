@@ -8,18 +8,83 @@ import (
 
 //go:generate go run gen_props.go --prefix gb --dataPath data/GraphemeBreakProperty.txt --dataPath data/emoji-data.txt --propertyName Prepend --propertyName Control --propertyName Extend --propertyName Regional_Indicator --propertyName SpacingMark --propertyName L --propertyName V --propertyName T --propertyName LV --propertyName LVT --propertyName ZWJ --propertyName CR --propertyName LF --propertyName Extended_Pictographic --outputPath grapheme_cluster_props.go
 
-// GraphemeClusterIter segments text into grapheme clusters.
-// A grapheme cluster is a user-perceived character, which can be composed of multiple unicode codepoints.
-// For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
-type GraphemeClusterIter struct {
-	runeIter                         text.CloneableRuneIter
-	hasCarryoverRune                 bool
-	carryoverRune                    rune
+// GraphemeClusterBreaker finds breakpoints between grapheme clusters in a sequence of runes.
+type GraphemeClusterBreaker struct {
 	lastProp                         gbProp
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
 	lastPropsWereRIOdd               bool
 	lastPropsWereRIEven              bool
+}
+
+// ProcessRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
+func (gb *GraphemeClusterBreaker) ProcessRune(r rune) (canBreakBefore bool) {
+	prop := gbPropForRune(r)
+
+	defer func() {
+		gb.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && gb.lastPropsWereRIOdd)
+		gb.lastPropsWereRIOdd = bool(prop == gbPropRegional_Indicator && !gb.lastPropsWereRIOdd)
+		gb.afterExtendedPictographicPlusZWJ = bool(gb.inExtendedPictographic && prop == gbPropZWJ)
+		gb.inExtendedPictographic = bool(
+			prop == gbPropExtended_Pictographic ||
+				gb.inExtendedPictographic && prop == gbPropExtend)
+		gb.lastProp = prop
+	}()
+
+	// GB1: sot ÷ Any
+	// GB2: Any ÷ eot
+	// We don't need to implement these because we're only interested in non-empty segments.
+
+	// GB3: CR × LF
+	if prop == gbPropLF && gb.lastProp == gbPropCR {
+		return false
+	}
+
+	// GB4: (Control | CR | LF) ÷
+	if gb.lastProp == gbPropControl || gb.lastProp == gbPropCR || gb.lastProp == gbPropLF ||
+		// GB5: ÷ (Control | CR | LF)
+		prop == gbPropControl || prop == gbPropCR || prop == gbPropLF {
+		return true
+	}
+
+	// GB6: L × (L | V | LV | LVT)
+	if (gb.lastProp == gbPropL && (prop == gbPropL || prop == gbPropV || prop == gbPropLV || prop == gbPropLVT)) ||
+
+		// GB7: (LV | V) × (V | T)
+		((gb.lastProp == gbPropLV || gb.lastProp == gbPropV) && (prop == gbPropV || prop == gbPropT)) ||
+		// GB8: (LVT | T) × T
+		((gb.lastProp == gbPropLVT || gb.lastProp == gbPropT) && prop == gbPropT) ||
+
+		// GB9: × (Extend | ZWJ)
+		prop == gbPropExtend || prop == gbPropZWJ ||
+
+		// GB9a: × SpacingMark
+		prop == gbPropSpacingMark ||
+
+		// GB9b: Prepend ×
+		gb.lastProp == gbPropPrepend ||
+
+		// GB11: \p{Extended_Pictographic} Extend* ZWJ × \p{Extended_Pictographic}
+		(gb.afterExtendedPictographicPlusZWJ && prop == gbPropExtended_Pictographic) ||
+
+		// GB12: sot (RI RI)* RI × RI
+		// GB13: [^RI] (RI RI)* RI × RI
+		(gb.lastPropsWereRIOdd && prop == gbPropRegional_Indicator) {
+		return false
+	}
+
+	// GB999: Any ÷ Any
+	return true
+}
+
+// GraphemeClusterIter segments text into grapheme clusters.
+// A grapheme cluster is a user-perceived character, which can be composed of multiple unicode codepoints.
+// For full details see https://www.unicode.org/reports/tr29/ version 13.0.0, revision 37.
+type GraphemeClusterIter struct {
+	runeIter         text.CloneableRuneIter
+	breaker          GraphemeClusterBreaker
+	hasCarryoverRune bool
+	carryoverRune    rune
 }
 
 // NewGraphemeClusterIter initializes a new iterator.
@@ -67,7 +132,7 @@ func (g *GraphemeClusterIter) NextSegment(segment *Segment) error {
 			return err
 		}
 
-		if canBreakBefore := g.processRune(r); canBreakBefore && segment.NumRunes() > 0 {
+		if canBreakBefore := g.breaker.ProcessRune(r); canBreakBefore && segment.NumRunes() > 0 {
 			g.hasCarryoverRune = true
 			g.carryoverRune = r
 			return nil
@@ -81,66 +146,6 @@ func (g *GraphemeClusterIter) NextSegment(segment *Segment) error {
 	}
 
 	return io.EOF
-}
-
-// processRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
-func (g *GraphemeClusterIter) processRune(r rune) (canBreakBefore bool) {
-	prop := gbPropForRune(r)
-
-	defer func() {
-		g.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && g.lastPropsWereRIOdd)
-		g.lastPropsWereRIOdd = bool(prop == gbPropRegional_Indicator && !g.lastPropsWereRIOdd)
-		g.afterExtendedPictographicPlusZWJ = bool(g.inExtendedPictographic && prop == gbPropZWJ)
-		g.inExtendedPictographic = bool(
-			prop == gbPropExtended_Pictographic ||
-				g.inExtendedPictographic && prop == gbPropExtend)
-		g.lastProp = prop
-	}()
-
-	// GB1: sot ÷ Any
-	// GB2: Any ÷ eot
-	// We don't need to implement these because we're only interested in non-empty segments.
-
-	// GB3: CR × LF
-	if prop == gbPropLF && g.lastProp == gbPropCR {
-		return false
-	}
-
-	// GB4: (Control | CR | LF) ÷
-	if g.lastProp == gbPropControl || g.lastProp == gbPropCR || g.lastProp == gbPropLF ||
-		// GB5: ÷ (Control | CR | LF)
-		prop == gbPropControl || prop == gbPropCR || prop == gbPropLF {
-		return true
-	}
-
-	// GB6: L × (L | V | LV | LVT)
-	if (g.lastProp == gbPropL && (prop == gbPropL || prop == gbPropV || prop == gbPropLV || prop == gbPropLVT)) ||
-
-		// GB7: (LV | V) × (V | T)
-		((g.lastProp == gbPropLV || g.lastProp == gbPropV) && (prop == gbPropV || prop == gbPropT)) ||
-		// GB8: (LVT | T) × T
-		((g.lastProp == gbPropLVT || g.lastProp == gbPropT) && prop == gbPropT) ||
-
-		// GB9: × (Extend | ZWJ)
-		prop == gbPropExtend || prop == gbPropZWJ ||
-
-		// GB9a: × SpacingMark
-		prop == gbPropSpacingMark ||
-
-		// GB9b: Prepend ×
-		g.lastProp == gbPropPrepend ||
-
-		// GB11: \p{Extended_Pictographic} Extend* ZWJ × \p{Extended_Pictographic}
-		(g.afterExtendedPictographicPlusZWJ && prop == gbPropExtended_Pictographic) ||
-
-		// GB12: sot (RI RI)* RI × RI
-		// GB13: [^RI] (RI RI)* RI × RI
-		(g.lastPropsWereRIOdd && prop == gbPropRegional_Indicator) {
-		return false
-	}
-
-	// GB999: Any ÷ Any
-	return true
 }
 
 // ReverseGraphemeClusterIter identifies valid breakpoints between grapheme clusters in a reversed-order sequence of runes.

@@ -100,13 +100,16 @@ func numColsIndentedPrevLine(buffer *BufferState, cursorPos uint64) uint64 {
 	}
 
 	prevLineStartPos := buffer.textTree.LineStartPosition(lineNum - 1)
-	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, prevLineStartPos, text.ReadDirectionForward)
+	reader := buffer.textTree.ReaderAtPosition(prevLineStartPos)
+	iter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	numCols := uint64(0)
 	for {
-		eof := segment.NextOrEof(iter, seg)
-		if eof {
+		err := iter.NextSegment(seg)
+		if err == io.EOF {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 
 		gc := seg.Runes()
@@ -201,12 +204,15 @@ func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 	var offset uint64
 	textTree := buffer.textTree
 	pos := locate.StartOfLineAtPos(textTree, startPos)
-	iter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(pos)
+	iter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	for pos < startPos {
-		eof := segment.NextOrEof(iter, seg)
-		if eof {
+		err := iter.NextSegment(seg)
+		if err == io.EOF {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
 		pos += seg.NumRunes()
@@ -450,22 +456,30 @@ func JoinLines(state *EditorState) {
 func isAdjacentToNewlineOrEof(textTree *text.Tree, pos uint64) bool {
 	seg := segment.Empty()
 
-	forwardIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(pos)
+	forwardIter := segment.NewGraphemeClusterIter(reader)
 
 	// Consume the grapheme cluster on the position.
-	segment.NextOrEof(forwardIter, seg)
+	if err := forwardIter.NextSegment(seg); err != nil && err != io.EOF {
+		panic(err)
+	}
 
 	// Check the next grapheme cluster after the position.
-	eof := segment.NextOrEof(forwardIter, seg)
-	if eof || seg.HasNewline() {
+	err := forwardIter.NextSegment(seg)
+	if err == io.EOF || (err == nil && seg.HasNewline()) {
 		return true
+	} else if err != nil {
+		panic(err)
 	}
 
 	// Check the grapheme cluster before the position.
-	backwardIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
-	eof = segment.NextOrEof(backwardIter, seg)
-	if eof || seg.HasNewline() {
+	reverseReader := textTree.ReverseReaderAtPosition(pos)
+	backwardIter := segment.NewReverseGraphemeClusterIter(reverseReader)
+	err = backwardIter.NextSegment(seg)
+	if err == io.EOF || (err == nil && seg.HasNewline()) {
 		return true
+	} else if err != nil {
+		panic(err)
 	}
 
 	return false
@@ -496,10 +510,9 @@ func ToggleCaseInSelection(state *EditorState, selectionEndLoc Locator) {
 func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 	tree := state.documentBuffer.textTree
 	newRunes := make([]rune, 0, 1)
-	reader := tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(reader)
+	reader := tree.ReaderAtPosition(startPos)
 	for pos := startPos; pos < endPos; pos++ {
-		r, err := runeIter.NextRune()
+		r, _, err := reader.ReadRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -560,12 +573,15 @@ func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
 	var offset uint64
 	pos := startOfLinePos
 	endOfIndentPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
-	iter := segment.NewGraphemeClusterIterForTree(buffer.textTree, pos, text.ReadDirectionForward)
+	reader := buffer.textTree.ReaderAtPosition(pos)
+	iter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	for pos < endOfIndentPos && offset < buffer.tabSize {
-		eof := segment.NextOrEof(iter, seg)
-		if eof {
+		err := iter.NextSegment(seg)
+		if err == io.EOF {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
 		pos += seg.NumRunes()
@@ -616,10 +632,9 @@ func CopySelection(state *EditorState, page clipboard.PageId) {
 func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
 	var sb strings.Builder
 	var offset uint64
-	textReader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(textReader)
+	reader := tree.ReaderAtPosition(pos)
 	for offset < numRunes {
-		r, err := runeIter.NextRune()
+		r, _, err := reader.ReadRune()
 		if err == io.EOF {
 			break
 		} else if err != nil {

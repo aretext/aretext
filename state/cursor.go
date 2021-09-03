@@ -1,6 +1,8 @@
 package state
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
@@ -103,14 +105,17 @@ func moveCursorToLine(buffer *BufferState, targetLineStartPos uint64) {
 }
 
 func findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cursorState, tabSize uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, lineStartPos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(lineStartPos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	pos, offset := lineStartPos, uint64(0)
 
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof || pos >= cursor.position {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF || (err == nil && pos >= cursor.position) {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 
 		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, tabSize)
@@ -121,16 +126,19 @@ func findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cu
 }
 
 func advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint64, tabSize uint64) (uint64, uint64) {
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, lineStartPos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(lineStartPos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var endOfLineOrFile bool
 	var prevPosOffset, posOffset, cellOffset uint64
 
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			endOfLineOrFile = true
 			break
+		} else if err != nil {
+			panic(err)
 		}
 
 		if seg.HasNewline() {

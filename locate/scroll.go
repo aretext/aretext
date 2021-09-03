@@ -108,9 +108,8 @@ func visibleRangeWithinMargin(tree *text.Tree, viewOrigin uint64, wrapConfig seg
 // visibleLineRanges returns the range for each soft- or hard-wrapped line visible in the current view.
 // For hard-wrapped lines, the newline character position is included in the line it terminates.
 func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.LineWrapConfig, viewHeight uint64) []posRange {
-	reader := tree.ReaderAtPosition(viewOrigin, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(reader)
-	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
+	reader := tree.ReaderAtPosition(viewOrigin)
+	wrappedLineIter := segment.NewWrappedLineIter(reader, wrapConfig)
 	wrappedLine := segment.Empty()
 	pos := viewOrigin
 	lineRanges := make([]posRange, 0, viewHeight)
@@ -170,9 +169,8 @@ func scrollToCursor(cursorPos uint64, maxLinesAboveCursor uint64, tree *text.Tre
 
 // softWrapLineUntil returns ranges for soft-wrapped lines in a line until a given stop condition occurs.
 func softWrapLineUntil(lineStartPos uint64, tree *text.Tree, wrapConfig segment.LineWrapConfig, stopFunc func(posRange) bool) []posRange {
-	reader := tree.ReaderAtPosition(lineStartPos, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(reader)
-	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
+	reader := tree.ReaderAtPosition(lineStartPos)
+	wrappedLineIter := segment.NewWrappedLineIter(reader, wrapConfig)
 	wrappedLine := segment.Empty()
 	pos := lineStartPos
 	result := make([]posRange, 0, 1)

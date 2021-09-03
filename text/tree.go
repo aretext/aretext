@@ -177,8 +177,13 @@ func (t *Tree) DeleteAtPosition(charPos uint64) (bool, rune) {
 
 // ReaderAtPosition returns a reader starting at the UTF-8 character at the specified position (0-indexed).
 // If the position is past the end of the text, the returned reader will read zero bytes.
-func (t *Tree) ReaderAtPosition(charPos uint64, direction ReadDirection) *TreeReader {
-	return t.root.readerAtPosition(charPos, direction)
+func (t *Tree) ReaderAtPosition(charPos uint64) Reader {
+	return t.root.readerAtPosition(charPos)
+}
+
+// ReverseReaderAtPosition returns a reverse reader starting at the specified position.
+func (t *Tree) ReverseReaderAtPosition(charPos uint64) ReverseReader {
+	return t.root.reverseReaderAtPosition(charPos)
 }
 
 // LineStartPosition returns the position of the first character at the specified line (0-indexed).
@@ -199,8 +204,8 @@ func (t *Tree) LineNumForPosition(charPos uint64) uint64 {
 
 // String returns the text in the tree as a string.
 func (t *Tree) String() string {
-	reader := t.ReaderAtPosition(0, ReadDirectionForward)
-	retrievedBytes, err := io.ReadAll(reader)
+	reader := t.ReaderAtPosition(0)
+	retrievedBytes, err := io.ReadAll(&reader)
 	if err != nil {
 		panic("Unexpected error reading bytes from text.Tree")
 	}
@@ -216,7 +221,8 @@ type nodeGroup interface {
 	keys() []indexKey
 	insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error)
 	deleteAtPosition(nodeIdx uint64, charPos uint64) (didDelete, wasNewline bool, r rune)
-	readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader
+	readerAtPosition(nodeIdx uint64, charPos uint64) Reader
+	reverseReaderAtPosition(nodeIdx uint64, charPos uint64) ReverseReader
 	positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64
 	numNewlinesBeforePosition(nodeIdx uint64, charPos uint64) uint64
 }
@@ -293,8 +299,12 @@ func (g *innerNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDe
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader {
-	return g.nodes[nodeIdx].readerAtPosition(charPos, direction)
+func (g *innerNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) Reader {
+	return g.nodes[nodeIdx].readerAtPosition(charPos)
+}
+
+func (g *innerNodeGroup) reverseReaderAtPosition(nodeIdx uint64, charPos uint64) ReverseReader {
+	return g.nodes[nodeIdx].reverseReaderAtPosition(charPos)
 }
 
 func (g *innerNodeGroup) positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64 {
@@ -393,9 +403,14 @@ func (n *innerNode) deleteAtPosition(charPos uint64) (didDelete, wasNewline bool
 	return
 }
 
-func (n *innerNode) readerAtPosition(charPos uint64, direction ReadDirection) *TreeReader {
+func (n *innerNode) readerAtPosition(charPos uint64) Reader {
 	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
-	return n.child.readerAtPosition(nodeIdx, adjustedCharPos, direction)
+	return n.child.readerAtPosition(nodeIdx, adjustedCharPos)
+}
+
+func (n *innerNode) reverseReaderAtPosition(charPos uint64) ReverseReader {
+	nodeIdx, adjustedCharPos := n.locatePosition(charPos)
+	return n.child.reverseReaderAtPosition(nodeIdx, adjustedCharPos)
 }
 
 func (n *innerNode) positionAfterNewline(newlineIdx uint64) uint64 {
@@ -508,9 +523,24 @@ func (g *leafNodeGroup) deleteAtPosition(nodeIdx uint64, charPos uint64) (didDel
 	return g.nodes[nodeIdx].deleteAtPosition(charPos)
 }
 
-func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64, direction ReadDirection) *TreeReader {
+func (g *leafNodeGroup) readerAtPosition(nodeIdx uint64, charPos uint64) Reader {
 	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
-	return newTreeReader(g, nodeIdx, textByteOffset, direction)
+	return Reader{
+		group:          g,
+		nodeIdx:        nodeIdx,
+		textByteOffset: textByteOffset,
+	}
+}
+
+func (g *leafNodeGroup) reverseReaderAtPosition(nodeIdx uint64, charPos uint64) ReverseReader {
+	textByteOffset := g.nodes[nodeIdx].byteOffsetForPosition(charPos)
+	return ReverseReader{
+		Reader{
+			group:          g,
+			nodeIdx:        nodeIdx,
+			textByteOffset: textByteOffset,
+		},
+	}
 }
 
 func (g *leafNodeGroup) positionAfterNewline(nodeIdx uint64, newlineIdx uint64) uint64 {

@@ -11,7 +11,7 @@ import (
 )
 
 // simpleParseFunc recognizes strings prefixed and suffixed with a double-quote.
-func simpleParseFunc(iter text.CloneableRuneIter, state State) Result {
+func simpleParseFunc(iter TrackingRuneIter, state State) Result {
 	// Consume the first character in the text.
 	r, err := iter.NextRune()
 	if err != nil {
@@ -106,7 +106,7 @@ func TestParseAll(t *testing.T) {
 }
 
 func TestRecoverFromFailure(t *testing.T) {
-	failingParseFunc := func(iter text.CloneableRuneIter, state State) Result {
+	failingParseFunc := func(iter TrackingRuneIter, state State) Result {
 		return FailedResult
 	}
 	tree, err := text.NewTreeFromString("abcd")

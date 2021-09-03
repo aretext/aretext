@@ -128,9 +128,10 @@ func TestWrappedLineIter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			wrapConfig := NewLineWrapConfig(tc.maxLineWidth, tc.widthFunc)
-			reader := text.NewCloneableReaderFromString(tc.inputString)
-			runeIter := text.NewCloneableForwardRuneIter(reader)
-			wrappedLineIter := NewWrappedLineIter(runeIter, wrapConfig)
+			tree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			reader := tree.ReaderAtPosition(0)
+			wrappedLineIter := NewWrappedLineIter(reader, wrapConfig)
 			lines := make([]string, 0)
 			seg := Empty()
 			for {
@@ -139,7 +140,7 @@ func TestWrappedLineIter(t *testing.T) {
 					break
 				}
 				require.NoError(t, err)
-				lines = append(lines, string(seg.Clone().Runes()))
+				lines = append(lines, string(seg.Runes()))
 			}
 			assert.Equal(t, tc.expectedLines, lines)
 		})

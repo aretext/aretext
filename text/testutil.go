@@ -2,13 +2,13 @@ package text
 
 import "io"
 
-// SingleByteReader is a CloneableReader that produces a single byte at a time.
+// SingleByteReader is an io.Reader that produces a single byte at a time.
 type SingleByteReader struct {
 	s string
 	i int
 }
 
-func NewSingleByteReader(s string) CloneableReader {
+func NewSingleByteReader(s string) *SingleByteReader {
 	return &SingleByteReader{s, 0}
 }
 
@@ -21,13 +21,6 @@ func (r *SingleByteReader) Read(p []byte) (n int, err error) {
 		err = io.EOF
 	}
 	return
-}
-
-func (r *SingleByteReader) Clone() CloneableReader {
-	return &SingleByteReader{
-		s: r.s,
-		i: r.i,
-	}
 }
 
 // Reverse reverses the bytes of a string.

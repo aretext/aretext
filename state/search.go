@@ -6,12 +6,32 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
+// SearchDirection represents the direction of the search (forward or backward).
+type SearchDirection int
+
+const (
+	SearchDirectionForward = iota
+	SearchDirectionBackward
+)
+
+// Reverse returns the opposite direction.
+func (d SearchDirection) Reverse() SearchDirection {
+	switch d {
+	case SearchDirectionForward:
+		return SearchDirectionBackward
+	case SearchDirectionBackward:
+		return SearchDirectionForward
+	default:
+		panic("Unrecognized direction")
+	}
+}
+
 // searchState represents the state of a text search.
 type searchState struct {
 	query         string
-	direction     text.ReadDirection
+	direction     SearchDirection
 	prevQuery     string
-	prevDirection text.ReadDirection
+	prevDirection SearchDirection
 	match         *SearchMatch
 }
 
@@ -26,7 +46,7 @@ func (sm *SearchMatch) ContainsPosition(pos uint64) bool {
 }
 
 // StartSearch initiates a new text search.
-func StartSearch(state *EditorState, direction text.ReadDirection) {
+func StartSearch(state *EditorState, direction SearchDirection) {
 	buffer := state.documentBuffer
 	prevQuery, prevDirection := buffer.search.query, buffer.search.direction
 	buffer.search = searchState{
@@ -82,7 +102,7 @@ func runTextSearchQuery(state *EditorState, q string) {
 	buffer := state.documentBuffer
 	buffer.search.query = q
 	foundMatch, matchStartPos := false, uint64(0)
-	if buffer.search.direction == text.ReadDirectionForward {
+	if buffer.search.direction == SearchDirectionForward {
 		foundMatch, matchStartPos = searchTextForward(
 			buffer.cursor.position,
 			buffer.textTree,
@@ -117,7 +137,7 @@ func FindNextMatch(state *EditorState, reverse bool) {
 	}
 
 	foundMatch, newCursorPos := false, uint64(0)
-	if direction == text.ReadDirectionForward {
+	if direction == SearchDirectionForward {
 		foundMatch, newCursorPos = searchTextForward(
 			buffer.cursor.position+1,
 			buffer.textTree,
@@ -137,8 +157,8 @@ func FindNextMatch(state *EditorState, reverse bool) {
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.
 func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
 	searcher := text.NewSearcher(query)
-	r := tree.ReaderAtPosition(startPos, text.ReadDirectionForward)
-	foundMatch, matchOffset, err := searcher.NextInReader(r)
+	r := tree.ReaderAtPosition(startPos)
+	foundMatch, matchOffset, err := searcher.NextInReader(&r)
 	if err != nil {
 		panic(err) // should never happen because the tree reader shouldn't return an error.
 	}
@@ -148,9 +168,9 @@ func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, ui
 	}
 
 	// Wraparound search.
-	r = tree.ReaderAtPosition(0, text.ReadDirectionForward)
+	r = tree.ReaderAtPosition(0)
 	searcher.Limit(startPos)
-	foundMatch, matchOffset, err = searcher.NextInReader(r)
+	foundMatch, matchOffset, err = searcher.NextInReader(&r)
 	if err != nil {
 		panic(err)
 	}
@@ -189,8 +209,8 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 	}
 
 	searcher := text.NewSearcher(string(reversedQuery))
-	r := tree.ReaderAtPosition(pos, text.ReadDirectionBackward)
-	foundMatch, matchOffset, err := searcher.NextInReader(r)
+	r := tree.ReverseReaderAtPosition(pos)
+	foundMatch, matchOffset, err := searcher.NextInReader(&r)
 	if err != nil {
 		panic(err) // should never happen because the tree reader shouldn't return an error.
 	}
@@ -201,8 +221,8 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 
 	// Wraparound search.
 	searcher.Limit(n - pos)
-	r = tree.ReaderAtPosition(n, text.ReadDirectionBackward)
-	foundMatch, matchOffset, err = searcher.NextInReader(r)
+	r = tree.ReverseReaderAtPosition(n)
+	foundMatch, matchOffset, err = searcher.NextInReader(&r)
 	if err != nil {
 		panic(err)
 	}

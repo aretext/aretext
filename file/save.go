@@ -28,9 +28,9 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 
 	// Compose a reader that calculates the checksum and appends the POSIX EOF indicator.
 	checksummer := NewChecksummer()
-	textReader := tree.ReaderAtPosition(0, text.ReadDirectionForward)
+	textReader := tree.ReaderAtPosition(0)
 	posixEofReader := strings.NewReader("\n")
-	r := io.TeeReader(io.MultiReader(textReader, posixEofReader), checksummer)
+	r := io.TeeReader(io.MultiReader(&textReader, posixEofReader), checksummer)
 
 	// Write to the file and calculate the checksum.
 	_, err = io.Copy(f, r)

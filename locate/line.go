@@ -1,6 +1,8 @@
 package locate
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -26,11 +28,14 @@ func ClosestCharOnLine(tree *text.Tree, pos uint64) uint64 {
 }
 
 func findNewlineAtPos(tree *text.Tree, pos uint64) (bool, uint64) {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+	reader := tree.ReaderAtPosition(pos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	eof := segment.NextOrEof(segmentIter, seg)
-	if eof {
+	err := segmentIter.NextSegment(seg)
+	if err == io.EOF {
 		return false, 0
+	} else if err != nil {
+		panic(err)
 	}
 
 	if seg.HasNewline() {
@@ -41,24 +46,29 @@ func findNewlineAtPos(tree *text.Tree, pos uint64) (bool, uint64) {
 }
 
 func findPrevGraphemeCluster(tree *text.Tree, pos uint64, count int) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
+	reader := tree.ReverseReaderAtPosition(pos)
+	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
 
 	// Iterate backward by (count - 1) grapheme clusters.
 	seg := segment.Empty()
 	var offset uint64
 	for i := 0; i < count-1; i++ {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 
 		offset += seg.NumRunes()
 	}
 
 	// Check the next grapheme cluster after (count - 1) grapheme clusters.
-	eof := segment.NextOrEof(segmentIter, seg)
-	if eof {
+	err := segmentIter.NextSegment(seg)
+	if err == io.EOF {
 		return 0
+	} else if err != nil {
+		panic(err)
 	}
 
 	// If the immediately preceding cluster is a newline, then we're on
@@ -122,14 +132,17 @@ func StartOfLineBelow(tree *text.Tree, count uint64, pos uint64) uint64 {
 // NextLineBoundary locates the end of the current line.
 // This assumes that the start position is on a line (not a newline character); if not, the result is undefined.
 func NextLineBoundary(tree *text.Tree, includeEndOfLineOrFile bool, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+	reader := tree.ReaderAtPosition(pos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var prevOffset, offset uint64
 
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof || seg.HasNewline() {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF || (err == nil && seg.HasNewline()) {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 		prevOffset = offset
 		offset += seg.NumRunes()
@@ -145,13 +158,16 @@ func NextLineBoundary(tree *text.Tree, includeEndOfLineOrFile bool, pos uint64) 
 // PrevLineBoundary locates the start of the current line, reading backwards from the specified position.
 // This assumes that the start position is on a line (not a newline character); if not, the result is undefined.
 func PrevLineBoundary(tree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
+	reader := tree.ReverseReaderAtPosition(pos)
+	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var offset uint64
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof || seg.HasNewline() {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF || (err == nil && seg.HasNewline()) {
 			break
+		} else if err != nil {
+			panic(err)
 		}
 		offset += seg.NumRunes()
 	}

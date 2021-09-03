@@ -11,7 +11,6 @@ import (
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
-	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
 
@@ -24,8 +23,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	selectedRegion := buffer.SelectedRegion()
 	viewTextOrigin := buffer.ViewTextOrigin()
 	pos := viewTextOrigin
-	reader := textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(reader)
+	reader := textTree.ReaderAtPosition(pos)
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
@@ -33,7 +31,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	wrapWidth := uint64(width) - lineNumMargin
 	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
-	wrappedLineIter := segment.NewWrappedLineIter(runeIter, wrapConfig)
+	wrappedLineIter := segment.NewWrappedLineIter(reader, wrapConfig)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
 	tokenIter := buffer.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)

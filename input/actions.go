@@ -9,7 +9,6 @@ import (
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
-	"github.com/aretext/aretext/text"
 )
 
 // Action is a function that mutates the editor state.
@@ -156,7 +155,7 @@ func ScrollUp(config Config) Action {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineAbove(params.TextTree, scrollLines, params.CursorPos)
 		})
-		state.ScrollViewByNumLines(s, text.ReadDirectionBackward, scrollLines)
+		state.ScrollViewByNumLines(s, state.ScrollDirectionBackward, scrollLines)
 	}
 }
 
@@ -172,7 +171,7 @@ func ScrollDown(config Config) Action {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineBelow(params.TextTree, scrollLines, params.CursorPos)
 		})
-		state.ScrollViewByNumLines(s, text.ReadDirectionForward, scrollLines)
+		state.ScrollViewByNumLines(s, state.ScrollDirectionForward, scrollLines)
 	}
 }
 
@@ -650,12 +649,12 @@ func DeleteRuneFromMenuSearch(s *state.EditorState) {
 
 func StartSearchForward(s *state.EditorState) {
 	// This sets the input mode to search.
-	state.StartSearch(s, text.ReadDirectionForward)
+	state.StartSearch(s, state.SearchDirectionForward)
 }
 
 func StartSearchBackward(s *state.EditorState) {
 	// This sets the input mode to search.
-	state.StartSearch(s, text.ReadDirectionBackward)
+	state.StartSearch(s, state.SearchDirectionBackward)
 }
 
 func AbortSearchAndReturnToNormalMode(s *state.EditorState) {

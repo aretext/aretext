@@ -71,7 +71,7 @@ func removePosixEof(tree *text.Tree) {
 }
 
 func endsWithLineFeed(tree *text.Tree) bool {
-	reader := tree.ReaderAtPosition(tree.NumChars(), text.ReadDirectionBackward)
+	reader := tree.ReverseReaderAtPosition(tree.NumChars())
 	var buf [1]byte
 	if n, err := reader.Read(buf[:]); err != nil || n == 0 {
 		return false

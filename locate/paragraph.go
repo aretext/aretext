@@ -1,6 +1,8 @@
 package locate
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -8,15 +10,18 @@ import (
 // NextParagraph locates the start of the next paragraph after the cursor.
 // Paragraph boundaries occur at empty lines.
 func NextParagraph(tree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionForward)
+	reader := tree.ReaderAtPosition(pos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset, prevOffset uint64
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			// End of document.
 			return pos + prevOffset
+		} else if err != nil {
+			panic(err)
 		}
 
 		if seg.HasNewline() {
@@ -40,15 +45,18 @@ func NextParagraph(tree *text.Tree, pos uint64) uint64 {
 // PrevParagraph locates the start of the first paragraph before the cursor.
 // Paragraph boundaries occur at empty lines.
 func PrevParagraph(tree *text.Tree, pos uint64) uint64 {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, text.ReadDirectionBackward)
+	reader := tree.ReverseReaderAtPosition(pos)
+	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var prevWasNewlineFlag, nonNewlineFlag bool
 	var offset uint64
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			// Start of the document.
 			return 0
+		} else if err != nil {
+			panic(err)
 		}
 
 		if seg.HasNewline() {

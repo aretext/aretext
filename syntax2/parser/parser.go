@@ -23,7 +23,7 @@ import (
 // The state parameter allows the parse func to track state across invocations.
 // The initial state is always EmptyState.  The parse func must return a non-nil
 // state, which will be passed back to the parse func on the next invocation.
-type Func func(text.CloneableRuneIter, State) Result
+type Func func(TrackingRuneIter, State) Result
 
 // Result represents the result of a single execution of a parse function.
 type Result struct {
@@ -43,6 +43,17 @@ func (r Result) IsSuccess() bool {
 // IsFailure returns whether the parse failed.
 func (r Result) IsFailure() bool {
 	return !r.IsSuccess()
+}
+
+// ShiftForward shifts the result offsets forward by the specified number of positions.
+func (r Result) ShiftForward(n uint64) Result {
+	if n > 0 {
+		r.NumConsumed += n
+		for i := 0; i < len(r.ComputedTokens); i++ {
+			r.ComputedTokens[i].Offset += n
+		}
+	}
+	return r
 }
 
 // P parses a document into tokens.
@@ -101,9 +112,8 @@ func (p *P) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 }
 
 func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation {
-	reader := tree.ReaderAtPosition(pos, text.ReadDirectionForward)
-	runeIter := text.NewCloneableForwardRuneIter(reader)
-	trackingIter := NewTrackingRuneIter(runeIter)
+	reader := tree.ReaderAtPosition(pos)
+	trackingIter := NewTrackingRuneIter(reader)
 	result := p.parseFunc(trackingIter, state)
 	return NewComputation(
 		trackingIter.MaxRead(),

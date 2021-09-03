@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/state"
-	"github.com/aretext/aretext/text"
 )
 
 func TestDrawSearchQuery(t *testing.T) {
@@ -15,7 +14,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		name                string
 		inputMode           state.InputMode
 		query               string
-		direction           text.ReadDirection
+		direction           state.SearchDirection
 		expectContents      [][]rune
 		expectCursorVisible bool
 		expectCursorCol     int
@@ -25,7 +24,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "normal mode hides search query",
 			inputMode: state.InputModeNormal,
 			query:     "abcd1234",
-			direction: text.ReadDirectionForward,
+			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' '},
@@ -35,7 +34,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with empty query",
 			inputMode: state.InputModeSearch,
 			query:     "",
-			direction: text.ReadDirectionForward,
+			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', ' ', ' ', ' ', ' ', ' '},
@@ -48,7 +47,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with non-empty query",
 			inputMode: state.InputModeSearch,
 			query:     "abcd",
-			direction: text.ReadDirectionForward,
+			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', 'a', 'b', 'c', 'd', ' '},
@@ -61,7 +60,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode with clipped query",
 			inputMode: state.InputModeSearch,
 			query:     "abcd1234",
-			direction: text.ReadDirectionForward,
+			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'/', 'a', 'b', 'c', 'd', '1'},
@@ -71,7 +70,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "search mode for backward search",
 			inputMode: state.InputModeSearch,
 			query:     "abcd",
-			direction: text.ReadDirectionBackward,
+			direction: state.SearchDirectionBackward,
 			expectContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' '},
 				{'?', 'a', 'b', 'c', 'd', ' '},

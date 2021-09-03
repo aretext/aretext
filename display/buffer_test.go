@@ -9,7 +9,6 @@ import (
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
-	"github.com/aretext/aretext/text"
 )
 
 func drawBuffer(t *testing.T, screen tcell.Screen, setupState func(*state.EditorState)) {
@@ -499,7 +498,7 @@ func TestSearchMatch(t *testing.T) {
 				state.InsertRune(editorState, r)
 			}
 			state.MoveCursor(editorState, func(state.LocatorParams) uint64 { return 0 })
-			state.StartSearch(editorState, text.ReadDirectionForward)
+			state.StartSearch(editorState, state.SearchDirectionForward)
 			for _, r := range query {
 				state.AppendRuneToSearchQuery(editorState, r)
 			}

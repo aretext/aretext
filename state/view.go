@@ -2,7 +2,14 @@ package state
 
 import (
 	"github.com/aretext/aretext/locate"
-	"github.com/aretext/aretext/text"
+)
+
+// Scroll direction represents the direction of the scroll (forward or backward).
+type ScrollDirection int
+
+const (
+	ScrollDirectionForward = iota
+	ScrollDirectionBackward
 )
 
 // ResizeView resizes the view to the specified width and height.
@@ -36,10 +43,10 @@ func scrollViewToPosition(buffer *BufferState, pos uint64) {
 }
 
 // ScrollViewByNumLines moves the view origin up or down by the specified number of lines.
-func ScrollViewByNumLines(state *EditorState, direction text.ReadDirection, numLines uint64) {
+func ScrollViewByNumLines(state *EditorState, direction ScrollDirection, numLines uint64) {
 	buffer := state.documentBuffer
 	lineNum := buffer.textTree.LineNumForPosition(buffer.view.textOrigin)
-	if direction == text.ReadDirectionForward {
+	if direction == ScrollDirectionForward {
 		lineNum += numLines
 	} else if lineNum >= numLines {
 		lineNum -= numLines

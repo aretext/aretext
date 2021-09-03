@@ -1,6 +1,8 @@
 package locate
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -259,15 +261,20 @@ type wordBoundaryFunc func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundar
 // It starts with the boundary between the grapheme clusters before and after the given position.
 func nextWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint64 {
 	var offset, prevOffset, gcOffset uint64
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionForward)
+	reader := textTree.ReaderAtPosition(pos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	prevSeg := adjacentGraphemeCluster(textTree, pos, text.ReadDirectionBackward)
+	prevSeg := prevAdjacentGraphemeCluster(textTree, pos)
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		var eof bool
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			// Let the wordBoundaryFunc decide whether to place the cursor
 			// on or after the last position in the document.
 			seg = segment.Empty()
+			eof = true
+		} else if err != nil {
+			panic(err)
 		}
 
 		switch f(gcOffset, prevSeg, seg) {
@@ -294,24 +301,23 @@ func nextWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint6
 // It starts with the boundary between the grapheme clusters before and after the given position.
 func prevWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint64 {
 	var offset, gcOffset uint64
-	segmentIter := segment.NewGraphemeClusterIterForTree(textTree, pos, text.ReadDirectionBackward)
+	reader := textTree.ReverseReaderAtPosition(pos)
+	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	prevSeg := adjacentGraphemeCluster(textTree, pos, text.ReadDirectionForward)
+	prevSeg := nextAdjacentGraphemeCluster(textTree, pos)
 	for {
-		eof := segment.NextOrEof(segmentIter, seg)
-		if eof {
+		err := segmentIter.NextSegment(seg)
+		if err == io.EOF {
 			// Start of document
 			return 0
+		} else if err != nil {
+			panic(err)
 		}
 
 		// Pass the grapheme clusters in the order they appear in the text
 		// (reverse of the order in which we read them).
 		switch f(gcOffset, seg, prevSeg) {
 		case noBoundary:
-			if eof {
-				// Can't go past the start of the text.
-				return pos - offset
-			}
 			break
 		case boundaryBefore:
 			return pos - offset - seg.NumRunes()
@@ -325,14 +331,32 @@ func prevWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint6
 	}
 }
 
-// adjacentGraphemeCluster finds a grapheme cluster before or after a position.
-// If at the start/end of the text, this returns an empty segment.
-func adjacentGraphemeCluster(tree *text.Tree, pos uint64, direction text.ReadDirection) *segment.Segment {
-	segmentIter := segment.NewGraphemeClusterIterForTree(tree, pos, direction)
+// nextAdjacentGraphemeCluster finds a grapheme cluster after a position.
+// If at the end of the text, this returns an empty segment.
+func nextAdjacentGraphemeCluster(tree *text.Tree, pos uint64) *segment.Segment {
+	reader := tree.ReaderAtPosition(pos)
+	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	eof := segment.NextOrEof(segmentIter, seg)
-	if eof {
+	err := segmentIter.NextSegment(seg)
+	if err == io.EOF {
 		return segment.Empty()
+	} else if err != nil {
+		panic(err)
+	}
+	return seg
+}
+
+// prevAdjacentGraphemeCluster finds a grapheme cluster before a position.
+// If at the start of the text, this returns an empty segment.
+func prevAdjacentGraphemeCluster(tree *text.Tree, pos uint64) *segment.Segment {
+	reader := tree.ReverseReaderAtPosition(pos)
+	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
+	seg := segment.Empty()
+	err := segmentIter.NextSegment(seg)
+	if err == io.EOF {
+		return segment.Empty()
+	} else if err != nil {
+		panic(err)
 	}
 	return seg
 }

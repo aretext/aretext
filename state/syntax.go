@@ -7,7 +7,6 @@ import (
 
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
-	"github.com/aretext/aretext/text"
 )
 
 // SetSyntax sets the syntax language for the current document.
@@ -28,9 +27,9 @@ func setSyntaxAndRetokenize(buffer *BufferState, language syntax.Language) error
 		return nil
 	}
 
-	r := buffer.textTree.ReaderAtPosition(0, text.ReadDirectionForward)
+	r := buffer.textTree.ReaderAtPosition(0)
 	textLen := buffer.textTree.NumChars()
-	tokenTree, err := buffer.tokenizer.TokenizeAll(r, textLen)
+	tokenTree, err := buffer.tokenizer.TokenizeAll(&r, textLen)
 	if err != nil {
 		return errors.Wrap(err, "TokenizeAll")
 	}
@@ -47,7 +46,8 @@ func retokenizeAfterEdit(buffer *BufferState, edit parser.Edit) error {
 
 	textLen := buffer.textTree.NumChars()
 	readerAtPos := func(pos uint64) parser.InputReader {
-		return buffer.textTree.ReaderAtPosition(pos, text.ReadDirectionForward)
+		r := buffer.textTree.ReaderAtPosition(pos)
+		return &r
 	}
 	updatedTokenTree, err := buffer.tokenizer.RetokenizeAfterEdit(buffer.tokenTree, edit, textLen, readerAtPos)
 	if err != nil {

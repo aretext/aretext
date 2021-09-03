@@ -46,13 +46,6 @@ func (seg *Segment) ReverseRunes() *Segment {
 	return seg
 }
 
-// Clone returns a copy of the segment.
-func (seg *Segment) Clone() *Segment {
-	runes := make([]rune, len(seg.runes))
-	copy(runes, seg.runes)
-	return &Segment{runes}
-}
-
 // NumRunes returns the number of runes in the segment.
 func (seg *Segment) NumRunes() uint64 {
 	return uint64(len(seg.runes))

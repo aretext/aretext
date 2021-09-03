@@ -11,8 +11,10 @@ import (
 )
 
 func TestTrackingRuneIter(t *testing.T) {
-	runeIter := text.NewRuneIterForSlice([]rune{'a', 'b', 'c', 'd'})
-	trackingIter := NewTrackingRuneIter(runeIter)
+	tree, err := text.NewTreeFromString("abcd")
+	require.NoError(t, err)
+	reader := tree.ReaderAtPosition(0)
+	trackingIter := NewTrackingRuneIter(reader)
 	assert.Equal(t, uint64(0), trackingIter.MaxRead())
 
 	r, err := trackingIter.NextRune()
@@ -20,7 +22,7 @@ func TestTrackingRuneIter(t *testing.T) {
 	assert.Equal(t, 'a', r)
 	assert.Equal(t, uint64(1), trackingIter.MaxRead())
 
-	cloneIter := trackingIter.Clone()
+	cloneIter := trackingIter
 	r, err = cloneIter.NextRune()
 	require.NoError(t, err)
 	assert.Equal(t, 'b', r)

@@ -177,7 +177,7 @@ func (s *BufferState) ViewSize() (uint64, uint64) {
 	return s.view.width, s.view.height
 }
 
-func (s *BufferState) SearchQueryAndDirection() (string, text.ReadDirection) {
+func (s *BufferState) SearchQueryAndDirection() (string, SearchDirection) {
 	return s.search.query, s.search.direction
 }
 

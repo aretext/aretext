@@ -14,7 +14,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 		name               string
 		inputString        string
 		initialView        viewState
-		direction          text.ReadDirection
+		direction          ScrollDirection
 		numLines           uint64
 		expectedtextOrigin uint64
 	}{
@@ -22,7 +22,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 			name:               "empty, scroll up",
 			inputString:        "",
 			initialView:        viewState{textOrigin: 0, height: 100, width: 100},
-			direction:          text.ReadDirectionBackward,
+			direction:          ScrollDirectionBackward,
 			numLines:           1,
 			expectedtextOrigin: 0,
 		},
@@ -30,7 +30,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 			name:               "empty, scroll down",
 			inputString:        "",
 			initialView:        viewState{textOrigin: 0, height: 100, width: 100},
-			direction:          text.ReadDirectionForward,
+			direction:          ScrollDirectionForward,
 			numLines:           1,
 			expectedtextOrigin: 0,
 		},
@@ -38,7 +38,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 			name:               "scroll up",
 			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
 			initialView:        viewState{textOrigin: 12, height: 2, width: 100},
-			direction:          text.ReadDirectionBackward,
+			direction:          ScrollDirectionBackward,
 			numLines:           3,
 			expectedtextOrigin: 3,
 		},
@@ -46,7 +46,7 @@ func TestScrollViewByNumLines(t *testing.T) {
 			name:               "scroll down",
 			inputString:        "ab\ncd\nef\ngh\nij\nkl\nmn",
 			initialView:        viewState{textOrigin: 3, height: 2, width: 100},
-			direction:          text.ReadDirectionForward,
+			direction:          ScrollDirectionForward,
 			numLines:           3,
 			expectedtextOrigin: 12,
 		},

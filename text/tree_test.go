@@ -111,8 +111,8 @@ func TestReaderStartLocation(t *testing.T) {
 
 			// Check a reader starting from each character position to the end
 			for i := 0; i < len(tc.runes); i++ {
-				reader := tree.ReaderAtPosition(uint64(i), ReadDirectionForward)
-				retrieved, err := io.ReadAll(reader)
+				reader := tree.ReaderAtPosition(uint64(i))
+				retrieved, err := io.ReadAll(&reader)
 				require.NoError(t, err)
 				require.Equal(t, string(tc.runes[i:]), string(retrieved), "invalid substring starting from character at position %d (expect len = %d, actual len = %d)", i, len(string(tc.runes[i:])), len(string(retrieved)))
 			}
@@ -162,8 +162,8 @@ func TestReaderPastLastCharacter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := NewTreeFromString(tc.text)
 			require.NoError(t, err)
-			reader := tree.ReaderAtPosition(tc.pos, ReadDirectionForward)
-			retrieved, err := io.ReadAll(reader)
+			reader := tree.ReaderAtPosition(tc.pos)
+			retrieved, err := io.ReadAll(&reader)
 			require.NoError(t, err)
 			assert.Equal(t, "", string(retrieved))
 		})
@@ -452,10 +452,133 @@ func TestReadBackwards(t *testing.T) {
 			tree, err := NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 
-			reader := tree.ReaderAtPosition(tc.position, ReadDirectionBackward)
-			retrieved, err := io.ReadAll(reader)
+			reader := tree.ReverseReaderAtPosition(tc.position)
+			retrieved, err := io.ReadAll(&reader)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, string(retrieved))
+		})
+	}
+}
+
+func TestReadRune(t *testing.T) {
+	testCases := []struct {
+		name          string
+		inputString   string
+		expectedRunes []rune
+	}{
+		{
+			name:          "empty string",
+			inputString:   "",
+			expectedRunes: []rune{},
+		},
+		{
+			name:          "multiple ASCII",
+			inputString:   "abcd",
+			expectedRunes: []rune{'a', 'b', 'c', 'd'},
+		},
+		{
+			name:        "multi-byte characters",
+			inputString: "£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC",
+			expectedRunes: []rune{
+				'£',
+				'ô',
+				'Ɗ',
+				'፴',
+				'ऴ',
+				'அ',
+				'\U0010AAAA',
+				'\U0010BBBB',
+				'\U0010CCCC',
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			reader := tree.ReaderAtPosition(0)
+			runes := make([]rune, 0, len(tc.expectedRunes))
+			for {
+				r, sz, err := reader.ReadRune()
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					require.NoError(t, err)
+				}
+				assert.Equal(t, sz, utf8.RuneLen(r))
+				runes = append(runes, r)
+			}
+			assert.Equal(t, tc.expectedRunes, runes)
+		})
+	}
+}
+
+func TestReadRuneBackwards(t *testing.T) {
+	testCases := []struct {
+		name          string
+		inputString   string
+		expectedRunes []rune
+	}{
+		{
+			name:          "empty string",
+			inputString:   "",
+			expectedRunes: []rune{},
+		},
+		{
+			name:          "multiple ASCII",
+			inputString:   "abcd",
+			expectedRunes: []rune{'d', 'c', 'b', 'a'},
+		},
+		{
+			name:          "two-byte char",
+			inputString:   "£",
+			expectedRunes: []rune{'£'},
+		},
+		{
+			name:          "three-byte char",
+			inputString:   "ऴ",
+			expectedRunes: []rune{'ऴ'},
+		},
+		{
+			name:          "four-byte char",
+			inputString:   "\U0010AAAA",
+			expectedRunes: []rune{'\U0010AAAA'},
+		},
+		{
+			name:        "multi-byte characters",
+			inputString: "£ôƊ፴ऴஅ\U0010AAAA\U0010BBBB\U0010CCCC",
+			expectedRunes: []rune{
+				'\U0010CCCC',
+				'\U0010BBBB',
+				'\U0010AAAA',
+				'அ',
+				'ऴ',
+				'፴',
+				'Ɗ',
+				'ô',
+				'£',
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree, err := NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			reader := tree.ReverseReaderAtPosition(tree.NumChars())
+			runes := make([]rune, 0, len(tc.expectedRunes))
+			for {
+				r, sz, err := reader.ReadRune()
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					require.NoError(t, err)
+				}
+				assert.Equal(t, sz, utf8.RuneLen(r))
+				runes = append(runes, r)
+			}
+			assert.Equal(t, tc.expectedRunes, runes)
 		})
 	}
 }
@@ -524,11 +647,11 @@ func TestReaderSeekBackward(t *testing.T) {
 			tree, err := NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 
-			reader := tree.ReaderAtPosition(tc.readPosition, ReadDirectionForward)
+			reader := tree.ReaderAtPosition(tc.readPosition)
 			err = reader.SeekBackward(tc.seekOffset)
 			require.NoError(t, err)
 
-			retrieved, err := io.ReadAll(reader)
+			retrieved, err := io.ReadAll(&reader)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, string(retrieved))
 		})
@@ -540,14 +663,14 @@ func TestReadToEndThenSeekBackward(t *testing.T) {
 	tree, err := NewTreeFromString(s)
 	require.NoError(t, err)
 
-	reader := tree.ReaderAtPosition(0, ReadDirectionForward)
-	_, err = io.ReadAll(reader)
+	reader := tree.ReaderAtPosition(0)
+	_, err = io.ReadAll(&reader)
 	require.NoError(t, err)
 
 	err = reader.SeekBackward(100)
 	require.NoError(t, err)
 
-	retrieved, err := io.ReadAll(reader)
+	retrieved, err := io.ReadAll(&reader)
 	require.NoError(t, err)
 
 	expect := Repeat('a', 100)
@@ -935,8 +1058,8 @@ func TestInsertNewline(t *testing.T) {
 			require.NoError(t, err)
 
 			lineStartPos := tree.LineStartPosition(tc.retrieveLineNum)
-			reader := tree.ReaderAtPosition(lineStartPos, ReadDirectionForward)
-			text, err := io.ReadAll(reader)
+			reader := tree.ReaderAtPosition(lineStartPos)
+			text, err := io.ReadAll(&reader)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectLine, string(text))
 		})
@@ -1174,8 +1297,8 @@ func BenchmarkRead(b *testing.B) {
 			}
 
 			for n := 0; n < b.N; n++ {
-				reader := tree.ReaderAtPosition(0, ReadDirectionForward)
-				_, err := io.ReadAll(reader)
+				reader := tree.ReaderAtPosition(0)
+				_, err := io.ReadAll(&reader)
 				if err != nil {
 					b.Fatalf("err = %v", err)
 				}

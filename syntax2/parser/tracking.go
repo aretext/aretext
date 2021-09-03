@@ -4,26 +4,27 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
-// TrackingRuneIter tracks the number of runes read by an iter and all its clones.
+// TrackingReader tracks the number of runes read by a reader iter and all its clones.
 // It updates a shared counter, so clones of this iter should NOT be used in other threads.
+// Copying the struct produces a new, independent iterator.
 type TrackingRuneIter struct {
-	subIter text.CloneableRuneIter
+	reader  text.Reader
 	numRead uint64
 	maxRead *uint64
 }
 
 // NewTrackingRuneIter starts tracking an existing rune iter.
-func NewTrackingRuneIter(subIter text.CloneableRuneIter) *TrackingRuneIter {
+func NewTrackingRuneIter(reader text.Reader) TrackingRuneIter {
 	var maxRead uint64
-	return &TrackingRuneIter{
-		subIter: subIter,
+	return TrackingRuneIter{
+		reader:  reader,
 		maxRead: &maxRead,
 	}
 }
 
-// NextRune implements text.CloneableRuneIter#NextRune()
+// NextRune returns the next rune from the underlying reader and advances the iterator.
 func (iter *TrackingRuneIter) NextRune() (rune, error) {
-	r, err := iter.subIter.NextRune()
+	r, _, err := iter.reader.ReadRune()
 	if err != nil {
 		return r, err
 	}
@@ -36,13 +37,15 @@ func (iter *TrackingRuneIter) NextRune() (rune, error) {
 	return r, nil
 }
 
-// Clone implements text.CloneableRuneIter#Clone()
-func (iter *TrackingRuneIter) Clone() text.CloneableRuneIter {
-	return &TrackingRuneIter{
-		subIter: iter.subIter.Clone(),
-		numRead: iter.numRead,
-		maxRead: iter.maxRead, // All clones point to the same counter.
+// Skip advances the iterator by the specified number of positions or the end of the file, whichever comes first.
+func (iter *TrackingRuneIter) Skip(n uint64) uint64 {
+	for i := uint64(0); i < n; i++ {
+		_, err := iter.NextRune()
+		if err != nil {
+			return i
+		}
 	}
+	return n
 }
 
 // MaxRead returns the maximum number of runes read by this iter and all its clones.

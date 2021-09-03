@@ -4,12 +4,11 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/state"
-	"github.com/aretext/aretext/text"
 )
 
 // DrawSearchQuery draws the search query (if any) on the last line of the screen.
 // This overwrites the status bar.
-func DrawSearchQuery(screen tcell.Screen, palette *Palette, inputMode state.InputMode, query string, direction text.ReadDirection) {
+func DrawSearchQuery(screen tcell.Screen, palette *Palette, inputMode state.InputMode, query string, direction state.SearchDirection) {
 	if inputMode != state.InputModeSearch {
 		return
 	}
@@ -27,11 +26,11 @@ func DrawSearchQuery(screen tcell.Screen, palette *Palette, inputMode state.Inpu
 	sr.ShowCursor(col, 0)
 }
 
-func searchPrefixForDirection(direction text.ReadDirection) rune {
+func searchPrefixForDirection(direction state.SearchDirection) rune {
 	switch direction {
-	case text.ReadDirectionForward:
+	case state.SearchDirectionForward:
 		return '/'
-	case text.ReadDirectionBackward:
+	case state.SearchDirectionBackward:
 		return '?'
 	default:
 		panic("unrecognized direction")

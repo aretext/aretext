@@ -355,7 +355,7 @@ func (c *computation) largestSubComputationInRange(
 
 	// Keep searching smaller and smaller sub-computations with the requested start position
 	// until we find one that didn't read past the end position.
-	if readEndPos >= rangeEndPos {
+	if readEndPos > rangeEndPos {
 		if c.leftChild == nil && c.rightChild == nil {
 			return nil
 		} else if c.leftChild == nil {

@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/text"
 )
 
@@ -9,6 +11,7 @@ import (
 // Copying the struct produces a new, independent iterator.
 type TrackingRuneIter struct {
 	reader  text.Reader
+	eof     bool
 	numRead uint64
 	maxRead *uint64
 }
@@ -25,16 +28,16 @@ func NewTrackingRuneIter(reader text.Reader) TrackingRuneIter {
 // NextRune returns the next rune from the underlying reader and advances the iterator.
 func (iter *TrackingRuneIter) NextRune() (rune, error) {
 	r, _, err := iter.reader.ReadRune()
-	if err != nil {
-		return r, err
+
+	if err == nil || (err == io.EOF && !iter.eof) {
+		iter.eof = bool(err == io.EOF)
+		iter.numRead++
+		if iter.numRead > *iter.maxRead {
+			*iter.maxRead = iter.numRead
+		}
 	}
 
-	iter.numRead++
-	if iter.numRead > *iter.maxRead {
-		*iter.maxRead = iter.numRead
-	}
-
-	return r, nil
+	return r, err
 }
 
 // Skip advances the iterator by the specified number of positions or the end of the file, whichever comes first.

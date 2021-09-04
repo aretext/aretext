@@ -61,7 +61,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 			readStartPos:       0,
 			readEndPos:         2,
 			state:              EmptyState{},
-			expectedReadLength: 0,
+			expectedReadLength: 2,
 		},
 		{
 			name: "single computation, greater than range",

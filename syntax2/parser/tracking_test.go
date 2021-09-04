@@ -43,12 +43,18 @@ func TestTrackingRuneIter(t *testing.T) {
 	assert.Equal(t, 'd', r)
 	assert.Equal(t, uint64(4), trackingIter.MaxRead())
 
+	// EOF should include one position past the end of text.
 	_, err = trackingIter.NextRune()
 	assert.ErrorIs(t, err, io.EOF)
-	assert.Equal(t, uint64(4), trackingIter.MaxRead())
+	assert.Equal(t, uint64(5), trackingIter.MaxRead())
 
 	r, err = cloneIter.NextRune()
 	require.NoError(t, err)
 	assert.Equal(t, 'c', r)
-	assert.Equal(t, uint64(4), trackingIter.MaxRead())
+	assert.Equal(t, uint64(5), trackingIter.MaxRead())
+
+	// Read EOF again, shouldn't affect max read.
+	_, err = trackingIter.NextRune()
+	assert.ErrorIs(t, err, io.EOF)
+	assert.Equal(t, uint64(5), trackingIter.MaxRead())
 }

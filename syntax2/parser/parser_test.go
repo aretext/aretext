@@ -277,3 +277,22 @@ func TestReparseAfterEditDeletion(t *testing.T) {
 		})
 	}
 }
+
+func TestReparseIndividualInsertionsAtEndOfDocument(t *testing.T) {
+	tree := text.NewTree()
+	p := New(simpleParseFunc)
+	p.ParseAll(tree)
+	text := `"test"`
+	for i, r := range text {
+		pos := uint64(i)
+		err := tree.InsertAtPosition(pos, r)
+		require.NoError(t, err)
+		edit := NewInsertEdit(pos, 1)
+		p.ReparseAfterEdit(tree, edit)
+	}
+	tokens := p.TokensIntersectingRange(0, math.MaxUint64)
+	expectedTokens := []Token{
+		{StartPos: 0, EndPos: uint64(len(text)), Role: TokenRoleString},
+	}
+	assert.Equal(t, expectedTokens, tokens)
+}

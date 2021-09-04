@@ -44,6 +44,16 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 			expectedReadLength: 2,
 		},
 		{
+			name: "single computation, one less than range end",
+			builder: func() *computation {
+				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
+			},
+			readStartPos:       0,
+			readEndPos:         3,
+			state:              EmptyState{},
+			expectedReadLength: 2,
+		},
+		{
 			name: "single computation, equal to range",
 			builder: func() *computation {
 				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
@@ -51,7 +61,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 			readStartPos:       0,
 			readEndPos:         2,
 			state:              EmptyState{},
-			expectedReadLength: 2,
+			expectedReadLength: 0,
 		},
 		{
 			name: "single computation, greater than range",
@@ -71,7 +81,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 				return left.Append(right)
 			},
 			readStartPos:       0,
-			readEndPos:         3,
+			readEndPos:         4,
 			state:              EmptyState{},
 			expectedReadLength: 3,
 		},
@@ -83,7 +93,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 				return left.Append(right)
 			},
 			readStartPos:       3,
-			readEndPos:         8,
+			readEndPos:         9,
 			state:              EmptyState{},
 			expectedReadLength: 5,
 		},
@@ -119,7 +129,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 				return left.Append(right)
 			},
 			readStartPos:       0,
-			readEndPos:         3,
+			readEndPos:         4,
 			state:              stubState{1},
 			expectedReadLength: 3,
 		},

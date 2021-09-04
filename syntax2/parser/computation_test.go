@@ -17,7 +17,7 @@ func (s stubState) Equals(other State) bool {
 func TestComputationLargestMatchingSubComputation(t *testing.T) {
 	testCases := []struct {
 		name               string
-		builder            func() *Computation
+		builder            func() *computation
 		readStartPos       uint64
 		readEndPos         uint64
 		state              State
@@ -25,8 +25,8 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 	}{
 		{
 			name: "single computation, start does not match",
-			builder: func() *Computation {
-				return NewComputation(2, 2, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
 			},
 			readStartPos:       2,
 			readEndPos:         5,
@@ -35,8 +35,8 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "single computation, smaller than range",
-			builder: func() *Computation {
-				return NewComputation(2, 2, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
 			},
 			readStartPos:       0,
 			readEndPos:         5,
@@ -45,8 +45,8 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "single computation, equal to range",
-			builder: func() *Computation {
-				return NewComputation(2, 2, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
 			},
 			readStartPos:       0,
 			readEndPos:         2,
@@ -55,8 +55,8 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "single computation, greater than range",
-			builder: func() *Computation {
-				return NewComputation(5, 5, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				return newComputation(5, 5, EmptyState{}, EmptyState{}, nil)
 			},
 			readStartPos:       0,
 			readEndPos:         4,
@@ -65,9 +65,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "multiple computations, match left child",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, EmptyState{}, EmptyState{}, nil)
-				right := NewComputation(5, 5, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, EmptyState{}, EmptyState{}, nil)
+				right := newComputation(5, 5, EmptyState{}, EmptyState{}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -77,9 +77,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "multiple computations, match right child",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, EmptyState{}, EmptyState{}, nil)
-				right := NewComputation(5, 5, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, EmptyState{}, EmptyState{}, nil)
+				right := newComputation(5, 5, EmptyState{}, EmptyState{}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       3,
@@ -89,9 +89,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "multiple computations, match left child with lookahead",
-			builder: func() *Computation {
-				left := NewComputation(10, 3, EmptyState{}, EmptyState{}, nil)
-				right := NewComputation(5, 5, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				left := newComputation(10, 3, EmptyState{}, EmptyState{}, nil)
+				right := newComputation(5, 5, EmptyState{}, EmptyState{}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -101,9 +101,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "multiple computations, match right child with lookahead",
-			builder: func() *Computation {
-				left := NewComputation(10, 3, EmptyState{}, EmptyState{}, nil)
-				right := NewComputation(9, 8, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				left := newComputation(10, 3, EmptyState{}, EmptyState{}, nil)
+				right := newComputation(9, 8, EmptyState{}, EmptyState{}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       3,
@@ -113,9 +113,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "match state left child",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, stubState{1}, stubState{2}, nil)
-				right := NewComputation(5, 5, stubState{3}, stubState{4}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, stubState{1}, stubState{2}, nil)
+				right := newComputation(5, 5, stubState{3}, stubState{4}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -125,9 +125,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "mismatch state left child",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, stubState{1}, stubState{2}, nil)
-				right := NewComputation(5, 5, stubState{3}, stubState{4}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, stubState{1}, stubState{2}, nil)
+				right := newComputation(5, 5, stubState{3}, stubState{4}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -137,9 +137,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "match state parent",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, stubState{1}, stubState{2}, nil)
-				right := NewComputation(5, 5, stubState{3}, stubState{4}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, stubState{1}, stubState{2}, nil)
+				right := newComputation(5, 5, stubState{3}, stubState{4}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -149,9 +149,9 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 		},
 		{
 			name: "mismatch state parent",
-			builder: func() *Computation {
-				left := NewComputation(3, 3, stubState{1}, stubState{2}, nil)
-				right := NewComputation(5, 5, stubState{3}, stubState{4}, nil)
+			builder: func() *computation {
+				left := newComputation(3, 3, stubState{1}, stubState{2}, nil)
+				right := newComputation(5, 5, stubState{3}, stubState{4}, nil)
 				return left.Append(right)
 			},
 			readStartPos:       0,
@@ -173,15 +173,15 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 func TestComputationTokensIntersectingRange(t *testing.T) {
 	testCases := []struct {
 		name           string
-		builder        func() *Computation
+		builder        func() *computation
 		startPos       uint64
 		endPos         uint64
 		expectedTokens []Token
 	}{
 		{
 			name: "single computation, no tokens",
-			builder: func() *Computation {
-				return NewComputation(1, 1, EmptyState{}, EmptyState{}, nil)
+			builder: func() *computation {
+				return newComputation(1, 1, EmptyState{}, EmptyState{}, nil)
 			},
 			startPos:       0,
 			endPos:         100,
@@ -189,8 +189,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, single token equals range",
-			builder: func() *Computation {
-				return NewComputation(2, 2, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(2, 2, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 0, Length: 2},
 				})
 			},
@@ -202,8 +202,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, multiple tokens in range",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 0, Length: 3},
 					{Offset: 3, Length: 1},
 				})
@@ -217,8 +217,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, token ending before range",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 0, Length: 1},
 				})
 			},
@@ -228,8 +228,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, token ending at range start",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 0, Length: 1},
 				})
 			},
@@ -239,8 +239,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, token starting at range end",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 2, Length: 1},
 				})
 			},
@@ -250,8 +250,8 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "single computation, token starting after range end",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 3, Length: 1},
 				})
 			},
@@ -261,11 +261,11 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "append two computations, all tokens intersect range",
-			builder: func() *Computation {
-				return NewComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+			builder: func() *computation {
+				return newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Offset: 0, Length: 4},
 				}).Append(
-					NewComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 3},
 					}))
 			},
@@ -278,10 +278,10 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "append many computations in sequence, all tokens intersect range",
-			builder: func() *Computation {
-				var c *Computation
+			builder: func() *computation {
+				var c *computation
 				for i := 0; i < 10; i++ {
-					c = c.Append(NewComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
+					c = c.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}))
 				}
@@ -304,10 +304,10 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "prepend many computations in sequence, all tokens intersect range",
-			builder: func() *Computation {
-				var c *Computation
+			builder: func() *computation {
+				var c *computation
 				for i := 0; i < 10; i++ {
-					c = NewComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
+					c = newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}).Append(c)
 				}
@@ -330,13 +330,13 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 		},
 		{
 			name: "append two computations each with many sub-computations, all tokens intersect range",
-			builder: func() *Computation {
-				var c1, c2 *Computation
+			builder: func() *computation {
+				var c1, c2 *computation
 				for i := 0; i < 5; i++ {
-					c1 = c1.Append(NewComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
+					c1 = c1.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}))
-					c2 = c2.Append(NewComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
+					c2 = c2.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}))
 				}
@@ -371,7 +371,7 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 func TestConcatLeafComputations(t *testing.T) {
 	testCases := []struct {
 		name         string
-		computations []*Computation
+		computations []*computation
 	}{
 		{
 			name:         "empty",
@@ -379,39 +379,39 @@ func TestConcatLeafComputations(t *testing.T) {
 		},
 		{
 			name: "single computation",
-			computations: []*Computation{
-				NewComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
+			computations: []*computation{
+				newComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 3},
 				}),
 			},
 		},
 		{
 			name: "two computations",
-			computations: []*Computation{
-				NewComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
+			computations: []*computation{
+				newComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 3},
 				}),
-				NewComputation(8, 8, EmptyState{}, EmptyState{}, []ComputedToken{
+				newComputation(8, 8, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 8},
 				}),
 			},
 		},
 		{
 			name: "many computations",
-			computations: []*Computation{
-				NewComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
+			computations: []*computation{
+				newComputation(5, 5, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 3},
 				}),
-				NewComputation(8, 8, EmptyState{}, EmptyState{}, []ComputedToken{
+				newComputation(8, 8, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 8},
 				}),
-				NewComputation(2, 2, EmptyState{}, EmptyState{}, []ComputedToken{
+				newComputation(2, 2, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 2},
 				}),
-				NewComputation(7, 7, EmptyState{}, EmptyState{}, []ComputedToken{
+				newComputation(7, 7, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 7},
 				}),
-				NewComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+				newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
 					{Length: 3},
 				}),
 			},
@@ -420,9 +420,9 @@ func TestConcatLeafComputations(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			c1 := ConcatLeafComputations(tc.computations)
+			c1 := concatLeafComputations(tc.computations)
 
-			var c2 *Computation
+			var c2 *computation
 			for _, leaf := range tc.computations {
 				c2 = c2.Append(leaf)
 			}

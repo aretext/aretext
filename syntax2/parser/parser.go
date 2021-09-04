@@ -61,7 +61,7 @@ func (r Result) ShiftForward(n uint64) Result {
 // reparse a document after an edit (insertion/deletion).
 type P struct {
 	parseFunc       Func
-	prevComputation *Computation
+	lastComputation *computation
 }
 
 // New constructs a new parser for the language recognized by parseFunc.
@@ -71,11 +71,16 @@ func New(f Func) *P {
 	return &P{parseFunc: f}
 }
 
+// TokensIntersectingRange returns tokens that overlap the interval [startPos, endPos)
+func (p *P) TokensIntersectingRange(startPos, endPos uint64) []Token {
+	return p.lastComputation.TokensIntersectingRange(startPos, endPos)
+}
+
 // ParseAll parses the entire document.
-func (p *P) ParseAll(tree *text.Tree) *Computation {
+func (p *P) ParseAll(tree *text.Tree) {
 	var pos uint64
 	state := State(EmptyState{})
-	leafComputations := make([]*Computation, 0)
+	leafComputations := make([]*computation, 0)
 	n := tree.NumChars()
 	for pos < n {
 		c := p.runParseFunc(tree, pos, state)
@@ -83,9 +88,8 @@ func (p *P) ParseAll(tree *text.Tree) *Computation {
 		state = c.EndState()
 		leafComputations = append(leafComputations, c)
 	}
-	c := ConcatLeafComputations(leafComputations)
-	p.prevComputation = c
-	return c
+	c := concatLeafComputations(leafComputations)
+	p.lastComputation = c
 }
 
 // ReparseAfterEdit parses a document after an edit (insertion/deletion),
@@ -93,9 +97,9 @@ func (p *P) ParseAll(tree *text.Tree) *Computation {
 // This should be called *after* at least one invocation of ParseAll().
 // It must be called for *every* edit to the document, otherwise the
 // tokens may not match the current state of the document.
-func (p *P) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
+func (p *P) ReparseAfterEdit(tree *text.Tree, edit Edit) {
 	var pos uint64
-	var c *Computation
+	var c *computation
 	state := State(EmptyState{})
 	n := tree.NumChars()
 	for pos < n {
@@ -107,15 +111,14 @@ func (p *P) ReparseAfterEdit(tree *text.Tree, edit Edit) *Computation {
 		pos += nextComputation.ConsumedLength()
 		c = c.Append(nextComputation)
 	}
-	p.prevComputation = c
-	return c
+	p.lastComputation = c
 }
 
-func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation {
+func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *computation {
 	reader := tree.ReaderAtPosition(pos)
 	trackingIter := NewTrackingRuneIter(reader)
 	result := p.parseFunc(trackingIter, state)
-	return NewComputation(
+	return newComputation(
 		trackingIter.MaxRead(),
 		result.NumConsumed,
 		state,
@@ -124,11 +127,11 @@ func (p *P) runParseFunc(tree *text.Tree, pos uint64, state State) *Computation 
 	)
 }
 
-func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *Computation {
+func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *computation {
 	if pos < edit.pos {
 		// If the parser is starting before the edit, look for a subcomputation
 		// from that position up to the start of the edit.
-		return p.prevComputation.LargestMatchingSubComputation(
+		return p.lastComputation.LargestMatchingSubComputation(
 			pos,
 			edit.pos,
 			state,
@@ -139,7 +142,7 @@ func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *Computa
 		// If the parser is past the last character inserted,
 		// translate the position to the previous document by subtracting
 		// the number of inserted characters.
-		return p.prevComputation.LargestMatchingSubComputation(
+		return p.lastComputation.LargestMatchingSubComputation(
 			pos-edit.numInserted,
 			math.MaxUint64,
 			state,
@@ -150,7 +153,7 @@ func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *Computa
 		// If the parser is past a deletion,
 		// translate the position to the previous document by adding
 		// the number of deleted characters.
-		return p.prevComputation.LargestMatchingSubComputation(
+		return p.lastComputation.LargestMatchingSubComputation(
 			pos+edit.numDeleted,
 			math.MaxUint64,
 			state,
@@ -158,6 +161,6 @@ func (p *P) findReusableComputation(pos uint64, edit Edit, state State) *Computa
 	}
 
 	// The parser is starting within the edit range, so we can can't re-use
-	// any of the previous computation.
+	// any of the last computation.
 	return nil
 }

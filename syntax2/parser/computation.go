@@ -9,35 +9,35 @@ type ComputedToken struct {
 	Role   TokenRole
 }
 
-// Computation is a result produced by a parser.
-// Computations are composable, so part of one computation
+// computation is a result produced by a parser.
+// computations are composable, so part of one computation
 // can be re-used when re-parsing an edited text.
-type Computation struct {
+type computation struct {
 	readLength     uint64
 	consumedLength uint64
 	treeHeight     uint64
 	startState     State
 	endState       State
 	tokens         []ComputedToken // Only in leaves.
-	leftChild      *Computation
-	rightChild     *Computation
+	leftChild      *computation
+	rightChild     *computation
 }
 
-// NewComputation constructs a computation.
+// newComputation constructs a computation.
 // readLength is the number of runes read by the parser,
 // and consumedLength is the number of runes consumed by the parser.
 // The tokens slice contains any tokens recognized by the parser;
 // these must have non-zero length, be ordered sequentially by start position,
 // and be non-overlapping.
-func NewComputation(
+func newComputation(
 	readLength uint64,
 	consumedLength uint64,
 	startState State,
 	endState State,
 	tokens []ComputedToken,
-) *Computation {
+) *computation {
 	if consumedLength == 0 {
-		panic("Computation must consume at least one rune")
+		panic("computation must consume at least one rune")
 	}
 
 	if consumedLength > readLength {
@@ -62,7 +62,7 @@ func NewComputation(
 		lastEndPos = tokEndPos
 	}
 
-	return &Computation{
+	return &computation{
 		readLength:     readLength,
 		consumedLength: consumedLength,
 		treeHeight:     1,
@@ -73,7 +73,7 @@ func NewComputation(
 }
 
 // ReadLength returns the number of runes read to produce this computation.
-func (c *Computation) ReadLength() uint64 {
+func (c *computation) ReadLength() uint64 {
 	if c == nil {
 		return 0
 	} else {
@@ -82,7 +82,7 @@ func (c *Computation) ReadLength() uint64 {
 }
 
 // ConsumedLength returns the number of runes consumed to produce this computation.
-func (c *Computation) ConsumedLength() uint64 {
+func (c *computation) ConsumedLength() uint64 {
 	if c == nil {
 		return 0
 	} else {
@@ -91,7 +91,7 @@ func (c *Computation) ConsumedLength() uint64 {
 }
 
 // TreeHeight returns the height of the computation tree.
-func (c *Computation) TreeHeight() uint64 {
+func (c *computation) TreeHeight() uint64 {
 	if c == nil {
 		return 0
 	} else {
@@ -100,7 +100,7 @@ func (c *Computation) TreeHeight() uint64 {
 }
 
 // StartState returns the parse state at the start of the computation.
-func (c *Computation) StartState() State {
+func (c *computation) StartState() State {
 	if c == nil {
 		return EmptyState{}
 	}
@@ -108,7 +108,7 @@ func (c *Computation) StartState() State {
 }
 
 // EndState returns the parse state at the end of the computation.
-func (c *Computation) EndState() State {
+func (c *computation) EndState() State {
 	if c == nil {
 		return EmptyState{}
 	}
@@ -119,7 +119,7 @@ func (c *Computation) EndState() State {
 // The positions of the computations and tokens in the second computation
 // are "shifted" to start immediately after the end (consumed length) of
 // the first computation.
-func (c *Computation) Append(other *Computation) *Computation {
+func (c *computation) Append(other *computation) *computation {
 	if c == nil {
 		return other
 	} else if other == nil {
@@ -142,7 +142,7 @@ func (c *Computation) Append(other *Computation) *Computation {
 // prependSubtree inserts a computation *before* a given computation,
 // rebalancing the tree if necessary (AVL balance invariant).
 // This assumes that both computations are non-nil.
-func (c *Computation) prependSubtree(other *Computation) *Computation {
+func (c *computation) prependSubtree(other *computation) *computation {
 	if c.leftChild.TreeHeight() <= other.TreeHeight()+1 {
 		// Insert the new tree as a sibling of a left child with approximately the same height.
 		newLeft := computationFromChildren(other, c.leftChild)
@@ -172,7 +172,7 @@ func (c *Computation) prependSubtree(other *Computation) *Computation {
 // appendSubtree inserts a computation *after* a given computation,
 // rebalancing the tree if necessary (AVL balance invariant).
 // This assumes that both computations are non-nil.
-func (c *Computation) appendSubtree(other *Computation) *Computation {
+func (c *computation) appendSubtree(other *computation) *computation {
 	if c.rightChild.TreeHeight() <= other.TreeHeight()+1 {
 		// Insert the new tree as a sibling of a right child with approximately the same height.
 		newRight := computationFromChildren(c.rightChild, other)
@@ -199,7 +199,7 @@ func (c *Computation) appendSubtree(other *Computation) *Computation {
 	}
 }
 
-func (c *Computation) rotateLeft() *Computation {
+func (c *computation) rotateLeft() *computation {
 	if c == nil || c.rightChild == nil {
 		// Can't rotate left for an empty tree or tree without a right child.
 		return c
@@ -227,7 +227,7 @@ func (c *Computation) rotateLeft() *Computation {
 	return computationFromChildren(computationFromChildren(q, r), s)
 }
 
-func (c *Computation) rotateRight() *Computation {
+func (c *computation) rotateRight() *computation {
 	if c == nil || c.leftChild == nil {
 		// Can't rotate right for an empty tree or tree without a left child.
 		return c
@@ -255,7 +255,7 @@ func (c *Computation) rotateRight() *Computation {
 	return computationFromChildren(q, computationFromChildren(r, s))
 }
 
-func computationFromChildren(leftChild, rightChild *Computation) *Computation {
+func computationFromChildren(leftChild, rightChild *computation) *computation {
 	var startState, endState State
 
 	if leftChild == nil && rightChild == nil {
@@ -279,7 +279,7 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 		maxReadLength = leftChild.ReadLength()
 	}
 
-	return &Computation{
+	return &computation{
 		readLength:     maxReadLength,
 		consumedLength: leftChild.ConsumedLength() + rightChild.ConsumedLength(),
 		treeHeight:     maxChildTreeHeight + 1,
@@ -296,18 +296,18 @@ func computationFromChildren(leftChild, rightChild *Computation) *Computation {
 // This is used to find a re-usable computation that is still valid after an edit.
 // A computation is considered *invalid* if it read some text that was edited,
 // so if the computation did *not* read any edited text, it's definitely still valid.
-func (c *Computation) LargestMatchingSubComputation(
+func (c *computation) LargestMatchingSubComputation(
 	rangeStartPos, rangeEndPos uint64,
 	state State,
-) *Computation {
+) *computation {
 	return c.largestSubComputationInRange(0, c.readLength, rangeStartPos, rangeEndPos, state)
 }
 
-func (c *Computation) largestSubComputationInRange(
+func (c *computation) largestSubComputationInRange(
 	readStartPos, readEndPos uint64,
 	rangeStartPos, rangeEndPos uint64,
 	state State,
-) *Computation {
+) *computation {
 
 	// First, search until we find a sub-computation with the requested start position.
 	if readStartPos != rangeStartPos {
@@ -396,7 +396,7 @@ func (c *Computation) largestSubComputationInRange(
 }
 
 // TokensIntersectingRange returns tokens that overlap the interval [startPos, endPos)
-func (c *Computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
+func (c *computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
 	if c == nil {
 		return nil
 	}
@@ -405,7 +405,7 @@ func (c *Computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
 
 	type stackItem struct {
 		offset uint64
-		c      *Computation
+		c      *computation
 	}
 	item := stackItem{offset: 0, c: c}
 	stack := []stackItem{item}
@@ -458,12 +458,12 @@ func (c *Computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
 	return result
 }
 
-// ConcatLeafComputations combines leaf computations into a single computation.
-// A leaf computation is a computation constructed by NewComputation
+// concatLeafComputations combines leaf computations into a single computation.
+// A leaf computation is a computation constructed by newComputation
 // without any other computations appended.
 // This produces the same result as sequentially appending the computations,
 // but does so more efficiently.
-func ConcatLeafComputations(computations []*Computation) *Computation {
+func concatLeafComputations(computations []*computation) *computation {
 	if len(computations) == 0 {
 		return nil
 	}
@@ -478,7 +478,7 @@ func ConcatLeafComputations(computations []*Computation) *Computation {
 	// calling Append repeatedly, because every node we allocate
 	// will be used in the final tree.  Additionally, we avoid
 	// the cost of rebalancing the tree since it's balanced by construction.
-	nextComputations := make([]*Computation, 0, len(computations)/2+1)
+	nextComputations := make([]*computation, 0, len(computations)/2+1)
 	for len(computations) > 1 {
 		var i int
 		for i < len(computations) {

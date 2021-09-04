@@ -98,8 +98,8 @@ func TestParseAll(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.text)
 			require.NoError(t, err)
 			p := New(simpleParseFunc)
-			c := p.ParseAll(tree)
-			tokens := c.TokensIntersectingRange(0, math.MaxUint64)
+			p.ParseAll(tree)
+			tokens := p.TokensIntersectingRange(0, math.MaxUint64)
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}
@@ -112,9 +112,9 @@ func TestRecoverFromFailure(t *testing.T) {
 	tree, err := text.NewTreeFromString("abcd")
 	require.NoError(t, err)
 	p := New(failingParseFunc)
-	c := p.ParseAll(tree)
-	assert.Equal(t, uint64(4), c.ConsumedLength())
-	tokens := c.TokensIntersectingRange(0, math.MaxUint64)
+	p.ParseAll(tree)
+	assert.Equal(t, uint64(4), p.lastComputation.ConsumedLength())
+	tokens := p.TokensIntersectingRange(0, math.MaxUint64)
 	assert.Equal(t, 0, len(tokens))
 }
 
@@ -196,8 +196,8 @@ func TestReparseAfterEditInsertion(t *testing.T) {
 			}
 
 			edit := NewInsertEdit(tc.editPos, n)
-			c := p.ReparseAfterEdit(tree, edit)
-			tokens := c.TokensIntersectingRange(0, math.MaxUint64)
+			p.ReparseAfterEdit(tree, edit)
+			tokens := p.TokensIntersectingRange(0, math.MaxUint64)
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}
@@ -271,8 +271,8 @@ func TestReparseAfterEditDeletion(t *testing.T) {
 			}
 
 			edit := NewDeleteEdit(tc.editPos, tc.numDeleted)
-			c := p.ReparseAfterEdit(tree, edit)
-			tokens := c.TokensIntersectingRange(0, math.MaxUint64)
+			p.ReparseAfterEdit(tree, edit)
+			tokens := p.TokensIntersectingRange(0, math.MaxUint64)
 			assert.Equal(t, tc.expectedTokens, tokens)
 		})
 	}

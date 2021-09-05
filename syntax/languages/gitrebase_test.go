@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/aretext/aretext/syntax2/parser"
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 func TestGitRebaseParseFunc(t *testing.T) {

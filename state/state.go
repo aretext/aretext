@@ -53,8 +53,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		search:         searchState{},
 		undoLog:        undo.NewLog(),
 		syntaxLanguage: syntax.LanguagePlaintext,
-		tokenTree:      nil,
-		tokenizer:      nil,
+		syntaxParser:   nil,
 		tabSize:        uint64(config.DefaultTabSize),
 		tabExpand:      config.DefaultTabExpand,
 		showTabs:       config.DefaultShowTabs,
@@ -132,8 +131,7 @@ type BufferState struct {
 	search         searchState
 	undoLog        *undo.Log
 	syntaxLanguage syntax.Language
-	tokenTree      *parser.TokenTree
-	tokenizer      *parser.Tokenizer
+	syntaxParser   *parser.P
 	tabSize        uint64
 	tabExpand      bool
 	showTabs       bool
@@ -145,8 +143,11 @@ func (s *BufferState) TextTree() *text.Tree {
 	return s.textTree
 }
 
-func (s *BufferState) TokenTree() *parser.TokenTree {
-	return s.tokenTree
+func (s *BufferState) SyntaxTokensIntersectingRange(startPos, endPos uint64) []parser.Token {
+	if s.syntaxParser == nil {
+		return nil
+	}
+	return s.syntaxParser.TokensIntersectingRange(startPos, endPos)
 }
 
 func (s *BufferState) CursorPosition() uint64 {

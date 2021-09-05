@@ -98,34 +98,6 @@ func (r *Reader) ReadRune() (rune, int, error) {
 	return rn, sz, nil
 }
 
-// SeekBackward implements parser.InputReader#SeekBackward
-func (r *Reader) SeekBackward(offset uint64) error {
-	for offset > 0 && !(r.group.prev == nil && r.nodeIdx == 0 && r.textByteOffset == 0) {
-		if r.textByteOffset >= offset {
-			r.textByteOffset -= offset
-			break
-		} else if r.textByteOffset > 0 {
-			offset -= r.textByteOffset
-			r.textByteOffset = 0
-			continue
-		}
-
-		if r.nodeIdx > 0 {
-			r.nodeIdx--
-			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
-			continue
-		}
-
-		if r.group.prev != nil {
-			r.group = r.group.prev
-			r.nodeIdx = r.group.numNodes - 1
-			r.textByteOffset = uint64(r.group.nodes[r.nodeIdx].numBytes)
-		}
-	}
-
-	return nil
-}
-
 // ReverseReader reads bytes in reverse order.
 type ReverseReader struct {
 	Reader

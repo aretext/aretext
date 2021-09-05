@@ -1,7 +1,7 @@
 package languages
 
 import (
-	"github.com/aretext/aretext/syntax2/parser"
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 // devlogParseState represents the state of the devlog parser.

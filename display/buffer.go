@@ -34,7 +34,6 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	wrappedLineIter := segment.NewWrappedLineIter(reader, wrapConfig)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
-	tokenIter := buffer.TokenTree().IterFromPosition(pos, parser.IterDirectionForward)
 
 	sr.HideCursor()
 
@@ -47,6 +46,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 		}
 		lineNum := textTree.LineNumForPosition(pos)
 		lineStartPos := textTree.LineStartPosition(lineNum)
+		wrappedLineRunes := wrappedLine.Runes()
+		syntaxTokens := buffer.SyntaxTokensIntersectingRange(pos, pos+uint64(len(wrappedLineRunes)))
 		drawLineAndSetCursor(
 			sr,
 			palette,
@@ -56,8 +57,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			lineNum,
 			lineNumMargin,
 			lineStartPos,
-			wrappedLine.Runes(),
-			tokenIter,
+			wrappedLineRunes,
+			syntaxTokens,
 			cursorPos,
 			selectedRegion,
 			searchMatch,
@@ -90,7 +91,7 @@ func drawLineAndSetCursor(
 	lineNumMargin uint64,
 	lineStartPos uint64,
 	wrappedLineRunes []rune,
-	tokenIter *parser.TokenIter,
+	syntaxTokens []parser.Token,
 	cursorPos uint64,
 	selectedRegion selection.Region,
 	searchMatch *state.SearchMatch,
@@ -127,7 +128,24 @@ func drawLineAndSetCursor(
 			return
 		}
 
-		style := styleAtPosition(palette, pos, selectedRegion, searchMatch, tokenIter)
+		style := tcell.StyleDefault
+		if selectedRegion.ContainsPosition(pos) {
+			style = palette.StyleForSelection()
+		} else if searchMatch.ContainsPosition(pos) {
+			style = palette.StyleForSearchMatch()
+		} else {
+			for len(syntaxTokens) > 0 {
+				token := syntaxTokens[0]
+				if token.StartPos <= pos && token.EndPos > pos {
+					style = palette.StyleForTokenRole(token.Role)
+					break
+				} else if token.StartPos > pos {
+					break
+				}
+				syntaxTokens = syntaxTokens[1:]
+			}
+		}
+
 		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs)
 
 		if pos-startPos == uint64(maxLineWidth) {
@@ -175,29 +193,4 @@ func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum
 		sr.SetContent(col, row, r, nil, style)
 		col++
 	}
-}
-
-func styleAtPosition(palette *Palette, pos uint64, selectedRegion selection.Region, searchMatch *state.SearchMatch, tokenIter *parser.TokenIter) tcell.Style {
-	if selectedRegion.ContainsPosition(pos) {
-		return palette.StyleForSelection()
-	}
-
-	if searchMatch.ContainsPosition(pos) {
-		return palette.StyleForSearchMatch()
-	}
-
-	var token parser.Token
-	for tokenIter.Get(&token) {
-		if token.StartPos <= pos && token.EndPos > pos {
-			return palette.StyleForTokenRole(token.Role)
-		}
-
-		if token.StartPos > pos {
-			break
-		}
-
-		tokenIter.Advance()
-	}
-
-	return tcell.StyleDefault
 }

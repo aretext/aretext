@@ -3,7 +3,7 @@ package languages
 import (
 	"unicode"
 
-	"github.com/aretext/aretext/syntax2/parser"
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 // GitRebaseParseFunc parses a git rebase.

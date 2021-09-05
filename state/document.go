@@ -178,7 +178,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.customMenuItems = customMenuItems(config)
 	state.dirPatternsToHide = config.HideDirectories
 	state.styles = config.Styles
-	setSyntaxAndRetokenize(state.documentBuffer, syntax.LanguageFromString(config.SyntaxLanguage))
+	setSyntaxAndRetokenize(state.documentBuffer, syntax.Language(config.SyntaxLanguage))
 
 	return fileExists, nil
 }

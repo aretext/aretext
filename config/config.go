@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-const DefaultSyntaxLanguage = "undefined"
+const DefaultSyntaxLanguage = "plaintext"
 const DefaultTabSize = 4
 const DefaultTabExpand = false
 const DefaultShowTabs = false

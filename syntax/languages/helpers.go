@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aretext/aretext/syntax2/parser"
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 // initialState sets the initial parser state if it hasn't yet been set.

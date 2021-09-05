@@ -44,7 +44,7 @@ func TestComputationLargestMatchingSubComputation(t *testing.T) {
 			expectedReadLength: 2,
 		},
 		{
-			name: "single computation, one less than range end",
+			name: "single computation, one less than end of range",
 			builder: func() *computation {
 				return newComputation(2, 2, EmptyState{}, EmptyState{}, nil)
 			},

@@ -1,23 +1,51 @@
 package syntax
 
 import (
-	"strings"
-	"unicode/utf8"
-
+	"github.com/aretext/aretext/syntax/languages"
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-//go:generate go run gen_tokenizers.go
+// Language is an enum of languages that we can parse.
+type Language string
 
-// TokenizeString tokenizes a string based on the specified language.
-func TokenizeString(language Language, s string) (*parser.TokenTree, error) {
-	tokenizer := TokenizerForLanguage(language)
-	if tokenizer == nil {
-		return nil, nil
+// AllLanguages lists every available language.
+var AllLanguages []Language
+
+const (
+	LanguagePlaintext = Language("plaintext")
+	LanguageJson      = Language("json")
+	LanguageYaml      = Language("yaml")
+	LanguageGo        = Language("go")
+	LanguageGitCommit = Language("gitcommit")
+	LanguageGitRebase = Language("gitrebase")
+	LanguageDevlog    = Language("devlog")
+)
+
+// languageToParseFunc maps each language to its parse func.
+var languageToParseFunc map[Language]parser.Func
+
+func init() {
+	languageToParseFunc = map[Language]parser.Func{
+		LanguagePlaintext: nil,
+		LanguageJson:      languages.JsonParseFunc(),
+		LanguageYaml:      languages.YamlParseFunc(),
+		LanguageGo:        languages.GolangParseFunc(),
+		LanguageGitCommit: languages.GitCommitParseFunc(),
+		LanguageGitRebase: languages.GitRebaseParseFunc(),
+		LanguageDevlog:    languages.DevlogParseFunc(),
 	}
-	inputReader := &parser.ReadSeekerInput{
-		R: strings.NewReader(s),
+
+	for language, _ := range languageToParseFunc {
+		AllLanguages = append(AllLanguages, language)
 	}
-	textLen := uint64(utf8.RuneCountInString(s))
-	return tokenizer.TokenizeAll(inputReader, textLen)
+}
+
+// ParseForLanguage creates a parser for a syntax language.
+// If no parser is available (e.g. for LanguagePlaintext) this returns nil.
+func ParserForLanguage(language Language) *parser.P {
+	parseFunc := languageToParseFunc[language]
+	if parseFunc == nil {
+		return nil
+	}
+	return parser.New(parseFunc)
 }

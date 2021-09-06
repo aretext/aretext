@@ -15,6 +15,8 @@ import (
 	"github.com/aretext/aretext/state"
 )
 
+const redrawInterval = 20 * time.Millisecond
+
 // Editor is a terminal-based text editing program.
 type Editor struct {
 	inputInterpreter     *input.Interpreter
@@ -92,10 +94,21 @@ func (e *Editor) pollTermEvents() {
 }
 
 func (e *Editor) runMainEventLoop() {
+	var redrawFlag bool
+	redrawTicker := time.NewTicker(redrawInterval)
+	defer redrawTicker.Stop()
+
 	for {
 		select {
+		case <-redrawTicker.C:
+			if redrawFlag {
+				e.redraw(false)
+				redrawFlag = false
+			}
+
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
+			redrawFlag = true
 
 		case <-e.editorState.FileWatcher().ChangedChan():
 			e.handleFileChanged()
@@ -105,8 +118,6 @@ func (e *Editor) runMainEventLoop() {
 			log.Printf("Quit flag set, exiting event loop...\n")
 			return
 		}
-
-		e.redraw(false)
 	}
 }
 

@@ -112,6 +112,7 @@ func (e *Editor) runMainEventLoop() {
 
 		case <-e.editorState.FileWatcher().ChangedChan():
 			e.handleFileChanged()
+			redrawFlag = true
 		}
 
 		if e.editorState.QuitFlag() {

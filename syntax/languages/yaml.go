@@ -75,7 +75,7 @@ func yamlSingleQuoteStringOrKeyParseFunc() parser.Func {
 
 func yamlCommentParseFunc() parser.Func {
 	return consumeString("#").
-		Then(consumeToEndOfLine).
+		ThenMaybe(consumeToNextLineFeed).
 		Map(recognizeToken(parser.TokenRoleComment))
 }
 

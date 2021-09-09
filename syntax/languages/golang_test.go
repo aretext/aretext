@@ -22,6 +22,13 @@ func TestGolangParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "empty comment at end of file",
+			text: "//",
+			expected: []TokenWithText{
+				{Text: "//", Role: parser.TokenRoleComment},
+			},
+		},
+		{
 			name: "general comment",
 			text: "/* abcd\n123 */",
 			expected: []TokenWithText{

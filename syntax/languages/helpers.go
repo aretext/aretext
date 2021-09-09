@@ -155,8 +155,8 @@ func consumeToEofOrRuneLike(predicate func(r rune) bool) parser.Func {
 	}
 }
 
-// consumeToEndOfLine consumes up to and including the next newline character or the last character in the document, whichever comes first.
-var consumeToEndOfLine = consumeToEofOrRuneLike(func(r rune) bool {
+// consumeToNextLineFeed consumes up to and including the next newline character or the last character in the document, whichever comes first.
+var consumeToNextLineFeed = consumeToEofOrRuneLike(func(r rune) bool {
 	return r == '\n'
 })
 

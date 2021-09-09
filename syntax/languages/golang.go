@@ -23,7 +23,7 @@ func GolangParseFunc() parser.Func {
 
 func golangLineCommentParseFunc() parser.Func {
 	return consumeString("//").
-		Then(consumeToEndOfLine).
+		ThenMaybe(consumeToNextLineFeed).
 		Map(recognizeToken(parser.TokenRoleComment))
 }
 

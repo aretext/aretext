@@ -7,7 +7,7 @@ import (
 // GitCommitParseFunc parses a git commit.
 func GitCommitParseFunc() parser.Func {
 	parseCommentLine := consumeString("#").
-		Then(consumeToEndOfLine).
+		ThenMaybe(consumeToNextLineFeed).
 		Map(recognizeToken(parser.TokenRoleComment))
-	return parseCommentLine.Or(consumeToEndOfLine)
+	return parseCommentLine.Or(consumeToNextLineFeed)
 }

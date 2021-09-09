@@ -39,21 +39,21 @@ func DevlogParseFunc() parser.Func {
 
 	parseTaskInProgress := matchState(
 		startOfLineState,
-		consumeString("^").Then(consumeToEndOfLine).
+		consumeString("^").ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(inProgressRole)).
 			Map(setState(startOfLineState)),
 	)
 
 	parseTaskCompleted := matchState(
 		startOfLineState,
-		consumeString("+").Then(consumeToEndOfLine).
+		consumeString("+").ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(completedRole)).
 			Map(setState(startOfLineState)),
 	)
 
 	parseTaskBlocked := matchState(
 		startOfLineState,
-		consumeString("-").Then(consumeToEndOfLine).
+		consumeString("-").ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(blockedRole)).
 			Map(setState(startOfLineState)),
 	)

@@ -38,6 +38,27 @@ func TestDevlogParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "in progress task at end of file",
+			text: "^",
+			expected: []TokenWithText{
+				{Text: "^", Role: inProgressRole},
+			},
+		},
+		{
+			name: "completed task at end of file",
+			text: "+",
+			expected: []TokenWithText{
+				{Text: "+", Role: completedRole},
+			},
+		},
+		{
+			name: "blocked task at end of file",
+			text: "-",
+			expected: []TokenWithText{
+				{Text: "-", Role: blockedRole},
+			},
+		},
+		{
 			name: "code block",
 			text: strings.Join([]string{
 				"before",

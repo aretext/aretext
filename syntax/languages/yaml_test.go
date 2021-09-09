@@ -23,6 +23,16 @@ func TestYamlTokenizer(t *testing.T) {
 			},
 		},
 		{
+			name: "comment right before end of file",
+			text: "#",
+			expected: []TokenWithText{
+				{
+					Role: parser.TokenRoleComment,
+					Text: "#",
+				},
+			},
+		},
+		{
 			name: "key without quotes",
 			text: "abc: xyz",
 			expected: []TokenWithText{

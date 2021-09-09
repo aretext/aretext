@@ -35,6 +35,16 @@ func TestGitCommitParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "comment right before end of file",
+			text: "#",
+			expected: []TokenWithText{
+				{
+					Role: parser.TokenRoleComment,
+					Text: "#",
+				},
+			},
+		},
+		{
 			name: "multiple lines, mix of comments and non-comments",
 			text: "this is a commit\n# this is a comment\n#\n# end",
 			expected: []TokenWithText{

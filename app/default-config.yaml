@@ -21,6 +21,12 @@
       tokenNumber: {color: "green"}
       tokenString: {color: "maroon"}
       tokenComment: {color: "navy"}
+      tokenCustom1: {color: "teal"}
+      tokenCustom2: {color: "darkblue"}
+      tokenCustom3: {color: "red"}
+      tokenCustom4: {color: "lime"}
+      tokenCustom5: {color: "fuchsia"}
+      tokenCustom6: {color: "aqua"}
 #   menuCommands:
 #     - name: my custom menu command
 #       shellCmd: echo 'hello world!' | less
@@ -44,8 +50,6 @@
     tabExpand: true
     tabSize: 2
     showLineNumbers: true
-    styles:
-      tokenCustom1: {color: "teal"} # object keys
 
 - name: yaml
   pattern: "**/*.yaml"
@@ -55,8 +59,6 @@
     tabExpand: true
     tabSize: 2
     showLineNumbers: true
-    styles:
-      tokenCustom1: {color: "teal"} # object keys
 
 - name: yml
   pattern: "**/*.yml"

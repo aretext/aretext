@@ -27,6 +27,8 @@
       tokenCustom4: {color: "lime"}
       tokenCustom5: {color: "fuchsia"}
       tokenCustom6: {color: "aqua"}
+      tokenCustom7: {color: "darkgreen"}
+      tokenCustom8: {color: "darkcyan"}
 #   menuCommands:
 #     - name: my custom menu command
 #       shellCmd: echo 'hello world!' | less

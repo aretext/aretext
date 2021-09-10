@@ -69,14 +69,14 @@ func NewPalette() *Palette {
 		tokenNumberStyle:        s.Foreground(tcell.ColorGreen),
 		tokenStringStyle:        s.Foreground(tcell.ColorMaroon),
 		tokenCommentStyle:       s.Foreground(tcell.ColorNavy),
-		tokenCustom1Style:       s,
-		tokenCustom2Style:       s,
-		tokenCustom3Style:       s,
-		tokenCustom4Style:       s,
-		tokenCustom5Style:       s,
-		tokenCustom6Style:       s,
-		tokenCustom7Style:       s,
-		tokenCustom8Style:       s,
+		tokenCustom1Style:       s.Foreground(tcell.ColorTeal),
+		tokenCustom2Style:       s.Foreground(tcell.ColorDarkBlue),
+		tokenCustom3Style:       s.Foreground(tcell.ColorRed),
+		tokenCustom4Style:       s.Foreground(tcell.ColorLime),
+		tokenCustom5Style:       s.Foreground(tcell.ColorFuchsia),
+		tokenCustom6Style:       s.Foreground(tcell.ColorAqua),
+		tokenCustom7Style:       s.Foreground(tcell.ColorDarkGreen),
+		tokenCustom8Style:       s.Foreground(tcell.ColorDarkCyan),
 	}
 }
 

@@ -40,7 +40,9 @@ func listDirRec(root string, dirPatternsToHide []string, semaphoreChan chan stru
 		path := filepath.Join(root, d.Name())
 
 		if !d.IsDir() {
+			mu.Lock()
 			results = append(results, path)
+			mu.Unlock()
 			continue
 		}
 

@@ -25,7 +25,7 @@ Major and Minor Releases
 1.	Create a release branch:
 
 	```
-	RELEASE_BRANCH=v$MAJOR.$MINOR.x
+	export RELEASE_BRANCH=v$MAJOR.$MINOR.x
 	git checkout -b $RELEASE_BRANCH
 	git push origin $RELEASE_BRANCH
 	```
@@ -33,9 +33,9 @@ Major and Minor Releases
 2.	Tag the release:
 
 	```
-	RELEASE_TAG=v$MAJOR.$MINOR.0
-	RELEASE_NAME="<name>"
-	git tag -s -a $RELEASE_TAG -m $RELEASE_NAME
+	export RELEASE_TAG=v$MAJOR.$MINOR.0
+	export RELEASE_NAME="<name>"
+	git tag -s -a $RELEASE_TAG -m "$RELEASE_TAG $RELEASE_NAME"
 	git push origin $RELEASE_TAG
 	```
 
@@ -55,7 +55,7 @@ Patch releases should be used to fix critical bugs (panics, data corruption, sec
 1.	Checkout the release branch:
 
 	```
-	RELEASE_BRANCH=v$MAJOR.$MINOR.x
+	export RELEASE_BRANCH=v$MAJOR.$MINOR.x
 	git checkout $RELEASE_BRANCH
 	```
 

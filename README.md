@@ -1,3 +1,5 @@
+![Test Status](https://github.com/aretext/aretext/actions/workflows/test.yml/badge.svg)
+
 aretext
 =======
 

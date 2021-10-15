@@ -137,10 +137,7 @@ func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env
 		return err
 	}
 
-	ShowMenu(state, MenuStyleFileLocation, func() []menu.Item {
-		return menuItems
-	})
-
+	ShowMenu(state, MenuStyleFileLocation, menuItems)
 	return nil
 }
 

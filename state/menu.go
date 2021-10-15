@@ -1,8 +1,13 @@
 package state
 
 import (
+	"context"
 	"log"
+	"os"
 
+	"github.com/pkg/errors"
+
+	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
 )
 
@@ -54,9 +59,8 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 }
 
 // ShowMenu displays the menu with the specified style and items.
-func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item) {
+func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 	emptyQueryShowAll := bool(style == MenuStyleFilePath || style == MenuStyleFileLocation)
-	items := loadItems()
 	if style == MenuStyleCommand {
 		items = append(items, state.customMenuItems...)
 	}
@@ -68,6 +72,46 @@ func ShowMenu(state *EditorState, style MenuStyle, loadItems func() []menu.Item)
 		selectedResultIdx: 0,
 	}
 	SetInputMode(state, InputModeMenu)
+}
+
+// ShowFileMenu displays a menu for finding and loading files in the current working directory.
+// The files are loaded asynchronously as a task that the user can cancel.
+func ShowFileMenu(s *EditorState, dirPatternsToHide []string) {
+	log.Printf("Scheduling task to load file menu items...\n")
+	StartTask(s, func(ctx context.Context) func(*EditorState) {
+		log.Printf("Starting to load file menu items...\n")
+		items := loadFileMenuItems(ctx, dirPatternsToHide)
+		log.Printf("Successfully loaded %d file menu items\n", len(items))
+		return func(s *EditorState) {
+			ShowMenu(s, MenuStyleFilePath, items)
+		}
+	})
+}
+
+func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		return nil
+	}
+
+	paths := file.ListDir(ctx, dir, dirPatternsToHide)
+	log.Printf("Listed %d paths for dir '%s\n", len(paths), dir)
+
+	items := make([]menu.Item, 0, len(paths))
+	for _, p := range paths {
+		menuPath := p // reference path in this iteration of the loop
+		items = append(items, menu.Item{
+			Name: file.RelativePath(menuPath, dir),
+			Action: func(s *EditorState) {
+				LoadDocument(s, menuPath, true, func(LocatorParams) uint64 {
+					return 0
+				})
+			},
+		})
+	}
+
+	return items
 }
 
 // HideMenu hides the menu.

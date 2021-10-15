@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"sort"
@@ -44,7 +45,8 @@ func TestListDir(t *testing.T) {
 	}
 
 	// List all paths in tmpdir.
-	foundPaths := ListDir(tmpDir, []string{"**/.hidden"})
+	ctx := context.Background()
+	foundPaths := ListDir(ctx, tmpDir, []string{"**/.hidden"})
 	relPaths := make([]string, 0, len(foundPaths))
 	for _, p := range foundPaths {
 		relPaths = append(relPaths, RelativePathCwd(p))

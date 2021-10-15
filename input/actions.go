@@ -619,6 +619,12 @@ func ShowCommandMenu(config Config) Action {
 	}
 }
 
+func ShowFileMenu(config Config) Action {
+	return func(s *state.EditorState) {
+		state.ShowFileMenu(s, config.DirPatternsToHide)
+	}
+}
+
 func HideMenuAndReturnToNormalMode(s *state.EditorState) {
 	state.HideMenu(s)
 }

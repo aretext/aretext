@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 )
 
@@ -188,7 +187,7 @@ func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	LoadDocument(state, path, true, startOfDocLocator)
 
 	// Open the command menu
-	ShowMenu(state, MenuStyleCommand, func() []menu.Item { return nil })
+	ShowMenu(state, MenuStyleCommand, nil)
 	assert.Equal(t, state.InputMode(), InputModeMenu)
 
 	// Update the file with shorter text and reload.

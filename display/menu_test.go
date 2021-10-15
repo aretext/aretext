@@ -33,8 +33,7 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, initial state with prompt",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
-				loadItems := func() []menu.Item { return nil }
-				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
+				state.ShowMenu(editorState, state.MenuStyleCommand, nil)
 				return editorState.Menu()
 			},
 			expectedContents: [][]rune{
@@ -50,8 +49,7 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, query with no results",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
-				loadItems := func() []menu.Item { return nil }
-				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
+				state.ShowMenu(editorState, state.MenuStyleCommand, nil)
 				state.AppendRuneToMenuSearch(editorState, 'a')
 				state.AppendRuneToMenuSearch(editorState, 'b')
 				state.AppendRuneToMenuSearch(editorState, 'c')
@@ -70,14 +68,12 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, query with results, first selected",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
-				loadItems := func() []menu.Item {
-					return []menu.Item{
-						{Name: "test first"},
-						{Name: "test second"},
-						{Name: "test third"},
-					}
+				items := []menu.Item{
+					{Name: "test first"},
+					{Name: "test second"},
+					{Name: "test third"},
 				}
-				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
+				state.ShowMenu(editorState, state.MenuStyleCommand, items)
 				state.AppendRuneToMenuSearch(editorState, 't')
 				return editorState.Menu()
 			},
@@ -94,20 +90,18 @@ func TestDrawMenu(t *testing.T) {
 			name: "visible, query with many results, second-to-last selected",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
-				loadItems := func() []menu.Item {
-					return []menu.Item{
-						{Name: "test 1"},
-						{Name: "test 2"},
-						{Name: "test 3"},
-						{Name: "test 4"},
-						{Name: "test 5"},
-						{Name: "test 6"},
-						{Name: "test 7"},
-						{Name: "test 8"},
-						{Name: "test 9"},
-					}
+				items := []menu.Item{
+					{Name: "test 1"},
+					{Name: "test 2"},
+					{Name: "test 3"},
+					{Name: "test 4"},
+					{Name: "test 5"},
+					{Name: "test 6"},
+					{Name: "test 7"},
+					{Name: "test 8"},
+					{Name: "test 9"},
 				}
-				state.ShowMenu(editorState, state.MenuStyleCommand, loadItems)
+				state.ShowMenu(editorState, state.MenuStyleCommand, items)
 				state.AppendRuneToMenuSearch(editorState, 't')
 				state.MoveMenuSelection(editorState, -2)
 				return editorState.Menu()

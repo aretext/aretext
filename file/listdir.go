@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"io/fs"
 	"log"
 	"os"
@@ -17,13 +18,21 @@ import (
 // Symbolic links are not followed.
 // If an error occurs while accessing a directory, ListDir will skip that
 // directory and log the error.
-func ListDir(root string, dirPatternsToHide []string) []string {
+func ListDir(ctx context.Context, root string, dirPatternsToHide []string) []string {
 	// Use a semaphore to limit the number of open files.
 	semaphoreChan := make(chan struct{}, runtime.NumCPU())
-	return listDirRec(root, dirPatternsToHide, semaphoreChan)
+	return listDirRec(ctx, root, dirPatternsToHide, semaphoreChan)
 }
 
-func listDirRec(root string, dirPatternsToHide []string, semaphoreChan chan struct{}) []string {
+func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, semaphoreChan chan struct{}) []string {
+	select {
+	case <-ctx.Done():
+		log.Printf("Context done channel closed while listing subdirectories in '%s': %s\n", root, ctx.Err())
+		return nil
+	default:
+		break
+	}
+
 	semaphoreChan <- struct{}{} // Block until open file count decreases.
 	dirEntries, err := listDir(root)
 	<-semaphoreChan // Decrease open file count.
@@ -54,7 +63,7 @@ func listDirRec(root string, dirPatternsToHide []string, semaphoreChan chan stru
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
-			subpaths := listDirRec(path, dirPatternsToHide, semaphoreChan)
+			subpaths := listDirRec(ctx, path, dirPatternsToHide, semaphoreChan)
 			mu.Lock()
 			results = append(results, subpaths...)
 			mu.Unlock()

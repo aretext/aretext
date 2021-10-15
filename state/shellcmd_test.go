@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,22 @@ import (
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 )
+
+func runShellCmdAndApplyAction(t *testing.T, state *EditorState, cmd string, mode string) {
+	RunShellCmd(state, cmd, mode)
+	if mode == config.CmdModeTerminal {
+		return // executes synchronously
+	}
+
+	// Wait for asynchronous task to complete and apply resulting action.
+	select {
+	case action := <-state.TaskResultChan():
+		action(state)
+
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "Timed out")
+	}
+}
 
 func TestRunShellCmd(t *testing.T) {
 	testCases := []struct {
@@ -33,7 +50,7 @@ func TestRunShellCmd(t *testing.T) {
 			setupShellCmdTest(t, func(state *EditorState, dir string) {
 				p := path.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printf "hello" > %s`, p)
-				RunShellCmd(state, cmd, tc.mode)
+				runShellCmdAndApplyAction(t, state, cmd, tc.mode)
 				data, err := os.ReadFile(p)
 				require.NoError(t, err)
 				assert.Equal(t, "hello", string(data))
@@ -50,7 +67,7 @@ func TestRunShellCmdFilePathEnvVar(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv FILEPATH > %s`, p)
-		RunShellCmd(state, cmd, config.CmdModeSilent)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, filePath+"\n", string(data))
@@ -94,7 +111,7 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 
 				p := path.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printenv WORD > %s`, p)
-				RunShellCmd(state, cmd, config.CmdModeSilent)
+				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 				data, err := os.ReadFile(p)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedWordEnvVar+"\n", string(data))
@@ -112,7 +129,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 
 		p := path.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv SELECTION > %s`, p)
-		RunShellCmd(state, cmd, config.CmdModeSilent)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
 		require.NoError(t, err)
 		assert.Equal(t, "foobar\n", string(data))
@@ -125,7 +142,7 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 		err := os.WriteFile(p, []byte("hello world"), 0644)
 		require.NoError(t, err)
 		cmd := fmt.Sprintf("cat %s", p)
-		RunShellCmd(state, cmd, config.CmdModeInsert)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsert)
 		s := state.documentBuffer.textTree.String()
 		cursorPos := state.documentBuffer.cursor.position
 		assert.Equal(t, "hello world", s)
@@ -181,7 +198,7 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 				err := os.WriteFile(p, []byte(tc.insertedText), 0644)
 				require.NoError(t, err)
 				cmd := fmt.Sprintf("cat %s", p)
-				RunShellCmd(state, cmd, config.CmdModeInsert)
+				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsert)
 				s := state.documentBuffer.textTree.String()
 				cursorPos := state.documentBuffer.cursor.position
 				assert.Equal(t, tc.expectedText, s)
@@ -201,7 +218,7 @@ func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 
 		// Populate the location list with a single file location.
 		cmd := fmt.Sprintf("echo '%s:2:cd'", p)
-		RunShellCmd(state, cmd, config.CmdModeFileLocations)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeFileLocations)
 		assert.Equal(t, InputModeMenu, state.InputMode())
 		assert.True(t, state.Menu().Visible())
 

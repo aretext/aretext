@@ -2,6 +2,7 @@ package shellcmd
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log"
 	"os"
@@ -13,22 +14,22 @@ import (
 )
 
 // RunSilent runs the command and discards any output.
-func RunSilent(cmd string, env []string) error {
-	return runInShell(cmd, env, nil, nil, nil)
+func RunSilent(ctx context.Context, cmd string, env []string) error {
+	return runInShell(ctx, cmd, env, nil, nil, nil)
 }
 
 // RunInTerminal runs the command using inputs and outputs of the current process.
-func RunInTerminal(cmd string, env []string) error {
-	clearTerminal()
-	return runInShell(cmd, env, os.Stdin, os.Stdout, os.Stderr)
+func RunInTerminal(ctx context.Context, cmd string, env []string) error {
+	clearTerminal(ctx)
+	return runInShell(ctx, cmd, env, os.Stdin, os.Stdout, os.Stderr)
 }
 
 // RunAndCaptureOutput runs the command and returns its stdout as a byte slice.
 // If the output is not valid UTF-8 text, this returns an error.
-func RunAndCaptureOutput(cmd string, env []string) (string, error) {
+func RunAndCaptureOutput(ctx context.Context, cmd string, env []string) (string, error) {
 	var buf bytes.Buffer
 	stdin, stdout, stderr := io.Reader(nil), &buf, io.Writer(nil)
-	err := runInShell(cmd, env, stdin, stdout, stderr)
+	err := runInShell(ctx, cmd, env, stdin, stdout, stderr)
 	if err != nil {
 		return "", err
 	}
@@ -40,8 +41,8 @@ func RunAndCaptureOutput(cmd string, env []string) (string, error) {
 	return buf.String(), nil
 }
 
-func clearTerminal() {
-	clearCmd := exec.Command("clear")
+func clearTerminal(ctx context.Context) {
+	clearCmd := exec.CommandContext(ctx, "clear")
 	clearCmd.Stdout = os.Stdout
 	clearCmd.Stderr = os.Stderr
 	if err := clearCmd.Run(); err != nil {
@@ -49,14 +50,14 @@ func clearTerminal() {
 	}
 }
 
-func runInShell(shellCmd string, env []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
+func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	s, err := shellProgAndArgs()
 	if err != nil {
 		return err
 	}
 
 	s = append(s, "-c", shellCmd)
-	cmd := exec.Command(s[0], s[1:]...)
+	cmd := exec.CommandContext(ctx, s[0], s[1:]...)
 	cmd.Env = env
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout

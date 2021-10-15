@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -18,32 +19,64 @@ import (
 )
 
 // SuspendScreenFunc suspends the screen, executes a function, then resumes the screen.
-// This is allows the shell command to take control of the terminal.
+// This allows the shell command to take control of the terminal.
 type SuspendScreenFunc func(func() error) error
 
 // RunShellCmd executes the command in a shell.
 // Mode must be a valid command mode, as defined in config.
+// All modes run as an asynchronous task that the user can cancel,
+// except for CmdModeTerminal which takes over stdin/stdout.
 func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 	log.Printf("Running shell command: '%s'\n", shellCmd)
-	env := envVars(state)
 
-	var err error
+	env := envVars(state) // Read-only copy of env vars is safe to pass to other goroutines.
+
 	switch mode {
-	case config.CmdModeSilent:
-		err = shellcmd.RunSilent(shellCmd, env)
 	case config.CmdModeTerminal:
-		err = state.suspendScreenFunc(func() error {
-			return shellcmd.RunInTerminal(shellCmd, env)
+		// Run synchronously because the command takes over stdin/stdout.
+		ctx := context.Background()
+		err := state.suspendScreenFunc(func() error {
+			return shellcmd.RunInTerminal(ctx, shellCmd, env)
 		})
+		setStatusForShellCmdResult(state, err)
+
+	case config.CmdModeSilent:
+		StartTask(state, func(ctx context.Context) func(*EditorState) {
+			err := shellcmd.RunSilent(ctx, shellCmd, env)
+			return func(state *EditorState) {
+				setStatusForShellCmdResult(state, err)
+			}
+		})
+
 	case config.CmdModeInsert:
-		err = runInShellAndInsertOutput(state, shellCmd, env)
+		StartTask(state, func(ctx context.Context) func(*EditorState) {
+			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
+			return func(state *EditorState) {
+				if err == nil {
+					insertShellCmdOutput(state, output)
+				}
+				setStatusForShellCmdResult(state, err)
+			}
+		})
+
 	case config.CmdModeFileLocations:
-		err = runInShellAndShowFileLocationsMenu(state, shellCmd, env)
+		StartTask(state, func(ctx context.Context) func(*EditorState) {
+			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
+			return func(state *EditorState) {
+				if err == nil {
+					err = showFileLocationsMenuForShellCmdOutput(state, output)
+				}
+				setStatusForShellCmdResult(state, err)
+			}
+		})
+
 	default:
 		// This should never happen because the config validates the mode.
 		panic("Unrecognized shell cmd mode")
 	}
+}
 
+func setStatusForShellCmdResult(state *EditorState, err error) {
 	if err != nil {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
@@ -88,17 +121,12 @@ func currentWordEnvVar(state *EditorState) string {
 	return strings.TrimSpace(word)
 }
 
-func runInShellAndInsertOutput(state *EditorState, shellCmd string, env []string) error {
-	text, err := shellcmd.RunAndCaptureOutput(shellCmd, env)
-	if err != nil {
-		return err
-	}
-	page := clipboard.PageContent{Text: text}
+func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
+	page := clipboard.PageContent{Text: shellCmdOutput}
 	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
 	deleteCurrentSelection(state)
 	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
 	SetInputMode(state, InputModeNormal)
-	return nil
 }
 
 func deleteCurrentSelection(state *EditorState) {
@@ -117,13 +145,8 @@ func deleteCurrentSelection(state *EditorState) {
 	}
 }
 
-func runInShellAndShowFileLocationsMenu(state *EditorState, shellCmd string, env []string) error {
-	text, err := shellcmd.RunAndCaptureOutput(shellCmd, env)
-	if err != nil {
-		return err
-	}
-
-	locations, err := shellcmd.FileLocationsFromLines(strings.NewReader(text))
+func showFileLocationsMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {
+	locations, err := shellcmd.FileLocationsFromLines(strings.NewReader(shellCmdOutput))
 	if err != nil {
 		return err
 	}

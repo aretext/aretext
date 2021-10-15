@@ -24,6 +24,7 @@ func NewInterpreter() *Interpreter {
 			state.InputModeMenu:   &menuMode{},
 			state.InputModeSearch: &searchMode{},
 			state.InputModeVisual: newVisualMode(),
+			state.InputModeTask:   &taskMode{},
 		},
 	}
 }

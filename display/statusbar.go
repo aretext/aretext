@@ -35,6 +35,8 @@ func statusBarContent(palette *Palette, statusMsg state.StatusMsg, inputMode sta
 		return "-- INSERT --", palette.StyleForStatusInputMode()
 	case state.InputModeVisual:
 		return "-- VISUAL --", palette.StyleForStatusInputMode()
+	case state.InputModeTask:
+		return "Running... press ESC to abort", palette.StyleForStatusInputMode()
 	default:
 		relPath := file.RelativePathCwd(filePath)
 		return relPath, palette.StyleForStatusFilePath()

@@ -110,6 +110,11 @@ func (e *Editor) runMainEventLoop() {
 			e.handleTermEvent(event)
 			redrawFlag = true
 
+		case actionFunc := <-e.editorState.TaskResultChan():
+			log.Printf("Task completed, executing resulting action...\n")
+			actionFunc(e.editorState)
+			redrawFlag = true
+
 		case <-e.editorState.FileWatcher().ChangedChan():
 			e.handleFileChanged()
 			redrawFlag = true

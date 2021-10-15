@@ -24,6 +24,7 @@ type EditorState struct {
 	fileWatcher               *file.Watcher
 	fileTimeline              *file.Timeline
 	menu                      *MenuState
+	task                      *TaskState
 	customMenuItems           []menu.Item
 	dirPatternsToHide         []string
 	styles                    map[string]config.StyleConfig
@@ -100,6 +101,13 @@ func (s *EditorState) DocumentBuffer() *BufferState {
 
 func (s *EditorState) Menu() *MenuState {
 	return s.menu
+}
+
+func (s *EditorState) TaskResultChan() chan func(*EditorState) {
+	if s.task == nil {
+		return nil
+	}
+	return s.task.resultChan
 }
 
 func (s *EditorState) DirPatternsToHide() []string {

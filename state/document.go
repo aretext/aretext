@@ -158,6 +158,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 		fileExists = true
 	}
 
+	CancelTaskIfRunning(state)
 	state.configVersion++
 	state.documentBuffer.textTree = tree
 	state.fileWatcher.Stop()

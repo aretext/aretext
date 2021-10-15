@@ -190,6 +190,23 @@ func (m *visualMode) InputBufferString() string {
 	return m.parser.InputBufferString()
 }
 
+// taskMode is used while a task is running asynchronously.
+// This allows the user to cancel the task if it takes too long.
+type taskMode struct{}
+
+func (m *taskMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+	switch event.Key() {
+	case tcell.KeyEscape:
+		return state.CancelTaskIfRunning
+	default:
+		return EmptyAction
+	}
+}
+
+func (m *taskMode) InputBufferString() string {
+	return ""
+}
+
 // firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
 func firstCheckpointUndoLog(f Action) Action {
 	return func(s *state.EditorState) {

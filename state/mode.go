@@ -13,6 +13,7 @@ const (
 	InputModeMenu
 	InputModeSearch
 	InputModeVisual
+	InputModeTask
 )
 
 func (im InputMode) String() string {
@@ -27,6 +28,8 @@ func (im InputMode) String() string {
 		return "search"
 	case InputModeVisual:
 		return "visual"
+	case InputModeTask:
+		return "task"
 	default:
 		panic("invalid input mode")
 	}

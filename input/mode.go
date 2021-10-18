@@ -49,12 +49,12 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 
 	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
 
-	// Record the action so we can replay it later.
-	// We ignore cursor movements, searches, and undo/redo, since the user
-	// may want to replay the last action before these operations.
-	if result.Rule.AddToLastActionMacro {
-		action = thenStartNewLastActionMacro(action)
-	}
+	clearLastActionMacro := result.Rule.AddToLastActionMacro
+	action = thenAddToMacros(
+		action,
+		clearLastActionMacro,
+		result.Rule.AddToLastActionMacro,
+	)
 
 	return action
 }
@@ -69,7 +69,7 @@ type insertMode struct{}
 func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
 	action = thenScrollViewToCursor(action)
-	action = thenAddToLastActionMacro(action)
+	action = thenAddToMacros(action, false, true)
 	return action
 }
 
@@ -183,12 +183,11 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 
 	action = thenScrollViewToCursor(action)
 
-	// Record the action so we can replay it later.
-	// We ignore some actions (like cursor movements) since the user
-	// may want to replay the last action before these operations.
-	if result.Rule.AddToLastActionMacro {
-		action = thenAddToLastActionMacro(action)
-	}
+	action = thenAddToMacros(
+		action,
+		false,
+		result.Rule.AddToLastActionMacro,
+	)
 
 	return action
 }
@@ -242,19 +241,21 @@ func thenClearStatusMsg(f Action) Action {
 	}
 }
 
-// thenStartNewLastActionMacro resets the "last action" macro to the specified action.
-func thenStartNewLastActionMacro(f Action) Action {
+// thenAddToMacros executes the action, then records it in macros.
+func thenAddToMacros(
+	f Action,
+	clearLastActionMacro bool,
+	addToLastActionMacro bool,
+) Action {
 	return func(s *state.EditorState) {
 		f(s)
-		state.ClearLastActionMacro(s)
-		state.AddToLastActionMacro(s, state.MacroAction(f))
-	}
-}
 
-// thenAddToLastActionMacro adds a new action to the "last action" macro.
-func thenAddToLastActionMacro(f Action) Action {
-	return func(s *state.EditorState) {
-		f(s)
-		state.AddToLastActionMacro(s, state.MacroAction(f))
+		if clearLastActionMacro {
+			state.ClearLastActionMacro(s)
+		}
+
+		if addToLastActionMacro {
+			state.AddToLastActionMacro(s, state.MacroAction(f))
+		}
 	}
 }

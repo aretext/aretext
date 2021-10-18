@@ -47,7 +47,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	// Record the action so we can replay it later.
 	// We ignore cursor movements, searches, and undo/redo, since the user
 	// may want to replay the last action before these operations.
-	if !result.Rule.SkipLastActionMacro {
+	if result.Rule.AddToLastActionMacro {
 		action = thenStartNewLastActionMacro(action)
 	}
 
@@ -176,7 +176,7 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	// Record the action so we can replay it later.
 	// We ignore some actions (like cursor movements) since the user
 	// may want to replay the last action before these operations.
-	if !result.Rule.SkipLastActionMacro {
+	if result.Rule.AddToLastActionMacro {
 		action = thenAddToLastActionMacro(action)
 	}
 

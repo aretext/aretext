@@ -19,10 +19,10 @@ type ActionBuilderParams struct {
 // Rule defines a command that the input parser can recognize.
 // The pattern is a sequence of keypresses that trigger the rule.
 type Rule struct {
-	Name                string
-	Pattern             []EventMatcher
-	ActionBuilder       ActionBuilder
-	SkipLastActionMacro bool
+	Name                 string
+	Pattern              []EventMatcher
+	ActionBuilder        ActionBuilder
+	AddToLastActionMacro bool
 }
 
 // These rules control cursor movement in normal and visual mode.
@@ -35,7 +35,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor left (h)",
@@ -45,7 +44,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor right (arrow)",
@@ -55,7 +53,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor right (l)",
@@ -65,7 +62,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor up (arrow)",
@@ -75,7 +71,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor up (k)",
@@ -85,7 +80,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor down (arrow)",
@@ -95,7 +89,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor down (j)",
@@ -105,7 +98,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor back (backspace)",
@@ -115,7 +107,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor back (backspace2)",
@@ -125,7 +116,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next word start (w)",
@@ -135,7 +125,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordStart
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor prev word start (b)",
@@ -145,7 +134,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevWordStart
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next word end (e)",
@@ -155,7 +143,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordEnd
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor prev paragraph ({)",
@@ -165,7 +152,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevParagraph
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next paragraph (})",
@@ -175,7 +161,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextParagraph
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to next matching char (f{char})",
@@ -186,7 +171,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, true)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to prev matching char (F{char})",
@@ -197,7 +181,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, true)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor till next matching char (t{char})",
@@ -208,7 +191,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, false)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to prev matching char (T{char})",
@@ -219,7 +201,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, false)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line start (0)",
@@ -229,7 +210,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStart
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line start non-whitespace (^)",
@@ -239,7 +219,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStartNonWhitespace
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line end ($)",
@@ -249,7 +228,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineEnd
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor start of line num (gg)",
@@ -260,7 +238,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLineNum(p.CountArg)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor start of last line (G)",
@@ -270,7 +247,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLastLine
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "scroll up (ctrl-u)",
@@ -280,7 +256,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollUp(p.Config)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "scroll down (ctrl-d)",
@@ -290,7 +265,6 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollDown(p.Config)
 		},
-		SkipLastActionMacro: true,
 	},
 }
 
@@ -304,6 +278,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "enter insert mode (i)",
@@ -313,6 +288,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return EnterInsertMode
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "enter insert mode at start of line (I)",
@@ -322,6 +298,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return EnterInsertModeAtStartOfLine
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "enter insert mode at next pos (a)",
@@ -331,6 +308,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return EnterInsertModeAtNextPos
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "enter insert mode at end of line (A)",
@@ -340,6 +318,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return EnterInsertModeAtEndOfLine
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "begin new line below (o)",
@@ -349,6 +328,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return BeginNewLineBelow
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "begin new line above (O)",
@@ -358,6 +338,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return BeginNewLineAbove
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "join lines (J)",
@@ -367,6 +348,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return JoinLines
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete line (dd)",
@@ -377,6 +359,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteLines(p.CountArg, p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete prev char in line (dh)",
@@ -387,6 +370,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeletePrevCharInLine(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete down (dj)",
@@ -397,6 +381,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteDown(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete up (dk)",
@@ -407,6 +392,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteUp(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete next char in line (dl)",
@@ -417,6 +403,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to end of line (d$)",
@@ -427,6 +414,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToEndOfLine(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to start of line (d0)",
@@ -437,6 +425,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToStartOfLine(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to start of line non-whitespace (d^)",
@@ -447,6 +436,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToStartOfLineNonWhitespace(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to end of line (D)",
@@ -456,6 +446,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToEndOfLine(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to next matching char (df{char}",
@@ -467,6 +458,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to prev matching char (dF{char}",
@@ -478,6 +470,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete till next matching char (dt{char}",
@@ -489,6 +482,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete till prev matching char (dT{char}",
@@ -500,6 +494,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete to start of next word (dw)",
@@ -510,6 +505,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteToStartOfNextWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete a word (daw)",
@@ -521,6 +517,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteAWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete inner word (diw)",
@@ -532,6 +529,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return DeleteInnerWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change to start of next word (cw)",
@@ -542,6 +540,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeToStartOfNextWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change a word (caw)",
@@ -553,6 +552,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeAWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change inner word (ciw)",
@@ -564,6 +564,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeInnerWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change to next matching char (cf{char})",
@@ -575,6 +576,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change to prev matching char (cF{char})",
@@ -586,6 +588,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change till next matching char (ct{char})",
@@ -597,6 +600,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change till prev matching char (cT{char})",
@@ -608,6 +612,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "replace character (r)",
@@ -618,6 +623,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ReplaceCharacter(p.InputEvents)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "toggle case (~)",
@@ -627,6 +633,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleCaseAtCursor
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "indent (>>)",
@@ -637,6 +644,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return IndentLine
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "outdent (<<)",
@@ -647,6 +655,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return OutdentLine
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "yank to start of next word (yw)",
@@ -657,6 +666,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopyToStartOfNextWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "yank a word (yaw)",
@@ -668,6 +678,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopyAWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "yank inner word (yiw)",
@@ -679,6 +690,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopyInnerWord(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "yank line (yy)",
@@ -689,6 +701,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopyLines(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "put after cursor (p)",
@@ -698,6 +711,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return PasteAfterCursor(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "put before cursor (P)",
@@ -707,6 +721,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return PasteBeforeCursor(p.ClipboardPageNameArg)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "show command menu",
@@ -716,7 +731,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ShowCommandMenu(p.Config)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "start forward search",
@@ -726,7 +740,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchForward
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "start backward search",
@@ -736,7 +749,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchBackward
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "find next match",
@@ -746,7 +758,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindNextMatch
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "find previous match",
@@ -756,7 +767,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindPrevMatch
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "undo (u)",
@@ -766,7 +776,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Undo
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "redo (ctrl-r)",
@@ -776,7 +785,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Redo
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "enter visual mode charwise (v)",
@@ -786,6 +794,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeCharwise
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "enter visual mode linewise (V)",
@@ -795,6 +804,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeLinewise
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "repeat last action (.)",
@@ -804,7 +814,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return state.ReplayLastActionMacro
 		},
-		SkipLastActionMacro: true,
 	},
 }...)
 
@@ -818,7 +827,6 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeCharwise
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "toggle visual mode linewise (V)",
@@ -828,7 +836,6 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeLinewise
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "return to normal mode (esc)",
@@ -838,7 +845,6 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ReturnToNormalMode
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "show command menu",
@@ -848,7 +854,6 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ShowCommandMenu(p.Config)
 		},
-		SkipLastActionMacro: true,
 	},
 	{
 		Name: "delete selection (x)",
@@ -862,6 +867,7 @@ var visualModeRules = append(cursorRules, []Rule{
 				p.Config.SelectionEndLocator,
 			)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "delete selection (d)",
@@ -875,6 +881,7 @@ var visualModeRules = append(cursorRules, []Rule{
 				p.Config.SelectionEndLocator,
 			)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "change selection (c)",
@@ -888,6 +895,7 @@ var visualModeRules = append(cursorRules, []Rule{
 				p.Config.SelectionEndLocator,
 			)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "toggle case for selection (~)",
@@ -897,6 +905,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleCaseInSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "indent selection (>)",
@@ -906,6 +915,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return IndentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "outdent selection (<)",
@@ -915,6 +925,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return OutdentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator)
 		},
+		AddToLastActionMacro: true,
 	},
 	{
 		Name: "yank selection (y)",
@@ -924,6 +935,5 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopySelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
 		},
-		SkipLastActionMacro: true,
 	},
 }...)

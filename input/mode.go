@@ -42,16 +42,18 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-	action = firstCheckpointUndoLog(thenScrollViewToCursor(thenClearStatusMsg(action)))
+
+	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 
 	clearLastActionMacro := result.Rule.AddToLastActionMacro
 	action = thenAddToMacros(
 		action,
 		clearLastActionMacro,
 		result.Rule.AddToLastActionMacro,
+		result.Rule.AddToUserMacro,
 	)
 
-	return action
+	return firstCheckpointUndoLog(action)
 }
 
 func (m *normalMode) InputBufferString() string {
@@ -64,7 +66,7 @@ type insertMode struct{}
 func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
 	action = thenScrollViewToCursor(action)
-	action = thenAddToMacros(action, false, true)
+	action = thenAddToMacros(action, false, true, true)
 	return action
 }
 
@@ -177,6 +179,7 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		action,
 		false,
 		result.Rule.AddToLastActionMacro,
+		result.Rule.AddToUserMacro,
 	)
 
 	return action
@@ -236,6 +239,7 @@ func thenAddToMacros(
 	f Action,
 	clearLastActionMacro bool,
 	addToLastActionMacro bool,
+	addToRecordingUserMacro bool,
 ) Action {
 	return func(s *state.EditorState) {
 		f(s)
@@ -246,6 +250,10 @@ func thenAddToMacros(
 
 		if addToLastActionMacro {
 			state.AddToLastActionMacro(s, state.MacroAction(f))
+		}
+
+		if addToRecordingUserMacro {
+			state.AddToRecordingUserMacro(s, state.MacroAction(f))
 		}
 	}
 }

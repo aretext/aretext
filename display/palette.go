@@ -12,71 +12,73 @@ import (
 
 // Palette controls the style of displayed text.
 type Palette struct {
-	lineNumStyle            tcell.Style
-	selectionStyle          tcell.Style
-	searchMatchStyle        tcell.Style
-	statusMsgSuccessStyle   tcell.Style
-	statusMsgErrorStyle     tcell.Style
-	statusInputModeStyle    tcell.Style
-	statusInputBufferStyle  tcell.Style
-	statusFilePathStyle     tcell.Style
-	menuBorderStyle         tcell.Style
-	menuIconStyle           tcell.Style
-	menuPromptStyle         tcell.Style
-	menuQueryStyle          tcell.Style
-	menuCursorStyle         tcell.Style
-	menuItemSelectedStyle   tcell.Style
-	menuItemUnselectedStyle tcell.Style
-	searchPrefixStyle       tcell.Style
-	searchQueryStyle        tcell.Style
-	tokenOperatorStyle      tcell.Style
-	tokenKeywordStyle       tcell.Style
-	tokenNumberStyle        tcell.Style
-	tokenStringStyle        tcell.Style
-	tokenCommentStyle       tcell.Style
-	tokenCustom1Style       tcell.Style
-	tokenCustom2Style       tcell.Style
-	tokenCustom3Style       tcell.Style
-	tokenCustom4Style       tcell.Style
-	tokenCustom5Style       tcell.Style
-	tokenCustom6Style       tcell.Style
-	tokenCustom7Style       tcell.Style
-	tokenCustom8Style       tcell.Style
+	lineNumStyle              tcell.Style
+	selectionStyle            tcell.Style
+	searchMatchStyle          tcell.Style
+	statusMsgSuccessStyle     tcell.Style
+	statusMsgErrorStyle       tcell.Style
+	statusInputModeStyle      tcell.Style
+	statusInputBufferStyle    tcell.Style
+	statusRecordingMacroStyle tcell.Style
+	statusFilePathStyle       tcell.Style
+	menuBorderStyle           tcell.Style
+	menuIconStyle             tcell.Style
+	menuPromptStyle           tcell.Style
+	menuQueryStyle            tcell.Style
+	menuCursorStyle           tcell.Style
+	menuItemSelectedStyle     tcell.Style
+	menuItemUnselectedStyle   tcell.Style
+	searchPrefixStyle         tcell.Style
+	searchQueryStyle          tcell.Style
+	tokenOperatorStyle        tcell.Style
+	tokenKeywordStyle         tcell.Style
+	tokenNumberStyle          tcell.Style
+	tokenStringStyle          tcell.Style
+	tokenCommentStyle         tcell.Style
+	tokenCustom1Style         tcell.Style
+	tokenCustom2Style         tcell.Style
+	tokenCustom3Style         tcell.Style
+	tokenCustom4Style         tcell.Style
+	tokenCustom5Style         tcell.Style
+	tokenCustom6Style         tcell.Style
+	tokenCustom7Style         tcell.Style
+	tokenCustom8Style         tcell.Style
 }
 
 func NewPalette() *Palette {
 	s := tcell.StyleDefault
 	return &Palette{
-		lineNumStyle:            s.Foreground(tcell.ColorOlive),
-		selectionStyle:          s.Reverse(true).Dim(true),
-		searchMatchStyle:        s.Reverse(true),
-		statusMsgSuccessStyle:   s.Foreground(tcell.ColorGreen).Bold(true),
-		statusMsgErrorStyle:     s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),
-		statusInputModeStyle:    s.Bold(true),
-		statusInputBufferStyle:  s.Bold(true),
-		statusFilePathStyle:     s,
-		menuBorderStyle:         s.Dim(true),
-		menuIconStyle:           s,
-		menuPromptStyle:         s.Dim(true),
-		menuQueryStyle:          s,
-		menuCursorStyle:         s.Bold(true),
-		menuItemSelectedStyle:   s.Underline(true),
-		menuItemUnselectedStyle: s,
-		searchPrefixStyle:       s,
-		searchQueryStyle:        s,
-		tokenOperatorStyle:      s.Foreground(tcell.ColorPurple),
-		tokenKeywordStyle:       s.Foreground(tcell.ColorOlive),
-		tokenNumberStyle:        s.Foreground(tcell.ColorGreen),
-		tokenStringStyle:        s.Foreground(tcell.ColorMaroon),
-		tokenCommentStyle:       s.Foreground(tcell.ColorNavy),
-		tokenCustom1Style:       s.Foreground(tcell.ColorTeal),
-		tokenCustom2Style:       s.Foreground(tcell.ColorDarkBlue),
-		tokenCustom3Style:       s.Foreground(tcell.ColorRed),
-		tokenCustom4Style:       s.Foreground(tcell.ColorLime),
-		tokenCustom5Style:       s.Foreground(tcell.ColorFuchsia),
-		tokenCustom6Style:       s.Foreground(tcell.ColorAqua),
-		tokenCustom7Style:       s.Foreground(tcell.ColorDarkGreen),
-		tokenCustom8Style:       s.Foreground(tcell.ColorDarkCyan),
+		lineNumStyle:              s.Foreground(tcell.ColorOlive),
+		selectionStyle:            s.Reverse(true).Dim(true),
+		searchMatchStyle:          s.Reverse(true),
+		statusMsgSuccessStyle:     s.Foreground(tcell.ColorGreen).Bold(true),
+		statusMsgErrorStyle:       s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),
+		statusInputModeStyle:      s.Bold(true),
+		statusInputBufferStyle:    s.Bold(true),
+		statusRecordingMacroStyle: s.Bold(true),
+		statusFilePathStyle:       s,
+		menuBorderStyle:           s.Dim(true),
+		menuIconStyle:             s,
+		menuPromptStyle:           s.Dim(true),
+		menuQueryStyle:            s,
+		menuCursorStyle:           s.Bold(true),
+		menuItemSelectedStyle:     s.Underline(true),
+		menuItemUnselectedStyle:   s,
+		searchPrefixStyle:         s,
+		searchQueryStyle:          s,
+		tokenOperatorStyle:        s.Foreground(tcell.ColorPurple),
+		tokenKeywordStyle:         s.Foreground(tcell.ColorOlive),
+		tokenNumberStyle:          s.Foreground(tcell.ColorGreen),
+		tokenStringStyle:          s.Foreground(tcell.ColorMaroon),
+		tokenCommentStyle:         s.Foreground(tcell.ColorNavy),
+		tokenCustom1Style:         s.Foreground(tcell.ColorTeal),
+		tokenCustom2Style:         s.Foreground(tcell.ColorDarkBlue),
+		tokenCustom3Style:         s.Foreground(tcell.ColorRed),
+		tokenCustom4Style:         s.Foreground(tcell.ColorLime),
+		tokenCustom5Style:         s.Foreground(tcell.ColorFuchsia),
+		tokenCustom6Style:         s.Foreground(tcell.ColorAqua),
+		tokenCustom7Style:         s.Foreground(tcell.ColorDarkGreen),
+		tokenCustom8Style:         s.Foreground(tcell.ColorDarkCyan),
 	}
 }
 
@@ -137,6 +139,10 @@ func (p *Palette) StyleForStatusInputMode() tcell.Style {
 
 func (p *Palette) StyleForStatusInputBuffer() tcell.Style {
 	return p.statusInputBufferStyle
+}
+
+func (p *Palette) StyleForStatusRecordingMacro() tcell.Style {
+	return p.statusRecordingMacroStyle
 }
 
 func (p *Palette) StyleForStatusFilePath() tcell.Style {

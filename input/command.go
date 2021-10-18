@@ -93,6 +93,16 @@ func commandMenuItems(config Config) []menu.Item {
 			Aliases: []string{"ai"},
 			Action:  state.ToggleAutoIndent,
 		},
+		{
+			Name:    "start/stop recording macro",
+			Aliases: []string{"m"},
+			Action:  state.ToggleUserMacroRecording,
+		},
+		{
+			Name:    "replay macro",
+			Aliases: []string{"r"},
+			Action:  state.ReplayRecordedUserMacro,
+		},
 	}
 
 	for _, language := range syntax.AllLanguages {

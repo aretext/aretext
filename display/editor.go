@@ -17,6 +17,7 @@ func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.Editor
 		editorState.StatusMsg(),
 		editorState.InputMode(),
 		inputBufferString,
+		editorState.IsRecordingUserMacro(),
 		editorState.FileWatcher().Path(),
 	)
 	searchQuery, searchDirection := editorState.DocumentBuffer().SearchQueryAndDirection()

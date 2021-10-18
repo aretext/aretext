@@ -111,6 +111,10 @@ func (s *EditorState) TaskResultChan() chan func(*EditorState) {
 	return s.task.resultChan
 }
 
+func (s *EditorState) IsRecordingUserMacro() bool {
+	return s.macroState.isRecordingUserMacro
+}
+
 func (s *EditorState) DirPatternsToHide() []string {
 	return s.dirPatternsToHide
 }

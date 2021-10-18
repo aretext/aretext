@@ -127,6 +127,8 @@ Menu Commands
 | toggle show tabs             | ta       |
 | toggle line numbers          | nu       |
 | toggle auto-indent           | ai       |
+| start/stop recording macro   | m        |
+| replay macro                 | r        |
 | set syntax plaintext         |          |
 | set syntax json              |          |
 | set syntax yaml              |          |

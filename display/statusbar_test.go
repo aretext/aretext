@@ -10,12 +10,13 @@ import (
 
 func TestDrawStatusBar(t *testing.T) {
 	testCases := []struct {
-		name              string
-		statusMsg         state.StatusMsg
-		inputMode         state.InputMode
-		inputBufferString string
-		filePath          string
-		expectedContents  [][]rune
+		name                 string
+		statusMsg            state.StatusMsg
+		inputMode            state.InputMode
+		inputBufferString    string
+		isRecordingUserMacro bool
+		filePath             string
+		expectedContents     [][]rune
 	}{
 		{
 			name:      "normal mode shows file path",
@@ -83,6 +84,15 @@ func TestDrawStatusBar(t *testing.T) {
 				{'"', 'a', 'y', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
+		{
+			name:                 "recording user macro",
+			inputMode:            state.InputModeNormal,
+			isRecordingUserMacro: true,
+			expectedContents: [][]rune{
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'R', 'e', 'c', 'o', 'r', 'd', 'i', 'n', 'g', ' ', 'm', 'a', 'c', 'r', 'o', '.'},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -90,7 +100,15 @@ func TestDrawStatusBar(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(16, 2)
 				palette := NewPalette()
-				DrawStatusBar(s, palette, tc.statusMsg, tc.inputMode, tc.inputBufferString, tc.filePath)
+				DrawStatusBar(
+					s,
+					palette,
+					tc.statusMsg,
+					tc.inputMode,
+					tc.inputBufferString,
+					tc.isRecordingUserMacro,
+					tc.filePath,
+				)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)
 			})

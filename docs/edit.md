@@ -101,7 +101,21 @@ To redo the last edit, press Ctrl-r (short for "redo") in normal mode.
 
 Aretext clears the undo history whenever a document is loaded or reloaded.
 
-Repeat last action (macros)
----------------------------
+Repeat last action
+------------------
 
 To repeat the last action, type "." in normal mode. This is useful for avoiding repetitive typing.
+
+Record and replay a macro
+-------------------------
+
+To repeat a sequence of commands, you can record a macro.
+
+1.	In normal mode, type ":" to open the command menu.
+2.	Search for and select "start/stop recording macro" to begin recording a macro.
+3.	Edit the document. Any changes you make will be recorded in the macro.
+4.	In the command menu, select "start/stop recording macro" again to stop recording the macro.
+
+To replay the recorded macro, select "replay macro" in the command menu.
+
+Once you have replayed a macro, you can repeat it using the "." (repeat last action) command in normal mode.

@@ -42,7 +42,12 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-	action = firstCheckpointUndoLog(thenScrollViewToCursor(thenClearStatusMsg(action)))
+
+	if result.Rule.ClearStatusMsg {
+		action = thenClearStatusMsg(action)
+	}
+
+	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
 
 	// Record the action so we can replay it later.
 	// We ignore cursor movements, searches, and undo/redo, since the user
@@ -171,7 +176,12 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-	action = thenScrollViewToCursor(thenClearStatusMsg(action))
+
+	if result.Rule.ClearStatusMsg {
+		action = thenClearStatusMsg(action)
+	}
+
+	action = thenScrollViewToCursor(action)
 
 	// Record the action so we can replay it later.
 	// We ignore some actions (like cursor movements) since the user

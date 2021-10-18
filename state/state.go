@@ -25,6 +25,7 @@ type EditorState struct {
 	fileTimeline              *file.Timeline
 	menu                      *MenuState
 	task                      *TaskState
+	macroState                MacroState
 	customMenuItems           []menu.Item
 	dirPatternsToHide         []string
 	styles                    map[string]config.StyleConfig

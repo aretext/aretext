@@ -2,6 +2,8 @@ package input
 
 import (
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/state"
 )
 
 // ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a rule.
@@ -11,17 +13,16 @@ type ActionBuilderParams struct {
 	InputEvents          []*tcell.EventKey
 	CountArg             *uint64
 	ClipboardPageNameArg *rune
-	MacroRecorder        *MacroRecorder
 	Config               Config
 }
 
 // Rule defines a command that the input parser can recognize.
 // The pattern is a sequence of keypresses that trigger the rule.
 type Rule struct {
-	Name          string
-	Pattern       []EventMatcher
-	ActionBuilder ActionBuilder
-	SkipMacro     bool
+	Name                string
+	Pattern             []EventMatcher
+	ActionBuilder       ActionBuilder
+	SkipLastActionMacro bool
 }
 
 // These rules control cursor movement in normal and visual mode.
@@ -34,7 +35,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor left (h)",
@@ -44,7 +45,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLeft
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor right (arrow)",
@@ -54,7 +55,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor right (l)",
@@ -64,7 +65,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorRight
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor up (arrow)",
@@ -74,7 +75,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor up (k)",
@@ -84,7 +85,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorUp
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor down (arrow)",
@@ -94,7 +95,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor down (j)",
@@ -104,7 +105,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorDown
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor back (backspace)",
@@ -114,7 +115,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor back (backspace2)",
@@ -124,7 +125,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorBack
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next word start (w)",
@@ -134,7 +135,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordStart
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor prev word start (b)",
@@ -144,7 +145,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevWordStart
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next word end (e)",
@@ -154,7 +155,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextWordEnd
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor prev paragraph ({)",
@@ -164,7 +165,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorPrevParagraph
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor next paragraph (})",
@@ -174,7 +175,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorNextParagraph
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to next matching char (f{char})",
@@ -185,7 +186,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, true)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to prev matching char (F{char})",
@@ -196,7 +197,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, true)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor till next matching char (t{char})",
@@ -207,7 +208,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToNextMatchingChar(p.InputEvents, p.CountArg, false)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor to prev matching char (T{char})",
@@ -218,7 +219,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, false)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line start (0)",
@@ -228,7 +229,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStart
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line start non-whitespace (^)",
@@ -238,7 +239,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineStartNonWhitespace
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor line end ($)",
@@ -248,7 +249,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorLineEnd
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor start of line num (gg)",
@@ -259,7 +260,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLineNum(p.CountArg)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "cursor start of last line (G)",
@@ -269,7 +270,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CursorStartOfLastLine
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "scroll up (ctrl-u)",
@@ -279,7 +280,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollUp(p.Config)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "scroll down (ctrl-d)",
@@ -289,7 +290,7 @@ var cursorRules = []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ScrollDown(p.Config)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 }
 
@@ -715,7 +716,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ShowCommandMenu(p.Config)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "start forward search",
@@ -725,7 +726,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchForward
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "start backward search",
@@ -735,7 +736,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchBackward
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "find next match",
@@ -745,7 +746,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindNextMatch
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "find previous match",
@@ -755,7 +756,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindPrevMatch
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "undo (u)",
@@ -765,7 +766,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Undo
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "redo (ctrl-r)",
@@ -775,7 +776,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Redo
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "enter visual mode charwise (v)",
@@ -801,8 +802,9 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: '.'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return p.MacroRecorder.LastAction()
+			return state.ReplayLastActionMacro
 		},
+		SkipLastActionMacro: true,
 	},
 }...)
 
@@ -816,7 +818,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeCharwise
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "toggle visual mode linewise (V)",
@@ -826,7 +828,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeLinewise
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "return to normal mode (esc)",
@@ -836,7 +838,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ReturnToNormalMode
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "show command menu",
@@ -846,7 +848,7 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ShowCommandMenu(p.Config)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 	{
 		Name: "delete selection (x)",
@@ -922,6 +924,6 @@ var visualModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return CopySelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
 		},
-		SkipMacro: true,
+		SkipLastActionMacro: true,
 	},
 }...)

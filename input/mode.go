@@ -12,7 +12,7 @@ import (
 type Mode interface {
 	// ProcessKeyEvent interprets the key event according to this mode.
 	// It will return any user-initiated action resulting from the keypress
-	ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action
+	ProcessKeyEvent(event *tcell.EventKey, config Config) Action
 
 	// InputBufferString returns a string describing buffered input events.
 	// It can be displayed to the user to help them understand the input state.
@@ -29,7 +29,7 @@ func newNormalMode() *normalMode {
 	return &normalMode{parser}
 }
 
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	result := m.parser.ProcessInput(event)
 	if !result.Accepted {
 		return EmptyAction
@@ -40,7 +40,6 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
-		MacroRecorder:        macroRecorder,
 		Config:               config,
 	})
 	action = firstCheckpointUndoLog(thenScrollViewToCursor(thenClearStatusMsg(action)))
@@ -48,9 +47,8 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	// Record the action so we can replay it later.
 	// We ignore cursor movements, searches, and undo/redo, since the user
 	// may want to replay the last action before these operations.
-	if !result.Rule.SkipMacro {
-		macroRecorder.ClearLastAction()
-		macroRecorder.RecordAction(action)
+	if !result.Rule.SkipLastActionMacro {
+		action = thenStartNewLastActionMacro(action)
 	}
 
 	return action
@@ -63,10 +61,10 @@ func (m *normalMode) InputBufferString() string {
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
 	action = thenScrollViewToCursor(action)
-	macroRecorder.RecordAction(action)
+	action = thenAddToLastActionMacro(action)
 	return action
 }
 
@@ -102,7 +100,7 @@ func (m *insertMode) InputBufferString() string {
 // menuMode allows the user to search for and select items in a menu.
 type menuMode struct{}
 
-func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return HideMenuAndReturnToNormalMode
@@ -130,7 +128,7 @@ func (m *menuMode) InputBufferString() string {
 // searchMode is used to search the text for a substring.
 type searchMode struct{}
 
-func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return AbortSearchAndReturnToNormalMode
@@ -160,7 +158,7 @@ func newVisualMode() *visualMode {
 	return &visualMode{parser}
 }
 
-func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	result := m.parser.ProcessInput(event)
 	if !result.Accepted {
 		return EmptyAction
@@ -171,7 +169,6 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
-		MacroRecorder:        macroRecorder,
 		Config:               config,
 	})
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
@@ -179,8 +176,8 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *Macro
 	// Record the action so we can replay it later.
 	// We ignore some actions (like cursor movements) since the user
 	// may want to replay the last action before these operations.
-	if !result.Rule.SkipMacro {
-		macroRecorder.RecordAction(action)
+	if !result.Rule.SkipLastActionMacro {
+		action = thenAddToLastActionMacro(action)
 	}
 
 	return action
@@ -194,7 +191,7 @@ func (m *visualMode) InputBufferString() string {
 // This allows the user to cancel the task if it takes too long.
 type taskMode struct{}
 
-func (m *taskMode) ProcessKeyEvent(event *tcell.EventKey, macroRecorder *MacroRecorder, config Config) Action {
+func (m *taskMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return state.CancelTaskIfRunning
@@ -232,5 +229,22 @@ func thenClearStatusMsg(f Action) Action {
 	return func(s *state.EditorState) {
 		f(s)
 		state.SetStatusMsg(s, state.StatusMsg{})
+	}
+}
+
+// thenStartNewLastActionMacro resets the "last action" macro to the specified action.
+func thenStartNewLastActionMacro(f Action) Action {
+	return func(s *state.EditorState) {
+		f(s)
+		state.ClearLastActionMacro(s)
+		state.AddToLastActionMacro(s, state.MacroAction(f))
+	}
+}
+
+// thenAddToLastActionMacro adds a new action to the "last action" macro.
+func thenAddToLastActionMacro(f Action) Action {
+	return func(s *state.EditorState) {
+		f(s)
+		state.AddToLastActionMacro(s, state.MacroAction(f))
 	}
 }

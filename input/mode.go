@@ -42,12 +42,7 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-
-	if result.Rule.ClearStatusMsg {
-		action = thenClearStatusMsg(action)
-	}
-
-	action = firstCheckpointUndoLog(thenScrollViewToCursor(action))
+	action = firstCheckpointUndoLog(thenScrollViewToCursor(thenClearStatusMsg(action)))
 
 	clearLastActionMacro := result.Rule.AddToLastActionMacro
 	action = thenAddToMacros(
@@ -176,12 +171,7 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-
-	if result.Rule.ClearStatusMsg {
-		action = thenClearStatusMsg(action)
-	}
-
-	action = thenScrollViewToCursor(action)
+	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 
 	action = thenAddToMacros(
 		action,

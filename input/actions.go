@@ -765,3 +765,10 @@ func CopySelectionAndReturnToNormalMode(clipboardPageNameArg *rune) Action {
 		ReturnToNormalMode(s)
 	}
 }
+
+func ReplayLastActionMacro(countArg *uint64) Action {
+	count := countArgOrDefault(countArg, 1)
+	return func(s *state.EditorState) {
+		state.ReplayLastActionMacro(s, count)
+	}
+}

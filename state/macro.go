@@ -27,9 +27,11 @@ func ClearLastActionMacro(s *EditorState) {
 }
 
 // ReplayLastActionMacro executes the actions recorded in the "last action" macro.
-func ReplayLastActionMacro(s *EditorState) {
-	for _, action := range s.macroState.lastActions {
-		action(s)
+func ReplayLastActionMacro(s *EditorState, count uint64) {
+	for i := uint64(0); i < count; i++ {
+		for _, action := range s.macroState.lastActions {
+			action(s)
+		}
 	}
 }
 

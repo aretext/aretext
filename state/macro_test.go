@@ -31,23 +31,37 @@ func (a *actionLogger) clear() {
 func TestLastActionMacro(t *testing.T) {
 	var logger actionLogger
 	state := NewEditorState(100, 100, nil, nil)
-	ReplayLastActionMacro(state)
+	ReplayLastActionMacro(state, 1)
 	assert.Equal(t, 0, len(logger.logEntries))
 
 	AddToLastActionMacro(state, logger.buildAction("a"))
 	AddToLastActionMacro(state, logger.buildAction("b"))
-	ReplayLastActionMacro(state)
+	ReplayLastActionMacro(state, 1)
 	expected := []actionLogEntry{{name: "a"}, {name: "b"}}
 	assert.Equal(t, expected, logger.logEntries)
 
 	logger.clear()
 	ClearLastActionMacro(state)
-	ReplayLastActionMacro(state)
+	ReplayLastActionMacro(state, 1)
 	assert.Equal(t, 0, len(logger.logEntries))
 
 	AddToLastActionMacro(state, logger.buildAction("c"))
-	ReplayLastActionMacro(state)
+	ReplayLastActionMacro(state, 1)
 	assert.Equal(t, []actionLogEntry{{name: "c"}}, logger.logEntries)
+}
+
+func TestLastActionMacroWithCount(t *testing.T) {
+	var logger actionLogger
+	state := NewEditorState(100, 100, nil, nil)
+	AddToLastActionMacro(state, logger.buildAction("a"))
+	AddToLastActionMacro(state, logger.buildAction("b"))
+	ReplayLastActionMacro(state, 3) // Repeat 3 times.
+	expected := []actionLogEntry{
+		{name: "a"}, {name: "b"},
+		{name: "a"}, {name: "b"},
+		{name: "a"}, {name: "b"},
+	}
+	assert.Equal(t, expected, logger.logEntries)
 }
 
 func TestRecordAndReplayUserMacro(t *testing.T) {
@@ -90,7 +104,7 @@ func TestLastActionIsUserMacro(t *testing.T) {
 	AddToRecordingUserMacro(state, logger.buildAction("b"))
 	ToggleUserMacroRecording(state)
 	ReplayRecordedUserMacro(state)
-	ReplayLastActionMacro(state)
+	ReplayLastActionMacro(state, 1)
 	expected := []actionLogEntry{
 		{name: "a", isReplayingUserMacro: true},
 		{name: "b", isReplayingUserMacro: true},

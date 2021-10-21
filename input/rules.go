@@ -2,8 +2,6 @@ package input
 
 import (
 	"github.com/gdamore/tcell/v2"
-
-	"github.com/aretext/aretext/state"
 )
 
 // ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a rule.
@@ -880,7 +878,7 @@ var normalModeRules = append(cursorRules, []Rule{
 			{Key: tcell.KeyRune, Rune: '.'},
 		},
 		ActionBuilder: func(p ActionBuilderParams) Action {
-			return state.ReplayLastActionMacro
+			return ReplayLastActionMacro(p.CountArg)
 		},
 		AddToUserMacro: true,
 	},

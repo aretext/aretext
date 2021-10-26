@@ -1,0 +1,4 @@
+---
+a: &anchor
+b: *anchor
+

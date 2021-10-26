@@ -1,0 +1,14 @@
+---
+key: value
+: empty key
+---
+{
+ key: value, : empty key
+}
+---
+# empty key and value
+:
+---
+# empty key and value
+{ : }
+

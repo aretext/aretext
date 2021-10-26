@@ -1,0 +1,6 @@
+# XXX Why is ? supported in flow?
+{
+  ? foo :,
+  : bar,
+}
+

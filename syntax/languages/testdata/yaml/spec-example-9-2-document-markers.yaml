@@ -1,0 +1,6 @@
+# XXX Why is a comment allowed on ...?
+    %YAML 1.2
+    ---
+    Document
+    ... # Suffix
+

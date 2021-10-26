@@ -1,0 +1,6 @@
+# XXX Why are tabs allowed as indentation after dash?
+? a
+: -	b
+  -  -	c
+     - d
+

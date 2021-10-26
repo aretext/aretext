@@ -1,0 +1,6 @@
+? explicit key # Empty value
+? |
+  block key
+: - one # Explicit compact
+  - two # block value
+

@@ -1,0 +1,4 @@
+---
+{ "foo" # comment
+  :bar }
+

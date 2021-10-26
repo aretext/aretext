@@ -5,6 +5,11 @@ func ToggleShowTabs(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.showTabs, "Showing tabs", "Hiding tabs")
 }
 
+// ToggleTabExpand toggles whether tabs should be expanded to spaces.
+func ToggleTabExpand(s *EditorState) {
+	toggleFlagAndSetStatus(s, &s.documentBuffer.tabExpand, "Enabled tab expand", "Disabled tab expand")
+}
+
 // ToggleShowLineNumbers shows or hides line numbers in the left margin.
 func ToggleShowLineNumbers(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.showLineNum, "Showing line numbers", "Hiding line numbers")

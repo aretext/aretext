@@ -84,6 +84,11 @@ func commandMenuItems(config Config) []menu.Item {
 			Action:  state.ToggleShowTabs,
 		},
 		{
+			Name:    "toggle tab expand",
+			Aliases: []string{"te"},
+			Action:  state.ToggleTabExpand,
+		},
+		{
 			Name:    "toggle line numbers",
 			Aliases: []string{"nu"},
 			Action:  state.ToggleShowLineNumbers,

@@ -16,7 +16,7 @@ Stable Releases
 
 ### Official Binaries
 
-You can download the the official binaries from [the aretext releases page](https://github.com/aretext/aretext/releases).
+You can download the official binaries from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
 ### Arch Linux
 

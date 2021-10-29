@@ -7,14 +7,14 @@ Supported Platforms
 | Platform | Status                |
 |----------|-----------------------|
 | Linux    | Fully supported       |
-| \*BSD    | Will probably work    |
-| macOS    | Will probably work    |
+| macOS    | Fully supported       |
 | Windows  | Supported on WSL only |
+| \*BSD    | Will probably work    |
 
 Official Binaries
 -----------------
 
-You can download the official binaries from [the aretext releases page](https://github.com/aretext/aretext/releases).
+You can download the official binaries for Linux and macOS from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
 Build From Source
 -----------------

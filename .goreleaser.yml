@@ -11,6 +11,7 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
+      - darwin
 
 archives:
   - wrap_in_directory: true

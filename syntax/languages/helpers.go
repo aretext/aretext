@@ -160,6 +160,43 @@ var consumeToNextLineFeed = consumeToEofOrRuneLike(func(r rune) bool {
 	return r == '\n'
 })
 
+func consumeDigitsAndSeparators(allowLeadingSeparator bool, isDigit func(r rune) bool) parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+		var lastWasUnderscore bool
+		for {
+			r, err := iter.NextRune()
+			if err != nil {
+				break
+			}
+
+			if r == '_' && !lastWasUnderscore && (allowLeadingSeparator || numConsumed > 0) {
+				lastWasUnderscore = true
+				numConsumed++
+				continue
+			}
+
+			if isDigit(r) {
+				lastWasUnderscore = false
+				numConsumed++
+				continue
+			}
+
+			break
+		}
+
+		if lastWasUnderscore {
+			numConsumed--
+		}
+
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState:   state,
+		}
+	}
+
+}
+
 // recognizeToken recognizes the consumed characters in the result as a token.
 func recognizeToken(tokenRole parser.TokenRole) parser.MapFn {
 	return func(result parser.Result) parser.Result {

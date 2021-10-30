@@ -134,5 +134,6 @@ Menu Commands
 | set syntax json              |          |
 | set syntax yaml              |          |
 | set syntax go                |          |
+| set syntax python            |          |
 | set syntax gitcommit         |          |
 | set syntax gitrebase         |          |

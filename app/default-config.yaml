@@ -75,3 +75,11 @@
     tabSize: 4
     showLineNumbers: true
 
+- name: python
+  pattern: "**/*.py"
+  config:
+    autoIndent: true
+    syntaxLanguage: python
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true

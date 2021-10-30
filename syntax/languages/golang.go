@@ -111,44 +111,8 @@ func golangInterpretedStringLiteralParseFunc() parser.Func {
 	return parseCStyleString('"')
 }
 
-func golangDigitsAndSeparatorsParseFunc(allowLeadingUnderscore bool, isDigit func(r rune) bool) parser.Func {
-	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-		var lastWasUnderscore bool
-		for {
-			r, err := iter.NextRune()
-			if err != nil {
-				break
-			}
-
-			if r == '_' && !lastWasUnderscore && (allowLeadingUnderscore || numConsumed > 0) {
-				lastWasUnderscore = true
-				numConsumed++
-				continue
-			}
-
-			if isDigit(r) {
-				lastWasUnderscore = false
-				numConsumed++
-				continue
-			}
-
-			break
-		}
-
-		if lastWasUnderscore {
-			numConsumed--
-		}
-
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
-	}
-}
-
 func golangFloatLiteralParseFunc() parser.Func {
-	consumeDecimalDigits := golangDigitsAndSeparatorsParseFunc(false, func(r rune) bool {
+	consumeDecimalDigits := consumeDigitsAndSeparators(false, func(r rune) bool {
 		return r >= '0' && r <= '9'
 	})
 	consumeDecimalExponent := consumeSingleRuneLike(func(r rune) bool {
@@ -173,10 +137,10 @@ func golangFloatLiteralParseFunc() parser.Func {
 		Or(consumeDecimalFloatLiteralFormB).
 		Or(consumeDecimalFloatLiteralFormC)
 
-	consumeHexDigitsAllowLeadingUnderscore := golangDigitsAndSeparatorsParseFunc(true, func(r rune) bool {
+	consumeHexDigitsAllowLeadingUnderscore := consumeDigitsAndSeparators(true, func(r rune) bool {
 		return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 	})
-	consumeHexDigits := golangDigitsAndSeparatorsParseFunc(false, func(r rune) bool {
+	consumeHexDigits := consumeDigitsAndSeparators(false, func(r rune) bool {
 		return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 	})
 	consumeHexExponent := consumeSingleRuneLike(func(r rune) bool {
@@ -211,19 +175,19 @@ func golangFloatLiteralParseFunc() parser.Func {
 func golangIntegerLiteralParseFunc() parser.Func {
 	consumeDecimalLiteral := consumeString("0").
 		Or(consumeSingleRuneLike(func(r rune) bool { return r >= '1' && r <= '9' }).
-			ThenMaybe(golangDigitsAndSeparatorsParseFunc(true, func(r rune) bool { return r >= '0' && r <= '9' })))
+			ThenMaybe(consumeDigitsAndSeparators(true, func(r rune) bool { return r >= '0' && r <= '9' })))
 
 	consumeBinaryLiteral := consumeString("0").
 		Then(consumeSingleRuneLike(func(r rune) bool { return r == 'b' || r == 'B' })).
-		Then(golangDigitsAndSeparatorsParseFunc(true, func(r rune) bool { return r == '0' || r == '1' }))
+		Then(consumeDigitsAndSeparators(true, func(r rune) bool { return r == '0' || r == '1' }))
 
 	consumeOctalLiteral := consumeString("0").
 		ThenMaybe(consumeSingleRuneLike(func(r rune) bool { return r == 'o' || r == 'O' })).
-		Then(golangDigitsAndSeparatorsParseFunc(true, func(r rune) bool { return r >= '0' && r <= '7' }))
+		Then(consumeDigitsAndSeparators(true, func(r rune) bool { return r >= '0' && r <= '7' }))
 
 	consumeHexLiteral := consumeString("0").
 		Then(consumeSingleRuneLike(func(r rune) bool { return r == 'x' || r == 'X' })).
-		Then(golangDigitsAndSeparatorsParseFunc(true, func(r rune) bool {
+		Then(consumeDigitsAndSeparators(true, func(r rune) bool {
 			return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 		}))
 

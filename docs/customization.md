@@ -194,9 +194,10 @@ For example, suppose you have written a template for a Go test. You can then cre
 - name: custom-snippet-command
   pattern: "**/*.go"
   config:
-    - name: insert test snippet
-      shellCmd: cat ~/snippets/go-test.go
-      mode: insert
+    menuCommands:
+      - name: insert test snippet
+        shellCmd: cat ~/snippets/go-test.go
+        mode: insert
 ```
 
 ### Example: Grep
@@ -207,9 +208,10 @@ You can add a custom menu command to grep for the word under the cursor. The fol
 - name: custom-grep-command
   pattern: "**"
   config:
-    - name: rg word
-      shellCmd: rg $WORD --vimgrep  # or `grep $WORD -n -R .`
-      mode: fileLocations
+    menuCommands:
+      - name: rg word
+        shellCmd: rg $WORD --vimgrep  # or `grep $WORD -n -R .`
+        mode: fileLocations
 ```
 
 Once the search has completed, aretext loads the locations into a searchable menu. This allows you to easily navigate to a particular result.

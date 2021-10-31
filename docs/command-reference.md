@@ -125,6 +125,7 @@ Menu Commands
 | open previous document       | p        |
 | open next document           | n        |
 | toggle show tabs             | ta       |
+| toggle tab expand            | te       |
 | toggle line numbers          | nu       |
 | toggle auto-indent           | ai       |
 | start/stop recording macro   | m        |

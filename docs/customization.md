@@ -19,7 +19,15 @@ In addition, you can define [custom menu commands](#custom-menu-commands) that i
 Configuration rules
 -------------------
 
-Aretext stores its configuration in a single YAML file. By default, the config file is located at `~/.config/aretext/config.yaml`, but you can change the location by setting the `XDG_CONFIG_HOME` env var (following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). If you open the config file, you should see something like:
+Aretext stores its configuration in a single YAML file. You can edit the config file using the `-editconfig` flag:
+
+```
+aretext -editconfig
+```
+
+The configuration file is located at `$XDG_CONFIG_HOME/aretext/config.yaml`, where `XDG_CONFIG_HOME` is configured according to the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). On Linux, this defaults to `~/.config`, and on macOS it defaults to `~/Library/Application Support`.
+
+When you open the config file, you should see something like:
 
 ```
 - name: default
@@ -87,7 +95,7 @@ Fixing configuration errors
 If your YAML config file has errors, aretext will exit with an error message. You can force aretext to ignore the config file by passing the "-noconfig" flag:
 
 ```
-aretext -noconfig ~/.config/aretext/config.yaml
+aretext -editconfig -noconfig
 ```
 
 This allows you to start the editor so you can fix the configuration.
@@ -97,7 +105,7 @@ Custom menu commands
 
 Aretext allows you to define custom menu items to run shell commands. This provides a simple, yet powerful, way to extend aretext.
 
-You can add new menu commands by editing the YAML config file at `~/.config/aretext/config.yaml`:
+You can add new menu commands by editing the config file:
 
 ```
 - name: custom-menu-rule

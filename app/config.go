@@ -17,6 +17,11 @@ import (
 //go:embed default-config.yaml
 var DefaultConfigYaml []byte
 
+// ConfigPath returns the path to the configuration file.
+func ConfigPath() (string, error) {
+	return xdg.ConfigFile("aretext/config.yaml")
+}
+
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.
 func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if forceDefaultConfig {
@@ -24,7 +29,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return unmarshalRuleSet(DefaultConfigYaml)
 	}
 
-	path, err := xdg.ConfigFile("aretext/config.yaml")
+	path, err := ConfigPath()
 	if err != nil {
 		return nil, err
 	}

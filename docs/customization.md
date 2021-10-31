@@ -160,10 +160,12 @@ Most systems provide command-line utilities for interacting with the system clip
 | WSL on Windows       | `clip.exe`, `powershell Get-Clipboard` |
 | tmux                 | `tmux set-buffer`, `tmux show-buffer`  |
 
-We can add custom menu commands to copy the current selection to the system clipboard and paste from the system clipboard into the document. For example, on Wayland:
+We can add custom menu commands to copy the current selection to the system clipboard and paste from the system clipboard into the document.
+
+On Linux (Wayland):
 
 ```
-- name: custom-clipboard-commands
+- name: linux-wayland-clipboard-commands
   pattern: "**"
   config:
     menuCommands:
@@ -173,6 +175,36 @@ We can add custom menu commands to copy the current selection to the system clip
       - name: paste from clipboard
         shellCmd: wl-paste
         mode: insert
+```
+
+On macOS:
+
+```
+- name: macos-clipboard-commands
+  pattern: "**"
+  config:
+    menuCommands:
+      - name: copy to clipboard
+        shellCmd: printenv SELECTION | pbcopy
+        mode: silent
+      - name: paste from clipboard
+        shellCmd: pbpaste
+        mode: insert
+```
+
+Using tmux:
+
+```
+- name: tmux-clipboard-commands
+  pattern: "**"
+  config:
+    menuCommands:
+    - name: copy to clipboard
+      shellCmd: printenv SELECTION | tmux load-buffer -
+      mode: silent
+    - name: paste from clipboard
+      shellCmd: tmux show-buffer
+      mode: insert
 ```
 
 ### Example: Format current file

@@ -179,7 +179,7 @@ For example, this command uses `go fmt` to format a Go file:
   config:
     menuCommands:
       - name: go fmt current file
-        shellCmd: go fmt -w $FILEPATH | less
+        shellCmd: go fmt $FILEPATH | less
 ```
 
 If there are no unsaved changes, aretext will automatically reload the file after it has been formatted.

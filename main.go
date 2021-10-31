@@ -22,7 +22,8 @@ var (
 
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-var noconfig = flag.Bool("noconfig", false, "use default configuration instead of loading it from $HOME/.config/aretext")
+var editconfig = flag.Bool("editconfig", false, "open the aretext configuration file")
+var noconfig = flag.Bool("noconfig", false, "force default configuration")
 var versionFlag = flag.Bool("version", false, "print version")
 
 func main() {
@@ -56,6 +57,14 @@ func main() {
 	}
 
 	path := flag.Arg(0)
+	if *editconfig {
+		configPath, err := app.ConfigPath()
+		if err != nil {
+			exitWithError(err)
+		}
+		path = configPath
+	}
+
 	err := runEditor(path)
 	if err != nil {
 		exitWithError(err)

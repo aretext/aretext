@@ -83,3 +83,12 @@
     tabExpand: true
     tabSize: 4
     showLineNumbers: true
+
+- name: rust
+  pattern: "**/*.rs"
+  config:
+    autoIndent: true
+    syntaxLanguage: rust
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true

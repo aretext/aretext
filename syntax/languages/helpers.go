@@ -212,19 +212,23 @@ func recognizeToken(tokenRole parser.TokenRole) parser.MapFn {
 	}
 }
 
+func maxStrLen(ss []string) uint64 {
+	maxLength := uint64(0)
+	for _, s := range ss {
+		length := uint64(len(s))
+		if length > maxLength {
+			maxLength = length
+		}
+	}
+	return maxLength
+}
+
 // recognizeKeywordOrConsume recognizes a keyword from the list of `keywords`.
 // If no keywords match, the result is returned unmodified.
 func recognizeKeywordOrConsume(keywords []string) parser.MapWithInputFn {
 	// Calculate the length of the longest keyword to limit how much
 	// of the input needs to be reprocessed.
-	maxLength := uint64(0)
-	for _, kw := range keywords {
-		length := uint64(len(kw))
-		if length > maxLength {
-			maxLength = length
-		}
-	}
-
+	maxLength := maxStrLen(keywords)
 	return func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		if result.NumConsumed > maxLength {
 			return result
@@ -249,6 +253,24 @@ func recognizeKeywordOrConsume(keywords []string) parser.MapWithInputFn {
 	}
 }
 
+// failIfMatchTerm fails if the consumed string matches any of the excluded terms.
+// Otherwise, it returns the result unmodified.
+func failIfMatchTerm(terms []string) parser.MapWithInputFn {
+	maxLength := maxStrLen(terms)
+	return func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		if result.NumConsumed > maxLength {
+			return result
+		}
+		s := readInputString(iter, result.NumConsumed)
+		for _, term := range terms {
+			if term == s {
+				return parser.FailedResult
+			}
+		}
+		return result
+	}
+}
+
 // readInputString reads a string from the text up to `n` characters long.
 func readInputString(iter parser.TrackingRuneIter, n uint64) string {
 	var sb strings.Builder
@@ -264,8 +286,8 @@ func readInputString(iter parser.TrackingRuneIter, n uint64) string {
 	return sb.String()
 }
 
-// parseCStyleString parses a string with characters escaped by a backslash.
-func parseCStyleString(quoteRune rune) parser.Func {
+// consumeCStyleString consumes a string with characters escaped by a backslash.
+func consumeCStyleString(quoteRune rune) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
 		r, err := iter.NextRune()
@@ -286,10 +308,7 @@ func parseCStyleString(quoteRune rune) parser.Func {
 				return parser.Result{
 					NumConsumed: n,
 					ComputedTokens: []parser.ComputedToken{
-						{
-							Length: n,
-							Role:   parser.TokenRoleString,
-						},
+						{Length: n},
 					},
 					NextState: state,
 				}
@@ -305,4 +324,10 @@ func parseCStyleString(quoteRune rune) parser.Func {
 			}
 		}
 	}
+}
+
+// parseCStyleString parses a string with characters escaped by a backslash.
+func parseCStyleString(quoteRune rune) parser.Func {
+	return consumeCStyleString(quoteRune).
+		Map(recognizeToken(parser.TokenRoleString))
 }

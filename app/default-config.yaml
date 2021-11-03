@@ -92,3 +92,16 @@
     tabExpand: true
     tabSize: 4
     showLineNumbers: true
+
+- name: c
+  pattern: "**/*.c"
+  config: &cconfig
+    autoIndent: true
+    syntaxLanguage: c
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
+- name: c-header
+  pattern: "**/*.h"
+  config: *cconfig

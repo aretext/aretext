@@ -136,5 +136,6 @@ Menu Commands
 | set syntax go                |          |
 | set syntax python            |          |
 | set syntax rust              |          |
+| set syntax c                 |          |
 | set syntax gitcommit         |          |
 | set syntax gitrebase         |          |

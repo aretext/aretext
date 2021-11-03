@@ -18,6 +18,7 @@ const (
 	LanguageGo        = Language("go")
 	LanguagePython    = Language("python")
 	LanguageRust      = Language("rust")
+	LanguageC         = Language("c")
 	LanguageGitCommit = Language("gitcommit")
 	LanguageGitRebase = Language("gitrebase")
 	LanguageDevlog    = Language("devlog")
@@ -34,6 +35,7 @@ func init() {
 		LanguageGo:        languages.GolangParseFunc(),
 		LanguagePython:    languages.PythonParseFunc(),
 		LanguageRust:      languages.RustParseFunc(),
+		LanguageC:         languages.CParseFunc(),
 		LanguageGitCommit: languages.GitCommitParseFunc(),
 		LanguageGitRebase: languages.GitRebaseParseFunc(),
 		LanguageDevlog:    languages.DevlogParseFunc(),

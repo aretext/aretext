@@ -71,6 +71,7 @@ func cIdentifierOrKeywordParseFunc() parser.Func {
 		"struct", "switch", "typedef", "union", "unsigned",
 		"void", "volatile", "while",
 		"inline", "_Bool", "_Complex", "_Imaginary",
+		"noreturn", "_Noreturn", "NULL", "bool", "true", "false",
 		"__FUNCTION__", "__PRETTY_FUNCTION__", "__alignof", "__alignof__", "__asm",
 		"__asm__", "__attribute", "__attribute__", "__builtin_offsetof",
 		"__builtin_va_arg", "__complex", "__complex__", "__const",

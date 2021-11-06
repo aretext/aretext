@@ -131,6 +131,11 @@ func (m *menuMode) InputBufferString() string {
 type searchMode struct{}
 
 func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	action := m.processKeyEvent(event)
+	return thenAddToMacros(action, false, false, true)
+}
+
+func (m *searchMode) processKeyEvent(event *tcell.EventKey) Action {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		return AbortSearchAndReturnToNormalMode

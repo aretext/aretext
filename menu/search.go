@@ -72,12 +72,13 @@ func (s *Search) SetQuery(q string) {
 	}
 
 	var scoreBuckets [maxScore][]int
-	querySearcher := text.NewSearcher(normalizeString(q))
+	normalizedQuery := normalizeString(q)
+	querySearcher := text.NewSearcher(normalizedQuery)
 	for i := 0; i < len(s.items); i++ {
 		score := s.scoreItemForQuery(
 			s.normalizedNames[i],
 			s.items[i].Aliases,
-			s.query,
+			normalizedQuery,
 			querySearcher,
 		)
 		if score > 0 {
@@ -102,7 +103,7 @@ func (s *Search) Results() []Item {
 
 func (s *Search) scoreItemForQuery(itemName string, itemAliases []string, query string, querySearcher *text.Searcher) int {
 	for _, alias := range itemAliases {
-		if normalizeString(alias) == normalizeString(query) {
+		if normalizeString(alias) == query {
 			return scoreExactMatchAlias
 		}
 	}

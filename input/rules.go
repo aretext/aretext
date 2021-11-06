@@ -864,7 +864,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeCharwise
 		},
-		AddToLastActionMacro: true,
 		AddToUserMacro:       true,
 	},
 	{
@@ -875,7 +874,6 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return ToggleVisualModeLinewise
 		},
-		AddToLastActionMacro: true,
 		AddToUserMacro:       true,
 	},
 	{

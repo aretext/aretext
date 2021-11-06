@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/adrg/xdg v0.4.0
-	github.com/gdamore/tcell/v2 v2.3.1
+	github.com/gdamore/tcell/v2 v2.4.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/pkg/errors v0.9.1

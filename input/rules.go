@@ -804,6 +804,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchForward
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "start backward search",
@@ -813,6 +814,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return StartSearchBackward
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "find next match",
@@ -822,6 +824,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindNextMatch
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "find previous match",
@@ -831,6 +834,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return FindPrevMatch
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "undo (u)",
@@ -840,6 +844,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Undo
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "redo (ctrl-r)",
@@ -849,6 +854,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		ActionBuilder: func(p ActionBuilderParams) Action {
 			return Redo
 		},
+		AddToUserMacro: true,
 	},
 	{
 		Name: "enter visual mode charwise (v)",

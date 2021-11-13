@@ -129,7 +129,8 @@ func (e *Editor) runMainEventLoop() {
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
 	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
-	actionFunc := e.inputInterpreter.ProcessEvent(event, e.inputConfig())
+	inputConfig := input.ConfigFromEditorState(e.editorState)
+	actionFunc := e.inputInterpreter.ProcessEvent(event, inputConfig)
 	actionFunc(e.editorState)
 }
 
@@ -140,18 +141,6 @@ func (e *Editor) handleFileChanged() {
 
 func (e *Editor) shutdown() {
 	e.editorState.FileWatcher().Stop()
-}
-
-func (e *Editor) inputConfig() input.Config {
-	_, screenHeight := e.screen.Size()
-	scrollLines := uint64(screenHeight) / 2
-	return input.Config{
-		InputMode:           e.editorState.InputMode(),
-		ScrollLines:         scrollLines,
-		DirPatternsToHide:   e.editorState.DirPatternsToHide(),
-		SelectionMode:       e.editorState.DocumentBuffer().SelectionMode(),
-		SelectionEndLocator: e.editorState.DocumentBuffer().SelectionEndLocator(),
-	}
 }
 
 func (e *Editor) redraw(sync bool) {

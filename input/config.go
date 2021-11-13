@@ -22,3 +22,15 @@ type Config struct {
 	SelectionMode       selection.Mode
 	SelectionEndLocator state.Locator
 }
+
+func ConfigFromEditorState(editorState *state.EditorState) Config {
+	_, screenHeight := editorState.ScreenSize()
+	scrollLines := uint64(screenHeight) / 2
+	return Config{
+		InputMode:           editorState.InputMode(),
+		ScrollLines:         scrollLines,
+		DirPatternsToHide:   editorState.DirPatternsToHide(),
+		SelectionMode:       editorState.DocumentBuffer().SelectionMode(),
+		SelectionEndLocator: editorState.DocumentBuffer().SelectionEndLocator(),
+	}
+}

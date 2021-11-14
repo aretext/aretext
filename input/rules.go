@@ -489,7 +489,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		AddToUserMacro:       true,
 	},
 	{
-		Name: "delete to next matching char (df{char}",
+		Name: "delete to next matching char (df{char})",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'f'},
@@ -502,7 +502,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		AddToUserMacro:       true,
 	},
 	{
-		Name: "delete to prev matching char (dF{char}",
+		Name: "delete to prev matching char (dF{char})",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'F'},
@@ -515,7 +515,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		AddToUserMacro:       true,
 	},
 	{
-		Name: "delete till next matching char (dt{char}",
+		Name: "delete till next matching char (dt{char})",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 't'},
@@ -528,7 +528,7 @@ var normalModeRules = append(cursorRules, []Rule{
 		AddToUserMacro:       true,
 	},
 	{
-		Name: "delete till prev matching char (dT{char}",
+		Name: "delete till prev matching char (dT{char})",
 		Pattern: []EventMatcher{
 			{Key: tcell.KeyRune, Rune: 'd'},
 			{Key: tcell.KeyRune, Rune: 'T'},

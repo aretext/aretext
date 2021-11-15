@@ -9,6 +9,7 @@ import (
 )
 
 func commandMenuItems(config Config) []menu.Item {
+	// These items are available from both normal and visual mode.
 	items := []menu.Item{
 		{
 			Name:    "quit",
@@ -98,16 +99,6 @@ func commandMenuItems(config Config) []menu.Item {
 			Aliases: []string{"ai"},
 			Action:  state.ToggleAutoIndent,
 		},
-		{
-			Name:    "start/stop recording macro",
-			Aliases: []string{"m"},
-			Action:  state.ToggleUserMacroRecording,
-		},
-		{
-			Name:    "replay macro",
-			Aliases: []string{"r"},
-			Action:  state.ReplayRecordedUserMacro,
-		},
 	}
 
 	for _, language := range syntax.AllLanguages {
@@ -118,6 +109,24 @@ func commandMenuItems(config Config) []menu.Item {
 				state.SetSyntax(s, l)
 			},
 		})
+	}
+
+	// User-defined macros are available only in normal mode, not visual mode.
+	// This avoids problematic states where a macro gets recorded in one mode
+	// and exected in another.
+	if config.InputMode == state.InputModeNormal {
+		items = append(items, []menu.Item{
+			{
+				Name:    "start/stop recording macro",
+				Aliases: []string{"m"},
+				Action:  state.ToggleUserMacroRecording,
+			},
+			{
+				Name:    "replay macro",
+				Aliases: []string{"r"},
+				Action:  state.ReplayRecordedUserMacro,
+			},
+		}...)
 	}
 
 	return items

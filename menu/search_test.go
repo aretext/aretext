@@ -276,6 +276,17 @@ func BenchmarkSearch(b *testing.B) {
 	}
 }
 
+func BenchmarkIncrementalSearch(b *testing.B) {
+	s := NewSearch(fakeItems(1000, "foo/bar/baz/bat/test"), false)
+	q := "test/123"
+	for i := 0; i < b.N; i++ {
+		for i := 1; i < len(q); i++ {
+			s.SetQuery(q[0:i])
+		}
+		s.Results()
+	}
+}
+
 func fakeItems(n int, prefix string) []Item {
 	items := make([]Item, 0, n)
 	for i := 0; i < n; i++ {

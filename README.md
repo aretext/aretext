@@ -22,7 +22,7 @@ Key Features
 ------------
 
 -	Vim-compatible\* key bindings.
--	Built-in fuzzy search for commands and files.
+-	Searchable menus for commands and files.
 -	Auto-reload when files are modified outside the editor.
 -	Fast incremental syntax highlighting.
 -	Easily [customize settings and menu commands](https://aretext.org/docs/customization.html) for different projects.

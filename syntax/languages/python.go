@@ -153,9 +153,9 @@ func pythonOperatorParseFunc() parser.Func {
 		Or(consumeString("&").ThenMaybe(consumeString("="))).
 		Or(consumeString("|").ThenMaybe(consumeString("="))).
 		Or(consumeString("^").ThenMaybe(consumeString("="))).
+		Or(consumeString("=").ThenMaybe(consumeString("="))).
 		Or(consumeString("~")).
 		Or(consumeString(":=")).
-		Or(consumeString("==")).
 		Or(consumeString("!=")).
 		Map(recognizeToken(parser.TokenRoleOperator))
 }

@@ -97,6 +97,15 @@ func TestPythonParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "assignment operator",
+			text: "a = 10",
+			expected: []TokenWithText{
+				{Text: "a", Role: parser.TokenRoleIdentifier},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "10", Role: parser.TokenRoleNumber},
+			},
+		},
+		{
 			name: "test short string, single quote",
 			text: `'foo\nbar'`,
 			expected: []TokenWithText{
@@ -292,6 +301,7 @@ if __name__ == "__main__":
 				{Role: parser.TokenRoleIdentifier, Text: "exit"},
 				{Role: parser.TokenRoleNumber, Text: "1"},
 				{Role: parser.TokenRoleIdentifier, Text: "name"},
+				{Role: parser.TokenRoleOperator, Text: "="},
 				{Role: parser.TokenRoleIdentifier, Text: "sys"},
 				{Role: parser.TokenRoleIdentifier, Text: "argv"},
 				{Role: parser.TokenRoleNumber, Text: "1"},

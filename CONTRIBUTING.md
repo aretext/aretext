@@ -47,6 +47,6 @@ If you have an idea for a feature, please start a [discussion in the forum](http
 
 3.	Fix any failures reported by the continuous integration build.
 
-4.	A maintainer will review your code as soon as possible. We are always busy, so please be patient with us :)
+4.	A maintainer will review your code as soon as possible. We are always busy, so please be patient with us.
 
 5.	Make any requested changes by updating the branch in your fork. Use [`git rebase`](https://git-rebase.io/) to squash commits into a small number of logical, self-contained changes.

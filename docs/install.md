@@ -36,7 +36,7 @@ export PATH=$PATH:$HOME/go/bin
 Packages
 --------
 
-**If a package is not yet available for your platform, please consider creating one! We are looking for package maintainers on Debian, Fedora, Homebrew, Nix, and any other platform you may prefer!**
+If a package is not yet available for your platform, please consider creating one! We are looking for package maintainers on Debian, Fedora, Homebrew, Nix, and any other platform you may prefer!
 
 ### Arch Linux
 

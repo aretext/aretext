@@ -36,6 +36,8 @@ export PATH=$PATH:$HOME/go/bin
 Packages
 --------
 
+**If a package is not yet available for your platform, please consider creating one! We are looking for package maintainers on Debian, Fedora, Homebrew, Nix, and any other platform you may prefer!**
+
 ### Arch Linux
 
 aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/). If you use [yay](https://github.com/Jguer/yay), run this to install it:

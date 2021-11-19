@@ -45,7 +45,7 @@ If you have an idea for a feature, please start a [discussion in the forum](http
 
 2.	Fork the repository, add your changes on a branch, then [submit a pull request](https://github.com/aretext/aretext/pulls). Please fill out the pull request template completely, and [allow edits from maintainers](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).
 
-3.	Fix any failures reported by the continuous integration build.
+3.	Fix any failing tests.
 
 4.	A maintainer will review your code as soon as possible. We are always busy, so please be patient with us.
 

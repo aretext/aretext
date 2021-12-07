@@ -3,6 +3,9 @@
 # Each rule below defines a pattern to match the file path.
 # All matching rules are merged in-order, with configuration from
 # later rules replacing or extending configurations from prior rules.
+#
+# Customization guide: https://aretext.org/docs/customization.html
+# Configuration reference: https://aretext.org/docs/config-reference.html
 
 - name: default
   pattern: "**"
@@ -29,10 +32,61 @@
       tokenCustom6: {color: "aqua"}
       tokenCustom7: {color: "darkgreen"}
       tokenCustom8: {color: "darkcyan"}
-#   menuCommands:
-#     - name: my custom menu command
-#       shellCmd: echo 'hello world!' | less
-#       mode: terminal  # or "silent" or "insert" or "fileLocations"
+
+#- name: linux wayland clipboard commands
+#  pattern: "**"
+#  config:
+#    menuCommands:
+#    - name: copy to clipboard
+#      shellCmd: wl-copy "$SELECTION"
+#      mode: silent
+#    - name: paste from clipboard
+#      shellCmd: wl-paste
+#      mode: insert
+
+#- name: macos clipboard commands
+#  pattern: "**"
+#  config:
+#    menuCommands:
+#    - name: copy to clipboard
+#      shellCmd: printenv SELECTION | pbcopy
+#      mode: silent
+#    - name: paste from clipboard
+#      shellCmd: pbpaste
+#      mode: insert
+
+#- name: tmux clipboard commands
+#  pattern: "**"
+#  config:
+#    menuCommands:
+#    - name: copy to clipboard
+#      shellCmd: printenv SELECTION | tmux load-buffer -
+#      mode: silent
+#    - name: paste from clipboard
+#      shellCmd: tmux show-buffer
+#      mode: insert
+
+#- name: tmux window commands
+#  pattern: "**"
+#  config:
+#    menuCommands:
+#    - name: split window horizontal
+#      shellCmd: tmux split-window -h "aretext $FILEPATH"
+#      mode: silent
+#    - name: split window vertical
+#      shellCmd: tmux split-window -v "aretext $FILEPATH"
+#      mode: silent
+
+#- name: grep command
+#  pattern: "**"
+#  config:
+#    menuCommands:
+#      - name: grep word
+#        # using grep
+#        shellCmd: grep $WORD -n -R .
+#        # using ripgrep
+#        # shellCmd: rg $WORD --vimgrep
+#        mode: fileLocations
 
 - name: git commit
   pattern: "**/.git/COMMIT_EDITMSG"
@@ -105,3 +159,10 @@
 - name: c-header
   pattern: "**/*.h"
   config: *cconfig
+
+#- name: custom commands for a specific project
+#  pattern: "**/myproject/**"
+#  config:
+#    menuCommands:
+#    - name: make
+#      shellCmd: make | less

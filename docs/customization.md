@@ -60,12 +60,12 @@ For example, if aretext loaded the file "foo/bar.json" using the above configura
 
 ```
 config:
-    autoIndent: true           # from the "json" rule
-    hideDirectories: [".git"]  # from the "default" rule
-    syntaxLanguage: json       # from the "json" rule
-    tabExpand: true            # from the "json" rule
-    tabSize: 2                 # from the "json" rule
-    showLineNumbers: true      # from the "json" rule
+  autoIndent: true           # from the "json" rule
+  hideDirectories: [".git"]  # from the "default" rule
+  syntaxLanguage: json       # from the "json" rule
+  tabExpand: true            # from the "json" rule
+  tabSize: 2                 # from the "json" rule
+  showLineNumbers: true      # from the "json" rule
 ```
 
 When merging configurations from different rules:
@@ -78,7 +78,7 @@ This is a powerful mechanism for customizing configuration based on filename ext
 
 ```
 # ... other rules above ...
-- name: myproject-json
+- name: myproject json
   pattern: "**/myproject/**/*.json"
   config:
     tabSize: 4
@@ -108,13 +108,13 @@ Aretext allows you to define custom menu items to run shell commands. This provi
 You can add new menu commands by editing the config file:
 
 ```
-- name: custom-menu-rule
+- name: custom menu rule
   pattern: "**/myproject/**"
   config:
     menuCommands:
-      - name: my custom menu command
-        shellCmd: echo 'hello world!' | less
-        mode: terminal  # or "silent" or "insert" or "fileLocations"
+    - name: my custom menu command
+      shellCmd: echo 'hello world!' | less
+      mode: terminal  # or "silent" or "insert" or "fileLocations"
 ```
 
 After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell (configured by the `$SHELL` environment variable) and execute the shell command (in this case, echoing "hello world").
@@ -139,13 +139,12 @@ In addition, the following environment variables are provided to the shell comma
 Add a menu command to build a project using `make`. Piping to `less` allows us to page through the output.
 
 ```
-- name: custom-make-cmd
+- name: custom make cmd
   pattern: "**/myproject/**"
   config:
     menuCommands:
-      - name: build
-        shellCmd: make | less
-        # default mode is "terminal"
+    - name: build
+      shellCmd: make | less
 ```
 
 ### Example: Copy and paste using the system clipboard
@@ -165,22 +164,22 @@ We can add custom menu commands to copy the current selection to the system clip
 On Linux (Wayland):
 
 ```
-- name: linux-wayland-clipboard-commands
+- name: linux wayland clipboard commands
   pattern: "**"
   config:
     menuCommands:
-      - name: copy to clipboard
-        shellCmd: wl-copy "$SELECTION"
-        mode: silent
-      - name: paste from clipboard
-        shellCmd: wl-paste
-        mode: insert
+    - name: copy to clipboard
+      shellCmd: wl-copy "$SELECTION"
+      mode: silent
+    - name: paste from clipboard
+      shellCmd: wl-paste
+      mode: insert
 ```
 
 On macOS:
 
 ```
-- name: macos-clipboard-commands
+- name: macos clipboard commands
   pattern: "**"
   config:
     menuCommands:
@@ -195,7 +194,7 @@ On macOS:
 Using tmux:
 
 ```
-- name: tmux-clipboard-commands
+- name: tmux clipboard commands
   pattern: "**"
   config:
     menuCommands:
@@ -214,12 +213,12 @@ Many programming languages provide command line tools to automatically format co
 For example, this command uses `go fmt` to format a Go file:
 
 ```
-- name: custom-fmt-command
+- name: custom fmt command
   pattern: "**/*.go"
   config:
     menuCommands:
-      - name: go fmt current file
-        shellCmd: go fmt $FILEPATH | less
+    - name: go fmt current file
+      shellCmd: go fmt $FILEPATH | less
 ```
 
 If there are no unsaved changes, aretext will automatically reload the file after it has been formatted.
@@ -231,13 +230,13 @@ You can add a custom menu command to insert a snippet of code.
 For example, suppose you have written a template for a Go test. You can then create a menu command to `cat` the contents of the file into the document:
 
 ```
-- name: custom-snippet-command
+- name: custom snippet command
   pattern: "**/*.go"
   config:
     menuCommands:
-      - name: insert test snippet
-        shellCmd: cat ~/snippets/go-test.go
-        mode: insert
+    - name: insert test snippet
+      shellCmd: cat ~/snippets/go-test.go
+      mode: insert
 ```
 
 ### Example: Grep
@@ -245,13 +244,13 @@ For example, suppose you have written a template for a Go test. You can then cre
 You can add a custom menu command to grep for the word under the cursor. The following example uses [ripgrep](https://github.com/BurntSushi/ripgrep) to perform the search:
 
 ```
-- name: custom-grep-command
+- name: custom grep command
   pattern: "**"
   config:
     menuCommands:
-      - name: rg word
-        shellCmd: rg $WORD --vimgrep  # or `grep $WORD -n -R .`
-        mode: fileLocations
+    - name: rg word
+      shellCmd: rg $WORD --vimgrep  # or `grep $WORD -n -R .`
+      mode: fileLocations
 ```
 
 Once the search has completed, aretext loads the locations into a searchable menu. This allows you to easily navigate to a particular result.
@@ -263,10 +262,14 @@ The "fileLocations" mode works with any command that outputs file locations as l
 If you use [tmux](https://wiki.archlinux.org/title/Tmux), you can add a custom menu command to open the current document in a new window.
 
 ```
-- name: split window horizontal
-  shellCmd: tmux split-window -h "aretext $FILEPATH"
-  mode: silent
-- name: split window vertical
-  shellCmd: tmux split-window -v "aretext $FILEPATH"
-  mode: silent
+- name: tmux window commands
+  pattern: "**"
+  config:
+    menuCommands:
+    - name: split window horizontal
+      shellCmd: tmux split-window -h "aretext $FILEPATH"
+      mode: silent
+    - name: split window vertical
+      shellCmd: tmux split-window -v "aretext $FILEPATH
+      mode: silent
 ```

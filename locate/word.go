@@ -59,6 +59,12 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 			return boundaryAfter
 		}
 
+		if gcOffset == 0 {
+			// Skip the first boundary so the cursor doesn't get stuck
+			// at the start of the current word.
+			return noBoundary
+		}
+
 		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
 		if s1ws && !s2ws {
 			// Stop on first non-whitespace after whitespace.

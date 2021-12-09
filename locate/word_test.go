@@ -206,6 +206,24 @@ func TestNextWordStartInLine(t *testing.T) {
 			expectedPos: 1,
 		},
 		{
+			name:        "line starting with a space, single word, cursor at start of word",
+			inputString: " foo",
+			pos:         1,
+			expectedPos: 4,
+		},
+		{
+			name:        "line starting with space, two words, cursor at start of first word",
+			inputString: " foo bar",
+			pos:         1,
+			expectedPos: 5,
+		},
+		{
+			name:        "start of word after punctuation",
+			inputString: "foo,bar;baz",
+			pos:         4,
+			expectedPos: 7,
+		},
+		{
 			name:        "empty lines",
 			inputString: "\n\n\n",
 			pos:         1,

@@ -8,8 +8,6 @@ Introduction
 
 Aretext is a terminal-based editor with vim-compatible key bindings. If you have used vim before, aretext should feel very familiar. If not, this guide will help you get started.
 
-You may have heard that vim keybindings are difficult to learn. This is partly true. If you have used mainly GUI editors, it may take some time to feel comfortable. The benefit is that almost every code editor supports vim keybindings, so once you learn them you can use them everywhere: in an IDE, in a terminal, or ssh'd into a server thousands of miles away. This guide will help get you started!
-
 Installing the editor
 ---------------------
 

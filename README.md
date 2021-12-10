@@ -12,11 +12,11 @@ See the [User Documentation](https://aretext.org/docs/) to get started!
 Key Features
 ------------
 
--	**Vim-compatible**: edit efficiently with vim\* key bindings.
+-	**Vim-compatible**: edit efficiently with vim key bindings.
 -	**Built-in fuzzy search**: quickly find files and commands.
 -	**Intuitive config**: easily customize settings in a single YAML file.
 
-*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
+*Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 
 Project Status: Beta
 --------------------

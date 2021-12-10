@@ -12,7 +12,7 @@ See the [User Documentation](https://aretext.org/docs/) to get started!
 Key Features
 ------------
 
--	**Vim-compatible**: edit efficiently with vim-compatible\* key bindings.
+-	**Vim-compatible**: edit efficiently with vim\* key bindings.
 -	**Built-in fuzzy search**: quickly find files and commands.
 -	**Intuitive config**: easily customize settings in a single YAML file.
 

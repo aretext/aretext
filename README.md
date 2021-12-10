@@ -5,8 +5,6 @@ aretext
 
 Minimalist text editor with vim-compatible key bindings.
 
-See the [User Documentation](https://aretext.org/docs/) to get started!
-
 [![screenshot of aretext](screenshot.svg)](https://aretext.org)
 
 Key Features
@@ -18,6 +16,13 @@ Key Features
 
 *Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 
+Getting Started
+---------------
+
+-	[Install](https://aretext.org/docs/install.html)
+-	[Quickstart](https://aretext.org/docs/quickstart.html)
+-	[User Documentation](https://aretext.org/docs/)
+
 Project Status: Beta
 --------------------
 
@@ -26,13 +31,6 @@ Project Status: Beta
 -	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.
-
-Getting Started
----------------
-
--	[Install](https://aretext.org/docs/install.html)
--	[Quickstart](https://aretext.org/docs/quickstart.html)
--	[User Documentation](https://aretext.org/docs/)
 
 Contributing
 ------------

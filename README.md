@@ -3,11 +3,20 @@
 aretext
 =======
 
-Minimalist text editor that never slows you down.
+Minimalist text editor with vim-compatible key bindings.
 
 See the [User Documentation](https://aretext.org/docs/) to get started!
 
-![screenshot of aretext](screenshot.gif)
+[![screenshot of aretext](screenshot.png)](https://aretext.org)
+
+Key Features
+------------
+
+-	**Vim-compatible**: edit efficiently with vim-compatible\* key bindings.
+-	**Built-in fuzzy search**: quickly find files and commands.
+-	**Intuitive config**: easily customize settings in a single YAML file.
+
+*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 
 Project Status: Beta
 --------------------
@@ -17,17 +26,6 @@ Project Status: Beta
 -	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.
-
-Key Features
-------------
-
--	Vim-compatible\* key bindings.
--	Searchable menus for commands and files.
--	Auto-reload when files are modified outside the editor.
--	Fast incremental syntax highlighting.
--	Easily [customize settings and menu commands](https://aretext.org/docs/customization.html) for different projects.
-
-*\* Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
 
 Getting Started
 ---------------

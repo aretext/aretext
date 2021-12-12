@@ -22,7 +22,9 @@ Setup
 Major and Minor Releases
 ------------------------
 
-1.	Create a release branch:
+1.	Update the version numbers in the [install docs](docs/install.md).
+
+2.	Create a release branch:
 
 	```
 	export RELEASE_BRANCH=v$MAJOR.$MINOR.x
@@ -30,7 +32,7 @@ Major and Minor Releases
 	git push origin $RELEASE_BRANCH
 	```
 
-2.	Tag the release:
+3.	Tag the release:
 
 	```
 	export RELEASE_TAG=v$MAJOR.$MINOR.0
@@ -39,31 +41,33 @@ Major and Minor Releases
 	git push origin $RELEASE_TAG
 	```
 
-3.	Build and publish to GitHub:
+4.	Build and publish to GitHub:
 
 	```
 	goreleaser release
 	```
 
-4.	Find the [release in GitHub](https://github.com/aretext/aretext/releases/) and edit the release notes.
+5.	Find the [release in GitHub](https://github.com/aretext/aretext/releases/) and edit the release notes.
 
 Patch Releases
 --------------
 
 Patch releases should be used to fix critical bugs (panics, data corruption, security vulnerabilities, etc.).
 
-1.	Checkout the release branch:
+1.	Update the version numbers in the [install docs](docs/install.md).
+
+2.	Checkout the release branch:
 
 	```
 	export RELEASE_BRANCH=v$MAJOR.$MINOR.x
 	git checkout $RELEASE_BRANCH
 	```
 
-2.	Cherry-pick commits onto the release branch.
+3.	Cherry-pick commits onto the release branch.
 
 	```
 	git cherry-pick $SHA
 	git push origin $RELEASE_BRANCH
 	```
 
-3.	Tag and publish the release (same as a major/minor release).
+4.	Tag and publish the release (same as a major/minor release).

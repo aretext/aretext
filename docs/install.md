@@ -16,6 +16,46 @@ Official Binaries
 
 You can download the official binaries for Linux and macOS from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
+### Linux x86 64-bit
+
+```
+VERSION=0.3.0
+RELEASE=aretext_${VERSION}_linux_amd64
+curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
+tar -zxvf $RELEASE.tar.gz
+sudo cp $RELEASE/aretext /usr/local/bin/
+```
+
+### Linux ARM 64-bit
+
+```
+VERSION=0.3.0
+RELEASE=aretext_${VERSION}_linux_arm64
+curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
+tar -zxvf $RELEASE.tar.gz
+sudo cp $RELEASE/aretext /usr/local/bin/
+```
+
+### macOS x86 64-bit
+
+```
+VERSION=0.3.0
+RELEASE=aretext_${VERSION}_darwin_amd64
+curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
+tar -zxvf $RELEASE.tar.gz
+sudo cp $RELEASE/aretext /usr/local/bin/
+```
+
+### macOS ARM 64-bit
+
+```
+VERSION=0.3.0
+RELEASE=aretext_${VERSION}_darwin_arm64
+curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
+tar -zxvf $RELEASE.tar.gz
+sudo cp $RELEASE/aretext /usr/local/bin/
+```
+
 Build From Source
 -----------------
 

@@ -4,8 +4,7 @@
 # All matching rules are merged in-order, with configuration from
 # later rules replacing or extending configurations from prior rules.
 #
-# Customization guide: https://aretext.org/docs/customization/
-# Configuration reference: https://aretext.org/docs/config-reference/
+# Configuration Reference: https://aretext.org/docs/config-reference/
 
 - name: default
   pattern: "**"

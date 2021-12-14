@@ -34,11 +34,11 @@ Syntax Languages
 Menu Command Object
 -------------------
 
-| Attribute | Type   | Description                                                                                                                                    |
-|-----------|--------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| name      | string | Displayed name of the menu item.                                                                                                               |
-| shellCmd  | string | Shell command to execute when the menu item is selected.                                                                                       |
-| mode      | enum   | Either "silent", "terminal", "insert", or "fileLocations". See [Custom menu commands](customization.md#custom-menu-commands) for more details. |
+| Attribute | Type   | Description                                                                                                                      |
+|-----------|--------|----------------------------------------------------------------------------------------------------------------------------------|
+| name      | string | Displayed name of the menu item.                                                                                                 |
+| shellCmd  | string | Shell command to execute when the menu item is selected.                                                                         |
+| mode      | enum   | Either "silent", "terminal", "insert", or "fileLocations". See [Custom Menu Commands](custom-menu-commands.md) for more details. |
 
 Styles
 ------

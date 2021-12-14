@@ -53,17 +53,7 @@ Add a menu command to build a project using `make`. Piping to `less` allows us t
 
 ### Copy and paste using the system clipboard
 
-Most systems provide command-line utilities for interacting with the system clipboard.
-
-| System               | Commands                               |
-|----------------------|----------------------------------------|
-| Linux using XWindows | `xclip`                                |
-| Linux using Wayland  | `wl-copy`, `wl-paste`                  |
-| macOS                | `pbcopy`, `pbpaste`                    |
-| WSL on Windows       | `clip.exe`, `powershell Get-Clipboard` |
-| tmux                 | `tmux set-buffer`, `tmux show-buffer`  |
-
-We can add custom menu commands to copy the current selection to the system clipboard and paste from the system clipboard into the document.
+Most systems provide command-line utilities for interacting with the system clipboard. Custom menu commands can invoke these tools to copy the current selection and paste into the document.
 
 On Linux (Wayland):
 

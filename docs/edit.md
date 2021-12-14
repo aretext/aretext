@@ -1,9 +1,7 @@
 Edit
 ====
 
-This guide describes commands you can use to edit a document efficiently. It assumes you are familiar with the commands described in the [Quickstart](quickstart.md).
-
-If you have used vim before, these will feel familiar. If not, this guide may feel a little overwhelming. Don't worry! You do not need to memorize all of these commands to use aretext effectively. The best way to learn is to choose a few commands that you think might be useful and practice until they feel comfortable.
+This guide describes commands you can use to edit a document efficiently using vim key bindings. It assumes you are familiar with the commands described in the [Quickstart](quickstart.md).
 
 Insert and append
 -----------------

@@ -26,8 +26,8 @@ func TestRanker(t *testing.T) {
 		4, // ".foobar"
 		5, // "foo.bar"
 		6, // "xoobar"
-		0, // "barfoo"
 		2, // "foo"
+		0, // "barfoo"
 		1, // "xoo"
 	}
 	assert.Equal(t, expected, result)

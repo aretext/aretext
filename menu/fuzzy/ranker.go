@@ -57,10 +57,13 @@ func (r *ranker) addRecord(recordId int, record string) {
 // rankedRecordIds returns a slice of all records, ordered from most- to least-relevant.
 func (r *ranker) rankedRecordIds() []int {
 	if r.dirty {
-		// Sort descending by score, then ascending by record string (lexicographic order).
+		// Sort descending by score, then ascending by record string length,
+		// then ascending by lexicographic order.
 		sort.SliceStable(r.scoredRecords, func(i, j int) bool {
 			if r.scoredRecords[i].score != r.scoredRecords[j].score {
 				return r.scoredRecords[i].score > r.scoredRecords[j].score
+			} else if len(r.scoredRecords[i].record) != len(r.scoredRecords[j].record) {
+				return len(r.scoredRecords[i].record) < len(r.scoredRecords[j].record)
 			} else {
 				return r.scoredRecords[i].record < r.scoredRecords[j].record
 			}

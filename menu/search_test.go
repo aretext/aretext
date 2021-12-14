@@ -104,8 +104,8 @@ func TestSearch(t *testing.T) {
 				{Name: "toggle line numbers"},
 			},
 			expected: []Item{
-				{Name: "toggle line numbers"},
 				{Name: "toggle tab expand"},
+				{Name: "toggle line numbers"},
 			},
 		},
 		{

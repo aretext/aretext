@@ -3,48 +3,47 @@ package menu
 import (
 	"sort"
 	"strings"
-	"unicode"
 
-	"golang.org/x/text/unicode/norm"
-
-	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/menu/fuzzy"
 )
 
 const (
-	scoreMismatch = iota
-	scoreMatchOffBoundary
-	scoreMatchAtBoundaryPastStart
-	scoreMatchAtStart
-	scoreExactMatchAlias
+	maxSearchItemNameLen = 1024
+	maxSearchQueryLen    = 1024
 )
-
-const maxScore = scoreExactMatchAlias
 
 // Search performs approximate text searches for menu items matching a query string.
 type Search struct {
 	query             string
 	emptyQueryShowAll bool
+	fuzzyIndex        *fuzzy.Index
+	aliasIndex        map[string]int
 	items             []Item
-	normalizedNames   []string
-	matchPositions    []uint64
 	results           []Item
 }
 
 func NewSearch(items []Item, emptyQueryShowAll bool) *Search {
-	sortItemsInLexicographicOrder(items)
-	normalizedNames := make([]string, len(items))
-	for i, item := range items {
-		normalizedNames[i] = normalizeString(item.Name)
+	itemNames := make([]string, len(items))
+	aliasIndex := make(map[string]int, 0)
+	for itemId, item := range items {
+		// Truncate long names to avoid perf issues when fuzzy searching.
+		itemNames[itemId] = truncateString(item.Name, maxSearchItemNameLen)
+		for _, alias := range item.Aliases {
+			aliasIndex[alias] = itemId
+		}
 	}
 
-	results := make([]Item, 0, len(items))
+	var results []Item
 	if emptyQueryShowAll {
 		results = append(results, items...)
+		sortItemsInLexicographicOrder(results)
 	}
+
 	return &Search{
 		emptyQueryShowAll: emptyQueryShowAll,
+		fuzzyIndex:        fuzzy.NewIndex(itemNames),
+		aliasIndex:        aliasIndex,
 		items:             items,
-		normalizedNames:   normalizedNames,
 		results:           results,
 	}
 }
@@ -56,93 +55,53 @@ func (s *Search) Query() string {
 
 // SetQuery updates the query for the search.
 func (s *Search) SetQuery(q string) {
-	if s.query == q {
+	if q == s.query {
 		return
+	} else {
+		s.query = q
 	}
-	s.query = q
-	s.results = s.results[:0]
 
 	if len(q) == 0 {
 		if s.emptyQueryShowAll {
+			s.results = make([]Item, 0, len(s.items))
 			s.results = append(s.results, s.items...)
+			sortItemsInLexicographicOrder(s.results)
 		} else {
-			s.results = s.results[:0]
+			s.results = nil
 		}
 		return
 	}
 
-	var scoreBuckets [maxScore][]int
-	normalizedQuery := normalizeString(q)
-	querySearcher := text.NewSearcher(normalizedQuery)
-	for i := 0; i < len(s.items); i++ {
-		score := s.scoreItemForQuery(
-			s.normalizedNames[i],
-			s.items[i].Aliases,
-			normalizedQuery,
-			querySearcher,
-		)
-		if score > 0 {
-			bucketIdx := score - 1
-			scoreBuckets[bucketIdx] = append(scoreBuckets[bucketIdx], i)
+	// Truncate long queries to avoid perf issues when fuzzy searching.
+	truncatedQuery := truncateString(q, maxSearchQueryLen)
+	resultItemIds := s.fuzzyIndex.Search(truncatedQuery)
+	results := make([]Item, 0, len(resultItemIds)+1)
+	itemIdMatchingAlias := -1
+	if itemId, ok := s.aliasIndex[strings.ToLower(truncatedQuery)]; ok {
+		itemIdMatchingAlias = itemId
+		results = append(results, s.items[itemId])
+	}
+	for _, itemId := range resultItemIds {
+		if itemId != itemIdMatchingAlias {
+			results = append(results, s.items[itemId])
 		}
 	}
-
-	for bucketIdx := len(scoreBuckets) - 1; bucketIdx >= 0; bucketIdx-- {
-		for _, itemIdx := range scoreBuckets[bucketIdx] {
-			s.results = append(s.results, s.items[itemIdx])
-		}
-	}
+	s.results = results
 }
 
 // Results returns the menu items matching the current query.
-// Items are sorted descending by similarity to the query,
+// Items are sorted descending by relevance to the query,
 // with ties broken by lexicographic ordering.
 func (s *Search) Results() []Item {
 	return s.results
 }
 
-func (s *Search) scoreItemForQuery(itemName string, itemAliases []string, query string, querySearcher *text.Searcher) int {
-	for _, alias := range itemAliases {
-		if normalizeString(alias) == query {
-			return scoreExactMatchAlias
-		}
+func truncateString(s string, maxLen int) string {
+	if len(s) > maxLen {
+		return s[0:maxLen]
+	} else {
+		return s
 	}
-
-	s.matchPositions = querySearcher.AllInString(itemName, s.matchPositions)
-	if len(s.matchPositions) == 0 {
-		return scoreMismatch
-	}
-
-	if s.matchPositions[0] == 0 {
-		return scoreMatchAtStart
-	}
-
-	var i int
-	var pos uint64
-	var prevRune rune
-	for _, r := range itemName {
-		matchPos := s.matchPositions[i]
-		if pos == matchPos {
-			if unicode.IsPunct(prevRune) && !unicode.IsPunct(r) {
-				return scoreMatchAtBoundaryPastStart
-			} else if unicode.IsSpace(prevRune) && !unicode.IsSpace(r) {
-				return scoreMatchAtBoundaryPastStart
-			}
-
-			i++
-			if i == len(s.matchPositions) {
-				break
-			}
-		}
-		prevRune = r
-		pos++
-	}
-
-	return scoreMatchOffBoundary
-}
-
-func normalizeString(s string) string {
-	return strings.ToLower(norm.NFC.String(s))
 }
 
 func sortItemsInLexicographicOrder(items []Item) {

@@ -18,20 +18,20 @@ func TestSearch(t *testing.T) {
 		{
 			name:     "no items, empty query",
 			query:    "",
-			items:    []Item{},
-			expected: []Item{},
+			items:    nil,
+			expected: nil,
 		},
 		{
 			name:              "no items, empty query with emptyQueryShowAll true",
 			query:             "",
 			emptyQueryShowAll: true,
-			items:             []Item{},
-			expected:          []Item{},
+			items:             nil,
+			expected:          nil,
 		},
 		{
 			name:     "no items, nonempty query",
 			query:    "a",
-			items:    []Item{},
+			items:    nil,
 			expected: []Item{},
 		},
 		{
@@ -42,7 +42,7 @@ func TestSearch(t *testing.T) {
 				{Name: "b"},
 				{Name: "c"},
 			},
-			expected: []Item{},
+			expected: nil,
 		},
 		{
 			name:              "some items, empty query with emptyQueryShowAll true",
@@ -60,127 +60,7 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
-			name:  "some items, prefix match first char",
-			query: "a",
-			items: []Item{
-				{Name: "a"},
-				{Name: "ab"},
-				{Name: "ac"},
-				{Name: "b"},
-				{Name: "ba"},
-				{Name: "bc"},
-			},
-			expected: []Item{
-				{Name: "a"},
-				{Name: "ab"},
-				{Name: "ac"},
-				{Name: "ba"},
-			},
-		},
-		{
-			name:  "some items, prefix match two chars",
-			query: "ba",
-			items: []Item{
-				{Name: "a"},
-				{Name: "ab"},
-				{Name: "ac"},
-				{Name: "b"},
-				{Name: "ba"},
-				{Name: "bc"},
-			},
-			expected: []Item{
-				{Name: "ba"},
-			},
-		},
-		{
-			name:  "some items, prefix match two words",
-			query: "foo/se",
-			items: []Item{
-				{Name: "foo/first.txt"},
-				{Name: "foo/second.txt"},
-				{Name: "bar/first.txt"},
-				{Name: "bar/second.txt"},
-			},
-			expected: []Item{
-				{Name: "foo/second.txt"},
-			},
-		},
-		{
-			name:  "some items, prefix match last word",
-			query: "fir",
-			items: []Item{
-				{Name: "foo/first.txt"},
-				{Name: "foo/second.txt"},
-				{Name: "bar/first.txt"},
-				{Name: "bar/second.txt"},
-			},
-			expected: []Item{
-				{Name: "bar/first.txt"},
-				{Name: "foo/first.txt"},
-			},
-		},
-		{
-			name:  "some items, case insensitive match",
-			query: "FoO",
-			items: []Item{
-				{Name: "fOo/first.txt"},
-				{Name: "Foo/second.txt"},
-				{Name: "foo/third.txt"},
-				{Name: "bar/first.txt"},
-				{Name: "bar/second.txt"},
-			},
-			expected: []Item{
-				{Name: "Foo/second.txt"},
-				{Name: "fOo/first.txt"},
-				{Name: "foo/third.txt"},
-			},
-		},
-		{
-			name:  "items with shared prefix, select shorter",
-			query: "s",
-			items: []Item{
-				{Name: "save"},
-				{Name: "force save"},
-			},
-			expected: []Item{
-				{Name: "save"},
-				{Name: "force save"},
-			},
-		},
-		{
-			name:  "find file extension without dot prefix",
-			query: "go",
-			items: []Item{
-				{Name: "foo/bar/test.txt"},
-				{Name: "foo/bar/test.go"},
-				{Name: "foo/baz/test.go"},
-				{Name: "doc.txt"},
-				{Name: "main.go"},
-			},
-			expected: []Item{
-				{Name: "foo/bar/test.go"},
-				{Name: "foo/baz/test.go"},
-				{Name: "main.go"},
-			},
-		},
-		{
-			name:  "find file extension with dot prefix",
-			query: ".go",
-			items: []Item{
-				{Name: "foo/bar/test.txt"},
-				{Name: "foo/bar/test.go"},
-				{Name: "foo/baz/test.go"},
-				{Name: "doc.txt"},
-				{Name: "main.go"},
-			},
-			expected: []Item{
-				{Name: "foo/bar/test.go"},
-				{Name: "foo/baz/test.go"},
-				{Name: "main.go"},
-			},
-		},
-		{
-			name:  "rank exact match for alias first",
+			name:  "exact match for alias",
 			query: "w",
 			items: []Item{
 				{Name: "write one"},
@@ -194,7 +74,7 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
-			name:  "rank case-insensitive match for alias first",
+			name:  "case-insensitive match for alias",
 			query: "W",
 			items: []Item{
 				{Name: "write one"},
@@ -210,47 +90,48 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
-			name:  "rank match at boundary after punctuation",
-			query: "foo",
+			name:  "commands",
+			query: "togle", // deliberate typo, should still fuzzy-match "toggle"
 			items: []Item{
-				{Name: "baz/bar"},
-				{Name: "baz/boofoo"},
-				{Name: "baz/foobar"},
-				{Name: "baz/barfoo"},
+				{Name: "quit"},
+				{Name: "force quit"},
+				{Name: "save document"},
+				{Name: "force save document"},
+				{Name: "force reload"},
+				{Name: "find and open"},
+				{Name: "open next document"},
+				{Name: "toggle tab expand"},
+				{Name: "toggle line numbers"},
 			},
 			expected: []Item{
-				{Name: "baz/foobar"},
-				{Name: "baz/barfoo"},
-				{Name: "baz/boofoo"},
+				{Name: "toggle line numbers"},
+				{Name: "toggle tab expand"},
 			},
 		},
 		{
-			name:  "rank match at boundary after whitespace",
-			query: "foo",
+			name:  "paths",
+			query: "firs",
 			items: []Item{
-				{Name: "baz bar"},
-				{Name: "baz boofoo"},
-				{Name: "baz foobar"},
-				{Name: "baz barfoo"},
+				{Name: "foo/first.txt"},
+				{Name: "foo/second.txt"},
+				{Name: "bar/first.txt"},
+				{Name: "bar/second.txt"},
 			},
 			expected: []Item{
-				{Name: "baz foobar"},
-				{Name: "baz barfoo"},
-				{Name: "baz boofoo"},
+				{Name: "bar/first.txt"},
+				{Name: "foo/first.txt"},
 			},
 		},
 		{
-			name:  "rank match at start",
-			query: "foo",
+			name:  "non-ascii unicode",
+			query: "𝓯𝓸",
 			items: []Item{
-				{Name: "baz foo"},
-				{Name: "foo bar"},
-				{Name: "bar foo"},
+				{Name: "𝓯𝓸𝓸"},
+				{Name: "ᵦₐᵣ"},
+				{Name: "乃ﾑ乙"},
 			},
 			expected: []Item{
-				{Name: "foo bar"},
-				{Name: "bar foo"},
-				{Name: "baz foo"},
+				{Name: "𝓯𝓸𝓸"},
 			},
 		},
 	}

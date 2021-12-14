@@ -5,22 +5,28 @@ Welcome to the user documentation for aretext!
 
 Aretext is a terminal-based text editor with vim-compatible key bindings.
 
-If you are new to aretext, start here:
+Getting Started
+===============
 
 -	[Install](install.md)
 -	[Quickstart](quickstart.md)
 
-These guides explain how to use aretext effectively:
+User Guide
+==========
 
--	[Files](files.md): How to find, open, and save documents.
--	[Navigation](navigation.md): How to navigate within a document.
--	[Edit](edit.md): How to edit a document.
--	[Customization](customization.md): How to customize the editor for your workflows.
+-	[Files](files.md): how to find, open, and save documents.
+-	[Navigation](navigation.md): how to navigate within a document.
+-	[Edit](edit.md): how to edit a document.
+-	[Customization](customization.md): how to customize the editor for your workflows.
 
-For an overview of all available commands, see [Command Reference](command-reference.md)
+Reference
+=========
 
-For a complete list of available configuration options, see [Configuration Reference](config-reference.md).
+-	[Command Reference](command-reference.md)
+-	[Configuration Reference](config-reference.md)
 
-If you have questions about aretext, you can ask in [GitHub Discussions](https://github.com/aretext/aretext/discussions).
+Contact
+=======
 
-If you want to report a bug or request a feature, please open a [GitHub Issue](https://github.com/aretext/aretext/issues).
+-	[GitHub Discussions](https://github.com/aretext/aretext/discussions) for questions.
+-	[GitHub Issues](https://github.com/aretext/aretext/issues) for bug reports and feature requests.

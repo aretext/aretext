@@ -8,7 +8,7 @@ Adding Custom Menu Comands
 
 You can add new menu commands by [editing the config file](configuration.md) to add this rule:
 
-```
+```yaml
 - name: custom menu rule
   pattern: "**/myproject/**"
   config:
@@ -42,7 +42,7 @@ Examples
 
 Add a menu command to build a project using `make`. Piping to `less` allows us to page through the output.
 
-```
+```yaml
 - name: custom make cmd
   pattern: "**/myproject/**"
   config:
@@ -67,7 +67,7 @@ We can add custom menu commands to copy the current selection to the system clip
 
 On Linux (Wayland):
 
-```
+```yaml
 - name: linux wayland clipboard commands
   pattern: "**"
   config:
@@ -82,7 +82,7 @@ On Linux (Wayland):
 
 On macOS:
 
-```
+```yaml
 - name: macos clipboard commands
   pattern: "**"
   config:
@@ -97,7 +97,7 @@ On macOS:
 
 Using tmux:
 
-```
+```yaml
 - name: tmux clipboard commands
   pattern: "**"
   config:
@@ -116,7 +116,7 @@ Many programming languages provide command line tools to automatically format co
 
 For example, this command uses `go fmt` to format a Go file:
 
-```
+```yaml
 - name: custom fmt command
   pattern: "**/*.go"
   config:
@@ -133,7 +133,7 @@ You can add a custom menu command to insert a snippet of code.
 
 For example, suppose you have written a template for a Go test. You can then create a menu command to `cat` the contents of the file into the document:
 
-```
+```yaml
 - name: custom snippet command
   pattern: "**/*.go"
   config:
@@ -147,7 +147,7 @@ For example, suppose you have written a template for a Go test. You can then cre
 
 You can add a custom menu command to grep for the word under the cursor. The following example uses [ripgrep](https://github.com/BurntSushi/ripgrep) to perform the search:
 
-```
+```yaml
 - name: custom grep command
   pattern: "**"
   config:
@@ -165,7 +165,7 @@ The "fileLocations" mode works with any command that outputs file locations as l
 
 If you use [tmux](https://wiki.archlinux.org/title/Tmux), you can add a custom menu command to open the current document in a new window.
 
-```
+```yaml
 - name: tmux window commands
   pattern: "**"
   config:

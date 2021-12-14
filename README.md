@@ -10,9 +10,9 @@ Minimalist text editor with vim-compatible key bindings.
 Key Features
 ------------
 
--	**Vim-compatible**: edit efficiently with vim key bindings.
--	**Built-in fuzzy search**: quickly find files and commands.
--	**Intuitive config**: easily customize settings in a single YAML file.
+-	Edit efficiently with nearly 100 supported vim key bindings.
+-	Find files and commands instantly with built-in fuzzy search.
+-	Customize settings confidently in a single, self-explanatory YAML file.
 
 *Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference/) for details.*
 

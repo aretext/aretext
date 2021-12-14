@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Llongfile)
+	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
 	if *logpath != "" {
 		logFile, err := os.Create(*logpath)
 		if err != nil {

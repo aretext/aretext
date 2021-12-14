@@ -70,6 +70,7 @@ The next sections explain how to use aretext effectively:
 -	[Files](files.md): How to find, open, and save documents.
 -	[Navigation](navigation.md): How to navigate within a document.
 -	[Edit](edit.md): How to edit a document.
--	[Customization](customization.md): How to customize the editor for your workflows.
+-	[Configuration](configuration.md): How to configure settings.
+-	[Custom Menu Commands](custom-menu-commands.md): How to extend the editor with custom menu commands.
 
 For an overview of all available commands, please see the [Command Reference](command-reference.md).

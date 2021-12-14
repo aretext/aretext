@@ -52,4 +52,4 @@ Aretext will warn you if a command would discard unsaved changes or overwrite ch
 Using grep to search files
 --------------------------
 
-To search for a term in multiple files, you can create a custom menu command that calls `grep`. See [Customization](customization.md) for instructions.
+To search for a term in multiple files, you can create a custom menu command that calls `grep`. See [Custom Menu Commands](custom-menu-commands.md) for instructions.

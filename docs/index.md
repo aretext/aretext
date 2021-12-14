@@ -17,7 +17,8 @@ User Guide
 -	[Files](files.md): how to find, open, and save documents.
 -	[Navigation](navigation.md): how to navigate within a document.
 -	[Edit](edit.md): how to edit a document.
--	[Customization](customization.md): how to customize the editor for your workflows.
+-	[Configuration](configuration.md): how to configure settings.
+-	[Custom Menu Commands](custom-menu-commands.md): how to extend the editor with custom menu commands.
 
 Reference
 ---------

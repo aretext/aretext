@@ -14,7 +14,7 @@ The configuration file is located at `$XDG_CONFIG_HOME/aretext/config.yaml`, whe
 
 When you open the config file, you should see something like:
 
-```
+```yaml
 - name: default
   pattern: "**"
   config:
@@ -43,7 +43,7 @@ When aretext loads a file, it checks each rule in order. If the rule's pattern m
 
 For example, if aretext loaded the file "foo/bar.json" using the above configuration, both rules would match the filename. The resulting configuration would be:
 
-```
+```yaml
 config:
   autoIndent: true           # from the "json" rule
   hideDirectories: [".git"]  # from the "default" rule
@@ -61,7 +61,7 @@ When merging configurations from different rules:
 
 This is a powerful mechanism for customizing configuration based on filename extension and/or project location. For example, suppose that one project you work on uses four spaces to indent JSON files. You could add a new rule to your config that overwrites the tabSize for JSON files in that specific project:
 
-```
+```yaml
 # ... other rules above ...
 - name: myproject json
   pattern: "**/myproject/**/*.json"

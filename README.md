@@ -14,13 +14,13 @@ Key Features
 -	**Built-in fuzzy search**: quickly find files and commands.
 -	**Intuitive config**: easily customize settings in a single YAML file.
 
-*Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference.html) for details.*
+*Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference/) for details.*
 
 Getting Started
 ---------------
 
--	[Install](https://aretext.org/docs/install.html)
--	[Quickstart](https://aretext.org/docs/quickstart.html)
+-	[Install](https://aretext.org/docs/install/)
+-	[Quickstart](https://aretext.org/docs/quickstart/)
 -	[User Documentation](https://aretext.org/docs/)
 
 Project Status: Beta

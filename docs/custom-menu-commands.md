@@ -3,6 +3,9 @@ Custom Menu Commands
 
 Aretext allows you to define custom menu items to run shell commands. This provides a simple, yet powerful, way to extend the editor.
 
+Adding Custom Menu Comands
+--------------------------
+
 You can add new menu commands by [editing the config file](configuration.md) to add this rule:
 
 ```
@@ -32,7 +35,10 @@ In addition, the following environment variables are provided to the shell comma
 -	`$WORD` is the current word under the cursor.
 -	`$SELECTION` is the currently selected text (if any).
 
-### Example: Make
+Examples
+--------
+
+### Build a project with make
 
 Add a menu command to build a project using `make`. Piping to `less` allows us to page through the output.
 
@@ -45,7 +51,7 @@ Add a menu command to build a project using `make`. Piping to `less` allows us t
       shellCmd: make | less
 ```
 
-### Example: Copy and paste using the system clipboard
+### Copy and paste using the system clipboard
 
 Most systems provide command-line utilities for interacting with the system clipboard.
 
@@ -104,7 +110,7 @@ Using tmux:
       mode: insert
 ```
 
-### Example: Format current file
+### Format the current file
 
 Many programming languages provide command line tools to automatically format code. You can add a custom menu command to run these tools on the current file.
 
@@ -121,7 +127,7 @@ For example, this command uses `go fmt` to format a Go file:
 
 If there are no unsaved changes, aretext will automatically reload the file after it has been formatted.
 
-### Example: Insert snippet
+### Insert a snippet
 
 You can add a custom menu command to insert a snippet of code.
 
@@ -137,7 +143,7 @@ For example, suppose you have written a template for a Go test. You can then cre
       mode: insert
 ```
 
-### Example: Grep
+### Grep for the word under the cursor
 
 You can add a custom menu command to grep for the word under the cursor. The following example uses [ripgrep](https://github.com/BurntSushi/ripgrep) to perform the search:
 
@@ -155,7 +161,7 @@ Once the search has completed, aretext loads the locations into a searchable men
 
 The "fileLocations" mode works with any command that outputs file locations as lines with the format: `<file>:<line>:<snippet>` or `<file>:<line>:<col>:<snippet>`. You can use grep, ripgrep, or a script you write yourself!
 
-### Example: Split tmux window
+### Open a document in a new tmux window
 
 If you use [tmux](https://wiki.archlinux.org/title/Tmux), you can add a custom menu command to open the current document in a new window.
 

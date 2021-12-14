@@ -1,6 +1,9 @@
 Configuration
 =============
 
+Editing Config
+--------------
+
 Aretext stores its configuration in a single YAML file. You can edit the config file using the `-editconfig` flag:
 
 ```

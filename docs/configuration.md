@@ -69,8 +69,11 @@ This is a powerful mechanism for customizing configuration based on filename ext
     tabSize: 4
 ```
 
-Fixing configuration errors
----------------------------
+Troubleshooting
+---------------
+
+Fixing errors on startup
+========================
 
 If your YAML config file has errors, aretext will exit with an error message. You can force aretext to ignore the config file by passing the "-noconfig" flag:
 
@@ -79,6 +82,23 @@ aretext -editconfig -noconfig
 ```
 
 This allows you to start the editor so you can fix the configuration.
+
+Checking which rules were applied
+=================================
+
+To see which configuration rules aretext applied when loading a file, start aretext with logging enabled:
+
+```
+aretext -log debug.log
+```
+
+If you view the file `debug.log`, you should see lines like this:
+
+```
+Applying config rule 'default' with pattern '**' for path 'path/to/file.txt'
+```
+
+This tells you which rules aretext applied when opening a file, which can help you debug your configuration.
 
 Configuration Reference
 -----------------------

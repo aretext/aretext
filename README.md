@@ -5,7 +5,7 @@ aretext
 
 Minimalist text editor with vim-compatible key bindings.
 
-[![screenshot of aretext](screenshot.svg)](https://aretext.org)
+[![screenshot of aretext](screenshot.png)](https://aretext.org)
 
 Key Features
 ------------

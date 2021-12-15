@@ -10,7 +10,7 @@ Minimalist text editor with vim-compatible key bindings.
 Key Features
 ------------
 
--	Edit efficiently with nearly 100 supported vim key bindings.
+-	Edit efficiently with nearly 100 supported vim commands.
 -	Find files and commands instantly with built-in fuzzy search.
 -	Customize settings confidently in a single, self-explanatory YAML file.
 

@@ -20,10 +20,10 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Screenshots**
-If applicable, add screenshots to help explain your problem.
+If applicable, please add screenshots to help explain your problem.
 
 **Logs**
-Please reproduce the issue while running `aretext -log debug.log` and attach `debug.log` to this issue.
+If applicable, please reproduce the issue while running `aretext -log debug.log` and attach `debug.log` to this issue.
 
 **System (please complete the following information):**
  - OS: [e.g. Linux]

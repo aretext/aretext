@@ -226,7 +226,7 @@ func TestSaveDocument(t *testing.T) {
 	assert.Equal(t, "x\n", string(contents))
 }
 
-func TestAbortIfFileChanged(t *testing.T) {
+func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 	testCases := []struct {
 		name        string
 		didChange   bool
@@ -262,7 +262,7 @@ func TestAbortIfFileChanged(t *testing.T) {
 			}
 
 			// Attempt an operation, but abort if the file changed.
-			AbortIfFileChanged(state, func(state *EditorState) {
+			AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
 				SetStatusMsg(state, StatusMsg{
 					Style: StatusMsgStyleSuccess,
 					Text:  "Operation executed",

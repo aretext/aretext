@@ -286,8 +286,8 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 	}
 }
 
-// AbortIfFileChanged executes a function only if the file has not changed on disk; otherwise, it aborts and shows an error message.
-func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
+// AbortIfFileExistsWithChangedContent aborts with an error message if the file exists with a different checksum than the last load/save.
+func AbortIfFileExistsWithChangedContent(state *EditorState, f func(*EditorState)) {
 	path := state.fileWatcher.Path()
 	changed, err := state.fileWatcher.CheckFileContentsChanged()
 	if changed {

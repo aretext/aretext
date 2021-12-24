@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -149,7 +149,7 @@ func currentTimelineState(state *EditorState) file.TimelineState {
 func loadDocumentAndResetState(state *EditorState, path string, requireExists bool) (fileExists bool, err error) {
 	config := state.configRuleSet.ConfigForPath(path)
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if err := errors.Cause(err); errors.Is(err, os.ErrNotExist) && !requireExists {
+	if err := errors.Cause(err); errors.Is(err, fs.ErrNotExist) && !requireExists {
 		tree = text.NewTree()
 		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
 	} else if err != nil {
@@ -289,11 +289,18 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 // AbortIfFileChanged executes a function only if the file has not changed on disk; otherwise, it aborts and shows an error message.
 func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
 	path := state.fileWatcher.Path()
-	if state.fileWatcher.ChangedFlag() {
+	changed, err := state.fileWatcher.CheckFileContentsChanged()
+	if changed {
 		log.Printf("Aborting operation because file changed on disk\n")
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
 			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
+		})
+	} else if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		log.Printf("Aborting operation because error occurred checking the file contents: %s\n", err)
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("Could not checksum file: %s", errors.Cause(err)),
 		})
 	} else {
 		f(state)

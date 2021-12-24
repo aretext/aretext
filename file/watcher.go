@@ -2,9 +2,9 @@ package file
 
 import (
 	"io"
+	"io/fs"
 	"log"
 	"os"
-	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -19,7 +19,6 @@ type Watcher struct {
 	size         int64
 	checksum     string
 	changedChan  chan struct{}
-	changedFlag  int32 // atomic boolean
 	quitChan     chan struct{}
 }
 
@@ -60,19 +59,23 @@ func (w *Watcher) Stop() {
 	w.quitChan = nil
 }
 
+// CheckFileContentsChanged checks whether the file's checksum has changed.
+// If the file no longer exists, this will return an error.
+func (w *Watcher) CheckFileContentsChanged() (bool, error) {
+	checksum, err := w.calculateChecksum()
+	if err != nil {
+		return false, err
+	}
+	changed := checksum != w.checksum
+	return changed, nil
+}
+
 // ChangedChan returns a channel that receives a message when the file's contents change.
 // This can produce false negatives if an error occurs accessing the file (for example, if file permissions changed).
 // The channel will receive at most one message.
 // This method is thread-safe.
 func (w *Watcher) ChangedChan() chan struct{} {
 	return w.changedChan
-}
-
-// ChangedFlag returns whether the file's contents have changed.
-// Like ChangedChan, this can produce false negatives.
-// This method is thread-safe.
-func (w *Watcher) ChangedFlag() bool {
-	return atomic.LoadInt32(&(w.changedFlag)) != 0
 }
 
 func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
@@ -84,7 +87,6 @@ func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 		case <-ticker.C:
 			if w.checkFileChanged() {
 				log.Printf("File change detected in %s\n", w.path)
-				atomic.StoreInt32(&(w.changedFlag), int32(1))
 				w.changedChan <- struct{}{}
 				return
 			}
@@ -98,7 +100,7 @@ func (w *Watcher) checkFileLoop(pollInterval time.Duration) {
 func (w *Watcher) checkFileChanged() bool {
 	fileInfo, err := os.Stat(w.path)
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, fs.ErrNotExist) {
 			log.Printf("Error retrieving file info: %v\n", err)
 		}
 		return false

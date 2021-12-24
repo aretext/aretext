@@ -47,7 +47,9 @@ func expectNoChange(t *testing.T, watcher *Watcher) {
 	case <-watcher.ChangedChan():
 		assert.Fail(t, "Unexpected change reported")
 	default:
-		assert.False(t, watcher.ChangedFlag())
+		changed, err := watcher.CheckFileContentsChanged()
+		assert.NoError(t, err)
+		assert.False(t, changed)
 		return
 	}
 }
@@ -55,7 +57,9 @@ func expectNoChange(t *testing.T, watcher *Watcher) {
 func waitForChangeOrTimeout(t *testing.T, watcher *Watcher) {
 	select {
 	case <-watcher.ChangedChan():
-		assert.True(t, watcher.ChangedFlag())
+		changed, err := watcher.CheckFileContentsChanged()
+		assert.NoError(t, err)
+		assert.True(t, changed)
 		return
 	case <-time.After(testWatcherPollInterval * 10):
 		assert.Fail(t, "Timed out waiting for change")

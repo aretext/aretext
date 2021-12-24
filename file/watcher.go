@@ -104,9 +104,10 @@ func (w *Watcher) checkFileChanged() bool {
 		return false
 	}
 
+	// If neither mtime or size changed since the last check or file load, the contents probably haven't changed.
+	// This check could produce a false negative if someone modifies the file immediately after loading it (within mtime granularity)
+	// and replaces bytes without changing the size, but it's so much cheaper than calculating the md5 checksum that we do it anyway.
 	// It is safe to read lastModified and size because no other goroutine mutates these.
-	// This check could produce a false negative if someone modifies the file immediately after loading it and doesn't change the size,
-	// but it's so much cheaper than calculating the md5 checksum that we do it anyway.
 	if w.lastModified.Equal(fileInfo.ModTime()) && w.size == fileInfo.Size() {
 		return false
 	}

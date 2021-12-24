@@ -3,6 +3,7 @@ package state
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -274,8 +275,66 @@ func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 				assert.Contains(t, state.statusMsg.Text, "changed since last save")
 			} else {
 				assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
-				assert.Equal(t, state.statusMsg.Text, "Operation executed")
+				assert.Equal(t, "Operation executed", state.statusMsg.Text)
 			}
 		})
 	}
+}
+
+func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
+	dir, err := os.MkdirTemp("", "aretext")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	path := filepath.Join(dir, "aretext-does-not-exist")
+	state := NewEditorState(100, 100, nil, nil)
+	LoadDocument(state, path, false, startOfDocLocator)
+
+	// File doesn't exist on disk, so the operation should succeed.
+	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Operation executed",
+		})
+	})
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+	assert.Equal(t, "Operation executed", state.statusMsg.Text)
+
+	// Create the file on disk.
+	f, err := os.Create(path)
+	require.NoError(t, err)
+	defer f.Close()
+
+	_, err = io.WriteString(f, "abcd")
+	require.NoError(t, err)
+
+	// Now the operation should abort.
+	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Operation executed",
+		})
+	})
+	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+	assert.Contains(t, state.statusMsg.Text, "changed since last save")
+}
+
+func TestAbortIfFileExistsWithChangedContentFileDeleted(t *testing.T) {
+	// Load the initial document.
+	path, cleanup := createTestFile(t, "abc")
+	state := NewEditorState(100, 100, nil, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	// Delete the file
+	cleanup()
+
+	// The operation should succeed, since the file does not exist.
+	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Operation executed",
+		})
+	})
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+	assert.Equal(t, "Operation executed", state.statusMsg.Text)
 }

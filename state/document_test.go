@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -260,15 +259,6 @@ func TestAbortIfFileChanged(t *testing.T) {
 				defer f.Close()
 				_, err = io.WriteString(f, "test")
 				require.NoError(t, err)
-
-				// Wait for the watcher to detect the change.
-				select {
-				case <-state.fileWatcher.ChangedChan():
-					break
-				case <-time.After(time.Second * 10):
-					assert.Fail(t, "Timed out waiting for change")
-					return
-				}
 			}
 
 			// Attempt an operation, but abort if the file changed.

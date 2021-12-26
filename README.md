@@ -12,7 +12,7 @@ Key Features
 
 -	Edit efficiently with nearly 100 supported vim commands.
 -	Find files and commands instantly with built-in fuzzy search.
--	Customize settings confidently in a single, self-explanatory YAML file.
+-	Confidently customize settings in a self-explanatory YAML file.
 
 *Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference/) for details.*
 

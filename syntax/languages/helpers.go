@@ -287,7 +287,7 @@ func readInputString(iter parser.TrackingRuneIter, n uint64) string {
 }
 
 // consumeCStyleString consumes a string with characters escaped by a backslash.
-func consumeCStyleString(quoteRune rune) parser.Func {
+func consumeCStyleString(quoteRune rune, allowLineBreaks bool) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
 		r, err := iter.NextRune()
@@ -299,7 +299,7 @@ func consumeCStyleString(quoteRune rune) parser.Func {
 		var inEscapeSeq bool
 		for {
 			r, err = iter.NextRune()
-			if err != nil || r == '\n' {
+			if err != nil || (!allowLineBreaks && r == '\n') {
 				return parser.FailedResult
 			}
 			n++
@@ -327,7 +327,7 @@ func consumeCStyleString(quoteRune rune) parser.Func {
 }
 
 // parseCStyleString parses a string with characters escaped by a backslash.
-func parseCStyleString(quoteRune rune) parser.Func {
-	return consumeCStyleString(quoteRune).
+func parseCStyleString(quoteRune rune, allowLineBreaks bool) parser.Func {
+	return consumeCStyleString(quoteRune, allowLineBreaks).
 		Map(recognizeToken(parser.TokenRoleString))
 }

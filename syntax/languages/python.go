@@ -39,7 +39,7 @@ func pythonStringLiteralParseFunc() parser.Func {
 
 	// Technically byte strings (prefix "b") should include only ASCII characters,
 	// but we accept non-ASCII.
-	consumeShortString := parseCStyleString('\'').Or(parseCStyleString('"'))
+	consumeShortString := parseCStyleString('\'', false).Or(parseCStyleString('"', false))
 	consumeLongString := (consumeString(`"""`).Then(consumeToString(`"""`))).
 		Or(consumeString(`'''`).Then(consumeToString(`'''`)))
 	consumeLongOrShortString := consumeLongString.Or(consumeShortString)

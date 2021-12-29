@@ -115,8 +115,8 @@ func cOperatorParseFunc() parser.Func {
 }
 
 func cStringParseFunc() parser.Func {
-	return consumeCStyleString('\'').
-		Or(consumeCStyleString('"')).
+	return consumeCStyleString('\'', false).
+		Or(consumeCStyleString('"', false)).
 		Map(recognizeToken(parser.TokenRoleString))
 }
 

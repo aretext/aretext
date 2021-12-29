@@ -57,7 +57,7 @@ func jsonConsumeToKeyEndParseFunc() parser.Func {
 func jsonStringOrKeyParseFunc() parser.Func {
 	const tokenRoleKey = parser.TokenRoleCustom1
 	recognizeKeyToken := recognizeToken(tokenRoleKey)
-	return parseCStyleString('"').
+	return parseCStyleString('"', false).
 		ThenMaybe(jsonConsumeToKeyEndParseFunc()).
 		Map(func(r parser.Result) parser.Result {
 			if len(r.ComputedTokens) == 1 && r.NumConsumed > r.ComputedTokens[0].Length {

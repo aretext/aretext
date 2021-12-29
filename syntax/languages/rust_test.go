@@ -85,6 +85,23 @@ func TestRustParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "multi-line quote string",
+			text: `
+const MSG: &'static str = "multi
+line
+string";`,
+			expected: []TokenWithText{
+				{Text: "const", Role: parser.TokenRoleKeyword},
+				{Text: "MSG", Role: parser.TokenRoleIdentifier},
+				{Text: ":", Role: parser.TokenRoleOperator},
+				{Text: "&", Role: parser.TokenRoleOperator},
+				{Text: "'static", Role: parser.TokenRoleCustom1},
+				{Text: "str", Role: parser.TokenRoleIdentifier},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "\"multi\nline\nstring\"", Role: parser.TokenRoleString},
+			},
+		},
+		{
 			name: "raw string",
 			text: `r#"Hello"#`,
 			expected: []TokenWithText{

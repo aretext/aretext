@@ -98,7 +98,7 @@ func golangOperatorParseFunc() parser.Func {
 }
 
 func golangRuneLiteralParseFunc() parser.Func {
-	return parseCStyleString('\'')
+	return parseCStyleString('\'', false)
 }
 
 func golangRawStringLiteralParseFunc() parser.Func {
@@ -108,7 +108,7 @@ func golangRawStringLiteralParseFunc() parser.Func {
 }
 
 func golangInterpretedStringLiteralParseFunc() parser.Func {
-	return parseCStyleString('"')
+	return parseCStyleString('"', false)
 }
 
 func golangFloatLiteralParseFunc() parser.Func {

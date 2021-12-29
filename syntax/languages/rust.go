@@ -113,8 +113,8 @@ func rustConsumeRawString(iter parser.TrackingRuneIter, state parser.State) pars
 }
 
 func rustStringLiteralParseFunc() parser.Func {
-	consumeCharacter := consumeCStyleString('\'')
-	consumeQuoteString := consumeCStyleString('"')
+	consumeCharacter := consumeCStyleString('\'', false)
+	consumeQuoteString := consumeCStyleString('"', true)
 	consumeRawString := consumeString("r").Then(rustConsumeRawString)
 
 	// Rust restricts byte strings to ASCII, but we don't enforce that.

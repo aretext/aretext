@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ var (
 	commit  = ""
 )
 
+var line = flag.Int("line", 1, "line number to view after opening the document")
 var logpath = flag.String("log", "", "log to file")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var editconfig = flag.Bool("editconfig", false, "open the aretext configuration file")
@@ -56,6 +58,13 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	var lineNum uint64
+	if *line < 1 {
+		exitWithError(errors.New("Line number must be at least 1"))
+	} else {
+		lineNum = uint64(*line) - 1 // convert 1-based line arg to 0-based lineNum.
+	}
+
 	path := flag.Arg(0)
 	if *editconfig {
 		configPath, err := app.ConfigPath()
@@ -65,7 +74,7 @@ func main() {
 		path = configPath
 	}
 
-	err := runEditor(path)
+	err := runEditor(path, lineNum)
 	if err != nil {
 		exitWithError(err)
 	}
@@ -77,9 +86,10 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-func runEditor(path string) error {
+func runEditor(path string, lineNum uint64) error {
 	log.Printf("aretext (version: %s, commit: %s)\n", version, commit)
 	log.Printf("path arg: '%s'\n", path)
+	log.Printf("lineNum: %d\n", lineNum)
 	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))
 
 	configRuleSet, err := app.LoadOrCreateConfig(*noconfig)
@@ -97,7 +107,7 @@ func runEditor(path string) error {
 	}
 	defer screen.Fini()
 
-	editor := app.NewEditor(screen, path, configRuleSet)
+	editor := app.NewEditor(screen, path, uint64(lineNum), configRuleSet)
 	editor.RunEventLoop()
 	return nil
 }

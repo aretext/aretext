@@ -12,6 +12,7 @@ import (
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/display"
 	"github.com/aretext/aretext/input"
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/state"
 )
 
@@ -28,7 +29,7 @@ type Editor struct {
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
-func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *Editor {
+func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet config.RuleSet) *Editor {
 	screenWidth, screenHeight := screen.Size()
 	editorState := state.NewEditorState(
 		uint64(screenWidth),
@@ -56,7 +57,9 @@ func NewEditor(screen tcell.Screen, path string, configRuleSet config.RuleSet) *
 		editorState,
 		effectivePath(path),
 		false,
-		func(state.LocatorParams) uint64 { return 0 },
+		func(p state.LocatorParams) uint64 {
+			return locate.StartOfLineNum(p.TextTree, lineNum)
+		},
 	)
 
 	return editor

@@ -60,6 +60,9 @@ type MenuCommandConfig struct {
 
 	// Mode controls how the command's input and output are handled.
 	Mode string
+
+	// Save controls whether the document will be saved before running the command.
+	Save bool
 }
 
 // Names of styles that can be overridden by configuration.
@@ -238,6 +241,7 @@ func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 			Name:     stringOrDefault(menuMap, "name", "[nil]"),
 			ShellCmd: stringOrDefault(menuMap, "shellCmd", ""),
 			Mode:     stringOrDefault(menuMap, "mode", CmdModeTerminal),
+			Save:     boolOrDefault(menuMap, "save", false),
 		})
 	}
 	return result

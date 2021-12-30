@@ -192,16 +192,27 @@ func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
 func customMenuItems(config config.Config) []menu.Item {
 	items := make([]menu.Item, 0, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
-		shellCmd := cmd.ShellCmd
-		shellCmdMode := cmd.Mode
 		items = append(items, menu.Item{
-			Name: cmd.Name,
-			Action: func(state *EditorState) {
-				RunShellCmd(state, shellCmd, shellCmdMode)
-			},
+			Name:   cmd.Name,
+			Action: actionForCustomMenuItem(cmd),
 		})
 	}
 	return items
+}
+
+func actionForCustomMenuItem(cmd config.MenuCommandConfig) func(*EditorState) {
+	if cmd.Save {
+		return func(state *EditorState) {
+			AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+				SaveDocument(state)
+				RunShellCmd(state, cmd.ShellCmd, cmd.Mode)
+			})
+		}
+	} else {
+		return func(state *EditorState) {
+			RunShellCmd(state, cmd.ShellCmd, cmd.Mode)
+		}
+	}
 }
 
 func reportOpenSuccess(state *EditorState, path string) {

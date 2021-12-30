@@ -39,6 +39,7 @@ Menu Command Object
 | name      | string | Displayed name of the menu item.                                                                                                 |
 | shellCmd  | string | Shell command to execute when the menu item is selected.                                                                         |
 | mode      | enum   | Either "silent", "terminal", "insert", or "fileLocations". See [Custom Menu Commands](custom-menu-commands.md) for more details. |
+| save      | bool   | If true, attempt to save the document before executing the command.                                                              |
 
 Styles
 ------

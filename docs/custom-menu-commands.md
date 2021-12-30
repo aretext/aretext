@@ -49,6 +49,7 @@ Add a menu command to build a project using `make`. Piping to `less` allows us t
     menuCommands:
     - name: build
       shellCmd: make | less
+      save: true  # save the file before running `make`
 ```
 
 ### Copy and paste using the system clipboard
@@ -113,9 +114,8 @@ For example, this command uses `go fmt` to format a Go file:
     menuCommands:
     - name: go fmt current file
       shellCmd: go fmt $FILEPATH | less
+      save: true  # save the file before running `go fmt`
 ```
-
-If there are no unsaved changes, aretext will automatically reload the file after it has been formatted.
 
 ### Insert a snippet
 

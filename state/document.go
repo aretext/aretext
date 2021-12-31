@@ -32,7 +32,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 		return
 	}
 
-	if !timelineState.Empty() && timelineState.Path != path {
+	if !timelineState.Empty() {
 		state.fileTimeline.TransitionFrom(timelineState)
 	}
 

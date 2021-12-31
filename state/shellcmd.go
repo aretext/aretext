@@ -178,9 +178,11 @@ func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item,
 		menuItems = append(menuItems, menu.Item{
 			Name: name,
 			Action: func(s *EditorState) {
-				LoadDocument(s, path, true, func(p LocatorParams) uint64 {
-					return locate.StartOfLineNum(p.TextTree, lineNum)
-				})
+				AbortIfUnsavedChanges(s, func(s *EditorState) {
+					LoadDocument(s, path, true, func(p LocatorParams) uint64 {
+						return locate.StartOfLineNum(p.TextTree, lineNum)
+					})
+				}, true)
 			},
 		})
 	}

@@ -11,9 +11,9 @@ type recordIdSet struct {
 	min, max int // valid only if the set contains at least one ID.
 }
 
-func newRecordIdSet(capacity int) *recordIdSet {
+func newRecordIdSet() *recordIdSet {
 	return &recordIdSet{
-		ids: make(map[int]struct{}, capacity),
+		ids: make(map[int]struct{}, 0),
 		min: math.MaxInt,
 		max: 0,
 	}

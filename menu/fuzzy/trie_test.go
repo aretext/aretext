@@ -8,45 +8,34 @@ import (
 
 func TestEmptyTrie(t *testing.T) {
 	trie := newTrie()
-	recordIds := trie.topRecordIdsForPrefix("", nil, 100)
+	recordIds := trie.recordIdsForPrefix("", nil)
 	assert.Equal(t, 0, recordIds.length())
 }
 
-func TestTopRecordIdsForPrefix(t *testing.T) {
+func TestRecordIdsForPrefix(t *testing.T) {
 	testCases := []struct {
 		name     string
 		prefix   string
-		limit    int
 		expected []int
 	}{
 		{
-			name:     "empty prefix large limit",
+			name:     "empty prefix",
 			prefix:   "",
-			limit:    100,
 			expected: []int{1, 2, 3, 4, 5, 6, 7},
-		},
-		{
-			name:     "empty prefix with limit",
-			prefix:   "",
-			limit:    3,
-			expected: []int{1, 2, 4},
 		},
 		{
 			name:     "prefix with single char",
 			prefix:   "b",
-			limit:    5,
-			expected: []int{1, 2, 4, 5, 6},
+			expected: []int{1, 2, 3, 4, 5, 6, 7},
 		},
 		{
 			name:     "prefix with multiple chars",
 			prefix:   "foo",
-			limit:    5,
 			expected: []int{1, 2, 3},
 		},
 		{
 			name:     "exact match really long string",
 			prefix:   "reallylongstringthatisreallylong",
-			limit:    10,
 			expected: []int{7},
 		},
 	}
@@ -61,13 +50,13 @@ func TestTopRecordIdsForPrefix(t *testing.T) {
 			trie.insert("baz", 4)
 			trie.insert("bat", 6)
 			trie.insert("reallylongstringthatisreallylong", 7)
-			recordIds := trie.topRecordIdsForPrefix(tc.prefix, nil, tc.limit).toSlice()
+			recordIds := trie.recordIdsForPrefix(tc.prefix, nil).toSlice()
 			assert.Equal(t, tc.expected, recordIds)
 		})
 	}
 }
 
-func TestFilterTopRecordsByPrevRecords(t *testing.T) {
+func TestFilterRecordsByPrevRecords(t *testing.T) {
 	trie := newTrie()
 	trie.insert("foo", 1)
 	trie.insert("foo", 2)
@@ -76,11 +65,11 @@ func TestFilterTopRecordsByPrevRecords(t *testing.T) {
 	trie.insert("bat", 6)
 	trie.insert("test", 7)
 	trie.insert("fooreallylongstringthatisreallylong", 8)
-	prevRecordIds := newRecordIdSet(0)
+	prevRecordIds := newRecordIdSet()
 	prevRecordIds.add(3)
 	prevRecordIds.add(5)
 	prevRecordIds.add(6)
-	recordIds := trie.topRecordIdsForPrefix("foo", prevRecordIds, 10).toSlice()
+	recordIds := trie.recordIdsForPrefix("foo", prevRecordIds).toSlice()
 	expected := []int{3}
 	assert.Equal(t, expected, recordIds)
 }
@@ -105,7 +94,7 @@ func TestIncrementalQueryAddChars(t *testing.T) {
 		{3},                // "foobar"
 	}
 	for i := 0; i <= len(query); i++ {
-		recordIds := trie.topRecordIdsForPrefix(query[0:i], nil, 100).toSlice()
+		recordIds := trie.recordIdsForPrefix(query[0:i], nil).toSlice()
 		assert.Equal(t, expected[i], recordIds)
 	}
 }
@@ -130,7 +119,7 @@ func TestIncrementalQueryDeleteChars(t *testing.T) {
 		{1, 2, 3, 5, 6, 7}, // ""
 	}
 	for i := 0; i <= len(query); i++ {
-		recordIds := trie.topRecordIdsForPrefix(query[0:len(query)-i], nil, 100).toSlice()
+		recordIds := trie.recordIdsForPrefix(query[0:len(query)-i], nil).toSlice()
 		assert.Equal(t, expected[i], recordIds)
 	}
 }

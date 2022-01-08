@@ -48,11 +48,11 @@ func (idx *Index) findTopMatchingRecords(query string) *recordIdSet {
 		// On subsequent queries, recordIds will be non-nil, so the trie will search
 		// only records within that set.
 		// The final set will contain only records that have ALL the query keywords.
-		recordIds = idx.keywordTrie.topRecordIdsForPrefix(queryKeyword, recordIds, maxSearchResults)
+		recordIds = idx.keywordTrie.recordIdsForPrefix(queryKeyword, recordIds)
 	})
 	if recordIds == nil {
 		// The query didn't have any keywords, so it doesn't match any records.
-		recordIds = newRecordIdSet(0)
+		recordIds = newRecordIdSet()
 	}
 	return recordIds
 }
@@ -61,7 +61,7 @@ func (idx *Index) rankRecords(query string, recordIds *recordIdSet) []int {
 	// We are NOT lowercasing the strings here
 	// so that case-sensitive matches will be ranked higher
 	// than case-insensitive matches.
-	ranker := newRanker(norm.NFC.String(query), recordIds.length())
+	ranker := newRanker(norm.NFC.String(query), maxSearchResults)
 	recordIds.forEach(func(recordId int) {
 		record := idx.records[recordId]
 		ranker.addRecord(recordId, norm.NFC.String(record))

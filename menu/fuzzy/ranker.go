@@ -1,6 +1,7 @@
 package fuzzy
 
 import (
+	"container/heap"
 	"math"
 	"sort"
 	"strings"
@@ -11,6 +12,9 @@ type ranker struct {
 	// The query against which records are ranked.
 	query string
 
+	// The maximum number of records to return.
+	limit int
+
 	// Used in the dynamic programming algorithm for calculating longest-common subsequence.
 	numCols             int
 	prevRow, currentRow []int
@@ -18,25 +22,21 @@ type ranker struct {
 	// Store scores of records that have been ranked.
 	// The dirty flag is set whenever a new record is ranked
 	// and unset whenever the slice is sorted.
-	scoredRecords []scoredRecord
+	scoredRecords scoredRecordHeap
 	dirty         bool
 }
 
-type scoredRecord struct {
-	recordId int
-	record   string
-	score    int
-}
-
 // newRanker returns a new, empty ranker for a query.
-func newRanker(query string, capacity int) *ranker {
+// Limit controls the maximum number of records returned from the ranker.
+func newRanker(query string, limit int) *ranker {
 	numCols := len(query) + 1
 	return &ranker{
 		query:         query,
+		limit:         limit,
 		numCols:       numCols,
 		prevRow:       make([]int, numCols),
 		currentRow:    make([]int, numCols),
-		scoredRecords: make([]scoredRecord, 0, capacity),
+		scoredRecords: make([]scoredRecord, 0, limit),
 	}
 }
 
@@ -46,27 +46,23 @@ func (r *ranker) addRecord(recordId int, record string) {
 	if !ok {
 		score = r.scorePartialSubstringMatch(record)
 	}
-	r.scoredRecords = append(r.scoredRecords, scoredRecord{
-		recordId: recordId,
-		record:   record,
-		score:    score,
-	})
-	r.dirty = true
+
+	sr := scoredRecord{recordId, record, score}
+	if len(r.scoredRecords) < r.limit {
+		heap.Push(&r.scoredRecords, sr)
+		r.dirty = true
+	} else {
+		heap.Push(&r.scoredRecords, sr)
+		heap.Remove(&r.scoredRecords, 0)
+		r.dirty = true
+	}
 }
 
 // rankedRecordIds returns a slice of all records, ordered from most- to least-relevant.
 func (r *ranker) rankedRecordIds() []int {
 	if r.dirty {
-		// Sort descending by score, then ascending by record string length,
-		// then ascending by lexicographic order.
 		sort.SliceStable(r.scoredRecords, func(i, j int) bool {
-			if r.scoredRecords[i].score != r.scoredRecords[j].score {
-				return r.scoredRecords[i].score > r.scoredRecords[j].score
-			} else if len(r.scoredRecords[i].record) != len(r.scoredRecords[j].record) {
-				return len(r.scoredRecords[i].record) < len(r.scoredRecords[j].record)
-			} else {
-				return r.scoredRecords[i].record < r.scoredRecords[j].record
-			}
+			return r.scoredRecords[i].Less(r.scoredRecords[j])
 		})
 		r.dirty = false
 	}
@@ -127,4 +123,54 @@ func maxScore(s1, s2 int) int {
 	} else {
 		return s2
 	}
+}
+
+// scoredRecord represents a record that has been assigned a score.
+type scoredRecord struct {
+	recordId int
+	record   string
+	score    int
+}
+
+// Order descending by score, then ascending by record string length,
+// then ascending by lexicographic order.
+func (r scoredRecord) Less(other scoredRecord) bool {
+	if r.score != other.score {
+		// slice.Sort always sorts in ascending order, and we want
+		// the first item to have the highest score, so we treat
+		// the higher-scoring item as "less" than the lower-scoring item.
+		return r.score > other.score
+	} else if len(r.record) != len(other.record) {
+		return len(r.record) < len(other.record)
+	} else {
+		return r.record < other.record
+	}
+}
+
+// scoredRecordHeap is a min heap of scored records.
+// It implements both heap.Interface and sort.Interface
+type scoredRecordHeap []scoredRecord
+
+func (h scoredRecordHeap) Len() int {
+	return len(h)
+}
+
+func (h scoredRecordHeap) Less(i, j int) bool {
+	// We want the lowest scoring item to be first so we can replace it with a higher scoring item.
+	// This is the the opposite of the usual sort order, so negate Less().
+	return !h[i].Less(h[j])
+}
+
+func (h scoredRecordHeap) Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+
+func (h *scoredRecordHeap) Push(x interface{}) {
+	*h = append(*h, x.(scoredRecord))
+}
+
+func (h *scoredRecordHeap) Pop() interface{} {
+	x := (*h)[len(*h)-1]
+	*h = (*h)[0 : len(*h)-1]
+	return x
 }

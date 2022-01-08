@@ -1,7 +1,6 @@
 package fuzzy
 
 import (
-	"container/heap"
 	"sort"
 )
 
@@ -65,18 +64,25 @@ func (t *trie) insert(s string, recordId int) {
 	t.nodes[currentNodeId].addRecordId(recordId)
 }
 
-// topRecordIdsForPrefix finds the closest strings in the trie to a given prefix,
-// as determined by edit distance.
+// recordIdsForPrefix finds records in the trie within editDistThreshold of a keyword prefix.
 // If prevRecordIds is non-nil, it includes only records that are in prevRecordIds.
-// The limit parameter controls the maximum number of records returned.
-func (t *trie) topRecordIdsForPrefix(prefix string, prevRecordIds *recordIdSet, limit int) *recordIdSet {
+func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *recordIdSet {
+	recordIds := newRecordIdSet()
 	visitedNodeIds := make(map[int]struct{}, 0)
 	ans := t.activeNodeSetForPrefix(prefix)
-	pq := newPriorityQueueForActiveNodeSet(ans) // Min heap by edit distance, then nodeId.
-	topRecordIds := newRecordIdSet(limit)
-	for pq.Len() > 0 {
-		pqi := heap.Pop(&pq).(priorityQueueItem)
-		if _, ok := visitedNodeIds[pqi.nodeId]; ok {
+
+	type stackItem struct {
+		nodeId   int
+		editDist float64
+	}
+	var currentItem stackItem
+	stack := make([]stackItem, 0, len(ans))
+	for nodeId, editDist := range ans {
+		stack = append(stack, stackItem{nodeId, editDist})
+	}
+	for len(stack) > 0 {
+		currentItem, stack = stack[len(stack)-1], stack[0:len(stack)-1]
+		if _, ok := visitedNodeIds[currentItem.nodeId]; ok {
 			// If we have already visited this node, then any subsequent visit must have a greater edit distance.
 			// (All subsequent visits correspond to an item in the priority queue or a descendant of an item
 			// in the priority queue. The heap property guarantees that the items in the priority queue have
@@ -86,34 +92,30 @@ func (t *trie) topRecordIdsForPrefix(prefix string, prevRecordIds *recordIdSet, 
 			continue
 		}
 
-		node := t.nodes[pqi.nodeId]
+		node := t.nodes[currentItem.nodeId]
 		for _, recordId := range node.recordIds {
 			if prevRecordIds != nil && !prevRecordIds.contains(recordId) {
 				// Filter by prevRecordIds.
 				continue
 			}
-			topRecordIds.add(recordId)
-			if topRecordIds.length() >= limit {
-				// Terminate if we've found enough records.
-				return topRecordIds
-			}
+			recordIds.add(recordId)
 		}
 
-		visitedNodeIds[pqi.nodeId] = struct{}{}
-		childEditDist := pqi.editDist + editDistPerSuffixChar
+		visitedNodeIds[currentItem.nodeId] = struct{}{}
+		childEditDist := currentItem.editDist + editDistPerSuffixChar
 		for _, child := range node.children {
 			if prevRecordIds != nil && (prevRecordIds.max < child.minRecordId || prevRecordIds.min > child.maxRecordId) {
 				// If the child doesn't have any records that match the filter, skip it.
 				// This is a performance optimization, not required for correctness.
 				continue
 			}
-			heap.Push(&pq, priorityQueueItem{
+			stack = append(stack, stackItem{
 				nodeId:   child.nodeId,
 				editDist: childEditDist,
 			})
 		}
 	}
-	return topRecordIds
+	return recordIds
 }
 
 // activeNodeSetForPrefix calculates the active nodes in the trie
@@ -259,52 +261,4 @@ func (ans activeNodeSet) insertIfMinEditDist(nodeId int, editDist float64) {
 	if !ok || editDist < currentEditDist {
 		ans[nodeId] = editDist
 	}
-}
-
-// priorityQueue is a min-heap based on edit distance.
-// It satisfies heap.Interface in the standard library.
-type priorityQueue []priorityQueueItem
-
-type priorityQueueItem struct {
-	nodeId   int
-	editDist float64
-}
-
-func newPriorityQueueForActiveNodeSet(ans activeNodeSet) priorityQueue {
-	pq := make(priorityQueue, 0, len(ans))
-	for nodeId, editDist := range ans {
-		pq = append(pq, priorityQueueItem{
-			nodeId:   nodeId,
-			editDist: editDist,
-		})
-	}
-	heap.Init(&pq)
-	return pq
-}
-
-func (pq priorityQueue) Len() int {
-	return len(pq)
-}
-
-func (pq priorityQueue) Less(i, j int) bool {
-	if pq[i].editDist != pq[j].editDist {
-		return pq[i].editDist < pq[j].editDist
-	} else {
-		return pq[i].nodeId < pq[j].nodeId
-	}
-}
-
-func (pq priorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-}
-
-func (pq *priorityQueue) Push(x interface{}) {
-	*pq = append(*pq, x.(priorityQueueItem))
-}
-
-func (pq *priorityQueue) Pop() interface{} {
-	n := len(*pq)
-	x := (*pq)[n-1]
-	*pq = (*pq)[0 : n-1]
-	return x
 }

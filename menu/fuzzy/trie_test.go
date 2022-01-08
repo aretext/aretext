@@ -9,7 +9,7 @@ import (
 func TestEmptyTrie(t *testing.T) {
 	trie := newTrie()
 	recordIds := trie.recordIdsForPrefix("", nil)
-	assert.Equal(t, 0, recordIds.length())
+	assert.Equal(t, 0, len(recordIds.toSlice()))
 }
 
 func TestRecordIdsForPrefix(t *testing.T) {

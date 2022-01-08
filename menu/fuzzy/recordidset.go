@@ -34,8 +34,6 @@ func (r recordIdSet) contains(id int) bool {
 	return ok
 }
 
-func (r recordIdSet) length() int { return len(r.ids) }
-
 func (r recordIdSet) forEach(f func(int)) {
 	for id := range r.ids {
 		f(id)

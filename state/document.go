@@ -185,6 +185,15 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 }
 
 func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
+	// First, scroll to the last line.
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		return locate.StartOfLastLine(p.TextTree)
+	})
+	ScrollViewToCursor(state)
+
+	// Then, scroll up to the target location.
+	// This ensures that the target line appears near the top
+	// of the view instead of near the bottom.
 	MoveCursor(state, cursorLoc)
 	ScrollViewToCursor(state)
 }

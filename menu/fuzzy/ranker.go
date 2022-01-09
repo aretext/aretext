@@ -51,9 +51,9 @@ func (r *ranker) addRecord(recordId int, record string) {
 	if len(r.scoredRecords) < r.limit {
 		heap.Push(&r.scoredRecords, sr)
 		r.dirty = true
-	} else {
-		heap.Push(&r.scoredRecords, sr)
+	} else if !r.scoredRecords[0].Less(sr) { // same order as scoredRecordHeap.Less()
 		heap.Remove(&r.scoredRecords, 0)
+		heap.Push(&r.scoredRecords, sr)
 		r.dirty = true
 	}
 }

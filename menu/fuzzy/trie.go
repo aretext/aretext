@@ -68,7 +68,7 @@ func (t *trie) insert(s string, recordId int) {
 // If prevRecordIds is non-nil, it includes only records that are in prevRecordIds.
 func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *recordIdSet {
 	recordIds := newRecordIdSet()
-	visitedNodeIds := make(map[int]struct{}, 0)
+	visitedNodeIds := newIntSet()
 	ans := t.activeNodeSetForPrefix(prefix)
 
 	var currentNodeId int
@@ -78,7 +78,7 @@ func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *re
 	}
 	for len(stack) > 0 {
 		currentNodeId, stack = stack[len(stack)-1], stack[0:len(stack)-1]
-		if _, ok := visitedNodeIds[currentNodeId]; ok {
+		if visitedNodeIds.contains(currentNodeId) {
 			continue
 		}
 
@@ -91,7 +91,7 @@ func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *re
 			recordIds.add(recordId)
 		}
 
-		visitedNodeIds[currentNodeId] = struct{}{}
+		visitedNodeIds.add(currentNodeId)
 		for _, child := range node.children {
 			if prevRecordIds != nil && (prevRecordIds.max < child.minRecordId || prevRecordIds.min > child.maxRecordId) {
 				// If the child doesn't have any records that match the filter, skip it.

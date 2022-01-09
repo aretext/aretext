@@ -2,7 +2,6 @@ package fuzzy
 
 import (
 	"math"
-	"sort"
 )
 
 // recordIdSet represents a set of record IDs.
@@ -38,13 +37,4 @@ func (r recordIdSet) forEach(f func(int)) {
 	for id := range r.ids {
 		f(id)
 	}
-}
-
-func (r recordIdSet) toSlice() []int {
-	recordIds := make([]int, 0, len(r.ids))
-	for id := range r.ids {
-		recordIds = append(recordIds, id)
-	}
-	sort.Ints(recordIds)
-	return recordIds
 }

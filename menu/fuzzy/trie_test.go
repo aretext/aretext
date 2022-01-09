@@ -1,15 +1,23 @@
 package fuzzy
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func recordIdSetToSlice(r *recordIdSet) []int {
+	var recordIds []int
+	r.forEach(func(id int) { recordIds = append(recordIds, id) })
+	sort.Ints(recordIds)
+	return recordIds
+}
+
 func TestEmptyTrie(t *testing.T) {
 	trie := newTrie()
 	recordIds := trie.recordIdsForPrefix("", nil)
-	assert.Equal(t, 0, len(recordIds.toSlice()))
+	assert.Equal(t, 0, len(recordIdSetToSlice(recordIds)))
 }
 
 func TestRecordIdsForPrefix(t *testing.T) {
@@ -50,7 +58,7 @@ func TestRecordIdsForPrefix(t *testing.T) {
 			trie.insert("baz", 4)
 			trie.insert("bat", 6)
 			trie.insert("reallylongstringthatisreallylong", 7)
-			recordIds := trie.recordIdsForPrefix(tc.prefix, nil).toSlice()
+			recordIds := recordIdSetToSlice(trie.recordIdsForPrefix(tc.prefix, nil))
 			assert.Equal(t, tc.expected, recordIds)
 		})
 	}
@@ -69,7 +77,7 @@ func TestFilterRecordsByPrevRecords(t *testing.T) {
 	prevRecordIds.add(3)
 	prevRecordIds.add(5)
 	prevRecordIds.add(6)
-	recordIds := trie.recordIdsForPrefix("foo", prevRecordIds).toSlice()
+	recordIds := recordIdSetToSlice(trie.recordIdsForPrefix("foo", prevRecordIds))
 	expected := []int{3}
 	assert.Equal(t, expected, recordIds)
 }
@@ -94,7 +102,7 @@ func TestIncrementalQueryAddChars(t *testing.T) {
 		{3},                // "foobar"
 	}
 	for i := 0; i <= len(query); i++ {
-		recordIds := trie.recordIdsForPrefix(query[0:i], nil).toSlice()
+		recordIds := recordIdSetToSlice(trie.recordIdsForPrefix(query[0:i], nil))
 		assert.Equal(t, expected[i], recordIds)
 	}
 }
@@ -119,7 +127,7 @@ func TestIncrementalQueryDeleteChars(t *testing.T) {
 		{1, 2, 3, 5, 6, 7}, // ""
 	}
 	for i := 0; i <= len(query); i++ {
-		recordIds := trie.recordIdsForPrefix(query[0:len(query)-i], nil).toSlice()
+		recordIds := recordIdSetToSlice(trie.recordIdsForPrefix(query[0:len(query)-i], nil))
 		assert.Equal(t, expected[i], recordIds)
 	}
 }

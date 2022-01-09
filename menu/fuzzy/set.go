@@ -103,20 +103,20 @@ func (ss intSetSlots) probe(target int) (int, bool) {
 
 // recordIdSet represents a set of record IDs.
 type recordIdSet struct {
-	ids      map[int]struct{}
+	ids      intSet
 	min, max int // valid only if the set contains at least one ID.
 }
 
 func newRecordIdSet() *recordIdSet {
 	return &recordIdSet{
-		ids: make(map[int]struct{}, 0),
+		ids: newIntSet(),
 		min: math.MaxInt,
 		max: 0,
 	}
 }
 
 func (r *recordIdSet) add(id int) {
-	r.ids[id] = struct{}{}
+	r.ids.add(id)
 	if id < r.min {
 		r.min = id
 	}
@@ -126,12 +126,9 @@ func (r *recordIdSet) add(id int) {
 }
 
 func (r recordIdSet) contains(id int) bool {
-	_, ok := r.ids[id]
-	return ok
+	return r.ids.contains(id)
 }
 
 func (r recordIdSet) forEach(f func(int)) {
-	for id := range r.ids {
-		f(id)
-	}
+	r.ids.forEach(f)
 }

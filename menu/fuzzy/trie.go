@@ -71,28 +71,18 @@ func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *re
 	visitedNodeIds := make(map[int]struct{}, 0)
 	ans := t.activeNodeSetForPrefix(prefix)
 
-	type stackItem struct {
-		nodeId   int
-		editDist float64
-	}
-	var currentItem stackItem
-	stack := make([]stackItem, 0, len(ans))
-	for nodeId, editDist := range ans {
-		stack = append(stack, stackItem{nodeId, editDist})
+	var currentNodeId int
+	stack := make([]int, 0, len(ans))
+	for nodeId := range ans {
+		stack = append(stack, nodeId)
 	}
 	for len(stack) > 0 {
-		currentItem, stack = stack[len(stack)-1], stack[0:len(stack)-1]
-		if _, ok := visitedNodeIds[currentItem.nodeId]; ok {
-			// If we have already visited this node, then any subsequent visit must have a greater edit distance.
-			// (All subsequent visits correspond to an item in the priority queue or a descendant of an item
-			// in the priority queue. The heap property guarantees that the items in the priority queue have
-			// edit distance greater than or equal to the current item,
-			// and since edit distance increases for each descendant, all the descendants also have
-			// edit distances greater than or equal to the current item.)
+		currentNodeId, stack = stack[len(stack)-1], stack[0:len(stack)-1]
+		if _, ok := visitedNodeIds[currentNodeId]; ok {
 			continue
 		}
 
-		node := t.nodes[currentItem.nodeId]
+		node := t.nodes[currentNodeId]
 		for _, recordId := range node.recordIds {
 			if prevRecordIds != nil && !prevRecordIds.contains(recordId) {
 				// Filter by prevRecordIds.
@@ -101,18 +91,14 @@ func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *re
 			recordIds.add(recordId)
 		}
 
-		visitedNodeIds[currentItem.nodeId] = struct{}{}
-		childEditDist := currentItem.editDist + editDistPerSuffixChar
+		visitedNodeIds[currentNodeId] = struct{}{}
 		for _, child := range node.children {
 			if prevRecordIds != nil && (prevRecordIds.max < child.minRecordId || prevRecordIds.min > child.maxRecordId) {
 				// If the child doesn't have any records that match the filter, skip it.
 				// This is a performance optimization, not required for correctness.
 				continue
 			}
-			stack = append(stack, stackItem{
-				nodeId:   child.nodeId,
-				editDist: childEditDist,
-			})
+			stack = append(stack, child.nodeId)
 		}
 	}
 	return recordIds

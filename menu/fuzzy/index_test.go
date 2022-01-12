@@ -52,8 +52,8 @@ func TestFuzzySearchIndex(t *testing.T) {
 			expected: []string{
 				"foobar",
 				".foobar",
-				"foo.bar",
 				"foo",
+				"foo.bar",
 			},
 		},
 		{
@@ -70,8 +70,8 @@ func TestFuzzySearchIndex(t *testing.T) {
 			expected: []string{
 				"FoO/first.txt",
 				"Foo/second.txt",
-				"fOo/first.txt",
 				"foo/third.txt",
+				"fOo/first.txt",
 				"bar/first.txt",
 			},
 		},

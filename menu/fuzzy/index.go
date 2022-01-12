@@ -58,15 +58,17 @@ func (idx *Index) findTopMatchingRecords(query string) *recordIdSet {
 }
 
 func (idx *Index) rankRecords(query string, recordIds *recordIdSet) []int {
-	// We are NOT lowercasing the strings here
-	// so that case-sensitive matches will be ranked higher
-	// than case-insensitive matches.
-	ranker := newRanker(norm.NFC.String(query), maxSearchResults)
+	var candidates []candidateRecord
 	recordIds.forEach(func(recordId int) {
-		record := idx.records[recordId]
-		ranker.addRecord(recordId, norm.NFC.String(record))
+		// We are NOT lowercasing the strings here
+		// so that case-sensitive matches will be ranked higher
+		// than case-insensitive matches.
+		candidates = append(candidates, candidateRecord{
+			recordId: recordId,
+			record:   norm.NFC.String(idx.records[recordId]),
+		})
 	})
-	return ranker.rankedRecordIds()
+	return rankRecords(candidates, norm.NFC.String(query), maxSearchResults)
 }
 
 // iterKeywords iterates through the keywords in a string.

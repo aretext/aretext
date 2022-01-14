@@ -49,7 +49,7 @@ func golangIdentifierOrKeywordParseFunc() parser.Func {
 		"uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "true",
 		"false", "iota", "nil", "append", "cap", "close", "complex", "copy",
 		"delete", "imag", "len", "make", "new", "panic", "print", "println",
-		"real", "recover",
+		"real", "recover", "any", "comparable",
 	}
 	return consumeSingleRuneLike(isLetter).
 		ThenMaybe(consumeRunesLike(isLetterOrDigit)).

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/renameio/v2"
 	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/text"
@@ -15,16 +16,16 @@ import (
 // This adds the POSIX end-of-file indicator (line feed at the end of the file).
 // This directly overwrites the target file and then syncs the file to disk.
 func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Watcher, error) {
-	// Open the target file, truncating it if it already exists.
-	// There's a risk that the file might get corrupted if an error occurs while
-	// we're writing the new contents, but it's very difficult to prevent this.
-	// In particular, tricks like writing a temporary file and renaming it to the target path
-	// don't work; see https://danluu.com/deconstruct-files/
-	f, err := os.Create(path)
+	// Use renameio to write the file to a temporary directory, then rename it to the target file.
+	// This should reduce the risk of data corruption if the editor crashes mid-write,
+	// but probably not 100% reliable (see http://danluu.com/deconstruct-files/).
+	// There is a good discussion of the Go libraries solving this problem in
+	// this GitHub issue comment: https://github.com/golang/go/issues/22397#issuecomment-380831736
+	t, err := renameio.TempFile("", path)
 	if err != nil {
-		return nil, errors.Wrap(err, "os.Create")
+		return nil, errors.Wrapf(err, "renamio.TempFile")
 	}
-	defer f.Close()
+	defer t.Cleanup()
 
 	// Compose a reader that calculates the checksum and appends the POSIX EOF indicator.
 	checksummer := NewChecksummer()
@@ -33,24 +34,24 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	r := io.TeeReader(io.MultiReader(&textReader, posixEofReader), checksummer)
 
 	// Write to the file and calculate the checksum.
-	_, err = io.Copy(f, r)
+	_, err = io.Copy(t, r)
 	if err != nil {
 		return nil, errors.Wrap(err, "io.Copy")
 	}
 
 	// Sync the file to disk so the watcher calculates the checksum correctly later.
-	err = f.Sync()
+	err = t.CloseAtomicallyReplace()
 	if err != nil {
-		return nil, errors.Wrap(err, "File.Sync")
+		return nil, errors.Wrap(err, "renamio.CloseAtomicallyReplace")
 	}
 
 	// Start a new watcher for subsequent changes to the file.
-	checksum := checksummer.Checksum()
-	lastModifiedTime, size, err := lastModifiedTimeAndSize(f)
+	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "os.Stat")
 	}
-	watcher := NewWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
+	checksum := checksummer.Checksum()
+	watcher := NewWatcher(watcherPollInterval, path, fileInfo.ModTime(), fileInfo.Size(), checksum)
 
 	return watcher, nil
 }

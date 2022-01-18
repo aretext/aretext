@@ -18,7 +18,7 @@ import (
 func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Watcher, error) {
 	// Use renameio to write the file to a temporary directory, then rename it to the target file.
 	// This should reduce the risk of data corruption if the editor crashes mid-write,
-	// but probably not 100% reliable (see http://danluu.com/deconstruct-files/).
+	// but is probably not 100% reliable (see http://danluu.com/deconstruct-files/).
 	// There is a good discussion of the Go libraries solving this problem in
 	// this GitHub issue comment: https://github.com/golang/go/issues/22397#issuecomment-380831736
 	t, err := renameio.TempFile("", path)

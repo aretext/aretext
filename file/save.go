@@ -20,11 +20,11 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// but is probably not 100% reliable (see http://danluu.com/deconstruct-files/).
 	// There is a good discussion of the Go libraries solving this problem in
 	// this GitHub issue comment: https://github.com/golang/go/issues/22397#issuecomment-380831736
-	t, err := renameio.TempFile("", path)
+	pf, err := renameio.NewPendingFile(path, renameio.WithPermissions(0644), renameio.WithExistingPermissions())
 	if err != nil {
 		return nil, errors.Wrapf(err, "renamio.TempFile")
 	}
-	defer t.Cleanup()
+	defer pf.Cleanup()
 
 	// Compose a reader that calculates the checksum and appends the POSIX EOF indicator.
 	checksummer := NewChecksummer()
@@ -33,13 +33,13 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	r := io.TeeReader(io.MultiReader(&textReader, posixEofReader), checksummer)
 
 	// Write to the file and calculate the checksum.
-	_, err = io.Copy(t, r)
+	_, err = io.Copy(pf, r)
 	if err != nil {
 		return nil, errors.Wrap(err, "io.Copy")
 	}
 
 	// Sync the file to disk so the watcher calculates the checksum correctly later.
-	err = t.CloseAtomicallyReplace()
+	err = pf.CloseAtomicallyReplace()
 	if err != nil {
 		return nil, errors.Wrap(err, "renamio.CloseAtomicallyReplace")
 	}

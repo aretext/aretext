@@ -20,16 +20,25 @@ func TestSaveNewFile(t *testing.T) {
 	}()
 
 	path := path.Join(tmpDir, "test.txt")
-	saveAndAssertContents(t, path, "abcd1234")
+	saveAndAssertContents(t, path, "abcd1234", 0644)
 }
 
 func TestSaveModifyExistingFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "old contents")
 	defer cleanup()
-	saveAndAssertContents(t, path, "new contents")
+	saveAndAssertContents(t, path, "new contents", 0644)
 }
 
-func saveAndAssertContents(t *testing.T, path string, contents string) {
+func TestSaveModifyExistingFilePreservePermissions(t *testing.T) {
+	path, cleanup := createTestFile(t, "old contents")
+	defer cleanup()
+
+	err := os.Chmod(path, 0600)
+	require.NoError(t, err)
+	saveAndAssertContents(t, path, "new contents", 0600)
+}
+
+func saveAndAssertContents(t *testing.T, path string, contents string, perms os.FileMode) {
 	tree, err := text.NewTreeFromString(contents)
 	require.NoError(t, err)
 
@@ -43,4 +52,8 @@ func saveAndAssertContents(t *testing.T, path string, contents string) {
 
 	expectedContents := contents + "\n" // Append POSIX EOF
 	assert.Equal(t, expectedContents, string(fileBytes))
+
+	fileInfo, err := os.Stat(path)
+	require.NoError(t, err)
+	assert.Equal(t, fileInfo.Mode().Perm(), perms)
 }

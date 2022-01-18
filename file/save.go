@@ -14,7 +14,6 @@ import (
 
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.
 // This adds the POSIX end-of-file indicator (line feed at the end of the file).
-// This directly overwrites the target file and then syncs the file to disk.
 func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Watcher, error) {
 	// Use renameio to write the file to a temporary directory, then rename it to the target file.
 	// This should reduce the risk of data corruption if the editor crashes mid-write,

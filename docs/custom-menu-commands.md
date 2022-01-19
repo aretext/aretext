@@ -33,6 +33,7 @@ In addition, the following environment variables are provided to the shell comma
 
 -	`$FILEPATH` is the absolute path to the current file.
 -	`$WORD` is the current word under the cursor.
+-	`$LINE` is the line number of the cursor, starting from one.
 -	`$SELECTION` is the currently selected text (if any).
 
 Examples

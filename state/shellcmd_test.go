@@ -120,6 +120,64 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 	}
 }
 
+func TestRunShellCmdLineEnvVar(t *testing.T) {
+	testCases := []struct {
+		name               string
+		text               string
+		cursorPos          uint64
+		expectedLineEnvVar string
+	}{
+		{
+			name:               "empty document",
+			text:               "",
+			cursorPos:          0,
+			expectedLineEnvVar: "1",
+		},
+		{
+			name:               "single line",
+			text:               "abc",
+			cursorPos:          0,
+			expectedLineEnvVar: "1",
+		},
+		{
+			name:               "multiple lines, cursor on first line",
+			text:               "abc\ndef\nghi",
+			cursorPos:          2,
+			expectedLineEnvVar: "1",
+		},
+		{
+			name:               "multiple lines, cursor on second line",
+			text:               "abc\ndef\nghi",
+			cursorPos:          4,
+			expectedLineEnvVar: "2",
+		},
+		{
+			name:               "multiple lines, cursor on last line",
+			text:               "abc\ndef\nghi",
+			cursorPos:          10,
+			expectedLineEnvVar: "3",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			setupShellCmdTest(t, func(state *EditorState, dir string) {
+				for _, r := range tc.text {
+					InsertRune(state, r)
+				}
+				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
+
+				p := path.Join(dir, "test-output.txt")
+				cmd := fmt.Sprintf(`printenv LINE > %s`, p)
+				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
+				data, err := os.ReadFile(p)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedLineEnvVar+"\n", string(data))
+			})
+		})
+	}
+}
+
 func TestRunShellCmdWithSelection(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		for _, r := range "foobar" {

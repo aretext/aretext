@@ -102,6 +102,10 @@ func envVars(state *EditorState) []string {
 	currentWord := currentWordEnvVar(state)
 	env = append(env, fmt.Sprintf("WORD=%s", currentWord))
 
+	// $LINE is the line number of the cursor, starting from one.
+	lineNum := lineNumEnvVar(state)
+	env = append(env, fmt.Sprintf("LINE=%d", lineNum))
+
 	// $SELECTION is the current visual mode selection, if any.
 	selection, _ := copySelectionText(state.documentBuffer)
 	if len(selection) > 0 {
@@ -119,6 +123,14 @@ func currentWordEnvVar(state *EditorState) string {
 	wordEndPos := locate.CurrentWordEnd(textTree, cursorPos)
 	word := copyText(textTree, wordStartPos, wordEndPos-wordStartPos)
 	return strings.TrimSpace(word)
+}
+
+func lineNumEnvVar(state *EditorState) uint64 {
+	buffer := state.documentBuffer
+	textTree := buffer.textTree
+	cursorPos := buffer.cursor.position
+	lineNum := textTree.LineNumForPosition(cursorPos)
+	return lineNum + 1 // start from 1 instead of from 0
 }
 
 func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {

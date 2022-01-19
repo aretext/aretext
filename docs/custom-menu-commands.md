@@ -118,6 +118,19 @@ For example, this command uses `go fmt` to format a Go file:
       save: true  # save the file before running `go fmt`
 ```
 
+### Git blame the current file
+
+When working in a git repository, you might want to know who last edited a line of code. You can find this using `git blame` on the current file.
+
+```yaml
+- name: git blame command
+  pattern: "**"
+  config:
+    menuCommands:
+    - name: git blame
+      shellCmd: git blame "$FILEPATH" | less +$LINE
+```
+
 ### Insert a snippet
 
 You can add a custom menu command to insert a snippet of code.

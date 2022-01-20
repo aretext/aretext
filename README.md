@@ -27,7 +27,7 @@ Project Status: Beta
 --------------------
 
 -	The user interface is stable, and I am using it as my primary editor.
--	Syntax highlighting is available for a few languages.
+-	Syntax highlighting is available for several languages, including Go, Python, Rust, and C.
 -	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.

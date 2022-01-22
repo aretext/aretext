@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/adrg/xdg v0.4.0
 	github.com/gdamore/tcell/v2 v2.4.0
+	github.com/google/renameio/v2 v2.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/pkg/errors v0.9.1
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect

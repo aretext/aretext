@@ -175,11 +175,6 @@ func scoreRecordsPartition(partition []scoredRecord, query string) {
 			prevRecordRune = recordRune
 			row++
 		}
-
-		// Normalize scores so that the maximum possible score is 1.0, representing an exact match
-		// between the record and the query. If two records match the same number of query characters,
-		// the shorter string will rank higher because a larger percentage of its characters matched the query.
-		partition[i].score /= (alignAtStartOrAfterSeparatorBonus + matchCharScore*float64(row))
 	}
 }
 
@@ -222,6 +217,9 @@ func (h scoredRecordHeap) Less(i, j int) bool {
 		// the first item to have the highest score, so we treat
 		// the higher-scoring item as "less" than the lower-scoring item.
 		return h[i].score > h[j].score
+	} else if len(h[i].record) != len(h[j].record) {
+		// if both records have the same score, rank the shorter record first.
+		return len(h[i].record) < len(h[j].record)
 	} else {
 		return h[i].record < h[j].record
 	}

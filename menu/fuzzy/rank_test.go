@@ -32,8 +32,8 @@ func TestRankRecords(t *testing.T) {
 				".foobar",
 				"foo.bar",
 				"xoobar",
-				"barfoo",
 				"foo",
+				"barfoo",
 				"xoo",
 			},
 		},
@@ -110,6 +110,26 @@ func TestRankRecords(t *testing.T) {
 				"state/quit_test.go",
 				"state/task_test.go",
 				"state/locator_test.go",
+			},
+		},
+		{
+			name:  "rank same score when normalized by length",
+			query: "trie.go",
+			limit: 100,
+			records: []string{
+				"text/tree.go",
+				"text/tree_test.go",
+				"menu/fuzzy/trie.go",
+				"menu/fuzzy/trie_test.go",
+			},
+			// "text/tree.go" used to rank higher than "menu/fuzzy/trie.go"
+			// when scores were normalized by length, but "trie.go" is a better
+			// match because the query is an exact substring match.
+			expected: []string{
+				"menu/fuzzy/trie.go",
+				"text/tree.go",
+				"menu/fuzzy/trie_test.go",
+				"text/tree_test.go",
 			},
 		},
 	}

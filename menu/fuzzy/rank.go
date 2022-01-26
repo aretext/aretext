@@ -187,14 +187,6 @@ func isSeparator(r rune) bool {
 	return r == '/' || r == ' ' || r == '\t'
 }
 
-func maxScore(s1, s2 float64) float64 {
-	if s1 > s2 {
-		return s1
-	} else {
-		return s2
-	}
-}
-
 func topRecordsDescByScore(scoredRecords []scoredRecord, limit int) []int {
 	numResults := len(scoredRecords)
 	if numResults > limit {

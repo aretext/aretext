@@ -68,6 +68,17 @@ main()
 			},
 		},
 		{
+			name: "macro with continuation",
+			text: `
+#define  printboth(a, b)  \
+   printf(#a " and " #b)
+// comment`,
+			expected: []TokenWithText{
+				{Text: "#define  printboth(a, b)  \\\n   printf(#a \" and \" #b)\n", Role: cTokenRolePreprocessorDirective},
+				{Text: `// comment`, Role: parser.TokenRoleComment},
+			},
+		},
+		{
 			name: "bit twiddling hacks",
 			text: `r = x ^ ((x ^ y) & -(x < y)); // max(x, y)`,
 			expected: []TokenWithText{

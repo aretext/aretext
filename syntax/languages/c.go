@@ -1,6 +1,7 @@
 package languages
 
 import (
+	"io"
 	"unicode"
 
 	"github.com/aretext/aretext/syntax/parser"
@@ -35,6 +36,31 @@ func cCommentParseFunc() parser.Func {
 }
 
 func cPreprocessorDirective() parser.Func {
+	// Consume to the end of line or EOF, unless the line ends with a backslash.
+	consumeToEndOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+		var lastWasBackslash bool
+		for {
+			r, err := iter.NextRune()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			numConsumed++
+
+			if r == '\n' && !lastWasBackslash {
+				break
+			}
+			lastWasBackslash = (r == '\\')
+		}
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState:   state,
+		}
+	}
+
 	return consumeString("#").
 		Then(consumeString("include").
 			Or(consumeString("pragma")).
@@ -50,7 +76,7 @@ func cPreprocessorDirective() parser.Func {
 		ThenNot(consumeSingleRuneLike(func(r rune) bool {
 			return !unicode.IsSpace(r) // must be followed by space, newline, or EOF
 		})).
-		ThenMaybe(consumeToNextLineFeed).
+		ThenMaybe(consumeToEndOfDirective).
 		Map(recognizeToken(cTokenRolePreprocessorDirective))
 }
 

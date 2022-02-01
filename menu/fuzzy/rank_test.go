@@ -132,6 +132,19 @@ func TestRankRecords(t *testing.T) {
 				"text/tree_test.go",
 			},
 		},
+		{
+			name:  "rank start of string slightly higher than start of word",
+			query: "fi",
+			limit: 100,
+			records: []string{
+				"find and open",
+				"fmt file",
+			},
+			expected: []string{
+				"find and open",
+				"fmt file",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

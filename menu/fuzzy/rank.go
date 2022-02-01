@@ -8,14 +8,15 @@ import (
 )
 
 const (
-	minRecordsPerPartition            = 64  // each goroutine will be assigned at least this many records.
-	maxNumPartitions                  = 128 // maximum number of goroutines used to score records.
-	deleteQueryCharCost               = 1.5
-	insertQueryCharCost               = 1.0
-	replaceQueryCharCost              = 1.0
-	matchCharScore                    = 1.0
-	matchCharDifferentCaseScore       = 0.2
-	alignAtStartOrAfterSeparatorBonus = 0.5
+	minRecordsPerPartition      = 64  // each goroutine will be assigned at least this many records.
+	maxNumPartitions            = 128 // maximum number of goroutines used to score records.
+	deleteQueryCharCost         = 1.5
+	insertQueryCharCost         = 1.0
+	replaceQueryCharCost        = 1.0
+	matchCharScore              = 1.0
+	matchCharDifferentCaseScore = 0.2
+	alignAtStartBonus           = 0.7
+	alignAfterSeparatorBonus    = 0.5
 )
 
 // candidateRecord is a record that can be scored by the ranking algorithm.
@@ -141,9 +142,13 @@ func scoreRecordsPartition(partition []scoredRecord, query string) {
 				if runeSimilarity > 0.0 {
 					// Query rune and record rune match!
 					matchScore := prevRow[col-1] + runeSimilarity
-					if col == 1 && (row == 1 || (isSeparator(prevRecordRune) && !isSeparator(recordRune))) {
+					if col == 1 {
 						// Break ties in favor of matches at the start of words or path components.
-						matchScore += alignAtStartOrAfterSeparatorBonus
+						if row == 1 {
+							matchScore += alignAtStartBonus
+						} else if isSeparator(prevRecordRune) && !isSeparator(recordRune) {
+							matchScore += alignAfterSeparatorBonus
+						}
 					}
 					if matchScore > currentRow[col] {
 						currentRow[col] = matchScore

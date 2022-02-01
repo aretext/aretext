@@ -1,6 +1,7 @@
 package fuzzy
 
 import (
+	"math"
 	"sort"
 )
 
@@ -20,48 +21,81 @@ const (
 // It caches the results of prior queries so it can return results quickly as the user types.
 // The algorithm is based on Ji, Shengyue, et al. "Efficient interactive fuzzy keyword search" (2009).
 type trie struct {
-	nodes           []trieNode               // Trie nodes are identified by index in this slice.
-	activeNodeCache map[string]activeNodeSet // Query prefix -> activeNodeSet
+	nodes           []trieNode              // Trie nodes are identified by index in this slice.
+	activeNodeCache map[string][]activeNode // Query prefix -> active nodes
 }
 
 // newTrie returns an empty trie.
 func newTrie() *trie {
-	var rootNode trieNode
+	rootNode := trieNode{
+		minRecordId: math.MaxInt,
+		maxRecordId: 0,
+	}
 	return &trie{
 		nodes:           []trieNode{rootNode},
-		activeNodeCache: make(map[string]activeNodeSet, 0),
+		activeNodeCache: make(map[string][]activeNode, 0),
 	}
 }
 
 // insert adds a new string to the trie and associates it with a record ID.
 func (t *trie) insert(s string, recordId int) {
 	var currentNodeId int // Start at the root.
-	for i := 0; i < len(s); i++ {
-		char := s[i]
-		if childIdx, ok := t.nodes[currentNodeId].childIdxForChar(char); ok {
-			// Child already exists for this char, so follow it.
-			child := &(t.nodes[currentNodeId].children[childIdx])
-			if recordId < child.minRecordId {
-				child.minRecordId = recordId
-			}
-			if recordId > child.maxRecordId {
-				child.maxRecordId = recordId
-			}
-			currentNodeId = child.nodeId
-		} else {
-			// Child does not yet exist for this char, so add it.
-			childNodeId := len(t.nodes)
-			t.nodes = append(t.nodes, trieNode{})
-			t.nodes[currentNodeId].insertChild(trieNodeChild{
-				nodeId:      childNodeId,
-				char:        char,
+	for len(s) > 0 {
+		t.nodes[currentNodeId].updateMinAndMaxRecordId(recordId)
+		childNodeId, ok := t.findChildForChar(currentNodeId, s[0])
+		if !ok {
+			// Add a child for this string.
+			childNodeId = len(t.nodes)
+			t.nodes = append(t.nodes, trieNode{
+				recordSlice: s,
 				minRecordId: recordId,
 				maxRecordId: recordId,
 			})
+			t.nodes[currentNodeId].childNodeIds.add(childNodeId)
+			currentNodeId = childNodeId
+			break
+		}
+
+		child := &(t.nodes[childNodeId])
+		n := sharedPrefixLen(s, child.recordSlice)
+		if n == len(child.recordSlice) {
+			currentNodeId = childNodeId
+		} else {
+			// Add a new node representing the non-shared suffix from the child.
+			suffixNodeId := len(t.nodes)
+			suffixNode := trieNode{
+				recordSlice:  child.recordSlice[n:len(child.recordSlice)],
+				childNodeIds: child.childNodeIds,
+				recordIds:    child.recordIds,
+				minRecordId:  child.minRecordId,
+				maxRecordId:  child.maxRecordId,
+			}
+			t.nodes = append(t.nodes, suffixNode)
+
+			// Truncate the child so it represents the shared suffix.
+			child.recordSlice = child.recordSlice[0:n]
+			child.childNodeIds = []int{suffixNodeId}
+			child.recordIds = nil
+
+			// Continue from the truncated child.
 			currentNodeId = childNodeId
 		}
+
+		// Consume the shared prefix.
+		s = s[n:len(s)]
 	}
-	t.nodes[currentNodeId].addRecordId(recordId)
+
+	t.nodes[currentNodeId].recordIds.add(recordId)
+}
+
+func (t *trie) findChildForChar(nodeId int, c byte) (int, bool) {
+	for _, childNodeId := range t.nodes[nodeId].childNodeIds {
+		child := t.nodes[childNodeId]
+		if child.recordSlice[0] == c {
+			return childNodeId, true
+		}
+	}
+	return 0, false
 }
 
 // recordIdsForPrefix finds records in the trie within editDistThreshold of a keyword prefix.
@@ -69,12 +103,12 @@ func (t *trie) insert(s string, recordId int) {
 func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *recordIdSet {
 	recordIds := newRecordIdSet()
 	visitedNodeIds := newIntSet()
-	ans := t.activeNodeSetForPrefix(prefix)
+	activeNodes := t.activeNodesForPrefix(prefix)
 
 	var currentNodeId int
-	stack := make([]int, 0, len(ans))
-	for nodeId := range ans {
-		stack = append(stack, nodeId)
+	stack := make([]int, 0, len(activeNodes))
+	for _, an := range activeNodes {
+		stack = append(stack, an.nodeId)
 	}
 	for len(stack) > 0 {
 		currentNodeId, stack = stack[len(stack)-1], stack[0:len(stack)-1]
@@ -92,47 +126,45 @@ func (t *trie) recordIdsForPrefix(prefix string, prevRecordIds *recordIdSet) *re
 		}
 
 		visitedNodeIds.add(currentNodeId)
-		for _, child := range node.children {
+		for _, childNodeId := range node.childNodeIds {
+			child := t.nodes[childNodeId]
 			if prevRecordIds != nil && (prevRecordIds.max < child.minRecordId || prevRecordIds.min > child.maxRecordId) {
 				// If the child doesn't have any records that match the filter, skip it.
 				// This is a performance optimization, not required for correctness.
 				continue
 			}
-			stack = append(stack, child.nodeId)
+			stack = append(stack, childNodeId)
 		}
 	}
 	return recordIds
 }
 
-// activeNodeSetForPrefix calculates the active nodes in the trie
+// activeNodesForPrefix calculates the active nodes in the trie
 // within the edit distance threshold of a query prefix.
 // When possible, it reuses cached results from prior queries.
-func (t *trie) activeNodeSetForPrefix(prefix string) activeNodeSet {
+func (t *trie) activeNodesForPrefix(prefix string) []activeNode {
 	if ans, ok := t.activeNodeCache[prefix]; ok {
 		// Re-use active nodes calculated from an earlier query.
 		return ans
 	}
 
-	ans := make(activeNodeSet, 0)
+	ans := make([]activeNode, 0)
 
 	// Helper function to add all nodes in a subtree rooted at nodeId that are within the edit distance threshold.
-	addDescendantsWithinEditDistThreshold := func(rootNodeId int, rootEditDist float64) {
-		type stackItem struct {
-			nodeId   int
-			editDist float64
-		}
-		var current stackItem
-		stack := []stackItem{{rootNodeId, rootEditDist}}
+	addDescendantsWithinEditDistThreshold := func(root activeNode) {
+		var current activeNode
+		stack := []activeNode{root}
 		for len(stack) > 0 {
 			current, stack = stack[len(stack)-1], stack[0:len(stack)-1]
 			if current.editDist <= editDistThreshold {
-				ans.insertIfMinEditDist(current.nodeId, current.editDist)
-				for _, child := range t.nodes[current.nodeId].children {
-					stack = append(stack, stackItem{
-						nodeId:   child.nodeId,
-						editDist: current.editDist + editDistForDeletePrefixChar,
+				ans = append(ans, current)
+				t.expandActiveNode(current, func(nodeId int, recordSliceLen int) {
+					stack = append(stack, activeNode{
+						nodeId:         nodeId,
+						recordSliceLen: recordSliceLen,
+						editDist:       current.editDist + editDistForDeletePrefixChar,
 					})
-				}
+				})
 			}
 		}
 	}
@@ -141,110 +173,151 @@ func (t *trie) activeNodeSetForPrefix(prefix string) activeNodeSet {
 	// adding one character from the prefix at a time.
 	if len(prefix) == 0 {
 		// Base case: empty prefix.
-		addDescendantsWithinEditDistThreshold(0, 0)
+		addDescendantsWithinEditDistThreshold(activeNode{
+			nodeId:         0, // root
+			recordSliceLen: 0,
+			editDist:       0,
+		})
 	} else {
 		// Recursive case: expand the active nodes by one character.
-		prevActiveNodeSet := t.activeNodeSetForPrefix(prefix[0 : len(prefix)-1])
-		for nodeId, editDist := range prevActiveNodeSet {
-			// This case represents deleting the next character from the query,
-			// which increases the edit distance.
-			if deletionEditDist := editDist + editDistForDeleteQueryChar; deletionEditDist <= editDistThreshold {
-				ans.insertIfMinEditDist(nodeId, deletionEditDist)
+		prevActiveNodes := t.activeNodesForPrefix(prefix[0 : len(prefix)-1])
+		for _, an := range prevActiveNodes {
+			// Delete the next character from the query, increasing the edit distance.
+			deletionEditDist := an.editDist + editDistForDeleteQueryChar
+			if deletionEditDist <= editDistThreshold {
+				ans = append(ans, activeNode{
+					nodeId:         an.nodeId,
+					recordSliceLen: an.recordSliceLen,
+					editDist:       deletionEditDist,
+				})
 			}
 
-			for _, child := range t.nodes[nodeId].children {
-				if child.char == prefix[len(prefix)-1] {
+			t.expandActiveNode(an, func(nodeId int, recordSliceLen int) {
+				nextChar := t.nodes[nodeId].recordSlice[recordSliceLen-1]
+				if prefix[len(prefix)-1] == nextChar {
 					// The next character matches the prefix, so the child is an
 					// active node with the same edit distance as the parent.
 					// We also need to include all descendants of the child within
 					// the edit distance threshold.
-					addDescendantsWithinEditDistThreshold(child.nodeId, editDist)
-				} else if replaceEditDist := editDist + editDistForReplacePrefixChar; replaceEditDist <= editDistThreshold {
-					// Replace the next character to match the prefix,
-					// which increases the edit distance.
-					ans.insertIfMinEditDist(child.nodeId, replaceEditDist)
+					addDescendantsWithinEditDistThreshold(activeNode{
+						nodeId:         nodeId,
+						recordSliceLen: recordSliceLen,
+						editDist:       an.editDist,
+					})
+				} else {
+					// Replace the next character to match the prefix, increasing the edit distance.
+					replaceEditDist := an.editDist + editDistForReplacePrefixChar
+					if replaceEditDist <= editDistThreshold {
+						ans = append(ans, activeNode{
+							nodeId:         nodeId,
+							recordSliceLen: recordSliceLen,
+							editDist:       replaceEditDist,
+						})
+					}
 				}
-			}
+			})
 		}
 	}
 
+	// Use the smallest edit distance for each unique node.
+	ans = deduplicateActiveNodes(ans)
+
+	// Cache the active nodes for reuse in later queries.
 	t.activeNodeCache[prefix] = ans
+
 	return ans
+}
+
+func (t *trie) expandActiveNode(an activeNode, f func(nodeId int, recordSliceLen int)) {
+	node := t.nodes[an.nodeId]
+	if an.recordSliceLen < len(node.recordSlice) {
+		f(an.nodeId, an.recordSliceLen+1)
+	} else {
+		for _, childNodeId := range node.childNodeIds {
+			f(childNodeId, 1)
+		}
+	}
 }
 
 // trieNode represents a node in the trie.
 type trieNode struct {
-	children  []trieNodeChild // Sorted ascending by char.
-	recordIds []int
-}
+	// Slice of the record string for the edge into this node.
+	// The root has an empty slice; all other nodes have at least one byte.
+	recordSlice string
 
-func (tn *trieNode) insertChild(child trieNodeChild) {
-	tn.children = append(tn.children, child)
+	childNodeIds uniqueSortedIntSlice
+	recordIds    uniqueSortedIntSlice
 
-	// Insertion-sort the new child to preserve the order (ascending by char).
-	for i := len(tn.children) - 1; i > 0; i-- {
-		if tn.children[i].char < tn.children[i-1].char {
-			tn.children[i], tn.children[i-1] = tn.children[i-1], tn.children[i]
-		} else if tn.children[i].char == tn.children[i-1].char {
-			panic("Duplicate child")
-		} else {
-			break
-		}
-	}
-}
-
-func (tn trieNode) childIdxForChar(char byte) (int, bool) {
-	// Binary search by char.
-	i := sort.Search(len(tn.children), func(i int) bool {
-		return tn.children[i].char >= char
-	})
-	if i < len(tn.children) && tn.children[i].char == char {
-		return i, true
-	} else {
-		return 0, false
-	}
-}
-
-func (tn *trieNode) addRecordId(recordId int) {
-	// Binary search by record ID.
-	i := sort.SearchInts(tn.recordIds, recordId)
-	if i < len(tn.recordIds) && tn.recordIds[i] == recordId {
-		// Record ID is already in the set
-		return
-	}
-
-	// Insertion sort the record ID to preserve order (ascending by ID).
-	tn.recordIds = append(tn.recordIds, recordId)
-	for i := len(tn.recordIds) - 1; i > 0; i-- {
-		if tn.recordIds[i] < tn.recordIds[i-1] {
-			tn.recordIds[i], tn.recordIds[i-1] = tn.recordIds[i-1], tn.recordIds[i]
-		} else if tn.recordIds[i] == tn.recordIds[i-1] {
-			panic("Duplicate record")
-		} else {
-			break
-		}
-	}
-}
-
-// trieNodeChild represents an edge from one trie node to its child.
-type trieNodeChild struct {
-	nodeId int
-	char   byte
-
-	// Store the range of record IDs in this child and all its descendants.
+	// Store the range of record IDs in this node and all its descendants.
 	// This allows the walk function to filter children that
 	// don't have a record of interest.
 	minRecordId, maxRecordId int
 }
 
-// Set of active nodes and their edit distances.
-// The key is an index into the the trie's nodes slice,
-// and the value is the edit distance.
-type activeNodeSet map[int]float64
-
-func (ans activeNodeSet) insertIfMinEditDist(nodeId int, editDist float64) {
-	currentEditDist, ok := ans[nodeId]
-	if !ok || editDist < currentEditDist {
-		ans[nodeId] = editDist
+func (tn *trieNode) updateMinAndMaxRecordId(recordId int) {
+	if recordId < tn.minRecordId {
+		tn.minRecordId = recordId
 	}
+	if recordId > tn.maxRecordId {
+		tn.maxRecordId = recordId
+	}
+}
+
+type uniqueSortedIntSlice []int
+
+func (s *uniqueSortedIntSlice) add(x int) {
+	// Binary search.
+	i := sort.SearchInts(*s, x)
+	if i < len(*s) && (*s)[i] == x {
+		// Already in the set.
+		return
+	}
+
+	// Insertion sort to preserve order (ascending by value).
+	*s = append(*s, x)
+	for i := len(*s) - 1; i > 0; i-- {
+		if (*s)[i] < (*s)[i-1] {
+			(*s)[i], (*s)[i-1] = (*s)[i-1], (*s)[i]
+		} else if (*s)[i] == (*s)[i-1] {
+			panic("duplicate")
+		} else {
+			break
+		}
+	}
+}
+
+// activeNode represents a prefix in the trie within editDistThreshold of a query prefix.
+type activeNode struct {
+	nodeId         int
+	recordSliceLen int
+	editDist       float64
+}
+
+func deduplicateActiveNodes(activeNodes []activeNode) []activeNode {
+	sort.Slice(activeNodes, func(i, j int) bool {
+		if activeNodes[i].nodeId != activeNodes[j].nodeId {
+			return activeNodes[i].nodeId < activeNodes[j].nodeId
+		} else {
+			return activeNodes[i].editDist < activeNodes[j].editDist
+		}
+	})
+
+	var prev activeNode
+	var i int
+	for j := 1; j < len(activeNodes); j++ {
+		if !(activeNodes[j].nodeId == prev.nodeId && activeNodes[j].recordSliceLen == prev.recordSliceLen) {
+			i++
+			activeNodes[i] = activeNodes[j]
+		}
+		prev = activeNodes[j]
+	}
+	return activeNodes[0:i]
+}
+
+func sharedPrefixLen(x, y string) int {
+	var n int
+	for n < len(x) && n < len(y) && x[n] == y[n] {
+		n++
+	}
+	return n
 }

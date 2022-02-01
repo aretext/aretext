@@ -302,14 +302,12 @@ func deduplicateActiveNodes(activeNodes []activeNode) []activeNode {
 		}
 	})
 
-	var prev activeNode
 	var i int
 	for j := 1; j < len(activeNodes); j++ {
-		if !(activeNodes[j].nodeId == prev.nodeId && activeNodes[j].recordSliceLen == prev.recordSliceLen) {
+		if !(activeNodes[j].nodeId == activeNodes[i].nodeId && activeNodes[j].recordSliceLen == activeNodes[i].recordSliceLen) {
 			i++
 			activeNodes[i] = activeNodes[j]
 		}
-		prev = activeNodes[j]
 	}
 	return activeNodes[0:i]
 }

@@ -159,6 +159,15 @@
   pattern: "**/*.h"
   config: *cconfig
 
+- name: protobuf
+  pattern: "**/*.proto"
+  config:
+    autoIndent: true
+    syntaxLanguage: protobuf
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
 #- name: custom commands for a specific project
 #  pattern: "**/myproject/**"
 #  config:

@@ -18,18 +18,19 @@ This document lists every configuration option in aretext.
 Syntax Languages
 ----------------
 
-| Value     | Description                                                     |
-|-----------|-----------------------------------------------------------------|
-| plaintext | Do not apply any syntax highlighting.                           |
-| json      | [JSON](https://www.json.org/json-en.html)                       |
-| yaml      | [YAML](https://yaml.org/spec/)                                  |
-| go        | [Go](https://golang.org/ref/spec)                               |
-| python    | [Python](https://docs.python.org/3/reference/)                  |
-| rust      | [Rust](https://doc.rust-lang.org/stable/reference/)             |
-| c         | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html) |
-| devlog    | [devlog](https://devlog-cli.org/)                               |
-| gitcommit | Format for editing a git commit                                 |
-| gitrebase | Format for git interactive rebase                               |
+| Value     | Description                                                                              |
+|-----------|------------------------------------------------------------------------------------------|
+| plaintext | Do not apply any syntax highlighting.                                                    |
+| json      | [JSON](https://www.json.org/json-en.html)                                                |
+| yaml      | [YAML](https://yaml.org/spec/)                                                           |
+| go        | [Go](https://golang.org/ref/spec)                                                        |
+| python    | [Python](https://docs.python.org/3/reference/)                                           |
+| rust      | [Rust](https://doc.rust-lang.org/stable/reference/)                                      |
+| c         | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                          |
+| protobuf  | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3) |
+| devlog    | [devlog](https://devlog-cli.org/)                                                        |
+| gitcommit | Format for editing a git commit                                                          |
+| gitrebase | Format for git interactive rebase                                                        |
 
 Menu Command Object
 -------------------

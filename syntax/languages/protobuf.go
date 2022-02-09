@@ -127,8 +127,8 @@ func protobufKeywordParseFunc() parser.Func {
 		return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
 	}
 
-	isLetterDigitOrUnderscore := func(r rune) bool {
-		return isLetter(r) || (r >= '0' && r <= '9') || r == '_'
+	isLetterDigitPeriodOrUnderscore := func(r rune) bool {
+		return isLetter(r) || (r >= '0' && r <= '9') || r == '.' || r == '_'
 	}
 
 	allLevelKeywords := []string{"true", "false", "message", "enum", "option"}
@@ -157,7 +157,7 @@ func protobufKeywordParseFunc() parser.Func {
 	// Consume an identifier, then check whether it's a keyword.
 	// The parser recognizes different keywords at the top-level than within a block (nested in open/close parens).
 	return consumeSingleRuneLike(isLetter).
-		ThenMaybe(consumeRunesLike(isLetterDigitOrUnderscore)).
+		ThenMaybe(consumeRunesLike(isLetterDigitPeriodOrUnderscore)).
 		MapWithInput(func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
 			depth := result.NextState.(protobufParseState).depth
 			if depth == 0 {

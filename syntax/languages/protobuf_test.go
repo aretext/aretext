@@ -38,6 +38,22 @@ package foo;
 			},
 		},
 		{
+			name: "identifier parsing",
+			text: `
+message Foo {
+	int64 foo.message.bar = 1;
+}
+`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleKeyword, Text: "message"},
+				{Role: parser.TokenRoleIdentifier, Text: "Foo"},
+				{Role: parser.TokenRoleKeyword, Text: "int64"},
+				{Role: parser.TokenRoleIdentifier, Text: "foo.message.bar"},
+				{Role: parser.TokenRoleOperator, Text: "="},
+				{Role: parser.TokenRoleNumber, Text: "1"},
+			},
+		},
+		{
 			name: "grpc service",
 			text: `
 service SearchService {

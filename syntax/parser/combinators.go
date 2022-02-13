@@ -87,9 +87,19 @@ func (f Func) ThenNot(nextFn Func) Func {
 
 // combineSeqResults combines two adjacent results into a single result.
 func combineSeqResults(r1, r2 Result) Result {
+	tokens := make([]ComputedToken, 0, len(r1.ComputedTokens)+len(r2.ComputedTokens))
+	tokens = append(tokens, r1.ComputedTokens...)
+	for _, tok := range r2.ComputedTokens {
+		tokens = append(tokens, ComputedToken{
+			Offset: r1.NumConsumed + tok.Offset,
+			Length: tok.Length,
+			Role:   tok.Role,
+		})
+	}
+
 	return Result{
 		NumConsumed:    r1.NumConsumed + r2.NumConsumed,
-		ComputedTokens: append(r1.ComputedTokens, r2.ComputedTokens...),
+		ComputedTokens: tokens,
 		NextState:      r2.NextState,
 	}
 }

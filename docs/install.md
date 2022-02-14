@@ -67,7 +67,7 @@ cd aretext
 make install
 ```
 
-This will install aretext in `$HOME/go/bin`, which you can add to your `$PATH`:
+This will install aretext in `$HOME/go/bin`, which you can add to your `$PATH` environment variable. If you are using the bash shell, set `$PATH` like this:
 
 ```
 export PATH=$PATH:$HOME/go/bin

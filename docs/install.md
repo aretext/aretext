@@ -62,15 +62,16 @@ Build From Source
 If you have [installed go](https://golang.org/doc/install), then you can build aretext from source:
 
 ```
+mkdir -p $(go env GOPATH)/bin
 git clone https://github.com/aretext/aretext.git
 cd aretext
 make install
 ```
 
-This will install aretext in `$HOME/go/bin`, which you can add to your `$PATH` environment variable. If you are using the bash shell, set `$PATH` like this:
+This will install aretext in `$(go env GOPATH)/bin`, which you can add to your `$PATH` environment variable. If you are using the bash shell, set `$PATH` like this:
 
 ```
-export PATH=$PATH:$HOME/go/bin
+export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
 Packages

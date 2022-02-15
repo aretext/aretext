@@ -130,6 +130,11 @@ func TestGraphemeClusterWidth(t *testing.T) {
 			gc:            []rune{'\U0001f1fa', '\U0001f1f8'},
 			expectedWidth: 1,
 		},
+		{
+			name:          "emoji presentation selector",
+			gc:            []rune{'\u2139', '\ufe0f'},
+			expectedWidth: 2,
+		},
 	}
 
 	for _, tc := range testCases {

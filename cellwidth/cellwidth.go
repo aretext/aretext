@@ -43,6 +43,12 @@ func GraphemeClusterWidth(gc []rune, offsetInLine uint64, tabSize uint64) uint64
 		return nextTabPosition - offsetInLine
 	}
 
+	if isEmojiVariationSequence(gc) {
+		// Most terminals render a character followed by
+		// the emoji presentation selector as an icon occupying two cells.
+		return 2
+	}
+
 	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
 		return RuneWidth(gc[0])
 	}
@@ -52,4 +58,15 @@ func GraphemeClusterWidth(gc []rune, offsetInLine uint64, tabSize uint64) uint64
 		w += RuneWidth(r)
 	}
 	return w
+}
+
+// Emoji variation selectors modify the appearance of emojis.
+// http://www.unicode.org/reports/tr51/#Emoji_Variation_Sequences
+const emojiPresentationSelector = 0xFE0F // U+FE0F VARIATION SELECTOR-16 (VS16)
+
+func isEmojiVariationSequence(gc []rune) bool {
+	if len(gc) <= 1 {
+		return false
+	}
+	return gc[len(gc)-1] == emojiPresentationSelector
 }

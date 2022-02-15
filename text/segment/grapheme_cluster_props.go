@@ -229,7 +229,19 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 2139:
 		return gbPropExtend
 
-	case r <= 2258:
+	case r <= 2191:
+		return gbPropOther
+
+	case r <= 2193:
+		return gbPropPrepend
+
+	case r <= 2199:
+		return gbPropOther
+
+	case r <= 2207:
+		return gbPropExtend
+
+	case r <= 2249:
 		return gbPropOther
 
 	case r <= 2273:
@@ -566,6 +578,12 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropSpacingMark
 
 	case r <= 3076:
+		return gbPropExtend
+
+	case r <= 3131:
+		return gbPropOther
+
+	case r <= 3132:
 		return gbPropExtend
 
 	case r <= 3133:
@@ -973,11 +991,17 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 5908:
 		return gbPropExtend
 
+	case r <= 5909:
+		return gbPropSpacingMark
+
 	case r <= 5937:
 		return gbPropOther
 
-	case r <= 5940:
+	case r <= 5939:
 		return gbPropExtend
+
+	case r <= 5940:
+		return gbPropSpacingMark
 
 	case r <= 5969:
 		return gbPropOther
@@ -1029,6 +1053,9 @@ func gbPropForRune(r rune) gbProp {
 
 	case r <= 6158:
 		return gbPropControl
+
+	case r <= 6159:
+		return gbPropExtend
 
 	case r <= 6276:
 		return gbPropOther
@@ -1138,7 +1165,7 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 6846:
 		return gbPropExtend
 
-	case r <= 6848:
+	case r <= 6862:
 		return gbPropExtend
 
 	case r <= 6911:
@@ -1297,12 +1324,6 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 7615:
 		return gbPropOther
 
-	case r <= 7673:
-		return gbPropExtend
-
-	case r <= 7674:
-		return gbPropOther
-
 	case r <= 7679:
 		return gbPropExtend
 
@@ -1426,6 +1447,21 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9192:
 		return gbPropOther
 
+	case r <= 9196:
+		return gbPropExtended_Pictographic
+
+	case r <= 9198:
+		return gbPropExtended_Pictographic
+
+	case r <= 9199:
+		return gbPropExtended_Pictographic
+
+	case r <= 9200:
+		return gbPropExtended_Pictographic
+
+	case r <= 9202:
+		return gbPropExtended_Pictographic
+
 	case r <= 9203:
 		return gbPropExtended_Pictographic
 
@@ -1467,6 +1503,12 @@ func gbPropForRune(r rune) gbProp {
 
 	case r <= 9727:
 		return gbPropOther
+
+	case r <= 9729:
+		return gbPropExtended_Pictographic
+
+	case r <= 9731:
+		return gbPropExtended_Pictographic
 
 	case r <= 9732:
 		return gbPropExtended_Pictographic
@@ -1537,10 +1579,16 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9773:
 		return gbPropExtended_Pictographic
 
+	case r <= 9774:
+		return gbPropExtended_Pictographic
+
 	case r <= 9775:
 		return gbPropExtended_Pictographic
 
 	case r <= 9783:
+		return gbPropExtended_Pictographic
+
+	case r <= 9785:
 		return gbPropExtended_Pictographic
 
 	case r <= 9786:
@@ -1615,6 +1663,12 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9873:
 		return gbPropExtended_Pictographic
 
+	case r <= 9874:
+		return gbPropExtended_Pictographic
+
+	case r <= 9875:
+		return gbPropExtended_Pictographic
+
 	case r <= 9876:
 		return gbPropExtended_Pictographic
 
@@ -1640,6 +1694,12 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropExtended_Pictographic
 
 	case r <= 9889:
+		return gbPropExtended_Pictographic
+
+	case r <= 9894:
+		return gbPropExtended_Pictographic
+
+	case r <= 9895:
 		return gbPropExtended_Pictographic
 
 	case r <= 9897:
@@ -1675,6 +1735,9 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9933:
 		return gbPropExtended_Pictographic
 
+	case r <= 9934:
+		return gbPropExtended_Pictographic
+
 	case r <= 9935:
 		return gbPropExtended_Pictographic
 
@@ -1687,10 +1750,16 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9938:
 		return gbPropExtended_Pictographic
 
+	case r <= 9939:
+		return gbPropExtended_Pictographic
+
 	case r <= 9940:
 		return gbPropExtended_Pictographic
 
 	case r <= 9960:
+		return gbPropExtended_Pictographic
+
+	case r <= 9961:
 		return gbPropExtended_Pictographic
 
 	case r <= 9962:
@@ -1699,10 +1768,22 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 9967:
 		return gbPropExtended_Pictographic
 
+	case r <= 9969:
+		return gbPropExtended_Pictographic
+
+	case r <= 9971:
+		return gbPropExtended_Pictographic
+
+	case r <= 9972:
+		return gbPropExtended_Pictographic
+
 	case r <= 9973:
 		return gbPropExtended_Pictographic
 
 	case r <= 9974:
+		return gbPropExtended_Pictographic
+
+	case r <= 9977:
 		return gbPropExtended_Pictographic
 
 	case r <= 9978:
@@ -1728,6 +1809,9 @@ func gbPropForRune(r rune) gbProp {
 
 	case r <= 9991:
 		return gbPropOther
+
+	case r <= 9996:
+		return gbPropExtended_Pictographic
 
 	case r <= 9997:
 		return gbPropExtended_Pictographic
@@ -1818,6 +1902,9 @@ func gbPropForRune(r rune) gbProp {
 
 	case r <= 10082:
 		return gbPropOther
+
+	case r <= 10083:
+		return gbPropExtended_Pictographic
 
 	case r <= 10084:
 		return gbPropExtended_Pictographic
@@ -4717,6 +4804,12 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 69456:
 		return gbPropExtend
 
+	case r <= 69505:
+		return gbPropOther
+
+	case r <= 69509:
+		return gbPropExtend
+
 	case r <= 69631:
 		return gbPropOther
 
@@ -4733,6 +4826,18 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropOther
 
 	case r <= 69702:
+		return gbPropExtend
+
+	case r <= 69743:
+		return gbPropOther
+
+	case r <= 69744:
+		return gbPropExtend
+
+	case r <= 69746:
+		return gbPropOther
+
+	case r <= 69748:
 		return gbPropExtend
 
 	case r <= 69758:
@@ -4764,6 +4869,12 @@ func gbPropForRune(r rune) gbProp {
 
 	case r <= 69821:
 		return gbPropPrepend
+
+	case r <= 69825:
+		return gbPropOther
+
+	case r <= 69826:
+		return gbPropExtend
 
 	case r <= 69836:
 		return gbPropOther
@@ -5096,7 +5207,7 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropExtend
 
 	case r <= 71457:
-		return gbPropSpacingMark
+		return gbPropOther
 
 	case r <= 71461:
 		return gbPropExtend
@@ -5419,6 +5530,18 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 113827:
 		return gbPropControl
 
+	case r <= 118527:
+		return gbPropOther
+
+	case r <= 118573:
+		return gbPropExtend
+
+	case r <= 118575:
+		return gbPropOther
+
+	case r <= 118598:
+		return gbPropExtend
+
 	case r <= 119140:
 		return gbPropOther
 
@@ -5534,6 +5657,12 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropOther
 
 	case r <= 123190:
+		return gbPropExtend
+
+	case r <= 123565:
+		return gbPropOther
+
+	case r <= 123566:
 		return gbPropExtend
 
 	case r <= 123627:
@@ -5665,10 +5794,94 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 127743:
 		return gbPropExtended_Pictographic
 
+	case r <= 127756:
+		return gbPropExtended_Pictographic
+
+	case r <= 127758:
+		return gbPropExtended_Pictographic
+
+	case r <= 127759:
+		return gbPropExtended_Pictographic
+
+	case r <= 127760:
+		return gbPropExtended_Pictographic
+
+	case r <= 127761:
+		return gbPropExtended_Pictographic
+
+	case r <= 127762:
+		return gbPropExtended_Pictographic
+
+	case r <= 127765:
+		return gbPropExtended_Pictographic
+
+	case r <= 127768:
+		return gbPropExtended_Pictographic
+
+	case r <= 127769:
+		return gbPropExtended_Pictographic
+
+	case r <= 127770:
+		return gbPropExtended_Pictographic
+
+	case r <= 127771:
+		return gbPropExtended_Pictographic
+
+	case r <= 127772:
+		return gbPropExtended_Pictographic
+
+	case r <= 127774:
+		return gbPropExtended_Pictographic
+
+	case r <= 127776:
+		return gbPropExtended_Pictographic
+
 	case r <= 127777:
 		return gbPropExtended_Pictographic
 
 	case r <= 127779:
+		return gbPropExtended_Pictographic
+
+	case r <= 127788:
+		return gbPropExtended_Pictographic
+
+	case r <= 127791:
+		return gbPropExtended_Pictographic
+
+	case r <= 127793:
+		return gbPropExtended_Pictographic
+
+	case r <= 127795:
+		return gbPropExtended_Pictographic
+
+	case r <= 127797:
+		return gbPropExtended_Pictographic
+
+	case r <= 127798:
+		return gbPropExtended_Pictographic
+
+	case r <= 127818:
+		return gbPropExtended_Pictographic
+
+	case r <= 127819:
+		return gbPropExtended_Pictographic
+
+	case r <= 127823:
+		return gbPropExtended_Pictographic
+
+	case r <= 127824:
+		return gbPropExtended_Pictographic
+
+	case r <= 127867:
+		return gbPropExtended_Pictographic
+
+	case r <= 127868:
+		return gbPropExtended_Pictographic
+
+	case r <= 127869:
+		return gbPropExtended_Pictographic
+
+	case r <= 127871:
 		return gbPropExtended_Pictographic
 
 	case r <= 127891:
@@ -5689,10 +5902,55 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 127901:
 		return gbPropExtended_Pictographic
 
+	case r <= 127903:
+		return gbPropExtended_Pictographic
+
+	case r <= 127940:
+		return gbPropExtended_Pictographic
+
+	case r <= 127941:
+		return gbPropExtended_Pictographic
+
+	case r <= 127942:
+		return gbPropExtended_Pictographic
+
+	case r <= 127943:
+		return gbPropExtended_Pictographic
+
+	case r <= 127944:
+		return gbPropExtended_Pictographic
+
+	case r <= 127945:
+		return gbPropExtended_Pictographic
+
+	case r <= 127946:
+		return gbPropExtended_Pictographic
+
+	case r <= 127950:
+		return gbPropExtended_Pictographic
+
+	case r <= 127955:
+		return gbPropExtended_Pictographic
+
+	case r <= 127967:
+		return gbPropExtended_Pictographic
+
+	case r <= 127971:
+		return gbPropExtended_Pictographic
+
+	case r <= 127972:
+		return gbPropExtended_Pictographic
+
 	case r <= 127984:
 		return gbPropExtended_Pictographic
 
 	case r <= 127986:
+		return gbPropExtended_Pictographic
+
+	case r <= 127987:
+		return gbPropExtended_Pictographic
+
+	case r <= 127988:
 		return gbPropExtended_Pictographic
 
 	case r <= 127989:
@@ -5701,16 +5959,145 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 127990:
 		return gbPropExtended_Pictographic
 
+	case r <= 127991:
+		return gbPropExtended_Pictographic
+
 	case r <= 127994:
 		return gbPropExtended_Pictographic
 
 	case r <= 127999:
 		return gbPropExtend
 
+	case r <= 128007:
+		return gbPropExtended_Pictographic
+
+	case r <= 128008:
+		return gbPropExtended_Pictographic
+
+	case r <= 128011:
+		return gbPropExtended_Pictographic
+
+	case r <= 128014:
+		return gbPropExtended_Pictographic
+
+	case r <= 128016:
+		return gbPropExtended_Pictographic
+
+	case r <= 128018:
+		return gbPropExtended_Pictographic
+
+	case r <= 128019:
+		return gbPropExtended_Pictographic
+
+	case r <= 128020:
+		return gbPropExtended_Pictographic
+
+	case r <= 128021:
+		return gbPropExtended_Pictographic
+
+	case r <= 128022:
+		return gbPropExtended_Pictographic
+
+	case r <= 128041:
+		return gbPropExtended_Pictographic
+
+	case r <= 128042:
+		return gbPropExtended_Pictographic
+
+	case r <= 128062:
+		return gbPropExtended_Pictographic
+
+	case r <= 128063:
+		return gbPropExtended_Pictographic
+
+	case r <= 128064:
+		return gbPropExtended_Pictographic
+
+	case r <= 128065:
+		return gbPropExtended_Pictographic
+
+	case r <= 128100:
+		return gbPropExtended_Pictographic
+
+	case r <= 128101:
+		return gbPropExtended_Pictographic
+
+	case r <= 128107:
+		return gbPropExtended_Pictographic
+
+	case r <= 128109:
+		return gbPropExtended_Pictographic
+
+	case r <= 128172:
+		return gbPropExtended_Pictographic
+
+	case r <= 128173:
+		return gbPropExtended_Pictographic
+
+	case r <= 128181:
+		return gbPropExtended_Pictographic
+
+	case r <= 128183:
+		return gbPropExtended_Pictographic
+
+	case r <= 128235:
+		return gbPropExtended_Pictographic
+
+	case r <= 128237:
+		return gbPropExtended_Pictographic
+
+	case r <= 128238:
+		return gbPropExtended_Pictographic
+
+	case r <= 128239:
+		return gbPropExtended_Pictographic
+
+	case r <= 128244:
+		return gbPropExtended_Pictographic
+
+	case r <= 128245:
+		return gbPropExtended_Pictographic
+
+	case r <= 128247:
+		return gbPropExtended_Pictographic
+
+	case r <= 128248:
+		return gbPropExtended_Pictographic
+
+	case r <= 128252:
+		return gbPropExtended_Pictographic
+
 	case r <= 128253:
 		return gbPropExtended_Pictographic
 
 	case r <= 128254:
+		return gbPropExtended_Pictographic
+
+	case r <= 128258:
+		return gbPropExtended_Pictographic
+
+	case r <= 128259:
+		return gbPropExtended_Pictographic
+
+	case r <= 128263:
+		return gbPropExtended_Pictographic
+
+	case r <= 128264:
+		return gbPropExtended_Pictographic
+
+	case r <= 128265:
+		return gbPropExtended_Pictographic
+
+	case r <= 128276:
+		return gbPropExtended_Pictographic
+
+	case r <= 128277:
+		return gbPropExtended_Pictographic
+
+	case r <= 128299:
+		return gbPropExtended_Pictographic
+
+	case r <= 128301:
 		return gbPropExtended_Pictographic
 
 	case r <= 128317:
@@ -5722,10 +6109,16 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 128328:
 		return gbPropExtended_Pictographic
 
+	case r <= 128330:
+		return gbPropExtended_Pictographic
+
 	case r <= 128334:
 		return gbPropExtended_Pictographic
 
 	case r <= 128335:
+		return gbPropExtended_Pictographic
+
+	case r <= 128347:
 		return gbPropExtended_Pictographic
 
 	case r <= 128359:
@@ -5848,16 +6241,223 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 128505:
 		return gbPropExtended_Pictographic
 
+	case r <= 128506:
+		return gbPropExtended_Pictographic
+
+	case r <= 128511:
+		return gbPropExtended_Pictographic
+
+	case r <= 128512:
+		return gbPropExtended_Pictographic
+
+	case r <= 128518:
+		return gbPropExtended_Pictographic
+
+	case r <= 128520:
+		return gbPropExtended_Pictographic
+
+	case r <= 128525:
+		return gbPropExtended_Pictographic
+
+	case r <= 128526:
+		return gbPropExtended_Pictographic
+
+	case r <= 128527:
+		return gbPropExtended_Pictographic
+
+	case r <= 128528:
+		return gbPropExtended_Pictographic
+
+	case r <= 128529:
+		return gbPropExtended_Pictographic
+
+	case r <= 128532:
+		return gbPropExtended_Pictographic
+
+	case r <= 128533:
+		return gbPropExtended_Pictographic
+
+	case r <= 128534:
+		return gbPropExtended_Pictographic
+
+	case r <= 128535:
+		return gbPropExtended_Pictographic
+
+	case r <= 128536:
+		return gbPropExtended_Pictographic
+
+	case r <= 128537:
+		return gbPropExtended_Pictographic
+
+	case r <= 128538:
+		return gbPropExtended_Pictographic
+
+	case r <= 128539:
+		return gbPropExtended_Pictographic
+
+	case r <= 128542:
+		return gbPropExtended_Pictographic
+
+	case r <= 128543:
+		return gbPropExtended_Pictographic
+
+	case r <= 128549:
+		return gbPropExtended_Pictographic
+
+	case r <= 128551:
+		return gbPropExtended_Pictographic
+
+	case r <= 128555:
+		return gbPropExtended_Pictographic
+
+	case r <= 128556:
+		return gbPropExtended_Pictographic
+
+	case r <= 128557:
+		return gbPropExtended_Pictographic
+
+	case r <= 128559:
+		return gbPropExtended_Pictographic
+
+	case r <= 128563:
+		return gbPropExtended_Pictographic
+
+	case r <= 128564:
+		return gbPropExtended_Pictographic
+
+	case r <= 128565:
+		return gbPropExtended_Pictographic
+
+	case r <= 128566:
+		return gbPropExtended_Pictographic
+
+	case r <= 128576:
+		return gbPropExtended_Pictographic
+
+	case r <= 128580:
+		return gbPropExtended_Pictographic
+
 	case r <= 128591:
 		return gbPropExtended_Pictographic
 
 	case r <= 128639:
 		return gbPropOther
 
+	case r <= 128640:
+		return gbPropExtended_Pictographic
+
+	case r <= 128642:
+		return gbPropExtended_Pictographic
+
+	case r <= 128645:
+		return gbPropExtended_Pictographic
+
+	case r <= 128646:
+		return gbPropExtended_Pictographic
+
+	case r <= 128647:
+		return gbPropExtended_Pictographic
+
+	case r <= 128648:
+		return gbPropExtended_Pictographic
+
+	case r <= 128649:
+		return gbPropExtended_Pictographic
+
+	case r <= 128651:
+		return gbPropExtended_Pictographic
+
+	case r <= 128652:
+		return gbPropExtended_Pictographic
+
+	case r <= 128653:
+		return gbPropExtended_Pictographic
+
+	case r <= 128654:
+		return gbPropExtended_Pictographic
+
+	case r <= 128655:
+		return gbPropExtended_Pictographic
+
+	case r <= 128656:
+		return gbPropExtended_Pictographic
+
+	case r <= 128659:
+		return gbPropExtended_Pictographic
+
+	case r <= 128660:
+		return gbPropExtended_Pictographic
+
+	case r <= 128661:
+		return gbPropExtended_Pictographic
+
+	case r <= 128662:
+		return gbPropExtended_Pictographic
+
+	case r <= 128663:
+		return gbPropExtended_Pictographic
+
+	case r <= 128664:
+		return gbPropExtended_Pictographic
+
+	case r <= 128666:
+		return gbPropExtended_Pictographic
+
+	case r <= 128673:
+		return gbPropExtended_Pictographic
+
+	case r <= 128674:
+		return gbPropExtended_Pictographic
+
+	case r <= 128675:
+		return gbPropExtended_Pictographic
+
+	case r <= 128677:
+		return gbPropExtended_Pictographic
+
+	case r <= 128678:
+		return gbPropExtended_Pictographic
+
+	case r <= 128685:
+		return gbPropExtended_Pictographic
+
+	case r <= 128689:
+		return gbPropExtended_Pictographic
+
+	case r <= 128690:
+		return gbPropExtended_Pictographic
+
+	case r <= 128693:
+		return gbPropExtended_Pictographic
+
+	case r <= 128694:
+		return gbPropExtended_Pictographic
+
+	case r <= 128696:
+		return gbPropExtended_Pictographic
+
+	case r <= 128702:
+		return gbPropExtended_Pictographic
+
+	case r <= 128703:
+		return gbPropExtended_Pictographic
+
+	case r <= 128704:
+		return gbPropExtended_Pictographic
+
 	case r <= 128709:
 		return gbPropExtended_Pictographic
 
 	case r <= 128714:
+		return gbPropExtended_Pictographic
+
+	case r <= 128715:
+		return gbPropExtended_Pictographic
+
+	case r <= 128716:
+		return gbPropExtended_Pictographic
+
+	case r <= 128719:
 		return gbPropExtended_Pictographic
 
 	case r <= 128720:
@@ -5870,6 +6470,12 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropExtended_Pictographic
 
 	case r <= 128725:
+		return gbPropExtended_Pictographic
+
+	case r <= 128727:
+		return gbPropExtended_Pictographic
+
+	case r <= 128732:
 		return gbPropExtended_Pictographic
 
 	case r <= 128735:
@@ -5914,6 +6520,9 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 128762:
 		return gbPropExtended_Pictographic
 
+	case r <= 128764:
+		return gbPropExtended_Pictographic
+
 	case r <= 128767:
 		return gbPropExtended_Pictographic
 
@@ -5930,6 +6539,12 @@ func gbPropForRune(r rune) gbProp {
 		return gbPropExtended_Pictographic
 
 	case r <= 129003:
+		return gbPropExtended_Pictographic
+
+	case r <= 129007:
+		return gbPropExtended_Pictographic
+
+	case r <= 129008:
 		return gbPropExtended_Pictographic
 
 	case r <= 129023:
@@ -6040,6 +6655,9 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 129398:
 		return gbPropExtended_Pictographic
 
+	case r <= 129400:
+		return gbPropExtended_Pictographic
+
 	case r <= 129401:
 		return gbPropExtended_Pictographic
 
@@ -6091,6 +6709,9 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 129482:
 		return gbPropExtended_Pictographic
 
+	case r <= 129483:
+		return gbPropExtended_Pictographic
+
 	case r <= 129484:
 		return gbPropExtended_Pictographic
 
@@ -6109,10 +6730,16 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 129651:
 		return gbPropExtended_Pictographic
 
+	case r <= 129652:
+		return gbPropExtended_Pictographic
+
 	case r <= 129655:
 		return gbPropExtended_Pictographic
 
 	case r <= 129658:
+		return gbPropExtended_Pictographic
+
+	case r <= 129660:
 		return gbPropExtended_Pictographic
 
 	case r <= 129663:
@@ -6121,11 +6748,65 @@ func gbPropForRune(r rune) gbProp {
 	case r <= 129666:
 		return gbPropExtended_Pictographic
 
+	case r <= 129670:
+		return gbPropExtended_Pictographic
+
 	case r <= 129679:
 		return gbPropExtended_Pictographic
 
 	case r <= 129685:
 		return gbPropExtended_Pictographic
+
+	case r <= 129704:
+		return gbPropExtended_Pictographic
+
+	case r <= 129708:
+		return gbPropExtended_Pictographic
+
+	case r <= 129711:
+		return gbPropExtended_Pictographic
+
+	case r <= 129718:
+		return gbPropExtended_Pictographic
+
+	case r <= 129722:
+		return gbPropExtended_Pictographic
+
+	case r <= 129727:
+		return gbPropExtended_Pictographic
+
+	case r <= 129730:
+		return gbPropExtended_Pictographic
+
+	case r <= 129733:
+		return gbPropExtended_Pictographic
+
+	case r <= 129743:
+		return gbPropExtended_Pictographic
+
+	case r <= 129750:
+		return gbPropExtended_Pictographic
+
+	case r <= 129753:
+		return gbPropExtended_Pictographic
+
+	case r <= 129759:
+		return gbPropExtended_Pictographic
+
+	case r <= 129767:
+		return gbPropExtended_Pictographic
+
+	case r <= 129775:
+		return gbPropExtended_Pictographic
+
+	case r <= 129782:
+		return gbPropExtended_Pictographic
+
+	case r <= 129791:
+		return gbPropExtended_Pictographic
+
+	case r <= 130047:
+		return gbPropOther
 
 	case r <= 131069:
 		return gbPropExtended_Pictographic

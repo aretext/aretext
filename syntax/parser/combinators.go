@@ -85,6 +85,25 @@ func (f Func) ThenNot(nextFn Func) Func {
 	}
 }
 
+// MaybeBefore produces a parse func that attempts `f` then `nextFn`,
+// falling back to `nextFn` if `f` fails.
+func (f Func) MaybeBefore(nextFn Func) Func {
+	return func(iter TrackingRuneIter, state State) Result {
+		result := f(iter, state)
+		if result.IsFailure() {
+			return nextFn(iter, state)
+		}
+
+		iter.Skip(result.NumConsumed)
+		nextResult := nextFn(iter, result.NextState)
+		if nextResult.IsFailure() {
+			return FailedResult
+		}
+
+		return combineSeqResults(result, nextResult)
+	}
+}
+
 // combineSeqResults combines two adjacent results into a single result.
 func combineSeqResults(r1, r2 Result) Result {
 	tokens := make([]ComputedToken, 0, len(r1.ComputedTokens)+len(r2.ComputedTokens))

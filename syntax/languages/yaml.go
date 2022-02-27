@@ -189,13 +189,13 @@ func yamlStringParseFunc() parser.Func {
 
 // Match at least two words separated by a space, continuing to the end of the line.
 // Example: "123 abc" matches, but "123" does not.
-func yamlMultiWordUnquotedScalarParseFunc(endRunePredicate func(r rune) bool) parser.Func {
+func yamlMultiWordUnquotedScalarParseFunc(scalarRunePredicate func(r rune) bool) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var searchState int
 		var n uint64
 		for {
 			r, err := iter.NextRune()
-			if err != nil || endRunePredicate(r) {
+			if err != nil || !scalarRunePredicate(r) {
 				break
 			}
 			n++
@@ -231,11 +231,11 @@ func yamlMultiWordUnquotedScalarParseFunc(endRunePredicate func(r rune) bool) pa
 	}
 }
 
-func yamlSingleWordUnquotedScalarParseFunc() parser.Func {
+func yamlSingleWordUnquotedScalarParseFunc(scalarRunePredicate func(r rune) bool) parser.Func {
 	keywords := []string{"true", "false", "null"}
 
 	yamlScalarRune := func(r rune) bool {
-		return !(unicode.IsSpace(r) || r == '#')
+		return scalarRunePredicate(r) && !unicode.IsSpace(r)
 	}
 
 	return consumeRunesLike(yamlScalarRune).
@@ -243,10 +243,11 @@ func yamlSingleWordUnquotedScalarParseFunc() parser.Func {
 }
 
 func yamlBlockScalarParseFunc() parser.Func {
-	endOfBlockScalarRune := func(r rune) bool {
-		return r == '#' || r == '\n'
+	scalarRunePredicate := func(r rune) bool {
+		return !(r == '#' || r == '\n')
 	}
-	parseMultiWordUnquotedScalar := yamlMultiWordUnquotedScalarParseFunc(endOfBlockScalarRune)
+	parseMultiWordUnquotedScalar := yamlMultiWordUnquotedScalarParseFunc(scalarRunePredicate)
+	parseSingleWordUnquotedScalar := yamlSingleWordUnquotedScalarParseFunc(scalarRunePredicate)
 
 	parseBlockStyleIndicator := consumeString("|").Or(consumeString(">")).
 		Map(recognizeToken(parser.TokenRoleOperator))
@@ -333,19 +334,19 @@ func yamlBlockScalarParseFunc() parser.Func {
 			Or(yamlStringParseFunc()).
 			Or(parseMultiWordUnquotedScalar).
 			Or(jsonNumberParseFunc()).
-			Or(yamlSingleWordUnquotedScalarParseFunc()))
+			Or(parseSingleWordUnquotedScalar))
 }
 
 func yamlFlowScalarParseFunc() parser.Func {
-	endOfFlowItemRune := func(r rune) bool {
-		return r == ',' || r == '{' || r == '}' || r == '[' || r == ']' || r == '#' || r == '\n'
+	scalarRunePredicate := func(r rune) bool {
+		return !(r == ',' || r == '{' || r == '}' || r == '[' || r == ']' || r == '#' || r == '\n')
 	}
 
 	return yamlSkipIndentation(
 		yamlStringParseFunc().
-			Or(yamlMultiWordUnquotedScalarParseFunc(endOfFlowItemRune)).
+			Or(yamlMultiWordUnquotedScalarParseFunc(scalarRunePredicate)).
 			Or(jsonNumberParseFunc()).
-			Or(yamlSingleWordUnquotedScalarParseFunc()))
+			Or(yamlSingleWordUnquotedScalarParseFunc(scalarRunePredicate)))
 }
 
 func yamlCommentParseFunc() parser.Func {

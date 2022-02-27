@@ -287,6 +287,20 @@ baz:
 				{Text: `-`, Role: parser.TokenRoleOperator},
 			},
 		},
+		{
+			name: "flow map with key adjacent to closing brace",
+			text: `
+foo: [ bar, {key: val} ]
+baz:
+  - test
+`,
+			expected: []TokenWithText{
+				{Text: `foo:`, Role: yamlTokenRoleKey},
+				{Text: `key:`, Role: yamlTokenRoleKey},
+				{Text: `baz:`, Role: yamlTokenRoleKey},
+				{Text: `-`, Role: parser.TokenRoleOperator},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

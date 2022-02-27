@@ -8,7 +8,7 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-func TestYamlTokenizer(t *testing.T) {
+func TestYamlParseFunc(t *testing.T) {
 	const tokenRoleKey = parser.TokenRoleCustom1
 	testCases := []struct {
 		name     string

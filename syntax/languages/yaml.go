@@ -96,10 +96,11 @@ func yamlFlowStyleBracketsAndBracesParseFunc() parser.Func {
 	parseCloseBracket := consumeString("]").
 		Map(popFlowStack(yamlFlowStyleArray))
 
-	return parseOpenBrace.
-		Or(parseCloseBrace).
-		Or(parseOpenBracket).
-		Or(parseCloseBracket)
+	return yamlSkipIndentation(
+		parseOpenBrace.
+			Or(parseCloseBrace).
+			Or(parseOpenBracket).
+			Or(parseCloseBracket))
 }
 
 func yamlKeyParseFunc() parser.Func {

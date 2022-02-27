@@ -240,6 +240,7 @@ bar: 789
 			expected: []TokenWithText{
 				{Text: `foo:`, Role: yamlTokenRoleKey},
 				{Text: `123`, Role: parser.TokenRoleNumber},
+				{Text: `baz:`, Role: yamlTokenRoleKey},
 				{Text: `456`, Role: parser.TokenRoleNumber},
 			},
 		},
@@ -253,9 +254,37 @@ key2: 789
 				{Text: `key1:`, Role: yamlTokenRoleKey},
 				{Text: `foo:`, Role: yamlTokenRoleKey},
 				{Text: `123`, Role: parser.TokenRoleNumber},
+				{Text: `baz:`, Role: yamlTokenRoleKey},
 				{Text: `456`, Role: parser.TokenRoleNumber},
 				{Text: `key2:`, Role: yamlTokenRoleKey},
 				{Text: `789`, Role: parser.TokenRoleNumber},
+			},
+		},
+		{
+			name: "flow list followed by block list",
+			text: `
+foo: [ bar ]
+baz:
+  - test
+`,
+			expected: []TokenWithText{
+				{Text: `foo:`, Role: yamlTokenRoleKey},
+				{Text: `baz:`, Role: yamlTokenRoleKey},
+				{Text: `-`, Role: parser.TokenRoleOperator},
+			},
+		},
+		{
+			name: "flow map followed by block list",
+			text: `
+foo: { bar: val }
+baz:
+  - test
+`,
+			expected: []TokenWithText{
+				{Text: `foo:`, Role: yamlTokenRoleKey},
+				{Text: `bar:`, Role: yamlTokenRoleKey},
+				{Text: `baz:`, Role: yamlTokenRoleKey},
+				{Text: `-`, Role: parser.TokenRoleOperator},
 			},
 		},
 	}

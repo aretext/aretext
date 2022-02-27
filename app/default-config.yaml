@@ -24,13 +24,13 @@
       tokenString: {color: "maroon"}
       tokenComment: {color: "navy"}
       tokenCustom1: {color: "teal"}
-      tokenCustom2: {color: "darkblue"}
+      tokenCustom2: {color: "fuchsia"}
       tokenCustom3: {color: "red"}
       tokenCustom4: {color: "lime"}
-      tokenCustom5: {color: "fuchsia"}
-      tokenCustom6: {color: "aqua"}
-      tokenCustom7: {color: "darkgreen"}
-      tokenCustom8: {color: "darkcyan"}
+      tokenCustom5: {color: "aqua"}
+      tokenCustom6: {color: "darkgreen"}
+      tokenCustom7: {color: "darkcyan"}
+      tokenCustom8: {color: "darkblue"}
 
 #- name: linux wayland clipboard commands
 #  pattern: "**"

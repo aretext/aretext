@@ -67,6 +67,24 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "single-quoted string with newline",
+			text: `'foo
+bar
+baz'`,
+			expected: []TokenWithText{
+				{Text: "'foo\nbar\nbaz'", Role: parser.TokenRoleString},
+			},
+		},
+		{
+			name: "double-quoted string with newline",
+			text: `"foo
+bar
+baz"`,
+			expected: []TokenWithText{
+				{Text: "\"foo\nbar\nbaz\"", Role: parser.TokenRoleString},
+			},
+		},
+		{
 			name: "list item with unquoted scalar starting with hyphen",
 			text: `- -s -w -X go test`,
 			expected: []TokenWithText{

@@ -157,7 +157,7 @@ func yamlStringParseFunc() parser.Func {
 			// Consume the rest of the string.
 			for {
 				r, err = iter.NextRune()
-				if err != nil || r == '\n' {
+				if err != nil {
 					// Couldn't find a closing quote.
 					return parser.FailedResult
 				}
@@ -182,7 +182,7 @@ func yamlStringParseFunc() parser.Func {
 		})
 
 	return consumeSingleQuotedString.
-		Or(consumeCStyleString('"', false)).
+		Or(consumeCStyleString('"', true)).
 		Map(recognizeToken(parser.TokenRoleString))
 }
 

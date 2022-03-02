@@ -156,21 +156,21 @@ func FindNextMatch(state *EditorState, reverse bool) {
 
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.
 func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
+	// Search forward from the start position to the end of the text, looking for the first match.
 	searcher := text.NewSearcher(query)
 	r := tree.ReaderAtPosition(startPos)
 	foundMatch, matchOffset, err := searcher.NextInReader(&r)
 	if err != nil {
-		panic(err) // should never happen because the tree reader shouldn't return an error.
+		panic(err) // should never happen for text.Reader.
 	}
 
 	if foundMatch {
 		return true, startPos + matchOffset
 	}
 
-	// Wraparound search.
+	// Wraparound search from the beginning of the text to the start position.
 	r = tree.ReaderAtPosition(0)
-	searcher.Limit(startPos)
-	foundMatch, matchOffset, err = searcher.NextInReader(&r)
+	foundMatch, matchOffset, err = searcher.Limit(startPos).NextInReader(&r)
 	if err != nil {
 		panic(err)
 	}
@@ -179,57 +179,30 @@ func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, ui
 
 // searchTextBackward finds the beginning of the previous match before the start position.
 func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
-	if len(query) == 0 {
-		return false, 0
+	// Search from the beginning of the text just past the start position, looking for the last match.
+	// Set the limit to startPos + queryLen - 1 to include matches overlapping startPos, but not startPos itself.
+	searcher := text.NewSearcher(query)
+	r := tree.ReaderAtPosition(0)
+	limit := startPos + uint64(utf8.RuneCountInString(query))
+	if limit > 0 {
+		limit--
 	}
-
-	// Since we're searching backwards through the text, we need to find
-	// the mirror image of the query string.  Note that we are reversing the bytes
-	// of the query string, not runes or grapheme clusters.
-	reversedQuery := make([]byte, len(query))
-	for i := 0; i < len(query); i++ {
-		reversedQuery[i] = query[len(query)-1-i]
-	}
-
-	// It is possible for the cursor to be in the middle of a search query,
-	// in which case we want to match the beginning of the query.
-	// Example: if the text is "...ab[c]d..." (where [] shows the cursor position)
-	// and we're searching backwards for "abcd", the cursor should end up on "a".
-	// To ensure that we find these matches, we need to start searching from the current
-	// position plus one less than the length of the query (or the end of text if that comes sooner).
-	n := tree.NumChars()
-	numRunesInQuery := uint64(utf8.RuneCountInString(query))
-	pos := startPos + numRunesInQuery - 1
-	if pos >= n {
-		if n > 0 {
-			pos = n - 1
-		} else {
-			pos = 0
-		}
-	}
-
-	searcher := text.NewSearcher(string(reversedQuery))
-	r := tree.ReverseReaderAtPosition(pos)
-	foundMatch, matchOffset, err := searcher.NextInReader(&r)
+	foundMatch, matchOffset, err := searcher.Limit(limit).LastInReader(&r)
 	if err != nil {
-		panic(err) // should never happen because the tree reader shouldn't return an error.
-	}
-	if foundMatch {
-		matchStartPos := pos - matchOffset - numRunesInQuery
-		return true, matchStartPos
+		panic(err) // should never happen for text.Reader.
 	}
 
-	// Wraparound search.
-	searcher.Limit(n - pos)
-	r = tree.ReverseReaderAtPosition(n)
-	foundMatch, matchOffset, err = searcher.NextInReader(&r)
+	if foundMatch {
+		return true, matchOffset
+	}
+
+	// Wraparound search from the start position to the end of the text, looking for the last match.
+	// Begin the search at startPos + 1 to exclude a potential match at startPos.
+	readerStartPos := startPos + 1
+	r = tree.ReaderAtPosition(readerStartPos)
+	foundMatch, matchOffset, err = searcher.NoLimit().LastInReader(&r)
 	if err != nil {
 		panic(err)
 	}
-	if !foundMatch {
-		return false, 0
-	}
-
-	matchStartPos := n - matchOffset - numRunesInQuery
-	return true, matchStartPos
+	return foundMatch, readerStartPos + matchOffset
 }

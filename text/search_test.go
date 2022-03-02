@@ -134,7 +134,7 @@ var searchTestCases = []struct {
 func TestSearchNextInReader(t *testing.T) {
 	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ok, offset, err := SearchNextInReader(tc.q, strings.NewReader(tc.s))
+			ok, offset, err := NewSearcher(tc.q).NextInReader(strings.NewReader(tc.s))
 			assert.Equal(t, tc.expectFound, ok)
 			assert.Equal(t, tc.expectOffset, offset)
 			assert.NoError(t, err)
@@ -146,7 +146,7 @@ func TestSearchNextInReaderWithSingleByteReader(t *testing.T) {
 	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := NewSingleByteReader(tc.s)
-			ok, offset, err := SearchNextInReader(tc.q, r)
+			ok, offset, err := NewSearcher(tc.q).NextInReader(r)
 			assert.Equal(t, tc.expectFound, ok)
 			assert.Equal(t, tc.expectOffset, offset)
 			assert.NoError(t, err)
@@ -228,6 +228,66 @@ func TestSearchNextInReaderWithLimit(t *testing.T) {
 	}
 }
 
+func TestSearchLastInReader(t *testing.T) {
+	testCases := []struct {
+		name         string
+		q            string
+		s            string
+		expectFound  bool
+		expectOffset uint64
+	}{
+		{
+			name:        "empty string, empty query",
+			q:           "",
+			s:           "",
+			expectFound: false,
+		},
+		{
+			name:        "empty string, non-empty query",
+			q:           "abc",
+			s:           "",
+			expectFound: false,
+		},
+		{
+			name:        "non-empty string, empty query",
+			q:           "",
+			s:           "abc",
+			expectFound: false,
+		},
+		{
+			name:        "no matches",
+			q:           "xyz",
+			s:           "abcdefghijklmnop",
+			expectFound: false,
+		},
+		{
+			name:         "single match",
+			q:            "xy",
+			s:            "abcdxyz",
+			expectFound:  true,
+			expectOffset: 4,
+		},
+		{
+			name:         "multiple matches",
+			q:            "xy",
+			s:            "abcdxyzxyz123",
+			expectFound:  true,
+			expectOffset: 7,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := strings.NewReader(tc.s)
+			searcher := NewSearcher(tc.q)
+			ok, offset, err := searcher.LastInReader(r)
+			assert.Equal(t, tc.expectFound, ok)
+			assert.Equal(t, tc.expectOffset, offset)
+			assert.NoError(t, err)
+		})
+	}
+}
+
 // queryAtEndReader outputs n space characters followed by a query string.
 type queryAtEndReader struct {
 	n int
@@ -262,7 +322,7 @@ func BenchmarkFindAtEnd(b *testing.B) {
 			n: 100000,
 			q: "abcdxyz1234",
 		}
-		ok, _, err := SearchNextInReader(r.q, r)
+		ok, _, err := NewSearcher(r.q).NextInReader(r)
 		assert.True(b, ok)
 		assert.NoError(b, err)
 	}

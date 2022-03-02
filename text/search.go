@@ -8,10 +8,6 @@ import (
 	"github.com/aretext/aretext/text/utf8"
 )
 
-func SearchNextInReader(q string, r io.Reader) (bool, uint64, error) {
-	return NewSearcher(q).NextInReader(r)
-}
-
 // Searcher searches for an exact match of a query.
 // It uses the Knuth-Morris-Pratt algorithm, which runs in O(n+m) time, where n is the length
 // of the text and m is the length of the query.
@@ -24,9 +20,6 @@ type Searcher struct {
 
 func NewSearcher(query string) *Searcher {
 	// Count the number of UTF8 start bytes in the query.
-	// For forward search, this is equivalent to the rune length;
-	// for backward search, however, the query bytes are reversed
-	// so the query won't necessarily be valid UTF-8.
 	var queryStartByteCount uint64
 	for i := 0; i < len(query); i++ {
 		queryStartByteCount += uint64(utf8.StartByteIndicator[query[i]])
@@ -47,21 +40,47 @@ func (s *Searcher) Limit(offset uint64) *Searcher {
 	return s
 }
 
+// NoLimit removes any limit set on the Searcher.
+func (s *Searcher) NoLimit() *Searcher {
+	s.offsetLimit = nil
+	return s
+}
+
 // NextInReader finds the next occurrence of a query in the text produced by an io.Reader.
 // If it finds a match, it returns the offset (in rune positions) from the start of the reader.
 func (s *Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
+	return s.searchInReader(r, searchModeFirstMatch)
+}
+
+// LastInReader finds the last occurrence of a query in the text produced by an io.Reader.
+// If it finds a match, it returns the offset (in rune positions) from the start of the reader.
+func (s *Searcher) LastInReader(r io.Reader) (bool, uint64, error) {
+	return s.searchInReader(r, searchModeLastMatch)
+}
+
+// searchMode controls whether to return the first or last match.
+type searchMode int
+
+const (
+	searchModeFirstMatch = searchMode(iota)
+	searchModeLastMatch
+)
+
+func (s *Searcher) searchInReader(r io.Reader, mode searchMode) (bool, uint64, error) {
 	if len(s.query) == 0 {
 		return false, 0, nil
 	}
 
 	var i int
 	var offsetToEnd uint64
+	var foundMatch bool
+	var matchOffsetToStart uint64
 	var buf [256]byte
 	for {
 		n, err := r.Read(buf[:])
 		if err == io.EOF {
 			if n == 0 {
-				return false, 0, nil
+				goto done
 			}
 		} else if err != nil {
 			return false, 0, errors.Wrap(err, "Read")
@@ -71,17 +90,28 @@ func (s *Searcher) NextInReader(r io.Reader) (bool, uint64, error) {
 		for j < n {
 			i, j, offsetToEnd = s.advance(i, j, offsetToEnd, buf[j])
 			if s.offsetLimit != nil && offsetToEnd > *s.offsetLimit {
-				// No match found within offset limit.
-				return false, 0, nil
+				// Past limit set on the searcher.
+				goto done
 			}
 
 			if i == len(s.query) {
-				// Found a substring match, so calculate the offset (in rune positions) and return.
-				offsetToStart := offsetToEnd - s.queryStartByteCount
-				return true, offsetToStart, nil
+				// Found a substring match.
+				foundMatch = true
+				matchOffsetToStart = offsetToEnd - s.queryStartByteCount
+				switch mode {
+				case searchModeFirstMatch:
+					goto done // Return the first match found.
+				case searchModeLastMatch:
+					i = 0 // Keep searching for a later match.
+				default:
+					panic("invalid search mode")
+				}
 			}
 		}
 	}
+
+done:
+	return foundMatch, matchOffsetToStart, nil
 }
 
 func (s *Searcher) advance(i int, j int, offsetToEnd uint64, textByte byte) (int, int, uint64) {

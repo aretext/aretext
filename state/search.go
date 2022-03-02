@@ -13,7 +13,7 @@ import (
 type SearchDirection int
 
 const (
-	SearchDirectionForward = iota
+	SearchDirectionForward = SearchDirection(iota)
 	SearchDirectionBackward
 )
 

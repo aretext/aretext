@@ -3,6 +3,9 @@ package state
 import (
 	"unicode/utf8"
 
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/aretext/aretext/text"
 )
 
@@ -154,12 +157,23 @@ func FindNextMatch(state *EditorState, reverse bool) {
 	}
 }
 
+func transformerForSearch() transform.Transformer {
+	return norm.NFKC
+}
+
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.
 func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
+	transformer := transformerForSearch()
+	transformedQuery, _, err := transform.String(transformer, query)
+	if err != nil {
+		panic(err)
+	}
+
 	// Search forward from the start position to the end of the text, looking for the first match.
-	searcher := text.NewSearcher(query)
-	r := tree.ReaderAtPosition(startPos)
-	foundMatch, matchOffset, err := searcher.NextInReader(&r)
+	searcher := text.NewSearcher(transformedQuery)
+	treeReader := tree.ReaderAtPosition(startPos)
+	transformedReader := transform.NewReader(&treeReader, transformer)
+	foundMatch, matchOffset, err := searcher.NextInReader(transformedReader)
 	if err != nil {
 		panic(err) // should never happen for text.Reader.
 	}
@@ -169,8 +183,9 @@ func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, ui
 	}
 
 	// Wraparound search from the beginning of the text to the start position.
-	r = tree.ReaderAtPosition(0)
-	foundMatch, matchOffset, err = searcher.Limit(startPos).NextInReader(&r)
+	treeReader = tree.ReaderAtPosition(0)
+	transformedReader = transform.NewReader(&treeReader, transformer)
+	foundMatch, matchOffset, err = searcher.Limit(startPos).NextInReader(transformedReader)
 	if err != nil {
 		panic(err)
 	}
@@ -179,15 +194,22 @@ func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, ui
 
 // searchTextBackward finds the beginning of the previous match before the start position.
 func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
+	transformer := transformerForSearch()
+	transformedQuery, _, err := transform.String(transformer, query)
+	if err != nil {
+		panic(err)
+	}
+
 	// Search from the beginning of the text just past the start position, looking for the last match.
 	// Set the limit to startPos + queryLen - 1 to include matches overlapping startPos, but not startPos itself.
-	searcher := text.NewSearcher(query)
-	r := tree.ReaderAtPosition(0)
+	searcher := text.NewSearcher(transformedQuery)
+	treeReader := tree.ReaderAtPosition(0)
+	transformedReader := transform.NewReader(&treeReader, transformer)
 	limit := startPos + uint64(utf8.RuneCountInString(query))
 	if limit > 0 {
 		limit--
 	}
-	foundMatch, matchOffset, err := searcher.Limit(limit).LastInReader(&r)
+	foundMatch, matchOffset, err := searcher.Limit(limit).LastInReader(transformedReader)
 	if err != nil {
 		panic(err) // should never happen for text.Reader.
 	}
@@ -199,8 +221,9 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 	// Wraparound search from the start position to the end of the text, looking for the last match.
 	// Begin the search at startPos + 1 to exclude a potential match at startPos.
 	readerStartPos := startPos + 1
-	r = tree.ReaderAtPosition(readerStartPos)
-	foundMatch, matchOffset, err = searcher.NoLimit().LastInReader(&r)
+	treeReader = tree.ReaderAtPosition(readerStartPos)
+	transformedReader = transform.NewReader(&treeReader, transformer)
+	foundMatch, matchOffset, err = searcher.NoLimit().LastInReader(transformedReader)
 	if err != nil {
 		panic(err)
 	}

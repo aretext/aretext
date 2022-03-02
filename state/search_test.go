@@ -237,6 +237,22 @@ func TestFindNextMatch(t *testing.T) {
 			expectedCursorPos: 4,
 			reverse:           true,
 		},
+		{
+			name:              "unicode normalization, forward search",
+			text:              "ohm \u03a9 xyz",
+			cursorPos:         0,
+			query:             "\u2126",
+			direction:         SearchDirectionForward,
+			expectedCursorPos: 4,
+		},
+		{
+			name:              "unicode normalization, backward search",
+			text:              "ohm \u03a9 xyz",
+			cursorPos:         14,
+			query:             "\u2126",
+			direction:         SearchDirectionBackward,
+			expectedCursorPos: 4,
+		},
 	}
 
 	for _, tc := range testCases {

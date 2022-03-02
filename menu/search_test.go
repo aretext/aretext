@@ -124,7 +124,7 @@ func TestSearch(t *testing.T) {
 		},
 		{
 			name:  "non-ascii unicode",
-			query: "𝓯𝓸",
+			query: "𝓯𝓸𝓸",
 			items: []Item{
 				{Name: "𝓯𝓸𝓸"},
 				{Name: "ᵦₐᵣ"},

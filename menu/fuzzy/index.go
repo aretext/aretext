@@ -33,6 +33,8 @@ func NewIndex(records []string) *Index {
 	return &Index{records, keywordTrie}
 }
 
+const unicodeNormalForm = norm.NFKC
+
 // Search returns record IDs that match the query, ordered from most- to least-relevant.
 // The ranking algorithm takes time proportional to the length of the query,
 // so the caller should truncate long queries.
@@ -65,17 +67,17 @@ func (idx *Index) rankRecords(query string, recordIds *recordIdSet) []int {
 		// than case-insensitive matches.
 		candidates = append(candidates, candidateRecord{
 			recordId: recordId,
-			record:   norm.NFC.String(idx.records[recordId]),
+			record:   unicodeNormalForm.String(idx.records[recordId]),
 		})
 	})
-	return rankRecords(candidates, norm.NFC.String(query), maxSearchResults)
+	return rankRecords(candidates, unicodeNormalForm.String(query), maxSearchResults)
 }
 
 // iterKeywords iterates through the keywords in a string.
 // Keywords are substrings separated by spaces or punctuation.
 func iterKeywords(s string, f func(string)) {
 	var sb strings.Builder
-	for _, r := range strings.ToLower(norm.NFC.String(s)) {
+	for _, r := range strings.ToLower(unicodeNormalForm.String(s)) {
 		if unicode.IsSpace(r) || unicode.IsPunct(r) {
 			if sb.Len() > 0 {
 				f(sb.String())

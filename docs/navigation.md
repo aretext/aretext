@@ -43,10 +43,17 @@ A "paragraph" in aretext is a contiguous sequence of non-empty lines. To move th
 Text search
 -----------
 
-Aretext supports case-sensitive forward and backward search within a document. (It does not currently support case-insensitive or regular expression searches, but these features may be added in the future.)
+Aretext supports forward and backward text search within a document.
 
 To search forward, type "/" in normal mode, then type your search query. To move the cursor to the search result, press enter; to abort the search, press escape.
 
 To search backward, type "?" in normal mode, then type your search query.
 
 To repeat a search, type "n" in normal mode (this moves the cursor to the "next" result). To move the cursor back to the previous result, type "N" in normal mode.
+
+If the search contains at least one uppercase letter, then it is case-sensitive; otherwise, it is case-insensitive (this is equivalent to vim's "smartcase" mode). You can override this by adding a suffix "\c" to force case-insensitive search and "\C" to force case-sensitive search. For example:
+
+| case-insensitive | case-sensitive |
+|------------------|----------------|
+| "abc"            | "Abc"          |
+| "Abc\c"          | "abc\C"        |

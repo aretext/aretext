@@ -205,7 +205,7 @@ func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, u
 	searcher := text.NewSearcher(transformedQuery)
 	treeReader := tree.ReaderAtPosition(0)
 	transformedReader := transform.NewReader(&treeReader, transformer)
-	limit := startPos + uint64(utf8.RuneCountInString(query))
+	limit := startPos + uint64(utf8.RuneCountInString(transformedQuery))
 	if limit > 0 {
 		limit--
 	}

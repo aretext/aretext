@@ -98,6 +98,58 @@ func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
 }
 
+func TestSearchCaseSensitivity(t *testing.T) {
+	testCases := []struct {
+		name             string
+		text             string
+		query            string
+		expectedMatchPos uint64
+	}{
+		{
+			name:             "lowercase query, case-insensitive search",
+			text:             "abc Foo foo xyz",
+			query:            "foo",
+			expectedMatchPos: 4,
+		},
+		{
+			name:             "mixed-case query, case-sensitive search",
+			text:             "abc foo Foo xyz",
+			query:            "Foo",
+			expectedMatchPos: 8,
+		},
+		{
+			name:             "lowercase query, force case-sensitive search",
+			text:             "abc Foo foo xyz",
+			query:            "foo\\C",
+			expectedMatchPos: 8,
+		},
+		{
+			name:             "mixed-case query, force case-insensitive search",
+			text:             "abc Foo foo xyz",
+			query:            "FOO\\c",
+			expectedMatchPos: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.text)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			buffer := state.documentBuffer
+			buffer.textTree = textTree
+
+			StartSearch(state, SearchDirectionForward)
+			for _, r := range tc.query {
+				AppendRuneToSearchQuery(state, r)
+			}
+			CompleteSearch(state, true)
+
+			assert.Equal(t, cursorState{position: tc.expectedMatchPos}, buffer.cursor)
+		})
+	}
+}
+
 func TestFindNextMatch(t *testing.T) {
 	testCases := []struct {
 		name              string

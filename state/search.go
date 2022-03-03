@@ -1,8 +1,12 @@
 package state
 
 import (
+	"strings"
+	"unicode"
 	"unicode/utf8"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 
@@ -105,16 +109,17 @@ func runTextSearchQuery(state *EditorState, q string) {
 	buffer := state.documentBuffer
 	buffer.search.query = q
 	foundMatch, matchStartPos := false, uint64(0)
+	parsedQuery := parseQuery(q)
 	if buffer.search.direction == SearchDirectionForward {
 		foundMatch, matchStartPos = searchTextForward(
 			buffer.cursor.position,
 			buffer.textTree,
-			buffer.search.query)
+			parsedQuery)
 	} else {
 		foundMatch, matchStartPos = searchTextBackward(
 			buffer.cursor.position,
 			buffer.textTree,
-			buffer.search.query)
+			parsedQuery)
 	}
 
 	if !foundMatch {
@@ -125,7 +130,7 @@ func runTextSearchQuery(state *EditorState, q string) {
 
 	buffer.search.match = &SearchMatch{
 		StartPos: matchStartPos,
-		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(q)),
+		EndPos:   matchStartPos + uint64(utf8.RuneCountInString(parsedQuery.queryText)),
 	}
 	scrollViewToPosition(buffer, matchStartPos)
 }
@@ -133,6 +138,7 @@ func runTextSearchQuery(state *EditorState, q string) {
 // FindNextMatch moves the cursor to the next position matching the search query.
 func FindNextMatch(state *EditorState, reverse bool) {
 	buffer := state.documentBuffer
+	parsedQuery := parseQuery(buffer.search.query)
 
 	direction := buffer.search.direction
 	if reverse {
@@ -144,12 +150,12 @@ func FindNextMatch(state *EditorState, reverse bool) {
 		foundMatch, newCursorPos = searchTextForward(
 			buffer.cursor.position+1,
 			buffer.textTree,
-			buffer.search.query)
+			parsedQuery)
 	} else {
 		foundMatch, newCursorPos = searchTextBackward(
 			buffer.cursor.position,
 			buffer.textTree,
-			buffer.search.query)
+			parsedQuery)
 	}
 
 	if foundMatch {
@@ -157,14 +163,63 @@ func FindNextMatch(state *EditorState, reverse bool) {
 	}
 }
 
-func transformerForSearch() transform.Transformer {
-	return norm.NFKC
+type parsedQuery struct {
+	queryText     string
+	caseSensitive bool
+}
+
+// parseQuery interprets the user's search query.
+// By default, if the query is all lowercase, it's case-insensitive;
+// otherwise, it's case-sensitive (equivalent to vim's smartcase option).
+// Users can override this by setting the suffix to "\c" for case-insensitive
+// and "\C" for case-sensitive.
+func parseQuery(rawQuery string) parsedQuery {
+	if strings.HasSuffix(rawQuery, `\c`) {
+		return parsedQuery{
+			queryText:     rawQuery[0 : len(rawQuery)-2],
+			caseSensitive: false,
+		}
+	}
+
+	if strings.HasSuffix(rawQuery, `\C`) {
+		return parsedQuery{
+			queryText:     rawQuery[0 : len(rawQuery)-2],
+			caseSensitive: true,
+		}
+	}
+
+	var caseSensitive bool
+	for _, r := range rawQuery {
+		if unicode.IsUpper(r) {
+			caseSensitive = true
+			break
+		}
+	}
+
+	return parsedQuery{
+		queryText:     rawQuery,
+		caseSensitive: caseSensitive,
+	}
+
+}
+
+func transformerForSearch(caseSensitive bool) transform.Transformer {
+	transformer := transform.Transformer(norm.NFKC) // Always normalize unicode.
+
+	if !caseSensitive {
+		// If the query is all lowercase, make the search case-insensitive
+		// by lowercasing the text. This is equivalent to vim's "smartcase" option.
+		lowerCaseTransformer := cases.Lower(language.Und)
+		transformer = transform.Chain(transformer, lowerCaseTransformer)
+	}
+
+	return transformer
 }
 
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.
-func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
-	transformer := transformerForSearch()
-	transformedQuery, _, err := transform.String(transformer, query)
+func searchTextForward(startPos uint64, tree *text.Tree, parsedQuery parsedQuery) (bool, uint64) {
+	transformer := transformerForSearch(parsedQuery.caseSensitive)
+	transformedQuery, _, err := transform.String(transformer, parsedQuery.queryText)
 	if err != nil {
 		panic(err)
 	}
@@ -193,9 +248,9 @@ func searchTextForward(startPos uint64, tree *text.Tree, query string) (bool, ui
 }
 
 // searchTextBackward finds the beginning of the previous match before the start position.
-func searchTextBackward(startPos uint64, tree *text.Tree, query string) (bool, uint64) {
-	transformer := transformerForSearch()
-	transformedQuery, _, err := transform.String(transformer, query)
+func searchTextBackward(startPos uint64, tree *text.Tree, parsedQuery parsedQuery) (bool, uint64) {
+	transformer := transformerForSearch(parsedQuery.caseSensitive)
+	transformedQuery, _, err := transform.String(transformer, parsedQuery.queryText)
 	if err != nil {
 		panic(err)
 	}

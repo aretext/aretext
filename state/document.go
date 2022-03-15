@@ -83,7 +83,7 @@ func ReloadDocument(state *EditorState) {
 }
 
 // LoadPrevDocument loads the previous document from the timeline in the editor.
-// The cursor is moved to the start of the line from the when the document was last open.
+// The cursor is moved to the start of the line from when the document was last open.
 func LoadPrevDocument(state *EditorState) {
 	prev := state.fileTimeline.PeekBackward()
 	if prev.Empty() {
@@ -110,7 +110,7 @@ func LoadPrevDocument(state *EditorState) {
 }
 
 // LoadNextDocument loads the next document from the timeline in the editor.
-// The cursor is moved to the start of the line from the when the document was last open.
+// The cursor is moved to the start of the line from when the document was last open.
 func LoadNextDocument(state *EditorState) {
 	next := state.fileTimeline.PeekForward()
 	if next.Empty() {

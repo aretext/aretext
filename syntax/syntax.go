@@ -43,7 +43,7 @@ func init() {
 		LanguageDevlog:    languages.DevlogParseFunc(),
 	}
 
-	for language, _ := range languageToParseFunc {
+	for language := range languageToParseFunc {
 		AllLanguages = append(AllLanguages, language)
 	}
 }

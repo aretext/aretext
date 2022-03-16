@@ -29,14 +29,14 @@ func TestConfigForPath(t *testing.T) {
 		{
 			name: "rule matches, set syntax language",
 			ruleSet: []Rule{
-				Rule{
+				{
 					Name:    "json",
 					Pattern: "**/*.json",
 					Config: map[string]any{
 						"syntaxLanguage": "json",
 					},
 				},
-				Rule{
+				{
 					Name:    "mismatched rule",
 					Pattern: "**/*.txt",
 					Config: map[string]any{

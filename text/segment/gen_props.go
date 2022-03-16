@@ -219,7 +219,7 @@ func uniquePropNames(ranges []propRange) []string {
 	}
 
 	result := make([]string, 0, len(set))
-	for propName, _ := range set {
+	for propName := range set {
 		result = append(result, propName)
 	}
 

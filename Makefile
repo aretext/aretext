@@ -1,6 +1,7 @@
 all: generate fmt build vet test
 
 fmt:
+	gofmt -s -w .
 	goimports -w -local "github.com/aretext" .
 	markdownfmt -w *.md ./docs
 

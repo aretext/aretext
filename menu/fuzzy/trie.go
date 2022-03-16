@@ -82,7 +82,7 @@ func (t *trie) insert(s string, recordId int) {
 		}
 
 		// Consume the shared prefix.
-		s = s[n:len(s)]
+		s = s[n:]
 	}
 
 	t.nodes[currentNodeId].recordIds.add(recordId)

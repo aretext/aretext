@@ -5,6 +5,7 @@ package file
 type TimelineState struct {
 	Path    string
 	LineNum uint64
+	Col     uint64
 }
 
 // Empty checks whether the timeline state is empty.

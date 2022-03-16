@@ -104,7 +104,7 @@ func LoadPrevDocument(state *EditorState) {
 
 	state.fileTimeline.TransitionBackwardFrom(timelineState)
 	setCursorAfterLoad(state, func(p LocatorParams) uint64 {
-		return locate.StartOfLineNum(p.TextTree, prev.LineNum)
+		return locate.LineNumAndColToPos(p.TextTree, prev.LineNum, prev.Col)
 	})
 	reportOpenSuccess(state, path)
 }
@@ -131,18 +131,18 @@ func LoadNextDocument(state *EditorState) {
 
 	state.fileTimeline.TransitionForwardFrom(timelineState)
 	setCursorAfterLoad(state, func(p LocatorParams) uint64 {
-		return locate.StartOfLineNum(p.TextTree, next.LineNum)
+		return locate.LineNumAndColToPos(p.TextTree, next.LineNum, next.Col)
 	})
 	reportOpenSuccess(state, path)
 }
 
 func currentTimelineState(state *EditorState) file.TimelineState {
 	buffer := state.documentBuffer
-	cursorPos := buffer.cursor.position
-	lineNum := buffer.textTree.LineNumForPosition(cursorPos)
+	lineNum, col := locate.PosToLineNumAndCol(buffer.textTree, buffer.cursor.position)
 	return file.TimelineState{
 		Path:    state.fileWatcher.Path(),
 		LineNum: lineNum,
+		Col:     col,
 	}
 }
 

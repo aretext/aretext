@@ -135,7 +135,7 @@ func TestLoadPrevDocument(t *testing.T) {
 	LoadPrevDocument(state)
 	assert.Equal(t, "abcd\nefghi\njklmnop\nqrst", state.documentBuffer.textTree.String())
 	assert.Equal(t, path, state.fileWatcher.Path())
-	assert.Equal(t, uint64(5), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(7), state.documentBuffer.cursor.position)
 }
 
 func TestLoadNextDocument(t *testing.T) {
@@ -161,7 +161,7 @@ func TestLoadNextDocument(t *testing.T) {
 	LoadNextDocument(state)
 	assert.Equal(t, path2, state.fileWatcher.Path())
 	assert.Equal(t, "qrs\ntuv\nwxyz", state.documentBuffer.textTree.String())
-	assert.Equal(t, uint64(4), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(5), state.documentBuffer.cursor.position)
 }
 
 func TestLoadDocumentIncrementConfigVersion(t *testing.T) {

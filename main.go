@@ -7,19 +7,46 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime/debug"
 	"runtime/pprof"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/app"
 )
 
-// These variables are set automatically as part of the release process.
-// Please do NOT modify the following lines
+// This variable is set automatically as part of the release process.
+// Please do NOT modify the following line.
+var version = "dev"
+
+// These variables are initialized from runtime/debug.BuildInfo.
 var (
-	version = "dev"
-	commit  = ""
+	vcsRevision string
+	vcsTime     time.Time
+	vcsModified bool
+	goVersion   string
 )
+
+func init() {
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+
+	goVersion = buildInfo.GoVersion
+
+	for _, setting := range buildInfo.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			vcsRevision = setting.Value
+		case "vcs.time":
+			vcsTime, _ = time.Parse(time.RFC3339, setting.Value)
+		case "vcs.modified":
+			vcsModified = (setting.Value == "true")
+		}
+	}
+}
 
 var line = flag.Int("line", 1, "line number to view after opening the document")
 var logpath = flag.String("log", "", "log to file")
@@ -33,7 +60,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("%s @ %s\n", version, commit)
+		fmt.Printf("%s @ %s\n", version, vcsRevision)
 		return
 	}
 
@@ -87,7 +114,11 @@ func printUsage() {
 }
 
 func runEditor(path string, lineNum uint64) error {
-	log.Printf("aretext (version: %s, commit: %s)\n", version, commit)
+	log.Printf("version: %s\n", version)
+	log.Printf("go version: %s\n", goVersion)
+	log.Printf("vcs.revision: %s\n", vcsRevision)
+	log.Printf("vcs.time: %s\n", vcsTime)
+	log.Printf("vcs.modified: %t\n", vcsModified)
 	log.Printf("path arg: '%s'\n", path)
 	log.Printf("lineNum: %d\n", lineNum)
 	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))

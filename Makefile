@@ -8,16 +8,16 @@ generate:
 	go generate ./...
 
 build:
-	go build -o aretext $(shell ./ldflags.sh) main.go
+	go build -o aretext github.com/aretext/aretext
 
 build-debug:
-	go build -o aretext $(shell ./ldflags.sh) -gcflags "all=-N -l" main.go
+	go build -o aretext -gcflags "all=-N -l" github.com/aretext/aretext
 
 test:
 	go test ./...
 
 install:
-	go install $(shell ./ldflags.sh)
+	go install
 
 vet:
 	go vet ./...

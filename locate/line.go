@@ -173,3 +173,25 @@ func PrevLineBoundary(tree *text.Tree, pos uint64) uint64 {
 	}
 	return pos - offset
 }
+
+// PosToLineNumAndCol converts a position to a line number and column.
+// The line number is zero-indexed, and the column is the number of
+// grapheme clusters from the start of the line.
+func PosToLineNumAndCol(tree *text.Tree, pos uint64) (uint64, uint64) {
+	lineNum := tree.LineNumForPosition(pos)
+	lineStartPos := tree.LineStartPosition(lineNum)
+	lineEndPos := pos
+	col := NumGraphemeClustersInRange(tree, lineStartPos, lineEndPos)
+	return lineNum, col
+}
+
+// LineNumAndColToPos converts a line number and column to a position.
+// The line number is zero-indexed, and the column is the number of
+// grapheme clusters from the start of the line.
+// If the column is greater than the number of grapheme clusters in the line,
+// it returns position of the last character on the line (excluding newlines and EOF).
+func LineNumAndColToPos(tree *text.Tree, lineNum uint64, col uint64) uint64 {
+	pos := tree.LineStartPosition(lineNum)
+	pos = ClosestCharOnLine(tree, pos)
+	return NextCharInLine(tree, col, false, pos)
+}

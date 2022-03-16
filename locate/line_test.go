@@ -409,3 +409,205 @@ func TestStartOfLastLine(t *testing.T) {
 		})
 	}
 }
+
+func TestPosToLineNumAndCol(t *testing.T) {
+	testCases := []struct {
+		name            string
+		inputString     string
+		pos             uint64
+		expectedLineNum uint64
+		expectedCol     uint64
+	}{
+		{
+			name:            "empty string",
+			inputString:     "",
+			pos:             0,
+			expectedLineNum: 0,
+			expectedCol:     0,
+		},
+		{
+			name:            "empty string, position past EOF",
+			inputString:     "",
+			pos:             5,
+			expectedLineNum: 0,
+			expectedCol:     0,
+		},
+		{
+			name:            "single line, pos at start of line",
+			inputString:     "foobar",
+			pos:             0,
+			expectedLineNum: 0,
+			expectedCol:     0,
+		},
+		{
+			name:            "single line, pos in middle of line",
+			inputString:     "foobar",
+			pos:             3,
+			expectedLineNum: 0,
+			expectedCol:     3,
+		},
+		{
+			name:            "single line, pos past end of line",
+			inputString:     "foobar",
+			pos:             24,
+			expectedLineNum: 0,
+			expectedCol:     6,
+		},
+		{
+			name:            "single line, multi-char grapheme cluster",
+			inputString:     "abc\u0301xyz",
+			pos:             6,
+			expectedLineNum: 0,
+			expectedCol:     5,
+		},
+		{
+			name:            "multiple lines, start of second line",
+			inputString:     "abc\ndef\nghi",
+			pos:             4,
+			expectedLineNum: 1,
+			expectedCol:     0,
+		},
+		{
+			name:            "multiple lines, middle of second line",
+			inputString:     "abc\ndef\nghi",
+			pos:             5,
+			expectedLineNum: 1,
+			expectedCol:     1,
+		},
+		{
+			name:            "multiple lines, end of second line",
+			inputString:     "abc\ndef\nghi",
+			pos:             6,
+			expectedLineNum: 1,
+			expectedCol:     2,
+		},
+		{
+			name:            "multiple lines, past end of second line",
+			inputString:     "abc\ndef\nghi",
+			pos:             7,
+			expectedLineNum: 1,
+			expectedCol:     3,
+		},
+		{
+			name:            "on blank line",
+			inputString:     "abc\n\n\ndef",
+			pos:             4,
+			expectedLineNum: 1,
+			expectedCol:     0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			lineNum, col := PosToLineNumAndCol(textTree, tc.pos)
+			assert.Equal(t, tc.expectedLineNum, lineNum)
+			assert.Equal(t, tc.expectedCol, col)
+		})
+	}
+}
+
+func TestLineNumAndColToPos(t *testing.T) {
+	testCases := []struct {
+		name        string
+		inputString string
+		lineNum     uint64
+		col         uint64
+		expectedPos uint64
+	}{
+		{
+			name:        "empty string",
+			inputString: "",
+			lineNum:     0,
+			col:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "empty string, line past EOF",
+			inputString: "",
+			lineNum:     4,
+			col:         3,
+			expectedPos: 0,
+		},
+		{
+			name:        "single line, at start of line",
+			inputString: "abcd",
+			lineNum:     0,
+			col:         0,
+			expectedPos: 0,
+		},
+		{
+			name:        "single line, in middle of line",
+			inputString: "abcd",
+			lineNum:     0,
+			col:         2,
+			expectedPos: 2,
+		},
+		{
+			name:        "single line, at end of line",
+			inputString: "abcd",
+			lineNum:     0,
+			col:         3,
+			expectedPos: 3,
+		},
+		{
+			name:        "single line, past end of line",
+			inputString: "abcd",
+			lineNum:     0,
+			col:         5,
+			expectedPos: 3,
+		},
+		{
+			name:        "single line, multi-char grapheme cluster",
+			inputString: "abc\u0301xyz",
+			lineNum:     0,
+			col:         5,
+			expectedPos: 6,
+		},
+		{
+			name:        "multiple lines, at start of second line",
+			inputString: "abc\ndef\nghi",
+			lineNum:     1,
+			col:         0,
+			expectedPos: 4,
+		},
+		{
+			name:        "multiple lines, at middle of second line",
+			inputString: "abc\ndef\nghi",
+			lineNum:     1,
+			col:         1,
+			expectedPos: 5,
+		},
+		{
+			name:        "multiple lines, at end of second line",
+			inputString: "abc\ndef\nghi",
+			lineNum:     1,
+			col:         2,
+			expectedPos: 6,
+		},
+		{
+			name:        "multiple lines, past end of second line",
+			inputString: "abc\ndef\nghi",
+			lineNum:     1,
+			col:         3,
+			expectedPos: 6,
+		},
+		{
+			name:        "on blank line",
+			inputString: "abc\n\n\ndef",
+			lineNum:     1,
+			col:         0,
+			expectedPos: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			pos := LineNumAndColToPos(textTree, tc.lineNum, tc.col)
+			assert.Equal(t, tc.expectedPos, pos)
+		})
+	}
+}

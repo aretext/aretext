@@ -32,14 +32,14 @@ func TestConfigForPath(t *testing.T) {
 				Rule{
 					Name:    "json",
 					Pattern: "**/*.json",
-					Config: map[string]interface{}{
+					Config: map[string]any{
 						"syntaxLanguage": "json",
 					},
 				},
 				Rule{
 					Name:    "mismatched rule",
 					Pattern: "**/*.txt",
-					Config: map[string]interface{}{
+					Config: map[string]any{
 						"syntaxLanguage": "undefined",
 					},
 				},

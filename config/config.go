@@ -96,7 +96,7 @@ type StyleConfig struct {
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
 // The map is usually loaded from a JSON document.
-func ConfigFromUntypedMap(m map[string]interface{}) Config {
+func ConfigFromUntypedMap(m map[string]any) Config {
 	return Config{
 		SyntaxLanguage:  stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),
 		TabSize:         intOrDefault(m, "tabSize", DefaultTabSize),
@@ -133,7 +133,7 @@ func (c Config) Validate() error {
 	return nil
 }
 
-func stringOrDefault(m map[string]interface{}, key string, defaultVal string) string {
+func stringOrDefault(m map[string]any, key string, defaultVal string) string {
 	v, ok := m[key]
 	if !ok {
 		return defaultVal
@@ -148,7 +148,7 @@ func stringOrDefault(m map[string]interface{}, key string, defaultVal string) st
 	return s
 }
 
-func intOrDefault(m map[string]interface{}, key string, defaultVal int) int {
+func intOrDefault(m map[string]any, key string, defaultVal int) int {
 	v, ok := m[key]
 	if !ok {
 		return defaultVal
@@ -165,7 +165,7 @@ func intOrDefault(m map[string]interface{}, key string, defaultVal int) int {
 	}
 }
 
-func boolOrDefault(m map[string]interface{}, key string, defaultVal bool) bool {
+func boolOrDefault(m map[string]any, key string, defaultVal bool) bool {
 	v, ok := m[key]
 	if !ok {
 		return defaultVal
@@ -180,13 +180,13 @@ func boolOrDefault(m map[string]interface{}, key string, defaultVal bool) bool {
 	return b
 }
 
-func sliceOrNil(m map[string]interface{}, key string) []interface{} {
+func sliceOrNil(m map[string]any, key string) []any {
 	v, ok := m[key]
 	if !ok {
 		return nil
 	}
 
-	s, ok := v.([]interface{})
+	s, ok := v.([]any)
 	if !ok {
 		log.Printf("Could not decode slice for config key '%s'\n", key)
 		return nil
@@ -195,7 +195,7 @@ func sliceOrNil(m map[string]interface{}, key string) []interface{} {
 	return s
 }
 
-func stringSliceOrNil(m map[string]interface{}, key string) []string {
+func stringSliceOrNil(m map[string]any, key string) []string {
 	slice := sliceOrNil(m, key)
 	if slice == nil {
 		return nil
@@ -213,13 +213,13 @@ func stringSliceOrNil(m map[string]interface{}, key string) []string {
 	return stringSlice
 }
 
-func mapOrNil(m map[string]interface{}, key string) map[string]interface{} {
+func mapOrNil(m map[string]any, key string) map[string]any {
 	v, ok := m[key]
 	if !ok {
 		return nil
 	}
 
-	subMap, ok := v.(map[string]interface{})
+	subMap, ok := v.(map[string]any)
 	if !ok {
 		log.Printf("Could not decode map for config key '%s'\n", key)
 		return nil
@@ -228,10 +228,10 @@ func mapOrNil(m map[string]interface{}, key string) map[string]interface{} {
 	return subMap
 }
 
-func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
+func menuCommandsFromSlice(s []any) []MenuCommandConfig {
 	result := make([]MenuCommandConfig, 0, len(s))
 	for _, m := range s {
-		menuMap, ok := m.(map[string]interface{})
+		menuMap, ok := m.(map[string]any)
 		if !ok {
 			log.Printf("Could not decode menu command map from %v\n", m)
 			continue
@@ -247,10 +247,10 @@ func menuCommandsFromSlice(s []interface{}) []MenuCommandConfig {
 	return result
 }
 
-func stylesFromMap(m map[string]interface{}) map[string]StyleConfig {
+func stylesFromMap(m map[string]any) map[string]StyleConfig {
 	result := make(map[string]StyleConfig, len(m))
 	for k, v := range m {
-		styleMap, ok := v.(map[string]interface{})
+		styleMap, ok := v.(map[string]any)
 		if !ok {
 			log.Printf("Could not decode style map from %v\n", v)
 			continue

@@ -10,7 +10,7 @@ import (
 // For maps of the same type, the overlay map keys are added to the base map.
 // For slices of the same type, the overlay slice is appended to the base slice.
 // For all other values, the overlay value replaces the base value.
-func MergeRecursive(base, overlay interface{}) interface{} {
+func MergeRecursive(base, overlay any) any {
 	baseType := reflect.TypeOf(base)
 	overlayType := reflect.TypeOf(overlay)
 
@@ -33,7 +33,7 @@ func MergeRecursive(base, overlay interface{}) interface{} {
 	return overlay
 }
 
-func mergeMaps(base, overlay interface{}) interface{} {
+func mergeMaps(base, overlay any) any {
 	baseMapValue := reflect.ValueOf(base)
 	overlayMapValue := reflect.ValueOf(overlay)
 
@@ -58,7 +58,7 @@ func mergeMaps(base, overlay interface{}) interface{} {
 	return base
 }
 
-func mergeSlices(base, overlay interface{}) interface{} {
+func mergeSlices(base, overlay any) any {
 	baseSliceValue := reflect.ValueOf(base)
 	overlaySliceValue := reflect.ValueOf(overlay)
 

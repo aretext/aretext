@@ -9,9 +9,9 @@ import (
 func TestMergeRecursive(t *testing.T) {
 	testCases := []struct {
 		name     string
-		base     interface{}
-		overlay  interface{}
-		expected interface{}
+		base     any
+		overlay  any
+		expected any
 	}{
 		{
 			name:     "nil / nil",
@@ -63,39 +63,39 @@ func TestMergeRecursive(t *testing.T) {
 		},
 		{
 			name: "empty map / non-empty map",
-			base: map[string]interface{}{},
-			overlay: map[string]interface{}{
+			base: map[string]any{},
+			overlay: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
 		},
 		{
 			name: "non-empty map / empty map",
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			overlay: map[string]interface{}{},
-			expected: map[string]interface{}{
+			overlay: map[string]any{},
+			expected: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
 		},
 		{
 			name: "map with overlapping keys, same types",
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			overlay: map[string]interface{}{
+			overlay: map[string]any{
 				"b": 3,
 				"c": 4,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"a": 1,
 				"b": 3,
 				"c": 4,
@@ -103,15 +103,15 @@ func TestMergeRecursive(t *testing.T) {
 		},
 		{
 			name: "map with overlapping keys, different types",
-			base: map[string]interface{}{
+			base: map[string]any{
 				"a": 1,
 				"b": 2,
 			},
-			overlay: map[string]interface{}{
+			overlay: map[string]any{
 				"b": "xyz",
 				"c": 4,
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"a": 1,
 				"b": "xyz",
 				"c": 4,
@@ -176,33 +176,33 @@ func TestMergeRecursive(t *testing.T) {
 		},
 		{
 			name:     "slices with heterogeneous types",
-			base:     []interface{}{1, "a"},
-			overlay:  []interface{}{nil, 2, "b"},
-			expected: []interface{}{1, "a", nil, 2, "b"},
+			base:     []any{1, "a"},
+			overlay:  []any{nil, 2, "b"},
+			expected: []any{1, "a", nil, 2, "b"},
 		},
 		{
 			name: "nested slices and structs",
-			base: map[string]interface{}{
-				"subMap": map[string]interface{}{
+			base: map[string]any{
+				"subMap": map[string]any{
 					"a": 1,
 					"b": 2,
 				},
-				"subSlice": []interface{}{"x"},
+				"subSlice": []any{"x"},
 			},
-			overlay: map[string]interface{}{
-				"subMap": map[string]interface{}{
+			overlay: map[string]any{
+				"subMap": map[string]any{
 					"b": 3,
 					"c": 4,
 				},
-				"subSlice": []interface{}{"y"},
+				"subSlice": []any{"y"},
 			},
-			expected: map[string]interface{}{
-				"subMap": map[string]interface{}{
+			expected: map[string]any{
+				"subMap": map[string]any{
 					"a": 1,
 					"b": 3,
 					"c": 4,
 				},
-				"subSlice": []interface{}{"x", "y"},
+				"subSlice": []any{"x", "y"},
 			},
 		},
 	}

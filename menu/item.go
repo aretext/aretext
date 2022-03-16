@@ -11,5 +11,5 @@ type Item struct {
 
 	// Action is the action to perform when the user selects the menu item.
 	// This should be a function that accepts a single *EditorState arg.
-	Action interface{}
+	Action any
 }

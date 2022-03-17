@@ -179,6 +179,35 @@ func TestLoadDocumentIncrementConfigVersion(t *testing.T) {
 	assert.Equal(t, state.ConfigVersion(), 1)
 }
 
+func TestReloadDocumentAlignCursorAndScroll(t *testing.T) {
+	// Load the initial document.
+	initialText := "abcd\nefghi\njklmnop\nqrst"
+	path, cleanup := createTestFile(t, initialText)
+	defer cleanup()
+	state := NewEditorState(5, 3, nil, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+	state.documentBuffer.cursor.position = 14
+
+	// Scroll to cursor at end of document.
+	ScrollViewToCursor(state)
+	assert.Equal(t, uint64(5), state.documentBuffer.view.textOrigin)
+
+	// Add some lines to the beginning of the document.
+	insertedText := "123\n456\n789\nqrs\ntuv\nwx\nyz\n"
+	err := os.WriteFile(path, []byte(insertedText+initialText), 0644)
+	require.NoError(t, err)
+
+	// Reload the document.
+	ReloadDocument(state)
+	defer state.fileWatcher.Stop()
+
+	// Expect that the cursor and scroll position moved to the
+	// equivalent line in the new document.
+	assert.Equal(t, insertedText+initialText, state.documentBuffer.textTree.String())
+	assert.Equal(t, uint64(40), state.documentBuffer.cursor.position)
+	assert.Equal(t, uint64(31), state.documentBuffer.view.textOrigin)
+}
+
 func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")

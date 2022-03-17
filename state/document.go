@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -50,8 +52,11 @@ func ReloadDocument(state *EditorState) {
 	path := state.fileWatcher.Path()
 
 	// Store the configuration we want to preserve.
+	oldTextTree := state.documentBuffer.textTree
+	oldText := oldTextTree.String()
+	oldTextOriginLineNum := oldTextTree.LineNumForPosition(state.documentBuffer.view.textOrigin)
+	oldCursorLineNum, oldCursorCol := locate.PosToLineNumAndCol(oldTextTree, state.documentBuffer.cursor.position)
 	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
-	oldCursorPos := state.documentBuffer.cursor.position
 	oldAutoIndent := state.documentBuffer.autoIndent
 	oldShowTabs := state.documentBuffer.showTabs
 	oldShowLineNum := state.documentBuffer.showLineNum
@@ -69,10 +74,23 @@ func ReloadDocument(state *EditorState) {
 		setSyntaxAndRetokenize(state.documentBuffer, oldSyntaxLanguage)
 	}
 
-	// Attempt to restore the original cursor position.
-	setCursorAfterLoad(state, func(LocatorParams) uint64 {
-		return oldCursorPos
-	})
+	// Attempt to restore the original cursor and scroll positions, aligned to the new document.
+	newTextTree := state.documentBuffer.textTree
+	newTreeReader := newTextTree.ReaderAtPosition(0)
+	oldReader := strings.NewReader(oldText)
+	lineMatches, err := text.Align(oldReader, &newTreeReader)
+	if err != nil {
+		panic(err) // Should never happen since we're reading from in-memory strings.
+	}
+	state.documentBuffer.cursor.position = locate.LineNumAndColToPos(
+		newTextTree,
+		translateLineNum(lineMatches, oldCursorLineNum),
+		oldCursorCol,
+	)
+	state.documentBuffer.view.textOrigin = newTextTree.LineStartPosition(
+		translateLineNum(lineMatches, oldTextOriginLineNum),
+	)
+	ScrollViewToCursor(state)
 
 	// Restore other configuration that might have been toggled with menu commands.
 	state.documentBuffer.autoIndent = oldAutoIndent
@@ -80,6 +98,21 @@ func ReloadDocument(state *EditorState) {
 	state.documentBuffer.showLineNum = oldShowLineNum
 
 	reportReloadSuccess(state, path)
+}
+
+func translateLineNum(lineMatches []text.LineMatch, lineNum uint64) uint64 {
+	matchIdx := sort.Search(len(lineMatches), func(i int) bool {
+		return lineMatches[i].LeftLineNum >= lineNum
+	})
+
+	if matchIdx < len(lineMatches) && lineMatches[matchIdx].LeftLineNum == lineNum {
+		alignedLineNum := lineMatches[matchIdx].RightLineNum
+		log.Printf("Aligned line %d in old document with line %d in new document\n", lineNum, alignedLineNum)
+		return lineMatches[matchIdx].RightLineNum
+	} else {
+		log.Printf("Could not find alignment for line number %d\n", lineNum)
+		return lineNum
+	}
 }
 
 // LoadPrevDocument loads the previous document from the timeline in the editor.

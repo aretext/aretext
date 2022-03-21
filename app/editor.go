@@ -20,12 +20,12 @@ const redrawInterval = 20 * time.Millisecond
 
 // Editor is a terminal-based text editing program.
 type Editor struct {
-	inputInterpreter     *input.Interpreter
-	editorState          *state.EditorState
-	screen               tcell.Screen
-	palette              *display.Palette
-	paletteConfigVersion int
-	termEventChan        chan tcell.Event
+	inputInterpreter  *input.Interpreter
+	editorState       *state.EditorState
+	screen            tcell.Screen
+	palette           *display.Palette
+	documentLoadCount int
+	termEventChan     chan tcell.Event
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
@@ -39,14 +39,14 @@ func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet c
 	)
 	inputInterpreter := input.NewInterpreter()
 	palette := display.NewPalette()
-	paletteConfigVersion := editorState.ConfigVersion()
+	documentLoadCount := editorState.DocumentLoadCount()
 	termEventChan := make(chan tcell.Event, 1)
 	editor := &Editor{
 		inputInterpreter,
 		editorState,
 		screen,
 		palette,
-		paletteConfigVersion,
+		documentLoadCount,
 		termEventChan,
 	}
 
@@ -123,6 +123,8 @@ func (e *Editor) runMainEventLoop() {
 			redrawFlag = true
 		}
 
+		e.handleIfDocumentLoaded()
+
 		if e.editorState.QuitFlag() {
 			log.Printf("Quit flag set, exiting event loop...\n")
 			return
@@ -142,12 +144,21 @@ func (e *Editor) handleFileChanged() {
 	state.AbortIfUnsavedChanges(e.editorState, state.ReloadDocument, false)
 }
 
+func (e *Editor) handleIfDocumentLoaded() {
+	documentLoadCount := e.editorState.DocumentLoadCount()
+	if documentLoadCount != e.documentLoadCount {
+		log.Printf("Document reloaded, updating editor")
+		styles := e.editorState.Styles()
+		e.palette = display.NewPaletteFromConfigStyles(styles)
+		e.documentLoadCount = documentLoadCount
+	}
+}
+
 func (e *Editor) shutdown() {
 	e.editorState.FileWatcher().Stop()
 }
 
 func (e *Editor) redraw(sync bool) {
-	e.reloadPaletteIfConfigChanged()
 	inputMode := e.editorState.InputMode()
 	inputBufferString := e.inputInterpreter.InputBufferString(inputMode)
 	display.DrawEditor(e.screen, e.palette, e.editorState, inputBufferString)
@@ -155,16 +166,6 @@ func (e *Editor) redraw(sync bool) {
 		e.screen.Sync()
 	} else {
 		e.screen.Show()
-	}
-}
-
-func (e *Editor) reloadPaletteIfConfigChanged() {
-	configVersion := e.editorState.ConfigVersion()
-	if configVersion != e.paletteConfigVersion {
-		log.Printf("Config change detected, reloading palette\n")
-		styles := e.editorState.Styles()
-		e.palette = display.NewPaletteFromConfigStyles(styles)
-		e.paletteConfigVersion = configVersion
 	}
 }
 

@@ -16,7 +16,7 @@ import (
 type EditorState struct {
 	screenWidth, screenHeight uint64
 	configRuleSet             config.RuleSet
-	configVersion             int
+	documentLoadCount         int
 	inputMode                 InputMode
 	prevInputMode             InputMode
 	documentBuffer            *BufferState
@@ -83,8 +83,8 @@ func (s *EditorState) ScreenSize() (uint64, uint64) {
 	return s.screenWidth, s.screenHeight
 }
 
-func (s *EditorState) ConfigVersion() int {
-	return s.configVersion
+func (s *EditorState) DocumentLoadCount() int {
+	return s.documentLoadCount
 }
 
 func (s *EditorState) SetScreenSize(width, height uint64) {

@@ -164,10 +164,10 @@ func TestLoadNextDocument(t *testing.T) {
 	assert.Equal(t, uint64(5), state.documentBuffer.cursor.position)
 }
 
-func TestLoadDocumentIncrementConfigVersion(t *testing.T) {
+func TestLoadDocumentIncrementLoadCount(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
-	assert.Equal(t, state.ConfigVersion(), 0)
+	assert.Equal(t, state.DocumentLoadCount(), 0)
 
 	// Load a document.
 	path, cleanup := createTestFile(t, "abcd")
@@ -175,8 +175,8 @@ func TestLoadDocumentIncrementConfigVersion(t *testing.T) {
 	defer state.fileWatcher.Stop()
 	defer cleanup()
 
-	// Expect that the config version was bumped.
-	assert.Equal(t, state.ConfigVersion(), 1)
+	// Expect that the load count was bumped.
+	assert.Equal(t, state.DocumentLoadCount(), 1)
 }
 
 func TestReloadDocumentAlignCursorAndScroll(t *testing.T) {

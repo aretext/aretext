@@ -147,9 +147,16 @@ func (e *Editor) handleFileChanged() {
 func (e *Editor) handleIfDocumentLoaded() {
 	documentLoadCount := e.editorState.DocumentLoadCount()
 	if documentLoadCount != e.documentLoadCount {
-		log.Printf("Document reloaded, updating editor")
+		log.Printf("Detected document loaded, updating editor")
+
+		// Reset the input interpreter, which may have state from the prev document.
+		e.inputInterpreter = input.NewInterpreter()
+
+		// Update palette, since the configuration might have changed.
 		styles := e.editorState.Styles()
 		e.palette = display.NewPaletteFromConfigStyles(styles)
+
+		// Store the new document load count so we know when the next document loads.
 		e.documentLoadCount = documentLoadCount
 	}
 }

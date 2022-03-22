@@ -4,7 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a rule.
+// ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a command.
 type ActionBuilder func(p ActionBuilderParams) Action
 
 type ActionBuilderParams struct {
@@ -14,9 +14,9 @@ type ActionBuilderParams struct {
 	Config               Config
 }
 
-// Rule defines a command that the input parser can recognize.
-// The pattern is a sequence of keypresses that trigger the rule.
-type Rule struct {
+// Command defines a command that the input parser can recognize.
+// The pattern is a sequence of keypresses that trigger the command.
+type Command struct {
 	Name                 string
 	Pattern              []EventMatcher
 	ActionBuilder        ActionBuilder
@@ -24,8 +24,8 @@ type Rule struct {
 	AddToUserMacro       bool
 }
 
-// These rules control cursor movement in normal and visual mode.
-var cursorRules = []Rule{
+// These commands control cursor movement in normal and visual mode.
+var cursorCommands = []Command{
 	{
 		Name: "cursor left (arrow)",
 		Pattern: []EventMatcher{
@@ -291,8 +291,8 @@ var cursorRules = []Rule{
 	},
 }
 
-// These rules are used when the editor is in normal mode.
-var normalModeRules = append(cursorRules, []Rule{
+// These commands are used when the editor is in normal mode.
+var normalModeCommands = append(cursorCommands, []Command{
 	{
 		Name: "delete next char in line (x)",
 		Pattern: []EventMatcher{
@@ -888,8 +888,8 @@ var normalModeRules = append(cursorRules, []Rule{
 	},
 }...)
 
-// These rules are used when the editor is in visual mode.
-var visualModeRules = append(cursorRules, []Rule{
+// These commands are used when the editor is in visual mode.
+var visualModeCommands = append(cursorCommands, []Command{
 	{
 		Name: "toggle visual mode charwise (v)",
 		Pattern: []EventMatcher{

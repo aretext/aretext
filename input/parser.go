@@ -13,10 +13,10 @@ type ParseResult struct {
 	// The following fields are set only if Accepted is true.
 	Accepted bool
 
-	// Rule is the rule triggered by the sequence of input key events.
-	Rule Rule
+	// Command is the command triggered by the sequence of input key events.
+	Command Command
 
-	// Input is the sequence of key events that triggered the rule.
+	// Input is the sequence of key events that triggered the command.
 	Input []*tcell.EventKey
 
 	// Count is the parsed count parameter, if provided.
@@ -46,33 +46,33 @@ const (
 	parserStateCommand                           // parsing the command itself.
 )
 
-// candidateState describes the state of a particular candidate rule that could accept the input.
+// candidateState describes the state of a particular candidate command that could accept the input.
 type candidateState struct {
-	ruleIdx    int // index of the rule associated with this candidate.
-	patternIdx int // index of the next pattern within the rule to match the next input key.
+	commandIdx int // index of the command associated with this candidate.
+	patternIdx int // index of the next pattern within the command to match the next input key.
 }
 
-// Parser parses a sequence of input key events based on a set of rules.
-// It parses input incrementally, waiting for a key that will trigger some rule.
-// If the input is rejected by all rules, the parser resets.
+// Parser parses a sequence of input key events based on a set of commands..
+// It parses input incrementally, waiting for a key that will trigger some command.
+// If the input is rejected by all commands, the parser resets.
 type Parser struct {
 	state             parserState
-	rules             []Rule
+	commands          []Command
 	candidates        []candidateState
 	inputBuffer       []*tcell.EventKey
 	countDigits       []rune
 	clipboardPageName *rune
 }
 
-// NewParser constructs a new parser for a set of rules.
-func NewParser(rules []Rule) *Parser {
-	candidates := make([]candidateState, len(rules))
-	for i := 0; i < len(rules); i++ {
-		candidates[i].ruleIdx = i
+// NewParser constructs a new parser for a set of commands.
+func NewParser(commands []Command) *Parser {
+	candidates := make([]candidateState, len(commands))
+	for i := 0; i < len(commands); i++ {
+		candidates[i].commandIdx = i
 	}
 	return &Parser{
 		state:       parserStateStart,
-		rules:       rules,
+		commands:    commands,
 		candidates:  candidates,
 		inputBuffer: make([]*tcell.EventKey, 0),
 	}
@@ -91,9 +91,9 @@ func (p *Parser) InputBufferString() string {
 }
 
 // ProcessInput processes an input event key.
-// If a rule accepts the sequence of key presses, the parser
-// returns the accepted sequence, triggered rule, and parsed count parameter.
-// If all rules reject the sequence, the parser resets.
+// If a command accepts the sequence of key presses, the parser
+// returns the accepted sequence, triggered command, and parsed count parameter.
+// If all commands reject the sequence, the parser resets.
 func (p *Parser) ProcessInput(event *tcell.EventKey) ParseResult {
 	if len(p.inputBuffer) >= maxParseInputLen {
 		// Enforce a max length on the input buffer to bound memory usage.
@@ -144,14 +144,14 @@ func (p *Parser) processCommandInput(event *tcell.EventKey) ParseResult {
 			continue
 		} else if accept {
 			// The candidate accepted the input, so we accept the input and reset the parser.
-			rule := p.rules[c.ruleIdx]
+			command := p.commands[c.commandIdx]
 			input := append([]*tcell.EventKey{}, p.inputBuffer...)
 			count := p.calculateCount() // This checks for overflow.
 			clipboardPageName := p.clipboardPageName
 			p.reset()
 			return ParseResult{
 				Accepted:          true,
-				Rule:              rule,
+				Command:           command,
 				Input:             input,
 				Count:             count,
 				ClipboardPageName: clipboardPageName,
@@ -175,7 +175,7 @@ func (p *Parser) processCommandInput(event *tcell.EventKey) ParseResult {
 }
 
 func (p *Parser) processCandidate(c *candidateState, event *tcell.EventKey) (accept, reject bool) {
-	r := p.rules[c.ruleIdx]
+	r := p.commands[c.commandIdx]
 	matcher := r.Pattern[c.patternIdx]
 	if !matcher.Matches(event) {
 		reject = true
@@ -197,9 +197,9 @@ func (p *Parser) reset() {
 	p.countDigits = p.countDigits[:0]
 	p.clipboardPageName = nil
 	p.candidates = p.candidates[:0]
-	for i := 0; i < len(p.rules); i++ {
+	for i := 0; i < len(p.commands); i++ {
 		p.candidates = append(p.candidates, candidateState{
-			ruleIdx:    i,
+			commandIdx: i,
 			patternIdx: 0,
 		})
 	}

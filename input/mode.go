@@ -25,7 +25,7 @@ type normalMode struct {
 }
 
 func newNormalMode() *normalMode {
-	parser := NewParser(normalModeRules)
+	parser := NewParser(normalModeCommands)
 	return &normalMode{parser}
 }
 
@@ -35,8 +35,8 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		return EmptyAction
 	}
 
-	log.Printf("Normal mode parser accepted input for rule '%s'\n", result.Rule.Name)
-	action := result.Rule.ActionBuilder(ActionBuilderParams{
+	log.Printf("Normal mode parser accepted input for command '%s'\n", result.Command.Name)
+	action := result.Command.ActionBuilder(ActionBuilderParams{
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
@@ -45,12 +45,12 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 
-	clearLastActionMacro := result.Rule.AddToLastActionMacro
+	clearLastActionMacro := result.Command.AddToLastActionMacro
 	action = thenAddToMacros(
 		action,
 		clearLastActionMacro,
-		result.Rule.AddToLastActionMacro,
-		result.Rule.AddToUserMacro,
+		result.Command.AddToLastActionMacro,
+		result.Command.AddToUserMacro,
 	)
 
 	return firstCheckpointUndoLog(action)
@@ -161,7 +161,7 @@ type visualMode struct {
 }
 
 func newVisualMode() *visualMode {
-	parser := NewParser(visualModeRules)
+	parser := NewParser(visualModeCommands)
 	return &visualMode{parser}
 }
 
@@ -171,8 +171,8 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 		return EmptyAction
 	}
 
-	log.Printf("Visual mode parser accepted input for rule '%s'\n", result.Rule.Name)
-	action := result.Rule.ActionBuilder(ActionBuilderParams{
+	log.Printf("Visual mode parser accepted input for command '%s'\n", result.Command.Name)
+	action := result.Command.ActionBuilder(ActionBuilderParams{
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
@@ -180,12 +180,12 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	})
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 
-	clearLastActionMacro := result.Rule.AddToLastActionMacro
+	clearLastActionMacro := result.Command.AddToLastActionMacro
 	action = thenAddToMacros(
 		action,
 		clearLastActionMacro,
-		result.Rule.AddToLastActionMacro,
-		result.Rule.AddToUserMacro,
+		result.Command.AddToLastActionMacro,
+		result.Command.AddToUserMacro,
 	)
 
 	return action

@@ -34,7 +34,7 @@ func clipboardPageArgOrDefault(arg *rune) clipboard.PageId {
 
 func lastInputEvent(inputEvents []*tcell.EventKey) *tcell.EventKey {
 	if len(inputEvents) == 0 {
-		// This should never happen if the parser rule is configured correctly.
+		// This should never happen if the parser command is configured correctly.
 		panic("Expected at least one input event")
 	}
 

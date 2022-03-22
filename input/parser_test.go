@@ -19,7 +19,7 @@ var oneHundredAndTwo = uint64(102)
 var lowercaseA = 'a'
 
 func TestParser(t *testing.T) {
-	rules := []Rule{
+	commands := []Command{
 		{
 			Name: "a",
 			Pattern: []EventMatcher{
@@ -113,7 +113,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name: "match first rule with shared prefix",
+			name: "match first command with shared prefix",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
@@ -123,7 +123,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name: "match second rule with shared prefix",
+			name: "match second command with shared prefix",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'k', tcell.ModNone),
@@ -133,7 +133,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name: "match rule with wildcard",
+			name: "match command with wildcard",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
@@ -223,7 +223,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name: "reset on special key with no rule",
+			name: "reset on special key with no command",
 			inputEvents: []*tcell.EventKey{
 				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
@@ -320,7 +320,7 @@ func TestParser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var acceptResults []acceptResult
-			parser := NewParser(rules)
+			parser := NewParser(commands)
 			for _, e := range tc.inputEvents {
 				result := parser.ProcessInput(e)
 				if result.Accepted {
@@ -341,7 +341,7 @@ func TestParser(t *testing.T) {
 }
 
 func TestParseMaxInputLen(t *testing.T) {
-	rules := []Rule{
+	commands := []Command{
 		{
 			Name: "a",
 			Pattern: []EventMatcher{
@@ -349,7 +349,7 @@ func TestParseMaxInputLen(t *testing.T) {
 			},
 		},
 	}
-	parser := NewParser(rules)
+	parser := NewParser(commands)
 	for i := 0; i < maxParseInputLen; i++ {
 		e := tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone)
 		result := parser.ProcessInput(e)
@@ -364,7 +364,7 @@ func TestParseMaxInputLen(t *testing.T) {
 }
 
 func TestParseCountOverflow(t *testing.T) {
-	rules := []Rule{
+	commands := []Command{
 		{
 			Name: "a",
 			Pattern: []EventMatcher{
@@ -372,7 +372,7 @@ func TestParseCountOverflow(t *testing.T) {
 			},
 		},
 	}
-	parser := NewParser(rules)
+	parser := NewParser(commands)
 	for i := 0; i < 100; i++ {
 		e := tcell.NewEventKey(tcell.KeyRune, '9', tcell.ModNone)
 		result := parser.ProcessInput(e)

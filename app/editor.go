@@ -97,30 +97,17 @@ func (e *Editor) pollTermEvents() {
 }
 
 func (e *Editor) runMainEventLoop() {
-	var redrawFlag bool
-	redrawTicker := time.NewTicker(redrawInterval)
-	defer redrawTicker.Stop()
-
 	for {
 		select {
-		case <-redrawTicker.C:
-			if redrawFlag {
-				e.redraw(false)
-				redrawFlag = false
-			}
-
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
-			redrawFlag = true
 
 		case actionFunc := <-e.editorState.TaskResultChan():
 			log.Printf("Task completed, executing resulting action...\n")
 			actionFunc(e.editorState)
-			redrawFlag = true
 
 		case <-e.editorState.FileWatcher().ChangedChan():
 			e.handleFileChanged()
-			redrawFlag = true
 		}
 
 		e.handleIfDocumentLoaded()
@@ -128,6 +115,13 @@ func (e *Editor) runMainEventLoop() {
 		if e.editorState.QuitFlag() {
 			log.Printf("Quit flag set, exiting event loop...\n")
 			return
+		}
+
+		// Redraw unless there are pending terminal events to process first.
+		// This helps avoid the overhead of redrawing after every keypress
+		// if the user pastes a lot of text into the terminal emulator.
+		if len(e.termEventChan) == 0 {
+			e.redraw(false)
 		}
 	}
 }

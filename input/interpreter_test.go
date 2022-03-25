@@ -1306,6 +1306,20 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "a\nb\nc\nd",
 		},
 		{
+			name:        "edit text, enter and exit visual mode, then replay last action",
+			initialText: "abc",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '.', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "xxabc",
+		},
+		{
 			name:        "visual mode escape to normal mode",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -1397,6 +1411,42 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			text := string(data)
 			assert.Equal(t, tc.expectedCursorPos, buffer.CursorPosition())
 			assert.Equal(t, tc.expectedText, text)
+		})
+	}
+}
+
+func TestEnterAndExitVisualModeThenReplayLastAction(t *testing.T) {
+	testCases := []struct {
+		name               string
+		enterVisualModeKey rune
+	}{
+		{
+			name:               "charwise (v)",
+			enterVisualModeKey: 'v',
+		},
+		{
+			name:               "linewise (V)",
+			enterVisualModeKey: 'V',
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			inputEvents := []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, tc.enterVisualModeKey, tcell.ModNone), // enter visual mode
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),                 // exit visual mode
+				tcell.NewEventKey(tcell.KeyRune, '.', tcell.ModNone),                   // replay last action
+			}
+
+			editorState := state.NewEditorState(100, 100, nil, nil)
+			interpreter := NewInterpreter()
+			for _, event := range inputEvents {
+				inputConfig := ConfigFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputConfig)
+				action(editorState)
+			}
+
+			assert.Equal(t, state.InputModeNormal, editorState.InputMode())
 		})
 	}
 }

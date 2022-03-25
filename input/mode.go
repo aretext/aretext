@@ -180,9 +180,10 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	})
 	action = thenScrollViewToCursor(thenClearStatusMsg(action))
 
+	clearLastActionMacro := result.Rule.AddToLastActionMacro
 	action = thenAddToMacros(
 		action,
-		false,
+		clearLastActionMacro,
 		result.Rule.AddToLastActionMacro,
 		result.Rule.AddToUserMacro,
 	)

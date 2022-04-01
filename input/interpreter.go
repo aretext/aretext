@@ -41,7 +41,7 @@ func (inp *Interpreter) ProcessEvent(event tcell.Event, config Config) Action {
 }
 
 func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, config Config) Action {
-	log.Printf("Processing key in mode %s\n", config.InputMode)
+	log.Printf("Processing key %s in mode %s\n", event.Name(), config.InputMode)
 	mode := inp.modes[config.InputMode]
 	return mode.ProcessKeyEvent(event, config)
 }

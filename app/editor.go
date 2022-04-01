@@ -127,7 +127,6 @@ func (e *Editor) runMainEventLoop() {
 }
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
-	log.Printf("Handling terminal event %s\n", describeTermEvent(event))
 	inputConfig := input.ConfigFromEditorState(e.editorState)
 	actionFunc := e.inputInterpreter.ProcessEvent(event, inputConfig)
 	actionFunc(e.editorState)
@@ -186,23 +185,5 @@ func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
 
 		// Execute the function.
 		return f()
-	}
-}
-
-func describeTermEvent(event tcell.Event) string {
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		if event.Key() == tcell.KeyRune {
-			return fmt.Sprintf("EventKey rune %q with modifiers %v", event.Rune(), event.Modifiers())
-		} else {
-			return fmt.Sprintf("EventKey %v with modifiers %v", event.Key(), event.Modifiers())
-		}
-
-	case *tcell.EventResize:
-		width, height := event.Size()
-		return fmt.Sprintf("EventResize with width %d and height %d", width, height)
-
-	default:
-		return "OtherEvent"
 	}
 }

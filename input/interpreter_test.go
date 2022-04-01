@@ -1450,3 +1450,9 @@ func TestEnterAndExitVisualModeThenReplayLastAction(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkNewInterpreter(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		NewInterpreter()
+	}
+}

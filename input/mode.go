@@ -25,7 +25,7 @@ type normalMode struct {
 }
 
 func newNormalMode() *normalMode {
-	parser := NewParser(normalModeCommands)
+	parser := NewParser(normalModeCommands())
 	return &normalMode{parser}
 }
 
@@ -161,7 +161,7 @@ type visualMode struct {
 }
 
 func newVisualMode() *visualMode {
-	parser := NewParser(visualModeCommands)
+	parser := NewParser(visualModeCommands())
 	return &visualMode{parser}
 }
 

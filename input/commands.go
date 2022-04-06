@@ -329,30 +329,30 @@ type addToMacro struct {
 	user       bool
 }
 
-// These commands are used when the editor is in normal mode.
-func normalModeCommands() []Command {
-	decorate := func(action Action, addToMacro addToMacro) Action {
-		return func(s *state.EditorState) {
-			wrappedAction := func(s *state.EditorState) {
-				action(s)
-				state.ScrollViewToCursor(s)
-				state.SetStatusMsg(s, state.StatusMsg{})
-			}
+func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
+	return func(s *state.EditorState) {
+		wrappedAction := func(s *state.EditorState) {
+			action(s)
+			state.ScrollViewToCursor(s)
+			state.SetStatusMsg(s, state.StatusMsg{})
+		}
 
-			state.CheckpointUndoLog(s)
-			wrappedAction(s)
+		state.CheckpointUndoLog(s)
+		wrappedAction(s)
 
-			if addToMacro.lastAction {
-				state.ClearLastActionMacro(s)
-				state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
-			}
+		if addToMacro.lastAction {
+			state.ClearLastActionMacro(s)
+			state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
+		}
 
-			if addToMacro.user {
-				state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
-			}
+		if addToMacro.user {
+			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
 		}
 	}
+}
 
+// These commands are used when the editor is in normal mode.
+func normalModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "delete next char in line (x)",
@@ -360,7 +360,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'x'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
@@ -371,7 +371,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'i'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(EnterInsertMode,
+				return decorateNormalOrVisual(
+					EnterInsertMode,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -381,7 +382,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'I'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(EnterInsertModeAtStartOfLine,
+				return decorateNormalOrVisual(
+					EnterInsertModeAtStartOfLine,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -391,7 +393,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'a'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(EnterInsertModeAtNextPos,
+				return decorateNormalOrVisual(
+					EnterInsertModeAtNextPos,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -401,7 +404,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'A'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(EnterInsertModeAtEndOfLine,
+				return decorateNormalOrVisual(
+					EnterInsertModeAtEndOfLine,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -411,7 +415,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'o'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(BeginNewLineBelow,
+				return decorateNormalOrVisual(
+					BeginNewLineBelow,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -421,7 +426,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'O'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(BeginNewLineAbove,
+				return decorateNormalOrVisual(
+					BeginNewLineAbove,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -431,7 +437,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'J'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(JoinLines,
+				return decorateNormalOrVisual(
+					JoinLines,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -442,7 +449,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'd'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					DeleteLines(p.CountOrDefault(), p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
@@ -454,7 +461,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'h'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeletePrevCharInLine(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeletePrevCharInLine(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -465,7 +473,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'j'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteDown(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteDown(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -476,7 +485,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'k'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteUp(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteUp(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -487,7 +497,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'l'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -498,7 +509,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '$'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteToEndOfLine(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteToEndOfLine(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -509,7 +521,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '0'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteToStartOfLine(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteToStartOfLine(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -520,7 +533,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '^'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteToStartOfLineNonWhitespace(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteToStartOfLineNonWhitespace(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -530,7 +544,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'D'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteToEndOfLine(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteToEndOfLine(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -546,7 +561,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+				return decorateNormalOrVisual(
+					DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -562,7 +578,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+				return decorateNormalOrVisual(
+					DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -578,7 +595,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+				return decorateNormalOrVisual(
+					DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -594,7 +612,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+				return decorateNormalOrVisual(
+					DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -605,7 +624,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteToStartOfNextWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteToStartOfNextWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -617,7 +637,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteAWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteAWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -629,7 +650,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(DeleteInnerWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					DeleteInnerWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -640,7 +662,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ChangeToStartOfNextWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					ChangeToStartOfNextWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -652,7 +675,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ChangeAWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					ChangeAWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -664,7 +688,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ChangeInnerWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					ChangeInnerWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -680,7 +705,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+				return decorateNormalOrVisual(
+					ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -696,7 +722,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+				return decorateNormalOrVisual(
+					ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -712,7 +739,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+				return decorateNormalOrVisual(
+					ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -728,7 +756,8 @@ func normalModeCommands() []Command {
 				if char == '\x00' {
 					return EmptyAction
 				}
-				return decorate(ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+				return decorateNormalOrVisual(
+					ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -756,7 +785,8 @@ func normalModeCommands() []Command {
 					return EmptyAction
 				}
 
-				return decorate(ReplaceCharacter(newChar),
+				return decorateNormalOrVisual(
+					ReplaceCharacter(newChar),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -766,7 +796,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '~'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ToggleCaseAtCursor,
+				return decorateNormalOrVisual(
+					ToggleCaseAtCursor,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -777,7 +808,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '>'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(IndentLine,
+				return decorateNormalOrVisual(
+					IndentLine,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -788,7 +820,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '<'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(OutdentLine,
+				return decorateNormalOrVisual(
+					OutdentLine,
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -799,7 +832,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CopyToStartOfNextWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					CopyToStartOfNextWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -811,7 +845,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CopyAWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					CopyAWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -823,7 +858,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CopyInnerWord(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					CopyInnerWord(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -834,7 +870,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'y'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CopyLines(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					CopyLines(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -844,7 +881,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'p'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(PasteAfterCursor(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					PasteAfterCursor(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -854,7 +892,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'P'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(PasteBeforeCursor(p.ClipboardPageOrDefault()),
+				return decorateNormalOrVisual(
+					PasteBeforeCursor(p.ClipboardPageOrDefault()),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -864,7 +903,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: ':'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ShowCommandMenu(p.Config),
+				return decorateNormalOrVisual(
+					ShowCommandMenu(p.Config),
 					addToMacro{})
 			},
 		},
@@ -874,7 +914,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '/'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(StartSearchForward,
+				return decorateNormalOrVisual(
+					StartSearchForward,
 					addToMacro{user: true})
 			},
 		},
@@ -884,7 +925,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '?'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(StartSearchBackward,
+				return decorateNormalOrVisual(
+					StartSearchBackward,
 					addToMacro{user: true})
 			},
 		},
@@ -894,7 +936,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'n'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(FindNextMatch,
+				return decorateNormalOrVisual(
+					FindNextMatch,
 					addToMacro{user: true})
 			},
 		},
@@ -904,7 +947,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'N'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(FindPrevMatch,
+				return decorateNormalOrVisual(
+					FindPrevMatch,
 					addToMacro{user: true})
 			},
 		},
@@ -914,7 +958,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'u'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(Undo,
+				return decorateNormalOrVisual(
+					Undo,
 					addToMacro{user: true})
 			},
 		},
@@ -924,7 +969,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyCtrlR},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(Redo,
+				return decorateNormalOrVisual(
+					Redo,
 					addToMacro{user: true})
 			},
 		},
@@ -934,7 +980,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'v'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ToggleVisualModeCharwise,
+				return decorateNormalOrVisual(
+					ToggleVisualModeCharwise,
 					addToMacro{user: true})
 			},
 		},
@@ -944,7 +991,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'V'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ToggleVisualModeLinewise,
+				return decorateNormalOrVisual(
+					ToggleVisualModeLinewise,
 					addToMacro{user: true})
 			},
 		},
@@ -954,7 +1002,8 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '.'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ReplayLastActionMacro(p.CountOrDefault()),
+				return decorateNormalOrVisual(
+					ReplayLastActionMacro(p.CountOrDefault()),
 					addToMacro{user: true})
 			},
 		},
@@ -963,27 +1012,6 @@ func normalModeCommands() []Command {
 
 // These commands are used when the editor is in visual mode.
 func visualModeCommands() []Command {
-	decorate := func(action Action, addToMacro addToMacro) Action {
-		return func(s *state.EditorState) {
-			wrappedAction := func(s *state.EditorState) {
-				action(s)
-				state.ScrollViewToCursor(s)
-				state.SetStatusMsg(s, state.StatusMsg{})
-			}
-
-			wrappedAction(s)
-
-			if addToMacro.lastAction {
-				state.ClearLastActionMacro(s)
-				state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
-			}
-
-			if addToMacro.user {
-				state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
-			}
-		}
-	}
-
 	return append(cursorCommands(), []Command{
 		{
 			Name: "toggle visual mode charwise (v)",
@@ -991,7 +1019,8 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'v'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ToggleVisualModeCharwise,
+				return decorateNormalOrVisual(
+					ToggleVisualModeCharwise,
 					addToMacro{user: true})
 			},
 		},
@@ -1001,7 +1030,8 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'V'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ToggleVisualModeLinewise,
+				return decorateNormalOrVisual(
+					ToggleVisualModeLinewise,
 					addToMacro{user: true})
 			},
 		},
@@ -1011,7 +1041,8 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyEscape},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ReturnToNormalMode,
+				return decorateNormalOrVisual(
+					ReturnToNormalMode,
 					addToMacro{user: true})
 			},
 		},
@@ -1021,7 +1052,9 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: ':'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ShowCommandMenu(p.Config), addToMacro{})
+				return decorateNormalOrVisual(
+					ShowCommandMenu(p.Config),
+					addToMacro{})
 			},
 		},
 		{
@@ -1030,7 +1063,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'x'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					DeleteSelectionAndReturnToNormalMode(
 						p.ClipboardPageOrDefault(),
 						p.Config.SelectionMode,
@@ -1044,7 +1077,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'd'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					DeleteSelectionAndReturnToNormalMode(
 						p.ClipboardPageOrDefault(),
 						p.Config.SelectionMode,
@@ -1058,7 +1091,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'c'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					ChangeSelection(
 						p.ClipboardPageOrDefault(),
 						p.Config.SelectionMode,
@@ -1072,7 +1105,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '~'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					ToggleCaseInSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
@@ -1083,7 +1116,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '>'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					IndentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
@@ -1094,7 +1127,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '<'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					OutdentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
@@ -1105,7 +1138,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'y'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(
+				return decorateNormalOrVisual(
 					CopySelectionAndReturnToNormalMode(p.ClipboardPageOrDefault()),
 					addToMacro{user: true})
 			},

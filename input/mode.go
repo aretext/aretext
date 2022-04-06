@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/state"
 )
 
@@ -115,7 +116,7 @@ func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
 	case tcell.KeyRune:
 		return InsertRune(event.Rune())
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return DeletePrevChar(nil)
+		return DeletePrevChar(clipboard.PageNull)
 	case tcell.KeyEnter:
 		return InsertNewlineAndUpdateAutoIndentWhitespace
 	case tcell.KeyTab:

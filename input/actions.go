@@ -1,10 +1,6 @@
 package input
 
 import (
-	"log"
-
-	"github.com/gdamore/tcell/v2"
-
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
@@ -16,30 +12,6 @@ type Action func(*state.EditorState)
 
 // EmptyAction is an action that does nothing.
 func EmptyAction(s *state.EditorState) {}
-
-func countArgOrDefault(countArg *uint64, defaultCount uint64) uint64 {
-	if countArg != nil {
-		return *countArg
-	} else {
-		return defaultCount
-	}
-}
-
-func clipboardPageArgOrDefault(arg *rune) clipboard.PageId {
-	if arg == nil {
-		return clipboard.PageDefault
-	}
-	return clipboard.PageIdForLetter(*arg)
-}
-
-func lastInputEvent(inputEvents []*tcell.EventKey) *tcell.EventKey {
-	if len(inputEvents) == 0 {
-		// This should never happen if the parser command is configured correctly.
-		panic("Expected at least one input event")
-	}
-
-	return inputEvents[len(inputEvents)-1]
-}
 
 func CursorLeft(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
@@ -103,15 +75,7 @@ func CursorNextParagraph(s *state.EditorState) {
 	})
 }
 
-func CursorToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
-	lastInput := lastInputEvent(inputEvents)
-	if lastInput.Key() != tcell.KeyRune {
-		// Accept only rune keys.
-		return EmptyAction
-	}
-
-	char := lastInput.Rune()
-	count := countArgOrDefault(countArg, 1)
+func CursorToNextMatchingChar(char rune, count uint64, includeChar bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			found, pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
@@ -123,15 +87,7 @@ func CursorToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, i
 	}
 }
 
-func CursorToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, includeChar bool) Action {
-	lastInput := lastInputEvent(inputEvents)
-	if lastInput.Key() != tcell.KeyRune {
-		// Accept only rune keys.
-		return EmptyAction
-	}
-
-	char := lastInput.Rune()
-	count := countArgOrDefault(countArg, 1)
+func CursorToPrevMatchingChar(char rune, count uint64, includeChar bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			found, pos := locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
@@ -200,11 +156,11 @@ func CursorLineEndIncludeEndOfLineOrFile(s *state.EditorState) {
 	})
 }
 
-func CursorStartOfLineNum(countArg *uint64) Action {
+func CursorStartOfLineNum(count uint64) Action {
 	// Convert 1-indexed count to 0-indexed line num
-	var lineNum uint64
-	if countArg != nil && *countArg > 0 {
-		lineNum = *countArg - 1
+	lineNum := count
+	if lineNum > 0 {
+		lineNum--
 	}
 
 	return func(s *state.EditorState) {
@@ -270,8 +226,7 @@ func InsertTab(s *state.EditorState) {
 	state.InsertTab(s)
 }
 
-func DeletePrevChar(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeletePrevChar(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			prevInLinePos := locate.PrevCharInLine(params.TextTree, 1, true, params.CursorPos)
@@ -304,12 +259,10 @@ func JoinLines(s *state.EditorState) {
 	state.JoinLines(s)
 }
 
-func DeleteLines(countArg *uint64, clipboardPageNameArg *rune) Action {
-	count := countArgOrDefault(countArg, 0)
+func DeleteLines(count uint64, clipboardPage clipboard.PageId) Action {
 	if count > 0 {
 		count--
 	}
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
 	return func(s *state.EditorState) {
 		targetLoc := func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineBelow(params.TextTree, count, params.CursorPos)
@@ -319,8 +272,7 @@ func DeleteLines(countArg *uint64, clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeletePrevCharInLine(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeletePrevCharInLine(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
@@ -328,9 +280,7 @@ func DeletePrevCharInLine(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteNextCharInLine(countArg *uint64, clipboardPageNameArg *rune) Action {
-	count := countArgOrDefault(countArg, 1)
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteNextCharInLine(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.NextCharInLine(params.TextTree, count, true, params.CursorPos)
@@ -341,16 +291,7 @@ func DeleteNextCharInLine(countArg *uint64, clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
-	lastInput := lastInputEvent(inputEvents)
-	if lastInput.Key() != tcell.KeyRune {
-		// Accept only rune keys.
-		return EmptyAction
-	}
-
-	char := lastInput.Rune()
-	count := countArgOrDefault(countArg, 1)
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToNextMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			found, pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
@@ -367,16 +308,7 @@ func DeleteToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, c
 	}
 }
 
-func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
-	lastInput := lastInputEvent(inputEvents)
-	if lastInput.Key() != tcell.KeyRune {
-		// Accept only rune keys.
-		return EmptyAction
-	}
-
-	char := lastInput.Rune()
-	count := countArgOrDefault(countArg, 1)
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToPrevMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			found, pos := locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
@@ -388,8 +320,7 @@ func DeleteToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, c
 	}
 }
 
-func DeleteDown(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteDown(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		targetLineLoc := func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
@@ -399,8 +330,7 @@ func DeleteDown(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteUp(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteUp(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		targetLineLoc := func(params state.LocatorParams) uint64 {
 			return locate.StartOfLineAbove(params.TextTree, 1, params.CursorPos)
@@ -410,8 +340,7 @@ func DeleteUp(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteToEndOfLine(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToEndOfLine(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
@@ -422,8 +351,7 @@ func DeleteToEndOfLine(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteToStartOfLine(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToStartOfLine(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.PrevLineBoundary(params.TextTree, params.CursorPos)
@@ -431,8 +359,7 @@ func DeleteToStartOfLine(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteToStartOfLineNonWhitespace(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToStartOfLineNonWhitespace(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
@@ -441,8 +368,7 @@ func DeleteToStartOfLineNonWhitespace(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteToStartOfNextWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteToStartOfNextWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.NextWordStartInLine(params.TextTree, params.CursorPos)
@@ -453,8 +379,7 @@ func DeleteToStartOfNextWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteAWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteAWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.CurrentWordStart(params.TextTree, params.CursorPos)
@@ -465,8 +390,7 @@ func DeleteAWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func DeleteInnerWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteInnerWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.CurrentWordStart(params.TextTree, params.CursorPos)
@@ -477,8 +401,7 @@ func DeleteInnerWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func ChangeToStartOfNextWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func ChangeToStartOfNextWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.NextWordStartInLine(params.TextTree, params.CursorPos)
@@ -487,52 +410,39 @@ func ChangeToStartOfNextWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func ChangeAWord(clipboardPageNameArg *rune) Action {
-	deleteAWordAction := DeleteAWord(clipboardPageNameArg)
+func ChangeAWord(clipboardPage clipboard.PageId) Action {
+	deleteAWordAction := DeleteAWord(clipboardPage)
 	return func(s *state.EditorState) {
 		deleteAWordAction(s)
 		EnterInsertMode(s)
 	}
 }
 
-func ChangeInnerWord(clipboardPageNameArg *rune) Action {
-	deleteInnerWordAction := DeleteInnerWord(clipboardPageNameArg)
+func ChangeInnerWord(clipboardPage clipboard.PageId) Action {
+	deleteInnerWordAction := DeleteInnerWord(clipboardPage)
 	return func(s *state.EditorState) {
 		deleteInnerWordAction(s)
 		EnterInsertMode(s)
 	}
 }
 
-func ChangeToNextMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
-	deleteToNextMatchingCharAction := DeleteToNextMatchingChar(inputEvents, countArg, clipboardPageNameArg, includeChar)
+func ChangeToNextMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
+	deleteToNextMatchingCharAction := DeleteToNextMatchingChar(char, count, clipboardPage, includeChar)
 	return func(s *state.EditorState) {
 		deleteToNextMatchingCharAction(s)
 		EnterInsertMode(s)
 	}
 }
 
-func ChangeToPrevMatchingChar(inputEvents []*tcell.EventKey, countArg *uint64, clipboardPageNameArg *rune, includeChar bool) Action {
-	deleteToPrevMatchingCharAction := DeleteToPrevMatchingChar(inputEvents, countArg, clipboardPageNameArg, includeChar)
+func ChangeToPrevMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
+	deleteToPrevMatchingCharAction := DeleteToPrevMatchingChar(char, count, clipboardPage, includeChar)
 	return func(s *state.EditorState) {
 		deleteToPrevMatchingCharAction(s)
 		EnterInsertMode(s)
 	}
 }
 
-func ReplaceCharacter(inputEvents []*tcell.EventKey) Action {
-	lastInput := lastInputEvent(inputEvents)
-	var newChar rune
-	if lastInput.Key() == tcell.KeyEnter {
-		newChar = '\n'
-	} else if lastInput.Key() == tcell.KeyTab {
-		newChar = '\t'
-	} else if lastInput.Key() == tcell.KeyRune {
-		newChar = lastInput.Rune()
-	} else {
-		log.Printf("Unsupported input for replace character command\n")
-		return EmptyAction
-	}
-
+func ReplaceCharacter(newChar rune) Action {
 	return func(s *state.EditorState) {
 		state.ReplaceChar(s, newChar)
 	}
@@ -552,8 +462,7 @@ func OutdentLine(s *state.EditorState) {
 	state.OutdentLines(s, targetLineLoc)
 }
 
-func CopyToStartOfNextWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func CopyToStartOfNextWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startLoc := func(params state.LocatorParams) uint64 {
 			return params.CursorPos
@@ -565,8 +474,7 @@ func CopyToStartOfNextWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func CopyAWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func CopyAWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startLoc := func(params state.LocatorParams) uint64 {
 			return locate.CurrentWordStart(params.TextTree, params.CursorPos)
@@ -578,8 +486,7 @@ func CopyAWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func CopyInnerWord(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func CopyInnerWord(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startLoc := func(params state.LocatorParams) uint64 {
 			return locate.CurrentWordStart(params.TextTree, params.CursorPos)
@@ -591,22 +498,19 @@ func CopyInnerWord(clipboardPageNameArg *rune) Action {
 	}
 }
 
-func CopyLines(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func CopyLines(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopyLine(s, clipboardPage)
 	}
 }
 
-func PasteAfterCursor(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func PasteAfterCursor(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.PasteAfterCursor(s, clipboardPage)
 	}
 }
 
-func PasteBeforeCursor(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func PasteBeforeCursor(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.PasteBeforeCursor(s, clipboardPage)
 	}
@@ -706,8 +610,7 @@ func ToggleVisualModeLinewise(s *state.EditorState) {
 	state.ToggleVisualMode(s, selection.ModeLine)
 }
 
-func DeleteSelection(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator, replaceWithEmptyLine bool) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func DeleteSelection(clipboardPage clipboard.PageId, selectionMode selection.Mode, selectionEndLoc state.Locator, replaceWithEmptyLine bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursorToStartOfSelection(s)
 		if selectionMode == selection.ModeChar {
@@ -718,8 +621,8 @@ func DeleteSelection(clipboardPageNameArg *rune, selectionMode selection.Mode, s
 	}
 }
 
-func DeleteSelectionAndReturnToNormalMode(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
-	deleteSelectionAction := DeleteSelection(clipboardPageNameArg, selectionMode, selectionEndLoc, false)
+func DeleteSelectionAndReturnToNormalMode(clipboardPage clipboard.PageId, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
+	deleteSelectionAction := DeleteSelection(clipboardPage, selectionMode, selectionEndLoc, false)
 	return func(s *state.EditorState) {
 		deleteSelectionAction(s)
 		ReturnToNormalMode(s)
@@ -750,24 +653,22 @@ func OutdentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action
 	}
 }
 
-func ChangeSelection(clipboardPageNameArg *rune, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
-	deleteSelectionAction := DeleteSelection(clipboardPageNameArg, selectionMode, selectionEndLoc, true)
+func ChangeSelection(clipboardPage clipboard.PageId, selectionMode selection.Mode, selectionEndLoc state.Locator) Action {
+	deleteSelectionAction := DeleteSelection(clipboardPage, selectionMode, selectionEndLoc, true)
 	return func(s *state.EditorState) {
 		deleteSelectionAction(s)
 		EnterInsertMode(s)
 	}
 }
 
-func CopySelectionAndReturnToNormalMode(clipboardPageNameArg *rune) Action {
-	clipboardPage := clipboardPageArgOrDefault(clipboardPageNameArg)
+func CopySelectionAndReturnToNormalMode(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopySelection(s, clipboardPage)
 		ReturnToNormalMode(s)
 	}
 }
 
-func ReplayLastActionMacro(countArg *uint64) Action {
-	count := countArgOrDefault(countArg, 1)
+func ReplayLastActionMacro(count uint64) Action {
 	return func(s *state.EditorState) {
 		state.ReplayLastActionMacro(s, count)
 	}

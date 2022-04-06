@@ -2,6 +2,8 @@ package input
 
 import (
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/aretext/aretext/clipboard"
 )
 
 // ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a command.
@@ -12,6 +14,31 @@ type ActionBuilderParams struct {
 	CountArg             *uint64
 	ClipboardPageNameArg *rune
 	Config               Config
+}
+
+func (p ActionBuilderParams) CountOrDefault() uint64 {
+	if p.CountArg == nil {
+		return 1
+	}
+	return *p.CountArg
+}
+
+func (p ActionBuilderParams) ClipboardPageOrDefault() clipboard.PageId {
+	if p.ClipboardPageNameArg == nil {
+		return clipboard.PageDefault
+	}
+	return clipboard.PageIdForLetter(*p.ClipboardPageNameArg)
+}
+
+func (p ActionBuilderParams) LastChar() rune {
+	if len(p.InputEvents) == 0 {
+		return '\x00'
+	}
+	lastEvent := p.InputEvents[len(p.InputEvents)-1]
+	if lastEvent.Key() != tcell.KeyRune {
+		return '\x00'
+	}
+	return lastEvent.Rune()
 }
 
 // Command defines a command that the input parser can recognize.
@@ -184,7 +211,11 @@ func cursorCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CursorToNextMatchingChar(p.InputEvents, p.CountArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return CursorToNextMatchingChar(char, p.CountOrDefault(), true)
 			},
 			AddToUserMacro: true,
 		},
@@ -195,7 +226,11 @@ func cursorCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return CursorToPrevMatchingChar(char, p.CountOrDefault(), true)
 			},
 			AddToUserMacro: true,
 		},
@@ -206,7 +241,11 @@ func cursorCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CursorToNextMatchingChar(p.InputEvents, p.CountArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return CursorToNextMatchingChar(char, p.CountOrDefault(), false)
 			},
 			AddToUserMacro: true,
 		},
@@ -217,7 +256,11 @@ func cursorCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CursorToPrevMatchingChar(p.InputEvents, p.CountArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return CursorToPrevMatchingChar(char, p.CountOrDefault(), false)
 			},
 			AddToUserMacro: true,
 		},
@@ -258,7 +301,7 @@ func cursorCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'g'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CursorStartOfLineNum(p.CountArg)
+				return CursorStartOfLineNum(p.CountOrDefault())
 			},
 			AddToUserMacro: true,
 		},
@@ -302,7 +345,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'x'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
+				return DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -391,7 +434,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'd'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteLines(p.CountArg, p.ClipboardPageNameArg)
+				return DeleteLines(p.CountOrDefault(), p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -403,7 +446,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'h'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeletePrevCharInLine(p.ClipboardPageNameArg)
+				return DeletePrevCharInLine(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -415,7 +458,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'j'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteDown(p.ClipboardPageNameArg)
+				return DeleteDown(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -427,7 +470,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'k'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteUp(p.ClipboardPageNameArg)
+				return DeleteUp(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -439,7 +482,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'l'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteNextCharInLine(p.CountArg, p.ClipboardPageNameArg)
+				return DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -451,7 +494,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '$'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToEndOfLine(p.ClipboardPageNameArg)
+				return DeleteToEndOfLine(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -463,7 +506,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '0'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToStartOfLine(p.ClipboardPageNameArg)
+				return DeleteToStartOfLine(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -475,7 +518,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '^'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToStartOfLineNonWhitespace(p.ClipboardPageNameArg)
+				return DeleteToStartOfLineNonWhitespace(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -486,7 +529,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'D'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToEndOfLine(p.ClipboardPageNameArg)
+				return DeleteToEndOfLine(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -499,7 +542,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -512,7 +559,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -525,7 +576,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -538,7 +593,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -550,7 +609,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteToStartOfNextWord(p.ClipboardPageNameArg)
+				return DeleteToStartOfNextWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -563,7 +622,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteAWord(p.ClipboardPageNameArg)
+				return DeleteAWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -576,7 +635,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return DeleteInnerWord(p.ClipboardPageNameArg)
+				return DeleteInnerWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -588,7 +647,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeToStartOfNextWord(p.ClipboardPageNameArg)
+				return ChangeToStartOfNextWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -601,7 +660,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeAWord(p.ClipboardPageNameArg)
+				return ChangeAWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -614,7 +673,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeInnerWord(p.ClipboardPageNameArg)
+				return ChangeInnerWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -627,7 +686,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -640,7 +703,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, true)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -653,7 +720,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeToNextMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -666,7 +737,11 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ChangeToPrevMatchingChar(p.InputEvents, p.CountArg, p.ClipboardPageNameArg, false)
+				char := p.LastChar()
+				if char == '\x00' {
+					return EmptyAction
+				}
+				return ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -678,7 +753,24 @@ func normalModeCommands() []Command {
 				{Wildcard: true},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ReplaceCharacter(p.InputEvents)
+				if len(p.InputEvents) == 0 {
+					return EmptyAction
+				}
+
+				lastEvent := p.InputEvents[len(p.InputEvents)-1]
+				var newChar rune
+				switch lastEvent.Key() {
+				case tcell.KeyEnter:
+					newChar = '\n'
+				case tcell.KeyTab:
+					newChar = '\t'
+				case tcell.KeyRune:
+					newChar = lastEvent.Rune()
+				default:
+					return EmptyAction
+				}
+
+				return ReplaceCharacter(newChar)
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -725,7 +817,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CopyToStartOfNextWord(p.ClipboardPageNameArg)
+				return CopyToStartOfNextWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -738,7 +830,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CopyAWord(p.ClipboardPageNameArg)
+				return CopyAWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -751,7 +843,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'w'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CopyInnerWord(p.ClipboardPageNameArg)
+				return CopyInnerWord(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -763,7 +855,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'y'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CopyLines(p.ClipboardPageNameArg)
+				return CopyLines(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -774,7 +866,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'p'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return PasteAfterCursor(p.ClipboardPageNameArg)
+				return PasteAfterCursor(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -785,7 +877,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'P'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return PasteBeforeCursor(p.ClipboardPageNameArg)
+				return PasteBeforeCursor(p.ClipboardPageOrDefault())
 			},
 			AddToLastActionMacro: true,
 			AddToUserMacro:       true,
@@ -885,7 +977,7 @@ func normalModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: '.'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return ReplayLastActionMacro(p.CountArg)
+				return ReplayLastActionMacro(p.CountOrDefault())
 			},
 			AddToUserMacro: true,
 		},
@@ -941,7 +1033,7 @@ func visualModeCommands() []Command {
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
 				return DeleteSelectionAndReturnToNormalMode(
-					p.ClipboardPageNameArg,
+					p.ClipboardPageOrDefault(),
 					p.Config.SelectionMode,
 					p.Config.SelectionEndLocator,
 				)
@@ -956,7 +1048,7 @@ func visualModeCommands() []Command {
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
 				return DeleteSelectionAndReturnToNormalMode(
-					p.ClipboardPageNameArg,
+					p.ClipboardPageOrDefault(),
 					p.Config.SelectionMode,
 					p.Config.SelectionEndLocator,
 				)
@@ -971,7 +1063,7 @@ func visualModeCommands() []Command {
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
 				return ChangeSelection(
-					p.ClipboardPageNameArg,
+					p.ClipboardPageOrDefault(),
 					p.Config.SelectionMode,
 					p.Config.SelectionEndLocator,
 				)
@@ -1018,7 +1110,7 @@ func visualModeCommands() []Command {
 				{Key: tcell.KeyRune, Rune: 'y'},
 			},
 			ActionBuilder: func(p ActionBuilderParams) Action {
-				return CopySelectionAndReturnToNormalMode(p.ClipboardPageNameArg)
+				return CopySelectionAndReturnToNormalMode(p.ClipboardPageOrDefault())
 			},
 			AddToUserMacro: true,
 		},

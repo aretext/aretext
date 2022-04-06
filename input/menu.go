@@ -8,7 +8,7 @@ import (
 	"github.com/aretext/aretext/syntax"
 )
 
-func commandMenuItems(config Config) []menu.Item {
+func menuItems(config Config) []menu.Item {
 	// These items are available from both normal and visual mode.
 	items := []menu.Item{
 		{

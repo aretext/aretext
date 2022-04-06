@@ -615,7 +615,7 @@ func PasteBeforeCursor(clipboardPageNameArg *rune) Action {
 func ShowCommandMenu(config Config) Action {
 	return func(s *state.EditorState) {
 		// This sets the input mode to menu.
-		state.ShowMenu(s, state.MenuStyleCommand, commandMenuItems(config))
+		state.ShowMenu(s, state.MenuStyleCommand, menuItems(config))
 	}
 }
 

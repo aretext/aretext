@@ -37,24 +37,12 @@ func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	}
 
 	log.Printf("Normal mode parser accepted input for command '%s'\n", result.Command.Name)
-	action := result.Command.ActionBuilder(ActionBuilderParams{
+	return result.Command.ActionBuilder(ActionBuilderParams{
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-
-	action = thenScrollViewToCursor(thenClearStatusMsg(action))
-
-	clearLastActionMacro := result.Command.AddToLastActionMacro
-	action = thenAddToMacros(
-		action,
-		clearLastActionMacro,
-		result.Command.AddToLastActionMacro,
-		result.Command.AddToUserMacro,
-	)
-
-	return firstCheckpointUndoLog(action)
 }
 
 func (m *normalMode) InputBufferString() string {
@@ -78,23 +66,12 @@ func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Actio
 	}
 
 	log.Printf("Visual mode parser accepted input for command '%s'\n", result.Command.Name)
-	action := result.Command.ActionBuilder(ActionBuilderParams{
+	return result.Command.ActionBuilder(ActionBuilderParams{
 		InputEvents:          result.Input,
 		CountArg:             result.Count,
 		ClipboardPageNameArg: result.ClipboardPageName,
 		Config:               config,
 	})
-	action = thenScrollViewToCursor(thenClearStatusMsg(action))
-
-	clearLastActionMacro := result.Command.AddToLastActionMacro
-	action = thenAddToMacros(
-		action,
-		clearLastActionMacro,
-		result.Command.AddToLastActionMacro,
-		result.Command.AddToUserMacro,
-	)
-
-	return action
 }
 
 func (m *visualMode) InputBufferString() string {
@@ -106,9 +83,15 @@ type insertMode struct{}
 
 func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
-	action = thenScrollViewToCursor(action)
-	action = thenAddToMacros(action, false, true, true)
-	return action
+	return func(s *state.EditorState) {
+		wrappedAction := func(s *state.EditorState) {
+			action(s)
+			state.ScrollViewToCursor(s)
+		}
+		wrappedAction(s)
+		state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
+		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+	}
 }
 
 func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
@@ -173,7 +156,10 @@ type searchMode struct{}
 
 func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 	action := m.processKeyEvent(event)
-	return thenAddToMacros(action, false, false, true)
+	return func(s *state.EditorState) {
+		action(s)
+		state.AddToRecordingUserMacro(s, state.MacroAction(action))
+	}
 }
 
 func (m *searchMode) processKeyEvent(event *tcell.EventKey) Action {
@@ -211,56 +197,4 @@ func (m *taskMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action 
 
 func (m *taskMode) InputBufferString() string {
 	return ""
-}
-
-// firstCheckpointUndoLog sets a checkpoint in the undo log before executing the action.
-func firstCheckpointUndoLog(f Action) Action {
-	return func(s *state.EditorState) {
-		// This ensures that an undo after the action returns the document
-		// to the state BEFORE the action was executed.
-		// For example, if the user deletes a line (dd), then the next undo should
-		// restore the deleted line.
-		state.CheckpointUndoLog(s)
-		f(s)
-	}
-}
-
-// thenScrollViewToCursor executes the action, then scrolls the view so the cursor is visible.
-func thenScrollViewToCursor(f Action) Action {
-	return func(s *state.EditorState) {
-		f(s)
-		state.ScrollViewToCursor(s)
-	}
-}
-
-// thenClearStatusMsg executes the action, then clears the status message.
-func thenClearStatusMsg(f Action) Action {
-	return func(s *state.EditorState) {
-		f(s)
-		state.SetStatusMsg(s, state.StatusMsg{})
-	}
-}
-
-// thenAddToMacros executes the action, then records it in macros.
-func thenAddToMacros(
-	f Action,
-	clearLastActionMacro bool,
-	addToLastActionMacro bool,
-	addToRecordingUserMacro bool,
-) Action {
-	return func(s *state.EditorState) {
-		f(s)
-
-		if clearLastActionMacro {
-			state.ClearLastActionMacro(s)
-		}
-
-		if addToLastActionMacro {
-			state.AddToLastActionMacro(s, state.MacroAction(f))
-		}
-
-		if addToRecordingUserMacro {
-			state.AddToRecordingUserMacro(s, state.MacroAction(f))
-		}
-	}
 }

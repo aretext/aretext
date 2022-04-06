@@ -60,6 +60,46 @@ func (m *normalMode) InputBufferString() string {
 	return m.parser.InputBufferString()
 }
 
+// visualMode is used to visually select a region of the document.
+type visualMode struct {
+	parser *Parser
+}
+
+func newVisualMode() *visualMode {
+	parser := NewParser(visualModeCommands())
+	return &visualMode{parser}
+}
+
+func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	result := m.parser.ProcessInput(event)
+	if !result.Accepted {
+		return EmptyAction
+	}
+
+	log.Printf("Visual mode parser accepted input for command '%s'\n", result.Command.Name)
+	action := result.Command.ActionBuilder(ActionBuilderParams{
+		InputEvents:          result.Input,
+		CountArg:             result.Count,
+		ClipboardPageNameArg: result.ClipboardPageName,
+		Config:               config,
+	})
+	action = thenScrollViewToCursor(thenClearStatusMsg(action))
+
+	clearLastActionMacro := result.Command.AddToLastActionMacro
+	action = thenAddToMacros(
+		action,
+		clearLastActionMacro,
+		result.Command.AddToLastActionMacro,
+		result.Command.AddToUserMacro,
+	)
+
+	return action
+}
+
+func (m *visualMode) InputBufferString() string {
+	return m.parser.InputBufferString()
+}
+
 // insertMode is used for inserting characters into text.
 type insertMode struct{}
 
@@ -153,46 +193,6 @@ func (m *searchMode) processKeyEvent(event *tcell.EventKey) Action {
 
 func (m *searchMode) InputBufferString() string {
 	return ""
-}
-
-// visualMode is used to visually select a region of the document.
-type visualMode struct {
-	parser *Parser
-}
-
-func newVisualMode() *visualMode {
-	parser := NewParser(visualModeCommands())
-	return &visualMode{parser}
-}
-
-func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	result := m.parser.ProcessInput(event)
-	if !result.Accepted {
-		return EmptyAction
-	}
-
-	log.Printf("Visual mode parser accepted input for command '%s'\n", result.Command.Name)
-	action := result.Command.ActionBuilder(ActionBuilderParams{
-		InputEvents:          result.Input,
-		CountArg:             result.Count,
-		ClipboardPageNameArg: result.ClipboardPageName,
-		Config:               config,
-	})
-	action = thenScrollViewToCursor(thenClearStatusMsg(action))
-
-	clearLastActionMacro := result.Command.AddToLastActionMacro
-	action = thenAddToMacros(
-		action,
-		clearLastActionMacro,
-		result.Command.AddToLastActionMacro,
-		result.Command.AddToUserMacro,
-	)
-
-	return action
-}
-
-func (m *visualMode) InputBufferString() string {
-	return m.parser.InputBufferString()
 }
 
 // taskMode is used while a task is running asynchronously.

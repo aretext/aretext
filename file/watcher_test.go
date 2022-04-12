@@ -13,9 +13,8 @@ import (
 
 const testWatcherPollInterval time.Duration = time.Millisecond * 50
 
-func createTestFile(t *testing.T, s string) (string, func()) {
-	tmpDir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
+func createTestFile(t *testing.T, s string) string {
+	tmpDir := t.TempDir()
 
 	filePath := path.Join(tmpDir, "test.txt")
 	f, err := os.Create(filePath)
@@ -25,12 +24,7 @@ func createTestFile(t *testing.T, s string) (string, func()) {
 	_, err = io.WriteString(f, s)
 	require.NoError(t, err)
 
-	cleanupFunc := func() {
-		err := os.RemoveAll(tmpDir)
-		require.NoError(t, err)
-	}
-
-	return filePath, cleanupFunc
+	return filePath
 }
 
 func appendToTestFile(t *testing.T, path string, s string) {
@@ -68,8 +62,7 @@ func waitForChangeOrTimeout(t *testing.T, watcher *Watcher) {
 
 func TestWatcher(t *testing.T) {
 	// Create a test file in a temporary directory.
-	filePath, cleanup := createTestFile(t, "abcd")
-	defer cleanup()
+	filePath := createTestFile(t, "abcd")
 
 	// Load the file and start a watcher.
 	_, watcher, err := Load(filePath, testWatcherPollInterval)

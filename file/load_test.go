@@ -33,8 +33,7 @@ func TestLoad(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			filePath, cleanup := createTestFile(t, tc.fileContents)
-			defer cleanup()
+			filePath := createTestFile(t, tc.fileContents)
 
 			tree, watcher, err := Load(filePath, time.Second)
 			require.NoError(t, err)

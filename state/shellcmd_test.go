@@ -303,9 +303,7 @@ func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
 	suspendScreenFunc := func(f func() error) error { return f() }
 	state := NewEditorState(100, 100, nil, suspendScreenFunc)
 
-	dir, err := os.MkdirTemp("", "aretext")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	f(state, dir)
 }

@@ -311,9 +311,7 @@ func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 }
 
 func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
-	dir, err := os.MkdirTemp("", "aretext")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	path := filepath.Join(dir, "aretext-does-not-exist")
 	state := NewEditorState(100, 100, nil, nil)

@@ -12,26 +12,19 @@ import (
 )
 
 func TestSaveNewFile(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-	defer func() {
-		err := os.RemoveAll(tmpDir)
-		require.NoError(t, err)
-	}()
+	tmpDir := t.TempDir()
 
 	path := path.Join(tmpDir, "test.txt")
 	saveAndAssertContents(t, path, "abcd1234", 0644)
 }
 
 func TestSaveModifyExistingFile(t *testing.T) {
-	path, cleanup := createTestFile(t, "old contents")
-	defer cleanup()
+	path := createTestFile(t, "old contents")
 	saveAndAssertContents(t, path, "new contents", 0644)
 }
 
 func TestSaveModifyExistingFilePreservePermissions(t *testing.T) {
-	path, cleanup := createTestFile(t, "old contents")
-	defer cleanup()
+	path := createTestFile(t, "old contents")
 
 	err := os.Chmod(path, 0600)
 	require.NoError(t, err)

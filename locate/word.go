@@ -81,6 +81,24 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 	})
 }
 
+// NextWordStartInLineOrAfterEmptyLine is the same as NextWordStartInLine, except it includes
+// the newline at the end of an empty line.
+func NextWordStartInLineOrAfterEmptyLine(textTree *text.Tree, pos uint64) uint64 {
+	nextPos := NextWordStartInLine(textTree, pos)
+
+	// The cursor didn't move, so check if we're on an empty line.
+	// If so, inlude the newline at the end of the empty line.
+	if nextPos == pos {
+		prevSeg := prevAdjacentGraphemeCluster(textTree, pos)
+		nextSeg := nextAdjacentGraphemeCluster(textTree, pos)
+		if prevSeg.HasNewline() && nextSeg.HasNewline() {
+			nextPos = pos + nextSeg.NumRunes()
+		}
+	}
+
+	return nextPos
+}
+
 // PrevWordStart locates the start of the word before the cursor.
 // It uses the same word break rules as NextWordStart.
 func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {

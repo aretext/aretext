@@ -572,6 +572,29 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "delete to start of next word on blank line, with next line indented",
+			initialText: "a\n\n    bcd",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "a\n    bcd",
+		},
+		{
+			name:        "delete to start of next word at end of line with whitespace",
+			initialText: "a\n   \nbcd",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 4,
+			expectedText:      "a\n  \nbcd",
+		},
+		{
 			name:        "delete a word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

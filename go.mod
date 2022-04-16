@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/adrg/xdg v0.4.0
-	github.com/gdamore/tcell/v2 v2.5.0
+	github.com/gdamore/tcell/v2 v2.5.1
 	github.com/google/renameio/v2 v2.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.13

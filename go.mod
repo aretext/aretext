@@ -23,5 +23,3 @@ require (
 	golang.org/x/sys v0.0.0-20220318055525-2edf467146b5 // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 )
-
-replace github.com/gdamore/tcell/v2 => github.com/aretext/tcell/v2 v2.5.1-0.20220408003816-46e6a2790b73

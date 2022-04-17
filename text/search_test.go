@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -142,10 +143,10 @@ func TestSearchNextInReader(t *testing.T) {
 	}
 }
 
-func TestSearchNextInReaderWithSingleByteReader(t *testing.T) {
+func TestSearchNextInReaderWithOneByteReader(t *testing.T) {
 	for _, tc := range searchTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := NewSingleByteReader(tc.s)
+			r := iotest.OneByteReader(strings.NewReader(tc.s))
 			ok, offset, err := NewSearcher(tc.q).NextInReader(r)
 			assert.Equal(t, tc.expectFound, ok)
 			assert.Equal(t, tc.expectOffset, offset)

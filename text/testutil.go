@@ -1,28 +1,5 @@
 package text
 
-import "io"
-
-// SingleByteReader is an io.Reader that produces a single byte at a time.
-type SingleByteReader struct {
-	s string
-	i int
-}
-
-func NewSingleByteReader(s string) *SingleByteReader {
-	return &SingleByteReader{s, 0}
-}
-
-func (r *SingleByteReader) Read(p []byte) (n int, err error) {
-	if r.i < len(r.s) {
-		n = copy(p, r.s[r.i:r.i+1])
-		r.i++
-	}
-	if r.i >= len(r.s) {
-		err = io.EOF
-	}
-	return
-}
-
 // Reverse reverses the bytes of a string.
 // The result may not be a valid UTF-8.
 func Reverse(s string) string {

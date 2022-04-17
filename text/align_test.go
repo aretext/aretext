@@ -3,6 +3,7 @@ package text
 import (
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -199,9 +200,9 @@ func TestAlign(t *testing.T) {
 	}
 }
 
-func TestAlignSingleByteReader(t *testing.T) {
-	leftReader := NewSingleByteReader("abc\ndef\nghi")
-	rightReader := NewSingleByteReader("abc\nxyz\nghi")
+func TestAlignOneByteReader(t *testing.T) {
+	leftReader := iotest.OneByteReader(strings.NewReader("abc\ndef\nghi"))
+	rightReader := iotest.OneByteReader(strings.NewReader("abc\nxyz\nghi"))
 	diff, err := Align(leftReader, rightReader)
 	require.NoError(t, err)
 	expected :=

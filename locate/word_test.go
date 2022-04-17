@@ -835,6 +835,12 @@ func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
 			pos:         2,
 			expectedPos: 5,
 		},
+		{
+			name:        "on empty line",
+			inputString: "ab\n\ncd",
+			pos:         3,
+			expectedPos: 4,
+		},
 	}
 
 	for _, tc := range testCases {

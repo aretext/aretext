@@ -86,14 +86,10 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 func NextWordStartInLineOrAfterEmptyLine(textTree *text.Tree, pos uint64) uint64 {
 	nextPos := NextWordStartInLine(textTree, pos)
 
-	// The cursor didn't move, so check if we're on an empty line.
-	// If so, inlude the newline at the end of the empty line.
+	// The cursor didn't move, so we may be on any empty line.
+	// If so, move past the empty line.
 	if nextPos == pos {
-		prevSeg := prevAdjacentGraphemeCluster(textTree, pos)
-		nextSeg := nextAdjacentGraphemeCluster(textTree, pos)
-		if prevSeg.HasNewline() && nextSeg.HasNewline() {
-			nextPos = pos + nextSeg.NumRunes()
-		}
+		nextPos = afterEmptyLine(textTree, pos)
 	}
 
 	return nextPos
@@ -229,7 +225,7 @@ func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint6
 	endOfWordPos := CurrentWordEnd(textTree, pos)
 
 	// Continue to the next non-whitespace or line boundary.
-	return nextWordBoundary(textTree, endOfWordPos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
+	nextPos := nextWordBoundary(textTree, endOfWordPos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
 		if s2.NumRunes() == 0 {
 			// Stop after EOF.
 			return boundaryAfter
@@ -247,6 +243,14 @@ func CurrentWordEndWithTrailingWhitespace(textTree *text.Tree, pos uint64) uint6
 
 		return noBoundary
 	})
+
+	// The cursor didn't move, so we may be on any empty line.
+	// If so, move past the empty line.
+	if nextPos == pos {
+		nextPos = afterEmptyLine(textTree, pos)
+	}
+
+	return nextPos
 }
 
 // isPunct returns whether a grapheme cluster should be treated as punctuation for determining word boundaries.
@@ -383,4 +387,18 @@ func prevAdjacentGraphemeCluster(tree *text.Tree, pos uint64) *segment.Segment {
 		panic(err)
 	}
 	return seg
+}
+
+// afterEmptyLine returns the position immediately after an empty line.
+// If the position is not on an empty line, this returns the original position.
+func afterEmptyLine(textTree *text.Tree, pos uint64) uint64 {
+	prevSeg := prevAdjacentGraphemeCluster(textTree, pos)
+	nextSeg := nextAdjacentGraphemeCluster(textTree, pos)
+	if prevSeg.HasNewline() && nextSeg.HasNewline() {
+		// Position is on an empty line, so move past it.
+		return pos + nextSeg.NumRunes()
+	} else {
+		// Position is NOT on an empty line, so do nothing.
+		return pos
+	}
 }

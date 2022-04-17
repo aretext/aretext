@@ -572,7 +572,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
-			name:        "delete to start of next word on blank line, with next line indented",
+			name:        "delete to start of next word on an empty line with next line indented",
 			initialText: "a\n\n    bcd",
 			events: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
@@ -612,6 +612,47 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 6,
 			expectedText:      "Lorem dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		// NOTE: aretext deletes the empty line, but vim deletes the word after the empty line as well.
+		{
+			name:        "delete a word on an empty line with next line indented",
+			initialText: "a\n\n    bcd",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "a\n    bcd",
+		},
+		// NOTE: aretext deletes the whitespace up to the word, but vim deletes the word after the whitespace as well.
+		{
+			name:        "delete a word in whitespace before word",
+			initialText: "ab   cd   ef",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 2,
+			expectedText:      "abcd   ef",
+		},
+		// NOTE: aretext deletes the word, but vim deletes the leading whitespace as well.
+		{
+			name:        "delete a word on word at end of line with leading whitespace",
+			initialText: "ab   cd   ef",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 10,
+			expectedText:      "ab   cd   ",
 		},
 		{
 			name:        "delete inner word",

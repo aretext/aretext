@@ -387,6 +387,9 @@ func DeleteAWord(clipboardPage clipboard.PageId) Action {
 		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
 			return locate.CurrentWordEndWithTrailingWhitespace(params.TextTree, params.CursorPos)
 		}, clipboardPage)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextNonWhitespaceOrNewline(params.TextTree, params.CursorPos)
+		})
 	}
 }
 

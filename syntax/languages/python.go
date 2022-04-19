@@ -117,7 +117,7 @@ func pythonIdentifierOrKeywordParseFunc() parser.Func {
 
 	// We are not handling soft keywords ("match", "case", "_").
 	keywords := []string{
-		"wait", "else", "import", "pass",
+		"False", "await", "else", "import", "pass",
 		"None", "break", "except", "in", "raise",
 		"True", "class", "finally", "is", "return",
 		"and", "continue", "for", "lambda", "try",

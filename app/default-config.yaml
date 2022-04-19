@@ -168,6 +168,15 @@
     tabSize: 2
     showLineNumbers: true
 
+- name: todo
+  pattern: "**/*.todo" # or "**/todo.txt"
+  config:
+    autoIndent: true
+    syntaxLanguage: todotxt
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
 #- name: custom commands for a specific project
 #  pattern: "**/myproject/**"
 #  config:

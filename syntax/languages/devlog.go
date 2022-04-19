@@ -16,6 +16,7 @@ func (s devlogParseState) Equals(other parser.State) bool {
 
 // DevlogParseFunc returns a parse func for the devlog file format.
 // See https://devlog-cli.org/ for details.
+// This parser is DEPRECATED in aretext v0.5.0 and will be removed in v0.6.0.
 func DevlogParseFunc() parser.Func {
 	// Custom token roles
 	const toDoRole = parser.TokenRoleCustom1

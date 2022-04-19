@@ -65,6 +65,21 @@ func TestPythonParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "boolean keywords",
+			text: `
+x = True
+y = False
+`,
+			expected: []TokenWithText{
+				{Text: "x", Role: parser.TokenRoleIdentifier},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "True", Role: parser.TokenRoleKeyword},
+				{Text: "y", Role: parser.TokenRoleIdentifier},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "False", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
 			name: "operators in equation",
 			text: "x + y - z",
 			expected: []TokenWithText{
@@ -264,6 +279,28 @@ func TestPythonParseFunc(t *testing.T) {
 			text: "3.14_15_93j",
 			expected: []TokenWithText{
 				{Text: "3.14_15_93j", Role: parser.TokenRoleNumber},
+			},
+		},
+		{
+			name: "async await",
+			text: `
+async def main():
+    print('hello')
+    await asyncio.sleep(1)
+    print('world')
+`,
+			expected: []TokenWithText{
+				{Text: "async", Role: parser.TokenRoleKeyword},
+				{Text: "def", Role: parser.TokenRoleKeyword},
+				{Text: "main", Role: parser.TokenRoleIdentifier},
+				{Text: "print", Role: parser.TokenRoleIdentifier},
+				{Text: "'hello'", Role: parser.TokenRoleString},
+				{Text: "await", Role: parser.TokenRoleKeyword},
+				{Text: "asyncio", Role: parser.TokenRoleIdentifier},
+				{Text: "sleep", Role: parser.TokenRoleIdentifier},
+				{Text: "1", Role: parser.TokenRoleNumber},
+				{Text: "print", Role: parser.TokenRoleIdentifier},
+				{Text: "'world'", Role: parser.TokenRoleString},
 			},
 		},
 		{

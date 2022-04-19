@@ -29,7 +29,7 @@ Syntax Languages
 | c         | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                          |
 | protobuf  | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3) |
 | todotxt   | [todo.txt](https://github.com/todotxt/todo.txt)                                          |
-| devlog    | [devlog](https://devlog-cli.org/)                                                        |
+| devlog    | [devlog](https://devlog-cli.org/) DEPRECATED in v0.5.0                                   |
 | gitcommit | Format for editing a git commit                                                          |
 | gitrebase | Format for git interactive rebase                                                        |
 

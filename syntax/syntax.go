@@ -22,7 +22,6 @@ const (
 	LanguageGitCommit = Language("gitcommit")
 	LanguageGitRebase = Language("gitrebase")
 	LanguageProtobuf  = Language("protobuf")
-	LanguageDevlog    = Language("devlog")
 	LanguageTodoTxt   = Language("todotxt")
 )
 
@@ -41,7 +40,6 @@ func init() {
 		LanguageGitCommit: languages.GitCommitParseFunc(),
 		LanguageGitRebase: languages.GitRebaseParseFunc(),
 		LanguageProtobuf:  languages.ProtobufParseFunc(),
-		LanguageDevlog:    languages.DevlogParseFunc(),
 		LanguageTodoTxt:   languages.TodoTxtParseFunc(),
 	}
 

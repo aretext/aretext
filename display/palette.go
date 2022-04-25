@@ -56,7 +56,7 @@ func NewPalette() *Palette {
 		statusInputModeStyle:      s.Bold(true),
 		statusInputBufferStyle:    s.Bold(true),
 		statusRecordingMacroStyle: s.Bold(true),
-		statusFilePathStyle:       s,
+		statusFilePathStyle:       s.Bold(true),
 		menuBorderStyle:           s.Dim(true),
 		menuIconStyle:             s,
 		menuPromptStyle:           s.Dim(true),

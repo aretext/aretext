@@ -77,6 +77,15 @@ func (p *Program) numBytecodes() int {
 	return len(*p)
 }
 
+// MustCompile panics if compilation fails.
+func MustCompile(expr Expr) Program {
+	program, err := Compile(expr)
+	if err != nil {
+		panic(err)
+	}
+	return program
+}
+
 // Compile transforms a regular expression to a program executable by the virtual machine runtime.
 func Compile(expr Expr) (Program, error) {
 	if err := validateExpr(expr); err != nil {

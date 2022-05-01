@@ -89,6 +89,50 @@ func Compile(expr Expr) (Program, error) {
 	return prog, nil
 }
 
+func validateExpr(expr Expr) error {
+	var validateRecursively func(Expr, []CaptureId) error
+	validateRecursively = func(expr Expr, parentCaptureIds []CaptureId) error {
+		switch expr := expr.(type) {
+		case EventExpr:
+			break
+		case EventRangeExpr:
+			if expr.StartEvent >= expr.EndEvent {
+				return fmt.Errorf("Invalid event range [%d, %d]", expr.StartEvent, expr.EndEvent)
+			}
+		case ConcatExpr:
+			for _, child := range expr.Children {
+				if err := validateRecursively(child, parentCaptureIds); err != nil {
+					return err
+				}
+			}
+		case AltExpr:
+			for _, child := range expr.Children {
+				if err := validateRecursively(child, parentCaptureIds); err != nil {
+					return err
+				}
+			}
+		case OptionExpr:
+			return validateRecursively(expr.Child, parentCaptureIds)
+		case StarExpr:
+			return validateRecursively(expr.Child, parentCaptureIds)
+		case CaptureExpr:
+			for _, id := range parentCaptureIds {
+				if id == expr.CaptureId {
+					return fmt.Errorf("Conflicting capture ID %d", expr.CaptureId)
+				}
+			}
+			return validateRecursively(expr.Child, append(parentCaptureIds, expr.CaptureId))
+		default:
+			return fmt.Errorf("Invalid expression type %T", expr)
+		}
+
+		return nil
+	}
+
+	var captureIds []CaptureId
+	return validateRecursively(expr, captureIds)
+}
+
 func compileRecursively(expr Expr, prog *Program) {
 	switch expr := expr.(type) {
 	case EventExpr:

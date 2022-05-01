@@ -31,7 +31,7 @@ func TestCompilerValidation(t *testing.T) {
 			errMsg: "Invalid event range [5, 4]",
 		},
 		{
-			name: "duplicate capture ID",
+			name: "duplicate capture ID, non-overlapping",
 			expr: ConcatExpr{
 				Children: []Expr{
 					CaptureExpr{
@@ -44,7 +44,23 @@ func TestCompilerValidation(t *testing.T) {
 					},
 				},
 			},
-			errMsg: "Duplicate capture ID 1",
+			errMsg: "",
+		},
+		{
+			name: "conflicting capture ID",
+			expr: CaptureExpr{
+				CaptureId: 1,
+				Child: AltExpr{
+					Children: []Expr{
+						CaptureExpr{
+							CaptureId: 1,
+							Child:     EventExpr{Event: 1},
+						},
+						EventExpr{Event: 2},
+					},
+				},
+			},
+			errMsg: "Conflicting capture ID 1",
 		},
 	}
 

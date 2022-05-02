@@ -65,18 +65,6 @@ type bytecode struct {
 // Valid programs are capable of recognizing any regular language.
 type Program []bytecode
 
-func (p *Program) setBytecode(idx int, bc bytecode) {
-	(*p)[idx] = bc
-}
-
-func (p *Program) appendBytecode(bc bytecode) {
-	*p = append(*p, bc)
-}
-
-func (p *Program) numBytecodes() int {
-	return len(*p)
-}
-
 // MustCompile panics if compilation fails.
 func MustCompile(expr Expr) Program {
 	program, err := Compile(expr)
@@ -92,9 +80,8 @@ func Compile(expr Expr) (Program, error) {
 		return nil, err
 	}
 
-	var prog Program
-	compileRecursively(expr, &prog)
-	prog.appendBytecode(bytecode{op: opAccept}) // last instruction is always opAccept.
+	prog := compileRecursively(expr, nil)
+	prog = append(prog, bytecode{op: opAccept}) // last instruction is always opAccept.
 	return prog, nil
 }
 
@@ -142,17 +129,17 @@ func validateExpr(expr Expr) error {
 	return validateRecursively(expr, captureIds)
 }
 
-func compileRecursively(expr Expr, prog *Program) {
+func compileRecursively(expr Expr, prog Program) Program {
 	switch expr := expr.(type) {
 	case EventExpr:
-		prog.appendBytecode(bytecode{
+		return append(prog, bytecode{
 			op:   opRead,
 			arg1: int64(expr.Event),
 			arg2: int64(expr.Event),
 		})
 
 	case EventRangeExpr:
-		prog.appendBytecode(bytecode{
+		return append(prog, bytecode{
 			op:   opRead,
 			arg1: int64(expr.StartEvent),
 			arg2: int64(expr.EndEvent),
@@ -160,14 +147,15 @@ func compileRecursively(expr Expr, prog *Program) {
 
 	case ConcatExpr:
 		for _, child := range expr.Children {
-			compileRecursively(child, prog)
+			prog = compileRecursively(child, prog)
 		}
+		return prog
 
 	case AltExpr:
 		if len(expr.Children) == 0 {
-			return
+			return prog
 		} else if len(expr.Children) == 1 {
-			compileRecursively(expr.Children[0], prog)
+			return compileRecursively(expr.Children[0], prog)
 		} else if len(expr.Children) > 1 {
 			// Split off the first child. The remaining children
 			// will be compiled recursively as an AltExpr.
@@ -175,89 +163,89 @@ func compileRecursively(expr Expr, prog *Program) {
 			rightChildren := expr.Children[1:len(expr.Children)]
 
 			// Placeholder for opFork, which will be filled in later.
-			forkIdx := prog.numBytecodes()
-			prog.appendBytecode(bytecode{})
+			forkIdx := len(prog)
+			prog = append(prog, bytecode{})
 
 			// Compile left child recursively.
-			leftChildIdx := prog.numBytecodes()
-			compileRecursively(leftChild, prog)
+			leftChildIdx := len(prog)
+			prog = compileRecursively(leftChild, prog)
 
-			// Placeholder for opJmp, which will be filled in later.
-			jumpIdx := prog.numBytecodes()
-			prog.appendBytecode(bytecode{})
+			// Placeholder for opJump, which will be filled in later.
+			jumpIdx := len(prog)
+			prog = append(prog, bytecode{})
 
 			// Compile right children recursively as an AltExpr.
-			rightChildIdx := prog.numBytecodes()
+			rightChildIdx := len(prog)
 			rightExpr := AltExpr{Children: rightChildren}
-			compileRecursively(rightExpr, prog)
-			endIdx := prog.numBytecodes()
+			prog = compileRecursively(rightExpr, prog)
+			endIdx := len(prog)
 
 			// Fill in opFork now that we know the program counters for the left and right child.
-			prog.setBytecode(forkIdx, bytecode{
+			prog[forkIdx] = bytecode{
 				op:   opFork,
 				arg1: int64(leftChildIdx),
 				arg2: int64(rightChildIdx),
-			})
+			}
 
 			// Fill in opJump now that we know the length of this part of the program.
-			prog.setBytecode(jumpIdx, bytecode{
+			prog[jumpIdx] = bytecode{
 				op:   opJump,
 				arg1: int64(endIdx),
-			})
+			}
 		}
 
 	case OptionExpr:
 		// Placeholder for opFork, which will be filled in later.
-		forkIdx := prog.numBytecodes()
-		prog.appendBytecode(bytecode{})
+		forkIdx := len(prog)
+		prog = append(prog, bytecode{})
 
 		// Compile the child recursively.
-		childStartIdx := prog.numBytecodes()
-		compileRecursively(expr.Child, prog)
-		endIdx := prog.numBytecodes()
+		childStartIdx := len(prog)
+		prog = compileRecursively(expr.Child, prog)
+		endIdx := len(prog)
 
 		// Fill in opFork now that we know the length of this part of the program.
-		prog.setBytecode(forkIdx, bytecode{
+		prog[forkIdx] = bytecode{
 			op:   opFork,
 			arg1: int64(childStartIdx),
 			arg2: int64(endIdx),
-		})
+		}
 
 	case StarExpr:
 		// Placeholder for opFork, which will be filled in later.
-		forkIdx := prog.numBytecodes()
-		prog.appendBytecode(bytecode{})
+		forkIdx := len(prog)
+		prog = append(prog, bytecode{})
 
 		// Compile the child recursively.
-		childStartIdx := prog.numBytecodes()
-		compileRecursively(expr.Child, prog)
+		childStartIdx := len(prog)
+		prog = compileRecursively(expr.Child, prog)
 
 		// Jump back to the first instruction so repetitions are accepted.
-		prog.appendBytecode(bytecode{
+		prog = append(prog, bytecode{
 			op:   opJump,
 			arg1: int64(forkIdx),
 		})
 
 		// Fill in opFork now that we know the length of this part of the program.
-		endIdx := prog.numBytecodes()
-		prog.setBytecode(forkIdx, bytecode{
+		endIdx := len(prog)
+		prog[forkIdx] = bytecode{
 			op:   opFork,
 			arg1: int64(childStartIdx),
 			arg2: int64(endIdx),
-		})
+		}
 
 	case CaptureExpr:
 		// Start the capture.
-		prog.appendBytecode(bytecode{
+		prog = append(prog, bytecode{
 			op:   opStartCapture,
 			arg1: int64(expr.CaptureId),
 		})
 
 		// Compile the child recursively.
-		compileRecursively(expr.Child, prog)
+		prog = compileRecursively(expr.Child, prog)
 
 		// End the capture after the child completes.
-		prog.appendBytecode(bytecode{
+		prog = append(prog, bytecode{
 			op:   opEndCapture,
 			arg1: int64(expr.CaptureId),
 		})
@@ -265,4 +253,6 @@ func compileRecursively(expr Expr, prog *Program) {
 	default:
 		panic(fmt.Sprintf("Invalid expression type %T", expr))
 	}
+
+	return prog
 }

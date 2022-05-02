@@ -89,37 +89,6 @@ func (m *vmMode) InputBufferString() string {
 	return m.inputBuffer.String()
 }
 
-// searchMode is used to search the text for a substring.
-type searchMode struct{}
-
-func (m *searchMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	action := m.processKeyEvent(event)
-	return func(s *state.EditorState) {
-		action(s)
-		state.AddToRecordingUserMacro(s, state.MacroAction(action))
-	}
-}
-
-func (m *searchMode) processKeyEvent(event *tcell.EventKey) Action {
-	switch event.Key() {
-	case tcell.KeyEscape:
-		return AbortSearchAndReturnToNormalMode
-	case tcell.KeyEnter:
-		return CommitSearchAndReturnToNormalMode
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		// This returns the input mode to normal if the search query is empty.
-		return DeleteRuneFromSearchQuery
-	case tcell.KeyRune:
-		return AppendRuneToSearchQuery(event.Rune())
-	default:
-		return EmptyAction
-	}
-}
-
-func (m *searchMode) InputBufferString() string {
-	return ""
-}
-
 // taskMode is used while a task is running asynchronously.
 // This allows the user to cancel the task if it takes too long.
 type taskMode struct{}

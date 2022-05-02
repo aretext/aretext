@@ -20,7 +20,7 @@ func NewInterpreter() *Interpreter {
 			state.InputModeNormal: newVmMode("normal", normalModeCommands()),
 			state.InputModeInsert: newVmMode("insert", insertModeCommands()),
 			state.InputModeMenu:   newVmMode("menu", menuModeCommands()),
-			state.InputModeSearch: &searchMode{},
+			state.InputModeSearch: newVmMode("search", searchModeCommands()),
 			state.InputModeVisual: newVmMode("visual", visualModeCommands()),
 			state.InputModeTask:   &taskMode{},
 		},

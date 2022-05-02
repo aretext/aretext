@@ -2,30 +2,41 @@ package input
 
 import (
 	"log"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/input/vm"
 	"github.com/aretext/aretext/state"
 )
 
 // Interpreter translates key events to commands.
 type Interpreter struct {
-	modes map[state.InputMode]Mode
+	modes map[state.InputMode]*mode
 }
 
 // NewInterpreter creates a new interpreter.
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		modes: map[state.InputMode]Mode{
-			state.InputModeNormal: newVmMode("normal", normalModeCommands()),
-			state.InputModeInsert: newVmMode("insert", insertModeCommands()),
-			state.InputModeMenu:   newVmMode("menu", menuModeCommands()),
-			state.InputModeSearch: newVmMode("search", searchModeCommands()),
-			state.InputModeVisual: newVmMode("visual", visualModeCommands()),
+		modes: map[state.InputMode]*mode{
+			// normal mode is used for navigating text.
+			state.InputModeNormal: newMode("normal", normalModeCommands()),
+
+			// insert mode is used for inserting characters into the document.
+			state.InputModeInsert: newMode("insert", insertModeCommands()),
+
+			// visual mode is used to visually select a region of the document.
+			state.InputModeVisual: newMode("visual", visualModeCommands()),
+
+			// menu mode allows the user to search for and select items in a menu.
+			state.InputModeMenu: newMode("menu", menuModeCommands()),
+
+			// search mode is used to search the document for a substring.
+			state.InputModeSearch: newMode("search", searchModeCommands()),
 
 			// task mode is used while a task is running asynchronously.
 			// This allows the user to cancel the task if it takes too long.
-			state.InputModeTask: newVmMode("task", taskModeCommands()),
+			state.InputModeTask: newMode("task", taskModeCommands()),
 		},
 	}
 }
@@ -62,4 +73,72 @@ func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) Action {
 // It can be displayed to the user to help them understand the input state.
 func (inp *Interpreter) InputBufferString(mode state.InputMode) string {
 	return inp.modes[mode].InputBufferString()
+}
+
+// mode is an editor input mode.
+// Each mode has its own rules for interpreting user input.
+type mode struct {
+	name        string
+	runtime     *vm.Runtime
+	eventBuffer []vm.Event
+	inputBuffer strings.Builder
+	commands    []Command
+}
+
+func newMode(name string, commands []Command) *mode {
+	// Build a single expression to recognize any of the commands for this mode.
+	// Wrap each command expression in CaptureExpr so we can determine which command
+	// was accepted by the virtual machine.
+	var expr vm.AltExpr
+	for i, c := range commands {
+		expr.Children = append(expr.Children, vm.CaptureExpr{
+			CaptureId: vm.CaptureId(i),
+			Child:     c.BuildExpr(),
+		})
+	}
+
+	runtime := vm.NewRuntime(vm.MustCompile(expr))
+
+	return &mode{
+		name:     name,
+		runtime:  runtime,
+		commands: commands,
+	}
+}
+
+func (m *mode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	vmEvent := eventKeyToVmEvent(event)
+	m.eventBuffer = append(m.eventBuffer, vmEvent)
+	if event.Key() == tcell.KeyRune {
+		m.inputBuffer.WriteRune(event.Rune())
+	}
+
+	action := EmptyAction
+	result := m.runtime.ProcessEvent(vmEvent)
+	if result.Accepted {
+		for _, capture := range result.Captures {
+			if int(capture.Id) < len(m.commands) {
+				command := m.commands[capture.Id]
+				params := capturesToCommandParams(result.Captures, m.eventBuffer)
+				action = command.BuildAction(config, params)
+				log.Printf(
+					"%s mode accepted input for command %q with params %+v and config %+v\n",
+					m.name, command.Name,
+					params, config,
+				)
+				break
+			}
+		}
+	}
+
+	if result.Reset {
+		m.eventBuffer = m.eventBuffer[:0]
+		m.inputBuffer.Reset()
+	}
+
+	return action
+}
+
+func (m *mode) InputBufferString() string {
+	return m.inputBuffer.String()
 }

@@ -89,34 +89,6 @@ func (m *vmMode) InputBufferString() string {
 	return m.inputBuffer.String()
 }
 
-// menuMode allows the user to search for and select items in a menu.
-type menuMode struct{}
-
-func (m *menuMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	switch event.Key() {
-	case tcell.KeyEscape:
-		return HideMenuAndReturnToNormalMode
-	case tcell.KeyEnter:
-		return ExecuteSelectedMenuItem
-	case tcell.KeyUp:
-		return MenuSelectionUp
-	case tcell.KeyDown:
-		return MenuSelectionDown
-	case tcell.KeyTab:
-		return MenuSelectionDown
-	case tcell.KeyRune:
-		return AppendRuneToMenuSearch(event.Rune())
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return DeleteRuneFromMenuSearch
-	default:
-		return EmptyAction
-	}
-}
-
-func (m *menuMode) InputBufferString() string {
-	return ""
-}
-
 // searchMode is used to search the text for a substring.
 type searchMode struct{}
 

@@ -1040,3 +1040,62 @@ func insertModeCommands() []Command {
 		},
 	}
 }
+
+func menuModeCommands() []Command {
+	return []Command{
+		{
+			Name: "escape to normal mode",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEscape)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return HideMenuAndReturnToNormalMode
+			},
+		},
+		{
+			Name: "execute menu item",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEnter)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return ExecuteSelectedMenuItem
+			},
+		},
+		{
+			Name: "move menu selection up",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyUp)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return MenuSelectionUp
+			},
+		},
+		{
+			Name: "move menu selection down",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyDown), keyExpr(tcell.KeyTab))
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return MenuSelectionDown
+			},
+		},
+		{
+			Name: "insert char to menu query",
+			BuildExpr: func() vm.Expr {
+				return insertExpr
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return AppendRuneToMenuSearch(p.InsertChar)
+			},
+		},
+		{
+			Name: "delete char from menu query",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return DeleteRuneFromMenuSearch
+			},
+		},
+	}
+}

@@ -3,6 +3,7 @@ package input
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
@@ -1518,5 +1519,50 @@ func TestEnterAndExitVisualModeThenReplayLastAction(t *testing.T) {
 func BenchmarkNewInterpreter(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		NewInterpreter()
+	}
+}
+
+func BenchmarkProcessEvent(b *testing.B) {
+	benchmarks := []struct {
+		name   string
+		mode   state.InputMode
+		events []tcell.Event
+	}{
+		{
+			name: "i",
+			mode: state.InputModeNormal,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+			},
+		},
+		{
+			name: "1234gg",
+			mode: state.InputModeNormal,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '1', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '3', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '4', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone),
+			},
+		},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			logWriter := log.Writer()
+			defer func() {
+				log.SetOutput(logWriter)
+			}()
+			log.SetOutput(io.Discard)
+
+			interpreter := NewInterpreter()
+			inputConfig := Config{InputMode: bm.mode}
+			b.ResetTimer()
+			for _, event := range bm.events {
+				interpreter.ProcessEvent(event, inputConfig)
+			}
+		})
 	}
 }

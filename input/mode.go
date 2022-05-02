@@ -7,7 +7,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/input/vm"
-	"github.com/aretext/aretext/state"
 )
 
 // Mode represents an input mode, which is a way of interpreting key events.
@@ -87,21 +86,4 @@ func (m *vmMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 
 func (m *vmMode) InputBufferString() string {
 	return m.inputBuffer.String()
-}
-
-// taskMode is used while a task is running asynchronously.
-// This allows the user to cancel the task if it takes too long.
-type taskMode struct{}
-
-func (m *taskMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	switch event.Key() {
-	case tcell.KeyEscape:
-		return state.CancelTaskIfRunning
-	default:
-		return EmptyAction
-	}
-}
-
-func (m *taskMode) InputBufferString() string {
-	return ""
 }

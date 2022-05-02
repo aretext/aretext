@@ -1141,3 +1141,17 @@ func searchModeCommands() []Command {
 		},
 	}
 }
+
+func taskModeCommands() []Command {
+	return []Command{
+		{
+			Name: "cancel task",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEscape)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return state.CancelTaskIfRunning
+			},
+		},
+	}
+}

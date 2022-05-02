@@ -22,7 +22,10 @@ func NewInterpreter() *Interpreter {
 			state.InputModeMenu:   newVmMode("menu", menuModeCommands()),
 			state.InputModeSearch: newVmMode("search", searchModeCommands()),
 			state.InputModeVisual: newVmMode("visual", visualModeCommands()),
-			state.InputModeTask:   &taskMode{},
+
+			// task mode is used while a task is running asynchronously.
+			// This allows the user to cancel the task if it takes too long.
+			state.InputModeTask: newVmMode("task", taskModeCommands()),
 		},
 	}
 }

@@ -14,6 +14,7 @@ type CommandParams struct {
 	ClipboardPage clipboard.PageId
 	MatchChar     rune
 	ReplaceChar   rune
+	InsertChar    rune
 }
 
 // Command defines a command that the input parser can recognize.
@@ -940,4 +941,102 @@ func visualModeCommands() []Command {
 			},
 		},
 	}...)
+}
+
+func insertModeCommands() []Command {
+	decorate := func(action Action) Action {
+		return func(s *state.EditorState) {
+			wrappedAction := func(s *state.EditorState) {
+				action(s)
+				state.ScrollViewToCursor(s)
+			}
+			wrappedAction(s)
+			state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
+			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+		}
+	}
+
+	return []Command{
+		{
+			Name: "insert rune",
+			BuildExpr: func() vm.Expr {
+				return insertExpr
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(InsertRune(p.InsertChar))
+			},
+		},
+		{
+			Name: "delete prev char",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(DeletePrevChar(clipboard.PageNull))
+			},
+		},
+		{
+			Name: "insert newline",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEnter)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(InsertNewlineAndUpdateAutoIndentWhitespace)
+			},
+		},
+		{
+			Name: "insert tab",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyTab)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(InsertTab)
+			},
+		},
+		{
+			Name: "cursor left",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyLeft)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorLeft)
+			},
+		},
+		{
+			Name: "cursor right",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyRight)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorRight)
+			},
+		},
+		{
+			Name: "cursor up",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyUp)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorUp)
+			},
+		},
+		{
+			Name: "cursor down",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyDown)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorDown)
+			},
+		},
+		{
+			Name: "escape to normal mode",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEscape)
+			},
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(ReturnToNormalModeAfterInsert)
+			},
+		},
+	}
 }

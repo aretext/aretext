@@ -18,7 +18,7 @@ func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		modes: map[state.InputMode]Mode{
 			state.InputModeNormal: newVmMode("normal", normalModeCommands()),
-			state.InputModeInsert: &insertMode{},
+			state.InputModeInsert: newVmMode("insert", insertModeCommands()),
 			state.InputModeMenu:   &menuMode{},
 			state.InputModeSearch: &searchMode{},
 			state.InputModeVisual: newVmMode("visual", visualModeCommands()),

@@ -3,6 +3,7 @@ package input
 import (
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -39,6 +40,7 @@ const (
 	captureIdClipboardPage
 	captureIdMatchChar
 	captureIdReplaceChar
+	captureIdInsertChar
 )
 
 type captureOpts struct {
@@ -61,7 +63,7 @@ func keyExpr(key tcell.Key) vm.Expr {
 }
 
 // Pre-compute and share these expressions to reduce number of allocations.
-var countExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr vm.Expr
+var countExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr vm.Expr
 
 func init() {
 	countExpr = vm.OptionExpr{
@@ -126,6 +128,14 @@ func init() {
 			},
 		},
 	}
+
+	insertExpr = vm.CaptureExpr{
+		CaptureId: captureIdInsertChar,
+		Child: vm.EventRangeExpr{
+			StartEvent: runeToVmEvent(rune(0)),
+			EndEvent:   runeToVmEvent(utf8.MaxRune),
+		},
+	}
 }
 
 func cmdExpr(verb string, object string, opts captureOpts) vm.Expr {
@@ -172,6 +182,7 @@ func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandPa
 		ClipboardPage: clipboard.PageDefault,
 		MatchChar:     '\x00',
 		ReplaceChar:   '\x00',
+		InsertChar:    '\x00',
 	}
 	for _, capture := range captures {
 		captureEvents := events[capture.StartIdx : capture.StartIdx+capture.Length]
@@ -181,9 +192,11 @@ func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandPa
 		case captureIdClipboardPage:
 			p.ClipboardPage = eventsToClipboardPage(captureEvents)
 		case captureIdMatchChar:
-			p.MatchChar = eventsToMatchChar(captureEvents)
+			p.MatchChar = eventsToChar(captureEvents)
 		case captureIdReplaceChar:
 			p.ReplaceChar = eventsToReplaceChar(captureEvents)
+		case captureIdInsertChar:
+			p.InsertChar = eventsToChar(captureEvents)
 		}
 	}
 	return p
@@ -208,7 +221,7 @@ func eventsToClipboardPage(events []vm.Event) clipboard.PageId {
 	return clipboard.PageIdForLetter(vmEventToRune(events[0]))
 }
 
-func eventsToMatchChar(events []vm.Event) rune {
+func eventsToChar(events []vm.Event) rune {
 	if len(events) != 1 {
 		return '\x00'
 	}

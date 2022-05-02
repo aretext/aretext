@@ -6,7 +6,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/input/vm"
 	"github.com/aretext/aretext/state"
 )
@@ -88,51 +87,6 @@ func (m *vmMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 
 func (m *vmMode) InputBufferString() string {
 	return m.inputBuffer.String()
-}
-
-// insertMode is used for inserting characters into text.
-type insertMode struct{}
-
-func (m *insertMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	action := m.processKeyEvent(event)
-	return func(s *state.EditorState) {
-		wrappedAction := func(s *state.EditorState) {
-			action(s)
-			state.ScrollViewToCursor(s)
-		}
-		wrappedAction(s)
-		state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
-		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
-	}
-}
-
-func (m *insertMode) processKeyEvent(event *tcell.EventKey) Action {
-	switch event.Key() {
-	case tcell.KeyRune:
-		return InsertRune(event.Rune())
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return DeletePrevChar(clipboard.PageNull)
-	case tcell.KeyEnter:
-		return InsertNewlineAndUpdateAutoIndentWhitespace
-	case tcell.KeyTab:
-		return InsertTab
-	case tcell.KeyLeft:
-		return CursorLeft
-	case tcell.KeyRight:
-		return CursorRight
-	case tcell.KeyUp:
-		return CursorUp
-	case tcell.KeyDown:
-		return CursorDown
-	case tcell.KeyEscape:
-		return ReturnToNormalModeAfterInsert
-	default:
-		return EmptyAction
-	}
-}
-
-func (m *insertMode) InputBufferString() string {
-	return ""
 }
 
 // menuMode allows the user to search for and select items in a menu.

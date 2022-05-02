@@ -2,10 +2,12 @@ package input
 
 import (
 	"log"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/input/vm"
 	"github.com/aretext/aretext/state"
 )
 
@@ -20,62 +22,72 @@ type Mode interface {
 	InputBufferString() string
 }
 
-// normalMode is used for navigating text.
-type normalMode struct {
-	parser *Parser
+// vmMode is a mode that uses a virtual machine to interpret input.
+// This is used to implement normal and visual modes.
+type vmMode struct {
+	name        string
+	runtime     *vm.Runtime
+	eventBuffer []vm.Event
+	inputBuffer strings.Builder
+	commands    []Command
 }
 
-func newNormalMode() *normalMode {
-	parser := NewParser(normalModeCommands())
-	return &normalMode{parser}
-}
-
-func (m *normalMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	result := m.parser.ProcessInput(event)
-	if !result.Accepted {
-		return EmptyAction
+func newVmMode(name string, commands []Command) *vmMode {
+	// Build a single expression to recognize any of the commands for this mode.
+	// Wrap each command expression in CaptureExpr so we can determine which command
+	// was accepted by the virtual machine.
+	var expr vm.AltExpr
+	for i, c := range commands {
+		expr.Children = append(expr.Children, vm.CaptureExpr{
+			CaptureId: vm.CaptureId(i),
+			Child:     c.BuildExpr(),
+		})
 	}
 
-	log.Printf("Normal mode parser accepted input for command '%s'\n", result.Command.Name)
-	return result.Command.ActionBuilder(ActionBuilderParams{
-		InputEvents:          result.Input,
-		CountArg:             result.Count,
-		ClipboardPageNameArg: result.ClipboardPageName,
-		Config:               config,
-	})
+	runtime := vm.NewRuntime(vm.MustCompile(expr))
+
+	return &vmMode{
+		name:     name,
+		runtime:  runtime,
+		commands: commands,
+	}
 }
 
-func (m *normalMode) InputBufferString() string {
-	return m.parser.InputBufferString()
-}
-
-// visualMode is used to visually select a region of the document.
-type visualMode struct {
-	parser *Parser
-}
-
-func newVisualMode() *visualMode {
-	parser := NewParser(visualModeCommands())
-	return &visualMode{parser}
-}
-
-func (m *visualMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
-	result := m.parser.ProcessInput(event)
-	if !result.Accepted {
-		return EmptyAction
+func (m *vmMode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+	vmEvent := eventKeyToVmEvent(event)
+	m.eventBuffer = append(m.eventBuffer, vmEvent)
+	if event.Key() == tcell.KeyRune {
+		m.inputBuffer.WriteRune(event.Rune())
 	}
 
-	log.Printf("Visual mode parser accepted input for command '%s'\n", result.Command.Name)
-	return result.Command.ActionBuilder(ActionBuilderParams{
-		InputEvents:          result.Input,
-		CountArg:             result.Count,
-		ClipboardPageNameArg: result.ClipboardPageName,
-		Config:               config,
-	})
+	action := EmptyAction
+	result := m.runtime.ProcessEvent(vmEvent)
+	if result.Accepted {
+		for _, capture := range result.Captures {
+			if int(capture.Id) < len(m.commands) {
+				command := m.commands[capture.Id]
+				params := capturesToCommandParams(result.Captures, m.eventBuffer)
+				action = command.BuildAction(config, params)
+				log.Printf(
+					"%s mode accepted input for command %q with params %+v and config %+v\n",
+					m.name, command.Name,
+					params, config,
+				)
+				break
+			}
+		}
+	}
+
+	if result.Reset {
+		m.eventBuffer = m.eventBuffer[:0]
+		m.inputBuffer.Reset()
+	}
+
+	return action
 }
 
-func (m *visualMode) InputBufferString() string {
-	return m.parser.InputBufferString()
+func (m *vmMode) InputBufferString() string {
+	return m.inputBuffer.String()
 }
 
 // insertMode is used for inserting characters into text.

@@ -4,50 +4,25 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/input/vm"
 	"github.com/aretext/aretext/state"
 )
 
-// ActionBuilder is invoked when the input parser accepts a sequence of keypresses matching a command.
-type ActionBuilder func(p ActionBuilderParams) Action
-
-type ActionBuilderParams struct {
-	InputEvents          []*tcell.EventKey
-	CountArg             *uint64
-	ClipboardPageNameArg *rune
-	Config               Config
-}
-
-func (p ActionBuilderParams) CountOrDefault() uint64 {
-	if p.CountArg == nil {
-		return 1
-	}
-	return *p.CountArg
-}
-
-func (p ActionBuilderParams) ClipboardPageOrDefault() clipboard.PageId {
-	if p.ClipboardPageNameArg == nil {
-		return clipboard.PageDefault
-	}
-	return clipboard.PageIdForLetter(*p.ClipboardPageNameArg)
-}
-
-func (p ActionBuilderParams) LastChar() rune {
-	if len(p.InputEvents) == 0 {
-		return '\x00'
-	}
-	lastEvent := p.InputEvents[len(p.InputEvents)-1]
-	if lastEvent.Key() != tcell.KeyRune {
-		return '\x00'
-	}
-	return lastEvent.Rune()
+// CommandParams are parameters parsed from user input.
+type CommandParams struct {
+	Count         uint64
+	ClipboardPage clipboard.PageId
+	MatchChar     rune
+	ReplaceChar   rune
 }
 
 // Command defines a command that the input parser can recognize.
-// The pattern is a sequence of keypresses that trigger the command.
+// The VM expression defines how the input processor recognizes the command,
+// and the action defines how the editor executes the command.
 type Command struct {
-	Name          string
-	Pattern       []EventMatcher
-	ActionBuilder ActionBuilder
+	Name        string
+	BuildExpr   func() vm.Expr
+	BuildAction func(Config, CommandParams) Action
 }
 
 // These commands control cursor movement in normal and visual mode.
@@ -67,258 +42,192 @@ func cursorCommands() []Command {
 
 	return []Command{
 		{
-			Name: "cursor left (arrow)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyLeft},
+			Name: "cursor left (left arrow or h)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyLeft), runeExpr('h'))
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorLeft)
 			},
 		},
 		{
-			Name: "cursor left (h)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'h'},
+			Name: "cursor right (right arrow or l)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyRight), runeExpr('l'))
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorLeft)
-			},
-		},
-		{
-			Name: "cursor right (arrow)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRight},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorRight)
 			},
 		},
 		{
-			Name: "cursor right (l)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'l'},
+			Name: "cursor up (up arrow or k)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyUp), runeExpr('k'))
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorRight)
-			},
-		},
-		{
-			Name: "cursor up (arrow)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyUp},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorUp)
 			},
 		},
 		{
-			Name: "cursor up (k)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'k'},
+			Name: "cursor down (down arrow or j)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyDown), runeExpr('j'))
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorUp)
-			},
-		},
-		{
-			Name: "cursor down (arrow)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyDown},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorDown)
-			},
-		},
-		{
-			Name: "cursor down (j)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'j'},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorDown)
 			},
 		},
 		{
 			Name: "cursor back (backspace)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyBackspace},
+			BuildExpr: func() vm.Expr {
+				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorBack)
-			},
-		},
-		{
-			Name: "cursor back (backspace2)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyBackspace2},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorBack)
 			},
 		},
 		{
 			Name: "cursor next word start (w)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("w", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorNextWordStart)
 			},
 		},
 		{
 			Name: "cursor prev word start (b)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'b'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("b", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorPrevWordStart)
 			},
 		},
 		{
 			Name: "cursor next word end (e)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'e'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("e", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorNextWordEnd)
 			},
 		},
 		{
 			Name: "cursor prev paragraph ({)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '{'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("{", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorPrevParagraph)
 			},
 		},
 		{
 			Name: "cursor next paragraph (})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '}'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("}", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorNextParagraph)
 			},
 		},
 		{
 			Name: "cursor to next matching char (f{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'f'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("f", "", captureOpts{count: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
-				return decorate(CursorToNextMatchingChar(char, p.CountOrDefault(), true))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, true))
 			},
 		},
 		{
 			Name: "cursor to prev matching char (F{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'F'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("F", "", captureOpts{count: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
-				return decorate(CursorToPrevMatchingChar(char, p.CountOrDefault(), true))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, true))
 			},
 		},
 		{
 			Name: "cursor till next matching char (t{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 't'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("t", "", captureOpts{count: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
-				return decorate(CursorToNextMatchingChar(char, p.CountOrDefault(), false))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, false))
 			},
 		},
 		{
 			Name: "cursor to prev matching char (T{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'T'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("T", "", captureOpts{count: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
-				return decorate(CursorToPrevMatchingChar(char, p.CountOrDefault(), false))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, false))
 			},
 		},
 		{
 			Name: "cursor line start (0)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '0'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("0", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorLineStart)
 			},
 		},
 		{
 			Name: "cursor line start non-whitespace (^)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '^'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("^", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorLineStartNonWhitespace)
 			},
 		},
 		{
 			Name: "cursor line end ($)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '$'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("$", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorLineEnd)
 			},
 		},
 		{
 			Name: "cursor start of line num (gg)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'g'},
-				{Key: tcell.KeyRune, Rune: 'g'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("gg", "", captureOpts{count: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(CursorStartOfLineNum(p.CountOrDefault()))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(CursorStartOfLineNum(p.Count))
 			},
 		},
 		{
 			Name: "cursor start of last line (G)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'G'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("G", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorate(CursorStartOfLastLine)
 			},
 		},
 		{
 			Name: "scroll up (ctrl-u)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyCtrlU},
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyCtrlU)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ScrollUp(p.Config))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(ScrollUp(config))
 			},
 		},
 		{
 			Name: "scroll down (ctrl-d)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyCtrlD},
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyCtrlD)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorate(ScrollDown(p.Config))
+			BuildAction: func(config Config, p CommandParams) Action {
+				return decorate(ScrollDown(config))
 			},
 		},
 	}
@@ -351,26 +260,14 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 	}
 }
 
-// These commands are used when the editor is in normal mode.
 func normalModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
-			Name: "delete next char in line (x)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'x'},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorateNormalOrVisual(
-					DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault()),
-					addToMacro{lastAction: true, user: true})
-			},
-		},
-		{
 			Name: "enter insert mode (i)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'i'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("i", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertMode,
 					addToMacro{lastAction: true, user: true})
@@ -378,10 +275,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at start of line (I)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'I'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("I", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtStartOfLine,
 					addToMacro{lastAction: true, user: true})
@@ -389,10 +286,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at next pos (a)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'a'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("a", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtNextPos,
 					addToMacro{lastAction: true, user: true})
@@ -400,10 +297,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at end of line (A)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'A'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("A", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtEndOfLine,
 					addToMacro{lastAction: true, user: true})
@@ -411,10 +308,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "begin new line below (o)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'o'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("o", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					BeginNewLineBelow,
 					addToMacro{lastAction: true, user: true})
@@ -422,10 +319,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "begin new line above (O)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'O'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("O", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					BeginNewLineAbove,
 					addToMacro{lastAction: true, user: true})
@@ -433,10 +330,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "join lines (J)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'J'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("J", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					JoinLines,
 					addToMacro{lastAction: true, user: true})
@@ -444,358 +341,277 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "delete line (dd)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'd'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("dd", "", captureOpts{count: true, clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteLines(p.CountOrDefault(), p.ClipboardPageOrDefault()),
+					DeleteLines(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete prev char in line (dh)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'h'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "h", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeletePrevCharInLine(p.ClipboardPageOrDefault()),
+					DeletePrevCharInLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete down (dj)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'j'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "j", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteDown(p.ClipboardPageOrDefault()),
+					DeleteDown(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete up (dk)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'k'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "k", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteUp(p.ClipboardPageOrDefault()),
+					DeleteUp(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
-			Name: "delete next char in line (dl)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'l'},
+			Name: "delete next char in line (dl or x)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "l", captureOpts{count: true, clipboardPage: true}),
+					cmdExpr("x", "", captureOpts{count: true, clipboardPage: true}),
+				)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteNextCharInLine(p.CountOrDefault(), p.ClipboardPageOrDefault()),
+					DeleteNextCharInLine(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to end of line (d$)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: '$'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "$", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToEndOfLine(p.ClipboardPageOrDefault()),
+					DeleteToEndOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to start of line (d0)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: '0'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "0", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToStartOfLine(p.ClipboardPageOrDefault()),
+					DeleteToStartOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to start of line non-whitespace (d^)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: '^'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "^", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToStartOfLineNonWhitespace(p.ClipboardPageOrDefault()),
+					DeleteToStartOfLineNonWhitespace(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to end of line (D)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'D'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("D", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToEndOfLine(p.ClipboardPageOrDefault()),
+					DeleteToEndOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to next matching char (df{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'f'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to prev matching char (dF{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'F'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete till next matching char (dt{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 't'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete till prev matching char (dT{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'T'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete to start of next word (dw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "w", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToStartOfNextWord(p.ClipboardPageOrDefault()),
+					DeleteToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete a word (daw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'a'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "aw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteAWord(p.ClipboardPageOrDefault()),
+					DeleteAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "delete inner word (diw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-				{Key: tcell.KeyRune, Rune: 'i'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "iw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteInnerWord(p.ClipboardPageOrDefault()),
+					DeleteInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change to start of next word (cw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "w", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeToStartOfNextWord(p.ClipboardPageOrDefault()),
+					ChangeToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change a word (caw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'a'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "aw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeAWord(p.ClipboardPageOrDefault()),
+					ChangeAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change inner word (ciw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'i'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "iw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeInnerWord(p.ClipboardPageOrDefault()),
+					ChangeInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change to next matching char (cf{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'f'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change to prev matching char (cF{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'F'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), true),
+					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change till next matching char (ct{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 't'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeToNextMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change till prev matching char (cT{char})",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
-				{Key: tcell.KeyRune, Rune: 'T'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				char := p.LastChar()
-				if char == '\x00' {
-					return EmptyAction
-				}
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeToPrevMatchingChar(char, p.CountOrDefault(), p.ClipboardPageOrDefault(), false),
+					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "replace character (r)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'r'},
-				{Wildcard: true},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("r", "", captureOpts{replaceChar: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				if len(p.InputEvents) == 0 {
-					return EmptyAction
-				}
-
-				lastEvent := p.InputEvents[len(p.InputEvents)-1]
-				var newChar rune
-				switch lastEvent.Key() {
-				case tcell.KeyEnter:
-					newChar = '\n'
-				case tcell.KeyTab:
-					newChar = '\t'
-				case tcell.KeyRune:
-					newChar = lastEvent.Rune()
-				default:
-					return EmptyAction
-				}
-
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ReplaceCharacter(newChar),
+					ReplaceCharacter(p.ReplaceChar),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "toggle case (~)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '~'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("~", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleCaseAtCursor,
 					addToMacro{lastAction: true, user: true})
@@ -803,11 +619,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "indent (>>)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '>'},
-				{Key: tcell.KeyRune, Rune: '>'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr(">>", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					IndentLine,
 					addToMacro{lastAction: true, user: true})
@@ -815,11 +630,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "outdent (<<)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '<'},
-				{Key: tcell.KeyRune, Rune: '<'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("<<", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					OutdentLine,
 					addToMacro{lastAction: true, user: true})
@@ -827,93 +641,87 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "yank to start of next word (yw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'y'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "w", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyToStartOfNextWord(p.ClipboardPageOrDefault()),
+					CopyToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "yank a word (yaw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'y'},
-				{Key: tcell.KeyRune, Rune: 'a'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "aw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyAWord(p.ClipboardPageOrDefault()),
+					CopyAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "yank inner word (yiw)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'y'},
-				{Key: tcell.KeyRune, Rune: 'i'},
-				{Key: tcell.KeyRune, Rune: 'w'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "iw", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyInnerWord(p.ClipboardPageOrDefault()),
+					CopyInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "yank line (yy)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'y'},
-				{Key: tcell.KeyRune, Rune: 'y'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("yy", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyLines(p.ClipboardPageOrDefault()),
+					CopyLines(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "put after cursor (p)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'p'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("p", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					PasteAfterCursor(p.ClipboardPageOrDefault()),
+					PasteAfterCursor(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "put before cursor (P)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'P'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("P", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					PasteBeforeCursor(p.ClipboardPageOrDefault()),
+					PasteBeforeCursor(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "show command menu",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: ':'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr(':')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ShowCommandMenu(p.Config),
+					ShowCommandMenu(config),
 					addToMacro{})
 			},
 		},
 		{
 			Name: "start forward search",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '/'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('/')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					StartSearchForward,
 					addToMacro{user: true})
@@ -921,10 +729,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "start backward search",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '?'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('?')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					StartSearchBackward,
 					addToMacro{user: true})
@@ -932,10 +740,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "find next match",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'n'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('n')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					FindNextMatch,
 					addToMacro{user: true})
@@ -943,10 +751,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "find previous match",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'N'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('N')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					FindPrevMatch,
 					addToMacro{user: true})
@@ -954,10 +762,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "undo (u)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'u'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('u')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					Undo,
 					addToMacro{user: true})
@@ -965,10 +773,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "redo (ctrl-r)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyCtrlR},
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyCtrlR)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					Redo,
 					addToMacro{user: true})
@@ -976,10 +784,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "enter visual mode charwise (v)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'v'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('v')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeCharwise,
 					addToMacro{user: true})
@@ -987,10 +795,10 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "enter visual mode linewise (V)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'V'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('V')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeLinewise,
 					addToMacro{user: true})
@@ -998,27 +806,26 @@ func normalModeCommands() []Command {
 		},
 		{
 			Name: "repeat last action (.)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '.'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr(".", "", captureOpts{count: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ReplayLastActionMacro(p.CountOrDefault()),
+					ReplayLastActionMacro(p.Count),
 					addToMacro{user: true})
 			},
 		},
 	}...)
 }
 
-// These commands are used when the editor is in visual mode.
 func visualModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "toggle visual mode charwise (v)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'v'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('v')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeCharwise,
 					addToMacro{user: true})
@@ -1026,10 +833,10 @@ func visualModeCommands() []Command {
 		},
 		{
 			Name: "toggle visual mode linewise (V)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'V'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr('V')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeLinewise,
 					addToMacro{user: true})
@@ -1037,10 +844,10 @@ func visualModeCommands() []Command {
 		},
 		{
 			Name: "return to normal mode (esc)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyEscape},
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyEscape)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReturnToNormalMode,
 					addToMacro{user: true})
@@ -1048,98 +855,87 @@ func visualModeCommands() []Command {
 		},
 		{
 			Name: "show command menu",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: ':'},
+			BuildExpr: func() vm.Expr {
+				return runeExpr(':')
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ShowCommandMenu(p.Config),
+					ShowCommandMenu(config),
 					addToMacro{})
 			},
 		},
 		{
-			Name: "delete selection (x)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'x'},
+			Name: "delete selection (x or d)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("x", "", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "", captureOpts{clipboardPage: true}),
+				)
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteSelectionAndReturnToNormalMode(
-						p.ClipboardPageOrDefault(),
-						p.Config.SelectionMode,
-						p.Config.SelectionEndLocator,
-					), addToMacro{lastAction: true, user: true})
-			},
-		},
-		{
-			Name: "delete selection (d)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'd'},
-			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
-				return decorateNormalOrVisual(
-					DeleteSelectionAndReturnToNormalMode(
-						p.ClipboardPageOrDefault(),
-						p.Config.SelectionMode,
-						p.Config.SelectionEndLocator,
+						p.ClipboardPage,
+						config.SelectionMode,
+						config.SelectionEndLocator,
 					), addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change selection (c)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'c'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeSelection(
-						p.ClipboardPageOrDefault(),
-						p.Config.SelectionMode,
-						p.Config.SelectionEndLocator,
+						p.ClipboardPage,
+						config.SelectionMode,
+						config.SelectionEndLocator,
 					), addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "toggle case for selection (~)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '~'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("~", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ToggleCaseInSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
+					ToggleCaseInSelectionAndReturnToNormalMode(config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "indent selection (>)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '>'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr(">", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					IndentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
+					IndentSelectionAndReturnToNormalMode(config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "outdent selection (<)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: '<'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("<", "", captureOpts{})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					OutdentSelectionAndReturnToNormalMode(p.Config.SelectionEndLocator),
+					OutdentSelectionAndReturnToNormalMode(config.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "yank selection (y)",
-			Pattern: []EventMatcher{
-				{Key: tcell.KeyRune, Rune: 'y'},
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "", captureOpts{clipboardPage: true})
 			},
-			ActionBuilder: func(p ActionBuilderParams) Action {
+			BuildAction: func(config Config, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopySelectionAndReturnToNormalMode(p.ClipboardPageOrDefault()),
+					CopySelectionAndReturnToNormalMode(p.ClipboardPage),
 					addToMacro{user: true})
 			},
 		},

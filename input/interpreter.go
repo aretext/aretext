@@ -17,11 +17,11 @@ type Interpreter struct {
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		modes: map[state.InputMode]Mode{
-			state.InputModeNormal: newNormalMode(),
+			state.InputModeNormal: newVmMode("normal", normalModeCommands()),
 			state.InputModeInsert: &insertMode{},
 			state.InputModeMenu:   &menuMode{},
 			state.InputModeSearch: &searchMode{},
-			state.InputModeVisual: newVisualMode(),
+			state.InputModeVisual: newVmMode("visual", visualModeCommands()),
 			state.InputModeTask:   &taskMode{},
 		},
 	}

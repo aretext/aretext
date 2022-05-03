@@ -261,7 +261,7 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 	}
 }
 
-func normalModeCommands() []Command {
+func NormalModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "enter insert mode (i)",
@@ -819,7 +819,7 @@ func normalModeCommands() []Command {
 	}...)
 }
 
-func visualModeCommands() []Command {
+func VisualModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "toggle visual mode charwise (v)",
@@ -943,7 +943,7 @@ func visualModeCommands() []Command {
 	}...)
 }
 
-func insertModeCommands() []Command {
+func InsertModeCommands() []Command {
 	decorate := func(action Action) Action {
 		return func(s *state.EditorState) {
 			wrappedAction := func(s *state.EditorState) {
@@ -1041,7 +1041,7 @@ func insertModeCommands() []Command {
 	}
 }
 
-func menuModeCommands() []Command {
+func MenuModeCommands() []Command {
 	return []Command{
 		{
 			Name: "escape to normal mode",
@@ -1100,7 +1100,7 @@ func menuModeCommands() []Command {
 	}
 }
 
-func searchModeCommands() []Command {
+func SearchModeCommands() []Command {
 	return []Command{
 		{
 			Name: "escape to normal mode",
@@ -1142,7 +1142,7 @@ func searchModeCommands() []Command {
 	}
 }
 
-func taskModeCommands() []Command {
+func TaskModeCommands() []Command {
 	return []Command{
 		{
 			Name: "cancel task",

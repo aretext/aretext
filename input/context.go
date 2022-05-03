@@ -5,7 +5,7 @@ import (
 	"github.com/aretext/aretext/state"
 )
 
-// Context controls how user input is interpreted.
+// Context influences how user input is interpreted.
 type Context struct {
 	// InputMode is the current input mode of the editor.
 	InputMode state.InputMode

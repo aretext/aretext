@@ -1,6 +1,7 @@
 package input
 
 import (
+	"embed"
 	"log"
 	"strings"
 
@@ -20,23 +21,47 @@ func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		modes: map[state.InputMode]*mode{
 			// normal mode is used for navigating text.
-			state.InputModeNormal: newMode("normal", normalModeCommands()),
+			state.InputModeNormal: {
+				name:     "normal",
+				commands: NormalModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(NormalModeProgramPath)),
+			},
 
 			// insert mode is used for inserting characters into the document.
-			state.InputModeInsert: newMode("insert", insertModeCommands()),
+			state.InputModeInsert: {
+				name:     "insert",
+				commands: InsertModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(InsertModeProgramPath)),
+			},
 
 			// visual mode is used to visually select a region of the document.
-			state.InputModeVisual: newMode("visual", visualModeCommands()),
+			state.InputModeVisual: {
+				name:     "visual",
+				commands: VisualModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(VisualModeProgramPath)),
+			},
 
 			// menu mode allows the user to search for and select items in a menu.
-			state.InputModeMenu: newMode("menu", menuModeCommands()),
+			state.InputModeMenu: {
+				name:     "menu",
+				commands: MenuModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(MenuModeProgramPath)),
+			},
 
 			// search mode is used to search the document for a substring.
-			state.InputModeSearch: newMode("search", searchModeCommands()),
+			state.InputModeSearch: {
+				name:     "search",
+				commands: SearchModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(SearchModeProgramPath)),
+			},
 
 			// task mode is used while a task is running asynchronously.
 			// This allows the user to cancel the task if it takes too long.
-			state.InputModeTask: newMode("task", taskModeCommands()),
+			state.InputModeTask: {
+				name:     "task",
+				commands: TaskModeCommands(),
+				runtime:  vm.NewRuntime(mustLoadProgram(TaskModeProgramPath)),
+			},
 		},
 	}
 }
@@ -75,35 +100,39 @@ func (inp *Interpreter) InputBufferString(mode state.InputMode) string {
 	return inp.modes[mode].InputBufferString()
 }
 
+const (
+	NormalModeProgramPath = "generated/normal.bin"
+	InsertModeProgramPath = "generated/insert.bin"
+	VisualModeProgramPath = "generated/visual.bin"
+	MenuModeProgramPath   = "generated/menu.bin"
+	SearchModeProgramPath = "generated/search.bin"
+	TaskModeProgramPath   = "generated/task.bin"
+)
+
+//go:generate go run generate.go
+//go:embed generated/*
+var generatedFiles embed.FS
+
+// mustLoadProgram loads an input VM program from an embedded file.
+// This avoids the overhead of compiling VM programs from command expressions
+// on program startup.
+// See input/generate.go for the code that compiles the programs.
+func mustLoadProgram(path string) vm.Program {
+	data, err := generatedFiles.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Could not read generated program file %s: %s", path, err)
+	}
+	return vm.DeserializeProgram(data)
+}
+
 // mode is an editor input mode.
 // Each mode has its own rules for interpreting user input.
 type mode struct {
 	name        string
+	commands    []Command
 	runtime     *vm.Runtime
 	eventBuffer []vm.Event
 	inputBuffer strings.Builder
-	commands    []Command
-}
-
-func newMode(name string, commands []Command) *mode {
-	// Build a single expression to recognize any of the commands for this mode.
-	// Wrap each command expression in CaptureExpr so we can determine which command
-	// was accepted by the virtual machine.
-	var expr vm.AltExpr
-	for i, c := range commands {
-		expr.Children = append(expr.Children, vm.CaptureExpr{
-			CaptureId: vm.CaptureId(i),
-			Child:     c.BuildExpr(),
-		})
-	}
-
-	runtime := vm.NewRuntime(vm.MustCompile(expr))
-
-	return &mode{
-		name:     name,
-		runtime:  runtime,
-		commands: commands,
-	}
 }
 
 func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
@@ -117,6 +146,8 @@ func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
 	result := m.runtime.ProcessEvent(vmEvent)
 	if result.Accepted {
 		for _, capture := range result.Captures {
+			// The capture ID encodes the command associated with this input.
+			// See input/generate.go for details.
 			if int(capture.Id) < len(m.commands) {
 				command := m.commands[capture.Id]
 				params := capturesToCommandParams(result.Captures, m.eventBuffer)

@@ -24,35 +24,35 @@ func NewInterpreter() *Interpreter {
 			state.InputModeNormal: {
 				name:     "normal",
 				commands: NormalModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(NormalModeProgramPath)),
+				runtime:  runtimeForMode(NormalModeProgramPath),
 			},
 
 			// insert mode is used for inserting characters into the document.
 			state.InputModeInsert: {
 				name:     "insert",
 				commands: InsertModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(InsertModeProgramPath)),
+				runtime:  runtimeForMode(InsertModeProgramPath),
 			},
 
 			// visual mode is used to visually select a region of the document.
 			state.InputModeVisual: {
 				name:     "visual",
 				commands: VisualModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(VisualModeProgramPath)),
+				runtime:  runtimeForMode(VisualModeProgramPath),
 			},
 
 			// menu mode allows the user to search for and select items in a menu.
 			state.InputModeMenu: {
 				name:     "menu",
 				commands: MenuModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(MenuModeProgramPath)),
+				runtime:  runtimeForMode(MenuModeProgramPath),
 			},
 
 			// search mode is used to search the document for a substring.
 			state.InputModeSearch: {
 				name:     "search",
 				commands: SearchModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(SearchModeProgramPath)),
+				runtime:  runtimeForMode(SearchModeProgramPath),
 			},
 
 			// task mode is used while a task is running asynchronously.
@@ -60,7 +60,7 @@ func NewInterpreter() *Interpreter {
 			state.InputModeTask: {
 				name:     "task",
 				commands: TaskModeCommands(),
-				runtime:  vm.NewRuntime(mustLoadProgram(TaskModeProgramPath)),
+				runtime:  runtimeForMode(TaskModeProgramPath),
 			},
 		},
 	}
@@ -123,6 +123,16 @@ func mustLoadProgram(path string) vm.Program {
 		log.Fatalf("Could not read generated program file %s: %s", path, err)
 	}
 	return vm.DeserializeProgram(data)
+}
+
+func runtimeForMode(programPath string) *vm.Runtime {
+	// This should be long enough for any valid input sequence,
+	// but not long enough that count params can overflow uint64.
+	const maxInputLen = 64
+
+	// Load the pre-compiled program and initialize the runtime.
+	program := mustLoadProgram(programPath)
+	return vm.NewRuntime(program, maxInputLen)
 }
 
 // mode is an editor input mode.

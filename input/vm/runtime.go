@@ -34,15 +34,21 @@ type Runtime struct {
 	eventCount     int
 	activeThreads  []threadState
 	blockedThreads []threadState
+	maxInputLen    int
 }
 
-func NewRuntime(program Program) *Runtime {
+func NewRuntime(program Program, maxInputLen int) *Runtime {
+	if maxInputLen < 1 {
+		panic("Runtime maxInputLen must be > 0")
+	}
+
 	initialThread := threadState{}
 	return &Runtime{
 		program:        program,
 		eventCount:     0,
 		activeThreads:  nil,
 		blockedThreads: []threadState{initialThread},
+		maxInputLen:    maxInputLen,
 	}
 }
 
@@ -71,7 +77,7 @@ func (r *Runtime) ProcessEvent(event Event) Result {
 	}
 
 	// If there are no blocked threads, restart from the beginning of the program.
-	if len(r.blockedThreads) == 0 {
+	if len(r.blockedThreads) == 0 || r.eventCount > r.maxInputLen {
 		r.reset()
 		return Result{Reset: true}
 	}

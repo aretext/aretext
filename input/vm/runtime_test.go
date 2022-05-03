@@ -253,7 +253,7 @@ func TestCompileAndRun(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			program, err := Compile(tc.expr)
 			require.NoError(t, err)
-			runtime := NewRuntime(program)
+			runtime := NewRuntime(program, 1024)
 			for i, step := range tc.steps {
 				result := runtime.ProcessEvent(step.event)
 				assert.Equal(
@@ -264,4 +264,30 @@ func TestCompileAndRun(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRuntimeMaxInputLen(t *testing.T) {
+	expr := ConcatExpr{
+		Children: []Expr{
+			StarExpr{Child: EventExpr{Event: 1}},
+			EventExpr{Event: 2},
+		},
+	}
+	program, err := Compile(expr)
+	require.NoError(t, err)
+
+	const maxInputLen = 8
+	runtime := NewRuntime(program, maxInputLen)
+
+	// Events before max input length should continue.
+	for i := 0; i < maxInputLen; i++ {
+		result := runtime.ProcessEvent(1)
+		assert.False(t, result.Accepted, "Should not accept at iteration %d", i)
+		assert.False(t, result.Reset, "Should not reset at iteration %d", i)
+	}
+
+	// First event past max input length should reset.
+	result := runtime.ProcessEvent(1)
+	assert.False(t, result.Accepted)
+	assert.True(t, result.Reset)
 }

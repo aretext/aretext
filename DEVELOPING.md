@@ -15,6 +15,35 @@ go install github.com/shurcooL/markdownfmt@latest
 
 You can then build aretext and run tests using `make`. See the [Makefile](Makefile) for available commands.
 
+Testing
+-------
+
+To run all unit tests:
+
+```
+make test
+```
+
+Formatting
+----------
+
+To format Go and Markdown files:
+
+```
+make fmt
+```
+
+Generating
+----------
+
+Some files in the project are generated. To regenerate these:
+
+```
+make generate
+```
+
+Generated files should be checked into the git repository.
+
 Debugging
 ---------
 

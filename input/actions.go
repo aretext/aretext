@@ -99,8 +99,8 @@ func CursorToPrevMatchingChar(char rune, count uint64, includeChar bool) Action 
 	}
 }
 
-func ScrollUp(config Config) Action {
-	scrollLines := config.ScrollLines
+func ScrollUp(ctx Context) Action {
+	scrollLines := ctx.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
 	}
@@ -115,8 +115,8 @@ func ScrollUp(config Config) Action {
 	}
 }
 
-func ScrollDown(config Config) Action {
-	scrollLines := config.ScrollLines
+func ScrollDown(ctx Context) Action {
+	scrollLines := ctx.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
 	}
@@ -519,16 +519,16 @@ func PasteBeforeCursor(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func ShowCommandMenu(config Config) Action {
+func ShowCommandMenu(ctx Context) Action {
 	return func(s *state.EditorState) {
 		// This sets the input mode to menu.
-		state.ShowMenu(s, state.MenuStyleCommand, menuItems(config))
+		state.ShowMenu(s, state.MenuStyleCommand, menuItems(ctx))
 	}
 }
 
-func ShowFileMenu(config Config) Action {
+func ShowFileMenu(ctx Context) Action {
 	return func(s *state.EditorState) {
-		state.ShowFileMenu(s, config.DirPatternsToHide)
+		state.ShowFileMenu(s, ctx.DirPatternsToHide)
 	}
 }
 

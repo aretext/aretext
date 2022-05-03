@@ -1463,8 +1463,8 @@ func TestInterpreterStateIntegration(t *testing.T) {
 
 			// Replay the input events.
 			for _, event := range tc.events {
-				inputConfig := ConfigFromEditorState(editorState)
-				action := interpreter.ProcessEvent(event, inputConfig)
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
 				action(editorState)
 			}
 
@@ -1506,8 +1506,8 @@ func TestEnterAndExitVisualModeThenReplayLastAction(t *testing.T) {
 			editorState := state.NewEditorState(100, 100, nil, nil)
 			interpreter := NewInterpreter()
 			for _, event := range inputEvents {
-				inputConfig := ConfigFromEditorState(editorState)
-				action := interpreter.ProcessEvent(event, inputConfig)
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
 				action(editorState)
 			}
 
@@ -1558,10 +1558,10 @@ func BenchmarkProcessEvent(b *testing.B) {
 			log.SetOutput(io.Discard)
 
 			interpreter := NewInterpreter()
-			inputConfig := Config{InputMode: bm.mode}
+			inputCtx := Context{InputMode: bm.mode}
 			b.ResetTimer()
 			for _, event := range bm.events {
-				interpreter.ProcessEvent(event, inputConfig)
+				interpreter.ProcessEvent(event, inputCtx)
 			}
 		})
 	}

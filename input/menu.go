@@ -8,7 +8,7 @@ import (
 	"github.com/aretext/aretext/syntax"
 )
 
-func menuItems(config Config) []menu.Item {
+func menuItems(ctx Context) []menu.Item {
 	// These items are available from both normal and visual mode.
 	items := []menu.Item{
 		{
@@ -62,7 +62,7 @@ func menuItems(config Config) []menu.Item {
 			Name:    "find and open",
 			Aliases: []string{"f"},
 			Action: func(s *state.EditorState) {
-				state.AbortIfUnsavedChanges(s, ShowFileMenu(config), true)
+				state.AbortIfUnsavedChanges(s, ShowFileMenu(ctx), true)
 			},
 		},
 		{
@@ -114,7 +114,7 @@ func menuItems(config Config) []menu.Item {
 	// User-defined macros are available only in normal mode, not visual mode.
 	// This avoids problematic states where a macro gets recorded in one mode
 	// and exected in another.
-	if config.InputMode == state.InputModeNormal {
+	if ctx.InputMode == state.InputModeNormal {
 		items = append(items, []menu.Item{
 			{
 				Name:    "start/stop recording macro",

@@ -127,8 +127,8 @@ func (e *Editor) runMainEventLoop() {
 }
 
 func (e *Editor) handleTermEvent(event tcell.Event) {
-	inputConfig := input.ConfigFromEditorState(e.editorState)
-	actionFunc := e.inputInterpreter.ProcessEvent(event, inputConfig)
+	inputCtx := input.ContextFromEditorState(e.editorState)
+	actionFunc := e.inputInterpreter.ProcessEvent(event, inputCtx)
 	actionFunc(e.editorState)
 }
 

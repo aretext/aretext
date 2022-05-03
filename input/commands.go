@@ -23,7 +23,7 @@ type CommandParams struct {
 type Command struct {
 	Name        string
 	BuildExpr   func() vm.Expr
-	BuildAction func(Config, CommandParams) Action
+	BuildAction func(Context, CommandParams) Action
 }
 
 // These commands control cursor movement in normal and visual mode.
@@ -47,7 +47,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyLeft), runeExpr('h'))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorLeft)
 			},
 		},
@@ -56,7 +56,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyRight), runeExpr('l'))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorRight)
 			},
 		},
@@ -65,7 +65,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyUp), runeExpr('k'))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorUp)
 			},
 		},
@@ -74,7 +74,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyDown), runeExpr('j'))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorDown)
 			},
 		},
@@ -83,7 +83,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorBack)
 			},
 		},
@@ -92,7 +92,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("w", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorNextWordStart)
 			},
 		},
@@ -101,7 +101,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("b", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorPrevWordStart)
 			},
 		},
@@ -110,7 +110,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("e", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorNextWordEnd)
 			},
 		},
@@ -119,7 +119,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("{", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorPrevParagraph)
 			},
 		},
@@ -128,7 +128,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("}", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorNextParagraph)
 			},
 		},
@@ -137,7 +137,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("f", "", captureOpts{count: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, true))
 			},
 		},
@@ -146,7 +146,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("F", "", captureOpts{count: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, true))
 			},
 		},
@@ -155,7 +155,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("t", "", captureOpts{count: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, false))
 			},
 		},
@@ -164,7 +164,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("T", "", captureOpts{count: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, false))
 			},
 		},
@@ -173,7 +173,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("0", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorLineStart)
 			},
 		},
@@ -182,7 +182,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("^", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorLineStartNonWhitespace)
 			},
 		},
@@ -191,7 +191,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("$", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorLineEnd)
 			},
 		},
@@ -200,7 +200,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("gg", "", captureOpts{count: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorStartOfLineNum(p.Count))
 			},
 		},
@@ -209,7 +209,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("G", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorStartOfLastLine)
 			},
 		},
@@ -218,8 +218,8 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyCtrlU)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
-				return decorate(ScrollUp(config))
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(ScrollUp(ctx))
 			},
 		},
 		{
@@ -227,8 +227,8 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyCtrlD)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
-				return decorate(ScrollDown(config))
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(ScrollDown(ctx))
 			},
 		},
 	}
@@ -268,7 +268,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("i", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertMode,
 					addToMacro{lastAction: true, user: true})
@@ -279,7 +279,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("I", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtStartOfLine,
 					addToMacro{lastAction: true, user: true})
@@ -290,7 +290,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("a", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtNextPos,
 					addToMacro{lastAction: true, user: true})
@@ -301,7 +301,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("A", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					EnterInsertModeAtEndOfLine,
 					addToMacro{lastAction: true, user: true})
@@ -312,7 +312,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("o", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					BeginNewLineBelow,
 					addToMacro{lastAction: true, user: true})
@@ -323,7 +323,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("O", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					BeginNewLineAbove,
 					addToMacro{lastAction: true, user: true})
@@ -334,7 +334,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("J", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					JoinLines,
 					addToMacro{lastAction: true, user: true})
@@ -345,7 +345,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("dd", "", captureOpts{count: true, clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteLines(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -356,7 +356,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "h", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeletePrevCharInLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -367,7 +367,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "j", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteDown(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -378,7 +378,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "k", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteUp(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -392,7 +392,7 @@ func normalModeCommands() []Command {
 					cmdExpr("x", "", captureOpts{count: true, clipboardPage: true}),
 				)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteNextCharInLine(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -403,7 +403,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "$", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToEndOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -414,7 +414,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "0", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToStartOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -425,7 +425,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "^", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToStartOfLineNonWhitespace(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -436,7 +436,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("D", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToEndOfLine(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -447,7 +447,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
@@ -458,7 +458,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
@@ -469,7 +469,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
@@ -480,7 +480,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
@@ -491,7 +491,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "w", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -502,7 +502,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "aw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -513,7 +513,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "iw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -524,7 +524,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "w", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -535,7 +535,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "aw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -546,7 +546,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "iw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -557,7 +557,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
@@ -568,7 +568,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
@@ -579,7 +579,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
@@ -590,7 +590,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
 					addToMacro{lastAction: true, user: true})
@@ -601,7 +601,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("r", "", captureOpts{replaceChar: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReplaceCharacter(p.ReplaceChar),
 					addToMacro{lastAction: true, user: true})
@@ -612,7 +612,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("~", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleCaseAtCursor,
 					addToMacro{lastAction: true, user: true})
@@ -623,7 +623,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr(">>", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					IndentLine,
 					addToMacro{lastAction: true, user: true})
@@ -634,7 +634,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("<<", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					OutdentLine,
 					addToMacro{lastAction: true, user: true})
@@ -645,7 +645,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("y", "w", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopyToStartOfNextWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -656,7 +656,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("y", "aw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopyAWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -667,7 +667,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("y", "iw", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopyInnerWord(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -678,7 +678,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("yy", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopyLines(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -689,7 +689,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("p", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					PasteAfterCursor(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -700,7 +700,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("P", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					PasteBeforeCursor(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
@@ -711,9 +711,9 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr(':')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ShowCommandMenu(config),
+					ShowCommandMenu(ctx),
 					addToMacro{})
 			},
 		},
@@ -722,7 +722,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('/')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					StartSearchForward,
 					addToMacro{user: true})
@@ -733,7 +733,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('?')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					StartSearchBackward,
 					addToMacro{user: true})
@@ -744,7 +744,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('n')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					FindNextMatch,
 					addToMacro{user: true})
@@ -755,7 +755,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('N')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					FindPrevMatch,
 					addToMacro{user: true})
@@ -766,7 +766,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('u')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					Undo,
 					addToMacro{user: true})
@@ -777,7 +777,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyCtrlR)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					Redo,
 					addToMacro{user: true})
@@ -788,7 +788,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('v')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeCharwise,
 					addToMacro{user: true})
@@ -799,7 +799,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('V')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeLinewise,
 					addToMacro{user: true})
@@ -810,7 +810,7 @@ func normalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr(".", "", captureOpts{count: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReplayLastActionMacro(p.Count),
 					addToMacro{user: true})
@@ -826,7 +826,7 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('v')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeCharwise,
 					addToMacro{user: true})
@@ -837,7 +837,7 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr('V')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ToggleVisualModeLinewise,
 					addToMacro{user: true})
@@ -848,7 +848,7 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReturnToNormalMode,
 					addToMacro{user: true})
@@ -859,9 +859,9 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return runeExpr(':')
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ShowCommandMenu(config),
+					ShowCommandMenu(ctx),
 					addToMacro{})
 			},
 		},
@@ -873,12 +873,12 @@ func visualModeCommands() []Command {
 					cmdExpr("d", "", captureOpts{clipboardPage: true}),
 				)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteSelectionAndReturnToNormalMode(
 						p.ClipboardPage,
-						config.SelectionMode,
-						config.SelectionEndLocator,
+						ctx.SelectionMode,
+						ctx.SelectionEndLocator,
 					), addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -887,12 +887,12 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeSelection(
 						p.ClipboardPage,
-						config.SelectionMode,
-						config.SelectionEndLocator,
+						ctx.SelectionMode,
+						ctx.SelectionEndLocator,
 					), addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -901,9 +901,9 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("~", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ToggleCaseInSelectionAndReturnToNormalMode(config.SelectionEndLocator),
+					ToggleCaseInSelectionAndReturnToNormalMode(ctx.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -912,9 +912,9 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr(">", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					IndentSelectionAndReturnToNormalMode(config.SelectionEndLocator),
+					IndentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -923,9 +923,9 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("<", "", captureOpts{})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					OutdentSelectionAndReturnToNormalMode(config.SelectionEndLocator),
+					OutdentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -934,7 +934,7 @@ func visualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("y", "", captureOpts{clipboardPage: true})
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopySelectionAndReturnToNormalMode(p.ClipboardPage),
 					addToMacro{user: true})
@@ -962,7 +962,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return insertExpr
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(InsertRune(p.InsertChar))
 			},
 		},
@@ -971,7 +971,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(DeletePrevChar(clipboard.PageNull))
 			},
 		},
@@ -980,7 +980,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(InsertNewlineAndUpdateAutoIndentWhitespace)
 			},
 		},
@@ -989,7 +989,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyTab)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(InsertTab)
 			},
 		},
@@ -998,7 +998,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyLeft)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorLeft)
 			},
 		},
@@ -1007,7 +1007,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyRight)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorRight)
 			},
 		},
@@ -1016,7 +1016,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyUp)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorUp)
 			},
 		},
@@ -1025,7 +1025,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyDown)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorDown)
 			},
 		},
@@ -1034,7 +1034,7 @@ func insertModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(ReturnToNormalModeAfterInsert)
 			},
 		},
@@ -1048,7 +1048,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return HideMenuAndReturnToNormalMode
 			},
 		},
@@ -1057,7 +1057,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return ExecuteSelectedMenuItem
 			},
 		},
@@ -1066,7 +1066,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyUp)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return MenuSelectionUp
 			},
 		},
@@ -1075,7 +1075,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyDown), keyExpr(tcell.KeyTab))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return MenuSelectionDown
 			},
 		},
@@ -1084,7 +1084,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return insertExpr
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return AppendRuneToMenuSearch(p.InsertChar)
 			},
 		},
@@ -1093,7 +1093,7 @@ func menuModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return DeleteRuneFromMenuSearch
 			},
 		},
@@ -1107,7 +1107,7 @@ func searchModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return AbortSearchAndReturnToNormalMode
 			},
 		},
@@ -1116,7 +1116,7 @@ func searchModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return CommitSearchAndReturnToNormalMode
 			},
 		},
@@ -1125,7 +1125,7 @@ func searchModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return insertExpr
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return AppendRuneToSearchQuery(p.InsertChar)
 			},
 		},
@@ -1134,7 +1134,7 @@ func searchModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				// This returns the input mode to normal if the search query is empty.
 				return DeleteRuneFromSearchQuery
 			},
@@ -1149,7 +1149,7 @@ func taskModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
-			BuildAction: func(config Config, p CommandParams) Action {
+			BuildAction: func(ctx Context, p CommandParams) Action {
 				return state.CancelTaskIfRunning
 			},
 		},

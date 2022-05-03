@@ -5,8 +5,8 @@ import (
 	"github.com/aretext/aretext/state"
 )
 
-// Config controls how user input is interpreted.
-type Config struct {
+// Context controls how user input is interpreted.
+type Context struct {
 	// InputMode is the current input mode of the editor.
 	InputMode state.InputMode
 
@@ -23,10 +23,10 @@ type Config struct {
 	SelectionEndLocator state.Locator
 }
 
-func ConfigFromEditorState(editorState *state.EditorState) Config {
+func ContextFromEditorState(editorState *state.EditorState) Context {
 	_, screenHeight := editorState.ScreenSize()
 	scrollLines := uint64(screenHeight) / 2
-	return Config{
+	return Context{
 		InputMode:           editorState.InputMode(),
 		ScrollLines:         scrollLines,
 		DirPatternsToHide:   editorState.DirPatternsToHide(),

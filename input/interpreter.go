@@ -43,10 +43,10 @@ func NewInterpreter() *Interpreter {
 
 // ProcessEvent interprets a terminal input event as an action.
 // (If there is no action, then EmptyAction will be returned.)
-func (inp *Interpreter) ProcessEvent(event tcell.Event, config Config) Action {
+func (inp *Interpreter) ProcessEvent(event tcell.Event, ctx Context) Action {
 	switch event := event.(type) {
 	case *tcell.EventKey:
-		return inp.processKeyEvent(event, config)
+		return inp.processKeyEvent(event, ctx)
 	case *tcell.EventResize:
 		return inp.processResizeEvent(event)
 	default:
@@ -54,10 +54,10 @@ func (inp *Interpreter) ProcessEvent(event tcell.Event, config Config) Action {
 	}
 }
 
-func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, config Config) Action {
-	log.Printf("Processing key %s in mode %s\n", event.Name(), config.InputMode)
-	mode := inp.modes[config.InputMode]
-	return mode.ProcessKeyEvent(event, config)
+func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, ctx Context) Action {
+	log.Printf("Processing key %s in mode %s\n", event.Name(), ctx.InputMode)
+	mode := inp.modes[ctx.InputMode]
+	return mode.ProcessKeyEvent(event, ctx)
 }
 
 func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) Action {
@@ -106,7 +106,7 @@ func newMode(name string, commands []Command) *mode {
 	}
 }
 
-func (m *mode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
+func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
 	vmEvent := eventKeyToVmEvent(event)
 	m.eventBuffer = append(m.eventBuffer, vmEvent)
 	if event.Key() == tcell.KeyRune {
@@ -120,11 +120,11 @@ func (m *mode) ProcessKeyEvent(event *tcell.EventKey, config Config) Action {
 			if int(capture.Id) < len(m.commands) {
 				command := m.commands[capture.Id]
 				params := capturesToCommandParams(result.Captures, m.eventBuffer)
-				action = command.BuildAction(config, params)
+				action = command.BuildAction(ctx, params)
 				log.Printf(
-					"%s mode accepted input for command %q with params %+v and config %+v\n",
+					"%s mode accepted input for command %q with params %+v and ctx %+v\n",
 					m.name, command.Name,
-					params, config,
+					params, ctx,
 				)
 				break
 			}

@@ -15,6 +15,21 @@ go install github.com/shurcooL/markdownfmt@latest
 
 You can then build aretext and run tests using `make`. See the [Makefile](Makefile) for available commands.
 
+Logging
+-------
+
+You can tell aretext to log debug information to a file like this:
+
+```
+aretext -log debug.log
+```
+
+You can then tail the log file in a separate terminal session to see what aretext is doing:
+
+```
+tail -f debug.log
+```
+
 Testing
 -------
 
@@ -66,3 +81,14 @@ You can then start aretext and attach a debugger:
 # replace `pgrep aretext` with the exact process ID.
 dlv attach `pgrep aretext`
 ```
+
+Profiling
+---------
+
+You can tell aretext to profile its CPU usage like this:
+
+```
+aretext -cpuprofile cpu.prof
+```
+
+This will create a [pprof](https://pkg.go.dev/runtime/pprof) profile that you can analyze using `go tool pprof cpu.prof`

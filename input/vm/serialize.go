@@ -22,6 +22,7 @@ func SerializeProgram(prog Program) []byte {
 // DeserializeProgram decodes a program's bytecodes.
 // It doesn't perform any validation, so it might panic
 // or produce an invalid program if the input data is invalid.
+// If the input is untrusted, run VerifyProgram before executing it.
 func DeserializeProgram(data []byte) Program {
 	var bc bytecode
 	prog := make(Program, 0, len(data)/bytecodeSize)

@@ -4,20 +4,7 @@ Releasing
 Setup
 -----
 
-1.	Install [goreleaser](https://goreleaser.com):
-
-	```
-	go install github.com/goreleaser/goreleaser@latest
-	```
-
-2.	Configure a GitHub token with `repo` scope:
-
-	```
-	# https://github.com/settings/tokens/new
-	export GITHUB_TOKEN="<TOKEN>"
-	```
-
-3.	Configure [gpg](https://www.gnupg.org/) so you can sign release artifacts.
+Configure [gpg](https://www.gnupg.org/) so you can sign release artifacts.
 
 Major and Minor Releases
 ------------------------
@@ -32,22 +19,19 @@ Major and Minor Releases
 	git push origin $RELEASE_BRANCH
 	```
 
-3.	Tag the release:
+3.	Tag the release and build artifacts:
 
 	```
-	export RELEASE_TAG=v$MAJOR.$MINOR.0
-	export RELEASE_NAME="<name>"
-	git tag -s -a $RELEASE_TAG -m "$RELEASE_TAG $RELEASE_NAME"
-	git push origin $RELEASE_TAG
+	./release.sh VERSION NAME
 	```
 
-4.	Build and publish to GitHub:
+	-	VERSION should have the form "1.2.3"
+	-	NAME should be the name of the release ("Zeno", "Frege", "Heraclitus", etc.)
 
-	```
-	goreleaser release
-	```
+4.	Create the release in the Github UI.
 
-5.	Find the [release in GitHub](https://github.com/aretext/aretext/releases/) and edit the release notes.
+	-	Edit the release notes
+	-	Upload artifacts from the ./dist directory.
 
 Patch Releases
 --------------

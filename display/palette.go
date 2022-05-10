@@ -231,5 +231,28 @@ func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 
 func styleFromConfig(s config.StyleConfig) tcell.Style {
 	c := tcell.GetColor(s.Color)
-	return tcell.StyleDefault.Foreground(c)
+	style := tcell.StyleDefault.Foreground(c)
+
+	if s.BackgroundColor != "" {
+		bg := tcell.GetColor(s.BackgroundColor)
+		style = style.Background(bg)
+	}
+
+	if s.Bold {
+		style = style.Bold(true)
+	}
+
+	if s.Italic {
+		style = style.Italic(true)
+	}
+
+	if s.Underline {
+		style = style.Underline(true)
+	}
+
+	if s.StrikeThrough {
+		style = style.StrikeThrough(true)
+	}
+
+	return style
 }

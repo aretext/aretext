@@ -45,7 +45,7 @@ Menu Command Object
 Styles
 ------
 
-The `styles` configuration is a dictionary. Each key represents a kind of UI element:
+The `styles` configuration is an object with keys:
 
 -	`lineNum`: the line numbers displayed in the left margin of the document.
 -	`tokenOperator`: an operator token recognized by the syntax language.
@@ -55,6 +55,19 @@ The `styles` configuration is a dictionary. Each key represents a kind of UI ele
 -	`tokenComment`: a comment token recognized by the syntax language.
 -	`tokenCustom1` through `tokenCustom8`: language-specific tokens recognized by the syntax language.
 
-The values are objects with a single key `color` that controls the color of the UI element. The color can be either [a W3C color keyword](https://www.w3.org/wiki/CSS/Properties/color/keywords) or a hexadecimal RGB code. For example, both `red` and `#ff0000` represent the color red.
+Each style object has the following attributes:
+
+| Attribute       | Type   | Description                  |
+|-----------------|--------|------------------------------|
+| color           | string | Foreground (text) color.     |
+| backgroundColor | string | Background color.            |
+| bold            | bool   | Set bold attribute.          |
+| italic          | bool   | Set italic attribute.        |
+| underline       | bool   | Set underline attribute.     |
+| strikethrough   | bool   | Set strikethrough attribute. |
+
+Colors can be either [a W3C color keyword](https://www.w3.org/wiki/CSS/Properties/color/keywords) or a hexadecimal RGB code. For example, both `red` and `#ff0000` represent the color red.
 
 When using named colors, the terminal emulator may override the displayed color. For example, the [solarized dark theme in Alacritty](https://github.com/eendroroy/alacritty-theme/blob/06c3920d35dbbe3de35183b0512f9406041d681b/themes/solarized_dark.yaml) overrides the color `red` to a specific hex code. If you want to ignore the terminal emulator palette, specify colors using hexadecimal RGB codes instead of named colors.
+
+Not all terminal emulators support every style attribute (bold, italic, etc.). If styles are displayed incorrectly, try changing the value of the `$TERM` environment variable. If you are using tmux, try [`set -g default-terminal "tmux"`](https://github.com/tmux/tmux/wiki/FAQ#i-dont-see-italics-or-italics-and-reverse-are-the-wrong-way-round).

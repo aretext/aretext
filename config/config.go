@@ -92,6 +92,22 @@ type StyleConfig struct {
 	// for the color; if the terminal does not support true-color,
 	// we fallback to a similar 8-bit color.
 	Color string
+
+	// BackgroundColor is the color of the background.
+	// It has the same format as Color.
+	BackgroundColor string
+
+	// Bold sets the bold attribute.
+	Bold bool
+
+	// Italic sets the italic attribute.
+	Italic bool
+
+	// Underline sets the underline attribute.
+	Underline bool
+
+	// Strikethrough sets the strikethrough attribute.
+	StrikeThrough bool
 }
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
@@ -256,8 +272,14 @@ func stylesFromMap(m map[string]any) map[string]StyleConfig {
 			continue
 		}
 
-		color := stringOrDefault(styleMap, "color", "")
-		result[k] = StyleConfig{Color: color}
+		result[k] = StyleConfig{
+			Color:           stringOrDefault(styleMap, "color", ""),
+			BackgroundColor: stringOrDefault(styleMap, "backgroundColor", ""),
+			Bold:            boolOrDefault(styleMap, "bold", false),
+			Italic:          boolOrDefault(styleMap, "italic", false),
+			Underline:       boolOrDefault(styleMap, "underline", false),
+			StrikeThrough:   boolOrDefault(styleMap, "strikethrough", false),
+		}
 	}
 	return result
 }

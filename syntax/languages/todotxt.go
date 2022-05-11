@@ -6,9 +6,12 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-type todoTxtParseState struct {
-	AtStartOfLine bool
-}
+type todoTxtParseState uint8
+
+const (
+	todoTxtStartOfLineState = todoTxtParseState(iota)
+	todoTxtWithinLineState
+)
 
 func (s todoTxtParseState) Equals(other parser.State) bool {
 	otherState, ok := other.(todoTxtParseState)
@@ -28,10 +31,6 @@ const (
 // TodoTxtParseFunc returns a parse func for the todo.txt file format.
 // See https://github.com/todotxt/todo.txt for details.
 func TodoTxtParseFunc() parser.Func {
-	// States to keep track of whether we're at the start of a line.
-	startOfLineState := todoTxtParseState{AtStartOfLine: true}
-	withinLineState := todoTxtParseState{AtStartOfLine: false}
-
 	// Helper parse funcs.
 	consumeToEndOfWord := consumeRunesLike(func(r rune) bool {
 		return !unicode.IsSpace(r)
@@ -53,51 +52,51 @@ func TodoTxtParseFunc() parser.Func {
 	}
 
 	// Parse a completed task. This is an "x " at the start of a line, then all chars to the end of the line.
-	// Transitions: startOfLineState -> startOfLineState
+	// Transitions: todoTxtStartOfLineState -> todoTxtStartOfLineState
 	parseCompletedTask := matchState(
-		startOfLineState,
+		todoTxtStartOfLineState,
 		consumeString("x ").
 			ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(todoTxtCompletedTaskRole)),
 	)
 
 	// Parse a priority, like "(A)" at the start of a line, followed by a space.
-	// Transitions: startOfLineState -> withinLineState
+	// Transitions: todoTxtStartOfLineState -> todoTxtWithinLineState
 	parsePriority := matchState(
-		startOfLineState,
+		todoTxtStartOfLineState,
 		consumeString("(").
 			Then(consumeSingleRuneLike(func(r rune) bool { return r >= 'A' && r <= 'Z' })).
 			Then(consumeString(")")).
 			Map(recognizeToken(todoTxtPriorityRole)).
 			Then(consumeString(" ")).
-			Map(setState(withinLineState)))
+			Map(setState(todoTxtWithinLineState)))
 
 	// Parse date formatted as YYYY-MM-DD.
-	// Transitions: any -> withinLineState
+	// Transitions: any -> todoTxtWithinLineState
 	parseDate := consumeNumbers(4).
 		Then(consumeString("-")).
 		Then(consumeNumbers(2)).
 		Then(consumeString("-")).
 		Then(consumeNumbers(2)).
 		Map(recognizeToken(todoTxtDateRole)).
-		Map(setState(withinLineState))
+		Map(setState(todoTxtWithinLineState))
 
 	// Parse project tag like "+project".
-	// Transitions: any -> withinLineState
+	// Transitions: any -> todoTxtWithinLineState
 	parseProjectTag := consumeString("+").
 		Then(consumeToEndOfWord).
 		Map(recognizeToken(todoTxtProjectTagRole)).
-		Map(setState(withinLineState))
+		Map(setState(todoTxtWithinLineState))
 
 	// Parse context tag like "@context"
-	// Transitions: any -> withinLineState
+	// Transitions: any -> todoTxtWithinLineState
 	parseContextTag := consumeString("@").
 		Then(consumeToEndOfWord).
 		Map(recognizeToken(todoTxtContextTagRole)).
-		Map(setState(withinLineState))
+		Map(setState(todoTxtWithinLineState))
 
 	// Parse a key-value tag like "key:val"
-	// Transitions: any -> withinLineState
+	// Transitions: any -> todoTxtWithinLineState
 	parseKey := consumeRunesLike(func(r rune) bool {
 		return !unicode.IsSpace(r) && r != ':'
 	}).Then(consumeString(":")).
@@ -107,18 +106,18 @@ func TodoTxtParseFunc() parser.Func {
 		Map(recognizeToken(todoTxtValTagRole))
 
 	parseKeyValTag := parseKey.Then(parseVal).
-		Map(setState(withinLineState))
+		Map(setState(todoTxtWithinLineState))
 
-	// Fallback to transition from startOfLineState -> withinLineState
+	// Fallback to transition from todoTxtStartOfLineState -> todoTxtWithinLineState
 	// if none of the other parse funcs succeed.
 	parseOtherStartOfLine := matchState(
-		startOfLineState,
+		todoTxtStartOfLineState,
 		consumeSingleRuneLike(func(r rune) bool { return r != '\n' }).
-			Map(setState(withinLineState)),
+			Map(setState(todoTxtWithinLineState)),
 	)
 
-	// Transition back to startOfLineState once we hit a newline.
-	parseNewline := consumeString("\n").Map(setState(startOfLineState))
+	// Transition back to todoTxtStartOfLineState once we hit a newline.
+	parseNewline := consumeString("\n").Map(setState(todoTxtStartOfLineState))
 
 	// Construct parse func for incomplete tasks.
 	parseIncompleteTask := parsePriority.
@@ -131,5 +130,5 @@ func TodoTxtParseFunc() parser.Func {
 		Or(parseNewline)
 
 	// Construct the final parse func (either complete or incomplete tasks).
-	return initialState(startOfLineState, parseCompletedTask.Or(parseIncompleteTask))
+	return initialState(todoTxtStartOfLineState, parseCompletedTask.Or(parseIncompleteTask))
 }

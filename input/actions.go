@@ -404,15 +404,6 @@ func DeleteInnerWord(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func ChangeToStartOfNextWord(clipboardPage clipboard.PageId) Action {
-	return func(s *state.EditorState) {
-		state.DeleteRunes(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordStartInLine(params.TextTree, params.CursorPos)
-		}, clipboardPage)
-		EnterInsertMode(s)
-	}
-}
-
 func ChangeAWord(clipboardPage clipboard.PageId) Action {
 	deleteAWordAction := DeleteAWord(clipboardPage)
 	return func(s *state.EditorState) {

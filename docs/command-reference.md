@@ -64,7 +64,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to prev matching character in line   | dF\{char\}  | count, clipboard page |
 | delete till next matching character in line | dt\{char\}  | count, clipboard page |
 | delete till prev matching character in line | dT\{char\}  | count, clipboard page |
-| change to start of next word                | cw          | clipboard page        |
+| change word                                 | cw          | clipboard page        |
 | change a word                               | caw         | clipboard page        |
 | change inner word                           | ciw         | clipboard page        |
 | change to next matching character in line   | cf\{char\}  | count, clipboard page |

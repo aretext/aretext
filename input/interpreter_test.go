@@ -751,7 +751,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "ipsum dolor\nLorem \nsit amet consectetur\nadipiscing elit",
 		},
 		{
-			name:        "change to start of next word",
+			name:        "change word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
@@ -762,7 +762,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
 			},
 			expectedCursorPos: 2,
-			expectedText:      "fooipsum dolor\nsit amet consectetur\nadipiscing elit",
+			expectedText:      "foo ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
 			name:        "change a word",

@@ -593,7 +593,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
 			},
-			expectedCursorPos: 4,
+			expectedCursorPos: 3,
 			expectedText:      "a\n  \nbcd",
 		},
 		{

@@ -46,16 +46,11 @@ func NextWordStart(textTree *text.Tree, pos uint64) uint64 {
 	})
 }
 
-// NextWordStartInLine locates the start of the next word or the end of the line, whichever comes first.
-func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
+// NextWordStartOrLineBoundary locates the start of the next word or before/after a newline.
+func NextWordStartOrLineBoundary(textTree *text.Tree, pos uint64) uint64 {
 	return nextWordBoundary(textTree, pos, func(gcOffset uint64, s1, s2 *segment.Segment) wordBoundaryDecision {
 		if s2.NumRunes() == 0 {
 			// Stop after EOF.
-			return boundaryAfter
-		}
-
-		if s2.HasNewline() {
-			// Stop at end of line.
 			return boundaryAfter
 		}
 
@@ -63,6 +58,11 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 			// Skip the first boundary so the cursor doesn't get stuck
 			// at the start of the current word.
 			return noBoundary
+		}
+
+		if s1.HasNewline() || s2.HasNewline() {
+			// Stop at line boundaries.
+			return boundaryAfter
 		}
 
 		s1ws, s2ws := s1.IsWhitespace(), s2.IsWhitespace()
@@ -79,20 +79,6 @@ func NextWordStartInLine(textTree *text.Tree, pos uint64) uint64 {
 
 		return noBoundary
 	})
-}
-
-// NextWordStartInLineOrAfterEmptyLine is the same as NextWordStartInLine, except it includes
-// the newline at the end of an empty line.
-func NextWordStartInLineOrAfterEmptyLine(textTree *text.Tree, pos uint64) uint64 {
-	nextPos := NextWordStartInLine(textTree, pos)
-
-	// The cursor didn't move, so we may be on any empty line.
-	// If so, move past the empty line.
-	if nextPos == pos {
-		nextPos = afterEmptyLine(textTree, pos)
-	}
-
-	return nextPos
 }
 
 // PrevWordStart locates the start of the word before the cursor.

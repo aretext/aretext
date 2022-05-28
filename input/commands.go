@@ -1096,6 +1096,13 @@ func MenuModeCommands() []Command {
 }
 
 func SearchModeCommands() []Command {
+	decorate := func(action Action) Action {
+		return func(s *state.EditorState) {
+			action(s)
+			state.AddToRecordingUserMacro(s, state.MacroAction(action))
+		}
+	}
+
 	return []Command{
 		{
 			Name: "escape to normal mode",
@@ -1103,7 +1110,7 @@ func SearchModeCommands() []Command {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return AbortSearchAndReturnToNormalMode
+				return decorate(AbortSearchAndReturnToNormalMode)
 			},
 		},
 		{
@@ -1112,7 +1119,7 @@ func SearchModeCommands() []Command {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return CommitSearchAndReturnToNormalMode
+				return decorate(CommitSearchAndReturnToNormalMode)
 			},
 		},
 		{
@@ -1121,7 +1128,7 @@ func SearchModeCommands() []Command {
 				return insertExpr
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return AppendRuneToSearchQuery(p.InsertChar)
+				return decorate(AppendRuneToSearchQuery(p.InsertChar))
 			},
 		},
 		{
@@ -1131,7 +1138,7 @@ func SearchModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				// This returns the input mode to normal if the search query is empty.
-				return DeleteRuneFromSearchQuery
+				return decorate(DeleteRuneFromSearchQuery)
 			},
 		},
 	}

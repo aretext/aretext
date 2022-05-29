@@ -290,20 +290,12 @@ func TestFindNextMatch(t *testing.T) {
 			reverse:           true,
 		},
 		{
-			name:              "unicode normalization, forward search",
-			text:              "ohm \u03a9 xyz",
+			name:              "unicode normalization has different offsets",
+			text:              "<p>  &amp; © Æ Ď\n¾ ℋ ⅆ\n∲ ≧̸</p>\nfoobar",
 			cursorPos:         0,
-			query:             "\u2126",
+			query:             "foobar",
 			direction:         SearchDirectionForward,
-			expectedCursorPos: 4,
-		},
-		{
-			name:              "unicode normalization, backward search",
-			text:              "ohm \u03a9 xyz",
-			cursorPos:         14,
-			query:             "\u2126",
-			direction:         SearchDirectionBackward,
-			expectedCursorPos: 4,
+			expectedCursorPos: 32,
 		},
 	}
 

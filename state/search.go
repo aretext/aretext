@@ -8,7 +8,6 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 
 	"github.com/aretext/aretext/text"
 )
@@ -204,16 +203,13 @@ func parseQuery(rawQuery string) parsedQuery {
 }
 
 func transformerForSearch(caseSensitive bool) transform.Transformer {
-	transformer := transform.Transformer(norm.NFKC) // Always normalize unicode.
-
-	if !caseSensitive {
-		// If the query is all lowercase, make the search case-insensitive
-		// by lowercasing the text. This is equivalent to vim's "smartcase" option.
-		lowerCaseTransformer := cases.Lower(language.Und)
-		transformer = transform.Chain(transformer, lowerCaseTransformer)
+	if caseSensitive {
+		// No transformation for case-sensitive search.
+		return transform.Nop
+	} else {
+		// Make the search case-insensitive by lowercasing the query and document.
+		return cases.Lower(language.Und)
 	}
-
-	return transformer
 }
 
 // searchTextForward finds the position of the next occurrence of a query string on or after the start position.

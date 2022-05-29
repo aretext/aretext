@@ -19,12 +19,14 @@ func (f Func) Map(mapFn MapFn) Func {
 type MapWithInputFn func(Result, TrackingRuneIter, State) Result
 
 // MapWithInput maps a successful parse to another parse result according to mapFn.
+// The input iterator will output only runes consumed by the result before returning EOF.
 func (f Func) MapWithInput(mapFn MapWithInputFn) Func {
 	return func(iter TrackingRuneIter, state State) Result {
 		result := f(iter, state)
 		if result.IsFailure() {
 			return FailedResult
 		}
+		iter.Limit(result.NumConsumed)
 		return mapFn(result, iter, state)
 	}
 }

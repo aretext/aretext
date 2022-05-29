@@ -2,6 +2,7 @@ package parser
 
 import (
 	"io"
+	"math"
 
 	"github.com/aretext/aretext/text"
 )
@@ -12,6 +13,7 @@ import (
 type TrackingRuneIter struct {
 	reader  text.Reader
 	eof     bool
+	limit   uint64
 	numRead uint64
 	maxRead *uint64
 }
@@ -21,13 +23,22 @@ func NewTrackingRuneIter(reader text.Reader) TrackingRuneIter {
 	var maxRead uint64
 	return TrackingRuneIter{
 		reader:  reader,
+		limit:   math.MaxUint64,
 		maxRead: &maxRead,
 	}
 }
 
 // NextRune returns the next rune from the underlying reader and advances the iterator.
 func (iter *TrackingRuneIter) NextRune() (rune, error) {
+	if iter.limit == 0 {
+		return '\x00', io.EOF
+	}
+
 	r, _, err := iter.reader.ReadRune()
+
+	if err == nil && iter.limit > 0 {
+		iter.limit--
+	}
 
 	if err == nil || (err == io.EOF && !iter.eof) {
 		iter.eof = bool(err == io.EOF)
@@ -49,6 +60,11 @@ func (iter *TrackingRuneIter) Skip(n uint64) uint64 {
 		}
 	}
 	return n
+}
+
+// Limit sets the maximum number of runes this reader can produce.
+func (iter *TrackingRuneIter) Limit(n uint64) {
+	iter.limit = n
 }
 
 // MaxRead returns the maximum number of runes read by this iter and all its clones.

@@ -157,3 +157,54 @@ func TestThenCombinatorShiftTokens(t *testing.T) {
 	}
 	assert.Equal(t, expectedTokens, tokens)
 }
+
+func TestMapWithInput(t *testing.T) {
+	// Parse func that consumes up to three runes in the input without producing any tokens.
+	parseFunc := func(iter TrackingRuneIter, state State) Result {
+		var n uint64
+		for n < 3 {
+			_, err := iter.NextRune()
+			if err != nil {
+				break
+			}
+			n++
+		}
+		return Result{
+			NumConsumed: n,
+			NextState:   state,
+		}
+	}
+
+	// MapFn that produces a single token with length of runes read from the iterator.
+	// This validates that the iterator returns only runes consumed by the parse func.
+	mapFn := func(result Result, iter TrackingRuneIter, state State) Result {
+		var n uint64
+		for {
+			_, err := iter.NextRune()
+			if err != nil {
+				break
+			}
+			n++
+		}
+
+		result.ComputedTokens = append(result.ComputedTokens, ComputedToken{
+			Offset: 0,
+			Length: n,
+			Role:   TokenRoleNumber,
+		})
+		return result
+	}
+
+	tree, err := text.NewTreeFromString("abc123")
+	require.NoError(t, err)
+
+	combinedParseFunc := Func(parseFunc).MapWithInput(mapFn)
+	p := New(combinedParseFunc)
+	p.ParseAll(tree)
+	tokens := p.TokensIntersectingRange(0, math.MaxUint64)
+	expectedTokens := []Token{
+		{StartPos: 0, EndPos: 3, Role: TokenRoleNumber},
+		{StartPos: 3, EndPos: 6, Role: TokenRoleNumber},
+	}
+	assert.Equal(t, expectedTokens, tokens)
+}

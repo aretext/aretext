@@ -159,6 +159,16 @@
   pattern: "**/*.h"
   config: *cconfig
 
+- name: markdown
+  pattern: "**/*.md"
+  config:
+    syntaxLanguage: markdown
+    styles:
+      tokenCustom1: {color: "teal", bold: true}        # Heading
+      tokenCustom2: {color: "default", italic: true}   # Emphasis
+      tokenCustom3: {color: "default", bold: true}     # Strong emphasis
+      tokenCustom4: {color: "purple", underline: true} # Link
+
 - name: protobuf
   pattern: "**/*.proto"
   config:

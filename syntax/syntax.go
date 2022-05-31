@@ -23,6 +23,7 @@ const (
 	LanguageGitRebase = Language("gitrebase")
 	LanguageProtobuf  = Language("protobuf")
 	LanguageTodoTxt   = Language("todotxt")
+	LanguageMarkdown  = Language("markdown")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -41,6 +42,7 @@ func init() {
 		LanguageGitRebase: languages.GitRebaseParseFunc(),
 		LanguageProtobuf:  languages.ProtobufParseFunc(),
 		LanguageTodoTxt:   languages.TodoTxtParseFunc(),
+		LanguageMarkdown:  languages.MarkdownParseFunc(),
 	}
 
 	for language := range languageToParseFunc {

@@ -103,14 +103,14 @@ func yamlFlowStyleBracketsAndBracesParseFunc() parser.Func {
 			Or(parseCloseBracket))
 }
 
+func yamlIdentifierRune(r rune) bool {
+	return unicode.IsLetter(r) || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' || r == '/'
+}
+
 func yamlKeyParseFunc() parser.Func {
 	consumeToKeyEnd := jsonConsumeToKeyEndParseFunc()
-
-	parseUnquotedKey := consumeRunesLike(jsonIdentifierRune).
-		Then(consumeToKeyEnd)
-
+	parseUnquotedKey := consumeRunesLike(yamlIdentifierRune).Then(consumeToKeyEnd)
 	parseQuotedKey := yamlStringParseFunc().Then(consumeToKeyEnd)
-
 	return yamlSkipIndentation(
 		parseUnquotedKey.
 			Or(parseQuotedKey).
@@ -130,7 +130,7 @@ func yamlAnchorAliasParseFunc() parser.Func {
 	return yamlSkipIndentation(
 		consumeString("*").
 			Or(consumeString("&")).
-			Then(consumeRunesLike(jsonIdentifierRune)).
+			Then(consumeRunesLike(yamlIdentifierRune)).
 			Map(recognizeToken(yamlTokenRoleAliasOrAnchor)))
 }
 

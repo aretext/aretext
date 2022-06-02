@@ -39,6 +39,13 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "unquoted key with forward slash",
+			text: "example.com/test: foobar",
+			expected: []TokenWithText{
+				{Text: `example.com/test:`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
 			name: "key with single-quoted string",
 			text: "'abc': xyz",
 			expected: []TokenWithText{

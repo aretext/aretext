@@ -9,6 +9,7 @@ This document lists every configuration option in aretext.
 | tabSize         | integer          | Maximum number of cells occupied by a tab. Must be greater than zero.                                                                       |
 | tabExpand       | boolean          | If true, replace inserted tabs with the equivalent number of spaces.                                                                        |
 | showTabs        | boolean          | If true, display tabs in the document.                                                                                                      |
+| showSpaces      | boolean          | If true, display spaces in the document.                                                                                                    |
 | autoIndent      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                        |
 | showLineNumbers | boolean          | If true, display line numbers.                                                                                                              |
 | menuCommands    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields. |

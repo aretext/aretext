@@ -857,3 +857,53 @@ func TestShowTabsWithSelectionStyle(t *testing.T) {
 		})
 	})
 }
+
+func TestShowSpaces(t *testing.T) {
+	testCases := []struct {
+		name             string
+		width, height    int
+		showSpaces       bool
+		inputString      string
+		expectedContents [][]rune
+	}{
+		{
+			name:        "hide spaces",
+			width:       8,
+			height:      2,
+			showSpaces:  false,
+			inputString: " a \nb ",
+			expectedContents: [][]rune{
+				{' ', 'a', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'b', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:        "show spaces",
+			width:       8,
+			height:      2,
+			showSpaces:  true,
+			inputString: " a \nb ",
+			expectedContents: [][]rune{
+				{tcell.RuneBullet, 'a', tcell.RuneBullet, ' ', ' ', ' ', ' ', ' '},
+				{'b', tcell.RuneBullet, ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					if tc.showSpaces {
+						state.ToggleShowSpaces(editorState)
+					}
+				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}

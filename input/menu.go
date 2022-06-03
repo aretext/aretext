@@ -85,6 +85,11 @@ func menuItems(ctx Context) []menu.Item {
 			Action:  state.ToggleShowTabs,
 		},
 		{
+			Name:    "toggle show spaces",
+			Aliases: []string{"sp"},
+			Action:  state.ToggleShowSpaces,
+		},
+		{
 			Name:    "toggle tab expand",
 			Aliases: []string{"te"},
 			Action:  state.ToggleTabExpand,

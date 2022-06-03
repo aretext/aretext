@@ -29,7 +29,7 @@ func drawStringNoWrap(sr *ScreenRegion, s string, col int, row int, style tcell.
 			if uint64(col)+gcWidth > uint64(maxLineWidth) {
 				break
 			}
-			drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, false)
+			drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, false, false)
 			col += int(gcWidth) // Safe to downcast because there's a limit on the number of cells a grapheme cluster can occupy.
 			gcRunes = gcRunes[:0]
 		}
@@ -49,6 +49,7 @@ func drawGraphemeCluster(
 	gcWidth int,
 	style tcell.Style,
 	showTabs bool,
+	showSpaces bool,
 ) {
 	startCol := col
 
@@ -66,6 +67,11 @@ func drawGraphemeCluster(
 		// Draw a special character to represent a tab.
 		if gc[0] == '\t' && showTabs {
 			sr.SetContent(startCol, row, tcell.RuneRArrow, nil, style.Dim(true))
+		}
+
+		// Draw a special character to represent a space.
+		if gc[0] == ' ' && showSpaces {
+			sr.SetContent(startCol, row, tcell.RuneBullet, nil, style.Dim(true))
 		}
 
 		return

@@ -15,6 +15,7 @@
     tabExpand: false
     tabSize: 4
     showTabs: false
+    showSpaces: false
     showLineNumbers: false
     styles:
       lineNum: {color: "olive"}

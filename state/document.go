@@ -59,6 +59,7 @@ func ReloadDocument(state *EditorState) {
 	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
 	oldAutoIndent := state.documentBuffer.autoIndent
 	oldShowTabs := state.documentBuffer.showTabs
+	oldShowSpaces := state.documentBuffer.showSpaces
 	oldShowLineNum := state.documentBuffer.showLineNum
 
 	// Reload the document.
@@ -95,6 +96,7 @@ func ReloadDocument(state *EditorState) {
 	// Restore other configuration that might have been toggled with menu commands.
 	state.documentBuffer.autoIndent = oldAutoIndent
 	state.documentBuffer.showTabs = oldShowTabs
+	state.documentBuffer.showSpaces = oldShowSpaces
 	state.documentBuffer.showLineNum = oldShowLineNum
 
 	reportReloadSuccess(state, path)
@@ -205,6 +207,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
 	state.documentBuffer.tabExpand = config.TabExpand
 	state.documentBuffer.showTabs = config.ShowTabs
+	state.documentBuffer.showSpaces = config.ShowSpaces
 	state.documentBuffer.autoIndent = config.AutoIndent
 	state.documentBuffer.showLineNum = config.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()

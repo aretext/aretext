@@ -574,3 +574,7 @@ interface {
 		})
 	}
 }
+
+func BenchmarkGolangParser(b *testing.B) {
+	ParserBenchmark(GolangParseFunc(), "testdata/golang/fib.go")(b)
+}

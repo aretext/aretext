@@ -62,6 +62,7 @@ func main() {
 
 	checkNonOverlapping(ranges)
 	ranges = fillGaps(ranges)
+	ranges = coalesce(ranges)
 	propNames := uniquePropNames(ranges)
 
 	if err := writeOutputFile(prefix, outputPath, propNames, ranges); err != nil {
@@ -179,7 +180,7 @@ func checkNonOverlapping(ranges []propRange) {
 }
 
 func fillGaps(ranges []propRange) []propRange {
-	// Assume that ranges are sorted by start and non-pverlapping.
+	// Assume that ranges are sorted by start and non-overlapping.
 	var lastRng propRange
 	result := make([]propRange, 0, len(ranges))
 	for i := 0; i < len(ranges); i++ {
@@ -207,6 +208,24 @@ func fillGaps(ranges []propRange) []propRange {
 		}
 
 		result = append(result, rng)
+		lastRng = rng
+	}
+	return result
+}
+
+func coalesce(ranges []propRange) []propRange {
+	// Assume that ranges are sorted by start and non-overlapping.
+	var lastRng propRange
+	result := make([]propRange, 0, len(ranges))
+	for i := 0; i < len(ranges); i++ {
+		rng := ranges[i]
+		if i > 0 && lastRng.End+1 == rng.Start && rng.PropName == lastRng.PropName {
+			// Current range has the same property as the previous range,
+			// so extend the previous range.
+			result[len(result)-1].End = rng.End
+		} else {
+			result = append(result, rng)
+		}
 		lastRng = rng
 	}
 	return result

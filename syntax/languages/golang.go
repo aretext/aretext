@@ -63,39 +63,14 @@ func golangIdentifierOrKeywordParseFunc() parser.Func {
 }
 
 func golangOperatorParseFunc() parser.Func {
-	return consumeString(":=").
-		Or(consumeString("+").
-			ThenMaybe(consumeString("=").Or(consumeString("+")))).
-		Or(consumeString("&").
-			ThenMaybe(consumeString("=").
-				Or(consumeString("&")).
-				Or(consumeString("^")).
-				Or(consumeString("^=")))).
-		Or(consumeString("=").
-			ThenMaybe(consumeString("="))).
-		Or(consumeString("!").
-			ThenMaybe(consumeString("="))).
-		Or(consumeString("-").
-			ThenMaybe(consumeString("=").
-				Or(consumeString("-")))).
-		Or(consumeString("|").
-			ThenMaybe(consumeString("=").
-				Or(consumeString("|")))).
-		Or(consumeString("<").
-			ThenMaybe(consumeString("=").
-				Or(consumeString("<").ThenMaybe(consumeString("="))).
-				Or(consumeString("-")))).
-		Or(consumeString("*").
-			ThenMaybe(consumeString("="))).
-		Or(consumeString("^").
-			ThenMaybe(consumeString("="))).
-		Or(consumeString(">").
-			ThenMaybe(consumeString("=").
-				Or(consumeString(">").ThenMaybe(consumeString("="))))).
-		Or(consumeString("/").ThenMaybe(consumeString("="))).
-		Or(consumeString("%").ThenMaybe(consumeString("="))).
-		Or(consumeString("~")).
-		Map(recognizeToken(parser.TokenRoleOperator))
+	return consumeLongestMatchingOption([]string{
+		"+", "&", "+=", "&=", "&&", "==", "!=",
+		"-", "|", "-=", "|=", "||", "<", "<=",
+		"*", "^", "*=", "^=", "<-", ">", ">=",
+		"/", "<<", "/=", "<<=", "++", "=", ":=",
+		"%", ">>", "%=", ">>=", "--", "!",
+		"&^", "&^=", "~",
+	}).Map(recognizeToken(parser.TokenRoleOperator))
 }
 
 func golangRuneLiteralParseFunc() parser.Func {

@@ -2,6 +2,7 @@ package languages
 
 import (
 	"io"
+	"sort"
 	"strings"
 	"unicode/utf8"
 
@@ -222,6 +223,51 @@ func maxStrLen(ss []string) uint64 {
 		}
 	}
 	return maxLength
+}
+
+// consumeLongestMatchingOption consumes the longest matching option from  a set of options.
+func consumeLongestMatchingOption(options []string) parser.Func {
+	// Sort options descending by length.
+	sort.SliceStable(options, func(i, j int) bool {
+		return len(options[i]) > len(options[j])
+	})
+
+	// Allocate buffer for lookahead runes (shared across func invocations).
+	buf := make([]rune, maxStrLen(options))
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		// Lookahead up to the length of the longest option.
+		var n uint64
+		for i := 0; i < len(buf); i++ {
+			r, err := iter.NextRune()
+			if err != nil {
+				break
+			}
+			buf[i] = r
+			n++
+		}
+
+		// Look for longest matching option.
+		// We can return the first one that matches b/c options
+		// are sorted descending by length.
+		for _, opt := range options {
+			var i uint64
+			matched := true
+			for _, r := range opt {
+				if r != buf[i] || i >= n {
+					matched = false
+					break
+				}
+				i++
+			}
+			if matched {
+				return parser.Result{
+					NumConsumed: i,
+					NextState:   state,
+				}
+			}
+		}
+		return parser.FailedResult
+	}
 }
 
 // recognizeKeywordOrConsume recognizes a keyword from the list of `keywords`.

@@ -121,23 +121,13 @@ func cIdentifierOrKeywordParseFunc() parser.Func {
 }
 
 func cOperatorParseFunc() parser.Func {
-	return (consumeString("=").ThenMaybe(consumeString("="))).
-		Or(consumeString("+").ThenMaybe(consumeString("=").Or(consumeString("+")))).
-		Or(consumeString("-").ThenMaybe(consumeString("=").Or(consumeString("-")))).
-		Or(consumeString("*").ThenMaybe(consumeString("="))).
-		Or(consumeString("/").ThenMaybe(consumeString("="))).
-		Or(consumeString("%").ThenMaybe(consumeString("="))).
-		Or(consumeString("<").ThenMaybe(consumeString("="))).
-		Or(consumeString(">").ThenMaybe(consumeString("="))).
-		Or(consumeString("<<").ThenMaybe(consumeString("="))).
-		Or(consumeString(">>").ThenMaybe(consumeString("="))).
-		Or(consumeString("^").ThenMaybe(consumeString("="))).
-		Or(consumeString("|").ThenMaybe(consumeString("=").Or(consumeString("|")))).
-		Or(consumeString("~")).
-		Or(consumeString("!").ThenMaybe(consumeString("="))).
-		Or(consumeString("&").ThenMaybe(consumeString("=").Or(consumeString("&")))).
-		Or(consumeString("sizeof")).
-		Map(recognizeToken(parser.TokenRoleOperator))
+	return consumeLongestMatchingOption([]string{
+		"=", "==", "+", "++", "+=", "-", "--", "-=",
+		"*", "*=", "/", "/=", "%", "%=",
+		"<", "<=", ">", ">=", "<<", "<<=", ">>", ">>=",
+		"^", "^=", "|", "|=", "||", "~",
+		"!", "!=", "&", "&=", "&&", "sizeof",
+	}).Map(recognizeToken(parser.TokenRoleOperator))
 }
 
 func cStringParseFunc() parser.Func {

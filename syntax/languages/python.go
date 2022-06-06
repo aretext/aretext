@@ -138,24 +138,13 @@ func pythonIdentifierOrKeywordParseFunc() parser.Func {
 }
 
 func pythonOperatorParseFunc() parser.Func {
-	return (consumeString("+").ThenMaybe(consumeString("="))).
-		Or(consumeString("-").ThenMaybe(consumeString(">").Or(consumeString("=")))).
-		Or(consumeString("*").ThenMaybe(consumeString("="))).
-		Or(consumeString("**").ThenMaybe(consumeString("="))).
-		Or(consumeString("/").ThenMaybe(consumeString("="))).
-		Or(consumeString("//").ThenMaybe(consumeString("="))).
-		Or(consumeString("%").ThenMaybe(consumeString("="))).
-		Or(consumeString("@").ThenMaybe(consumeString("="))).
-		Or(consumeString("<").ThenMaybe(consumeString("="))).
-		Or(consumeString("<<").ThenMaybe(consumeString("="))).
-		Or(consumeString(">").ThenMaybe(consumeString("="))).
-		Or(consumeString(">>").ThenMaybe(consumeString("="))).
-		Or(consumeString("&").ThenMaybe(consumeString("="))).
-		Or(consumeString("|").ThenMaybe(consumeString("="))).
-		Or(consumeString("^").ThenMaybe(consumeString("="))).
-		Or(consumeString("=").ThenMaybe(consumeString("="))).
-		Or(consumeString("~")).
-		Or(consumeString(":=")).
-		Or(consumeString("!=")).
-		Map(recognizeToken(parser.TokenRoleOperator))
+	return consumeLongestMatchingOption([]string{
+		"+", "+=", "-", "->", "-=",
+		"*", "*=", "**", "**=", "/", "/=",
+		"//", "//=", "%", "%=",
+		"@", "@=", "<", "<=", "<<", "<<=",
+		">", ">=", ">>", ">>=", "&", "&=",
+		"|", "|=", "^", "^=", "=", "==",
+		"~", ":=", "!=",
+	}).Map(recognizeToken(parser.TokenRoleOperator))
 }

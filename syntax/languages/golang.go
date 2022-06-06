@@ -94,6 +94,7 @@ func golangOperatorParseFunc() parser.Func {
 				Or(consumeString(">").ThenMaybe(consumeString("="))))).
 		Or(consumeString("/").ThenMaybe(consumeString("="))).
 		Or(consumeString("%").ThenMaybe(consumeString("="))).
+		Or(consumeString("~")).
 		Map(recognizeToken(parser.TokenRoleOperator))
 }
 

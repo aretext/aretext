@@ -550,6 +550,21 @@ func TestGolangParseFunc(t *testing.T) {
 				{Text: `"test"`, Role: parser.TokenRoleString},
 			},
 		},
+		{
+			name: "interface with underlying type",
+			text: `
+interface {
+	~int
+	String() string
+}`,
+			expected: []TokenWithText{
+				{Text: "interface", Role: parser.TokenRoleKeyword},
+				{Text: "~", Role: parser.TokenRoleOperator},
+				{Text: "int", Role: parser.TokenRoleKeyword},
+				{Text: "String", Role: parser.TokenRoleIdentifier},
+				{Text: "string", Role: parser.TokenRoleKeyword},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

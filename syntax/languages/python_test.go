@@ -362,3 +362,7 @@ if __name__ == "__main__":
 		})
 	}
 }
+
+func BenchmarkPythonParser(b *testing.B) {
+	ParserBenchmark(PythonParseFunc(), "testdata/python/hello.py")(b)
+}

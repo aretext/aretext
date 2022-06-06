@@ -436,6 +436,15 @@ string";`,
 			},
 		},
 		{
+			name: "bitwise operator assignment",
+			text: "x &= y",
+			expected: []TokenWithText{
+				{Text: "x", Role: parser.TokenRoleIdentifier},
+				{Text: "&=", Role: parser.TokenRoleOperator},
+				{Text: "y", Role: parser.TokenRoleIdentifier},
+			},
+		},
+		{
 			name: "fizzbuzz",
 			text: `
 fn main() {

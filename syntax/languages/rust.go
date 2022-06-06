@@ -44,7 +44,7 @@ func rustOperatorParseFunc() parser.Func {
 		Or(consumeString("%").ThenMaybe(consumeString("="))).
 		Or(consumeString("^").ThenMaybe(consumeString("="))).
 		Or(consumeString("!").ThenMaybe(consumeString("="))).
-		Or(consumeString("&").ThenMaybe(consumeString("&").Or(consumeString("-")))).
+		Or(consumeString("&").ThenMaybe(consumeString("&").Or(consumeString("=")))).
 		Or(consumeString("|").ThenMaybe(consumeString("|").Or(consumeString("=")))).
 		Or(consumeString("=").ThenMaybe(consumeString("=").Or(consumeString(">")))).
 		Or(consumeString("<<").ThenMaybe(consumeString("="))).

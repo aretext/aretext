@@ -3,6 +3,7 @@ package languages
 import (
 	"io"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/syntax/parser"
 )
@@ -215,7 +216,7 @@ func recognizeToken(tokenRole parser.TokenRole) parser.MapFn {
 func maxStrLen(ss []string) uint64 {
 	maxLength := uint64(0)
 	for _, s := range ss {
-		length := uint64(len(s))
+		length := uint64(utf8.RuneCountInString(s))
 		if length > maxLength {
 			maxLength = length
 		}

@@ -32,26 +32,14 @@ func rustCommentParseFunc() parser.Func {
 }
 
 func rustOperatorParseFunc() parser.Func {
-	return consumeString("@").
-		Or(consumeString("#")).
-		Or(consumeString("$")).
-		Or(consumeString("?")).
-		Or(consumeString(":").ThenMaybe(consumeString(":"))).
-		Or(consumeString("+").ThenMaybe(consumeString("="))).
-		Or(consumeString("-").ThenMaybe(consumeString("=").Or(consumeString(">")))).
-		Or(consumeString("*").ThenMaybe(consumeString("="))).
-		Or(consumeString("/").ThenMaybe(consumeString("="))).
-		Or(consumeString("%").ThenMaybe(consumeString("="))).
-		Or(consumeString("^").ThenMaybe(consumeString("="))).
-		Or(consumeString("!").ThenMaybe(consumeString("="))).
-		Or(consumeString("&").ThenMaybe(consumeString("&").Or(consumeString("=")))).
-		Or(consumeString("|").ThenMaybe(consumeString("|").Or(consumeString("=")))).
-		Or(consumeString("=").ThenMaybe(consumeString("=").Or(consumeString(">")))).
-		Or(consumeString("<<").ThenMaybe(consumeString("="))).
-		Or(consumeString(">>").ThenMaybe(consumeString("="))).
-		Or(consumeString(">").ThenMaybe(consumeString("="))).
-		Or(consumeString("<").ThenMaybe(consumeString("="))).
-		Map(recognizeToken(parser.TokenRoleOperator))
+	return consumeLongestMatchingOption([]string{
+		"@", "#", "$", "?", ":", "::",
+		"+", "+=", "-", "-=", "->",
+		"*", "*=", "/", "/=", "%", "%=",
+		"^", "^=", "!", "!=", "&", "&&", "&=",
+		"|", "||", "|=", "=", "==", "=>",
+		"<<", "<<=", ">>", ">>=", ">", ">=", "<", "<=",
+	}).Map(recognizeToken(parser.TokenRoleOperator))
 }
 
 func rustLifetimeParseFunc() parser.Func {

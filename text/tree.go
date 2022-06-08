@@ -320,7 +320,7 @@ func (g *innerNodeGroup) numNewlinesBeforePosition(nodeIdx uint64, charPos uint6
 // +-----------------------------+
 // | child | numKeys |  keys[64] |
 // +-----------------------------+
-//     8        8         1024     = 1032 bytes
+//    16        8         1024     = 1048 bytes
 //
 type innerNode struct {
 	child   nodeGroup

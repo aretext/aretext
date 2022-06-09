@@ -113,8 +113,6 @@ func pythonIdentifierOrKeywordParseFunc() parser.Func {
 		return isIdentifierStart(r) || unicode.In(r, unicode.Mn, unicode.Mc, unicode.Nd, unicode.Pc, unicode.Other_ID_Continue)
 	}
 
-	recognizeIdentifier := recognizeToken(parser.TokenRoleIdentifier)
-
 	// We are not handling soft keywords ("match", "case", "_").
 	keywords := []string{
 		"False", "await", "else", "import", "pass",
@@ -128,13 +126,7 @@ func pythonIdentifierOrKeywordParseFunc() parser.Func {
 
 	return consumeSingleRuneLike(isIdentifierStart).
 		ThenMaybe(consumeRunesLike(isIdentifierContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords)).
-		Map(func(r parser.Result) parser.Result {
-			if len(r.ComputedTokens) == 0 {
-				return recognizeIdentifier(r)
-			}
-			return r
-		})
+		MapWithInput(recognizeKeywordOrConsume(keywords))
 }
 
 func pythonOperatorParseFunc() parser.Func {

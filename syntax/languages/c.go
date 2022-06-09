@@ -108,16 +108,9 @@ func cIdentifierOrKeywordParseFunc() parser.Func {
 		"restrict",
 	}
 
-	recognizeIdentifier := recognizeToken(parser.TokenRoleIdentifier)
 	return consumeSingleRuneLike(isIdStart).
 		ThenMaybe(consumeRunesLike(isIdContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords)).
-		Map(func(r parser.Result) parser.Result {
-			if len(r.ComputedTokens) == 0 {
-				return recognizeIdentifier(r)
-			}
-			return r
-		})
+		MapWithInput(recognizeKeywordOrConsume(keywords))
 }
 
 func cOperatorParseFunc() parser.Func {

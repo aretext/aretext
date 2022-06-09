@@ -40,7 +40,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: `var foo []int`,
 			expected: []TokenWithText{
 				{Text: "var", Role: parser.TokenRoleKeyword},
-				{Text: "foo", Role: parser.TokenRoleIdentifier},
 				{Text: "int", Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -48,11 +47,8 @@ func TestGolangParseFunc(t *testing.T) {
 			name: "operators",
 			text: "a + b / c",
 			expected: []TokenWithText{
-				{Text: "a", Role: parser.TokenRoleIdentifier},
 				{Text: "+", Role: parser.TokenRoleOperator},
-				{Text: "b", Role: parser.TokenRoleIdentifier},
 				{Text: "/", Role: parser.TokenRoleOperator},
-				{Text: "c", Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -94,16 +90,13 @@ func TestGolangParseFunc(t *testing.T) {
 			name: "incomplete interpreted string ending with escaped quote",
 			text: `"abc\" 123`,
 			expected: []TokenWithText{
-				{Text: `abc`, Role: parser.TokenRoleIdentifier},
 				{Text: `123`, Role: parser.TokenRoleNumber},
 			},
 		},
 		{
-			name: "incomplete interpreted string with newline before quote",
-			text: "\"abc\n\"",
-			expected: []TokenWithText{
-				{Text: `abc`, Role: parser.TokenRoleIdentifier},
-			},
+			name:     "incomplete interpreted string with newline before quote",
+			text:     "\"abc\n\"",
+			expected: []TokenWithText{},
 		},
 		{
 			name: "rune",
@@ -139,25 +132,19 @@ func TestGolangParseFunc(t *testing.T) {
 			expected: []TokenWithText{},
 		},
 		{
-			name: "identifier with underscore prefix",
-			text: "_x9",
-			expected: []TokenWithText{
-				{Text: `_x9`, Role: parser.TokenRoleIdentifier},
-			},
+			name:     "identifier with underscore prefix",
+			text:     "_x9",
+			expected: []TokenWithText{},
 		},
 		{
-			name: "identifier with mixed case",
-			text: "ThisVariableIsExported",
-			expected: []TokenWithText{
-				{Text: `ThisVariableIsExported`, Role: parser.TokenRoleIdentifier},
-			},
+			name:     "identifier with mixed case",
+			text:     "ThisVariableIsExported",
+			expected: []TokenWithText{},
 		},
 		{
-			name: "identifier with non-ascii unicode",
-			text: "αβ",
-			expected: []TokenWithText{
-				{Text: "αβ", Role: parser.TokenRoleIdentifier},
-			},
+			name:     "identifier with non-ascii unicode",
+			text:     "αβ",
+			expected: []TokenWithText{},
 		},
 		{
 			name: "integer with underscore",
@@ -237,18 +224,15 @@ func TestGolangParseFunc(t *testing.T) {
 			},
 		},
 		{
-			name: "identifier with leading underscore and digits",
-			text: "_42",
-			expected: []TokenWithText{
-				{Text: `_42`, Role: parser.TokenRoleIdentifier},
-			},
+			name:     "identifier with leading underscore and digits",
+			text:     "_42",
+			expected: []TokenWithText{},
 		},
 		{
 			name: "invalid number with digits and trailing underscore",
 			text: "42_",
 			expected: []TokenWithText{
 				{Text: `42`, Role: parser.TokenRoleNumber},
-				{Text: `_`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -256,7 +240,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "4__2",
 			expected: []TokenWithText{
 				{Text: `4`, Role: parser.TokenRoleNumber},
-				{Text: `__2`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -264,7 +247,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "0_xBadFace",
 			expected: []TokenWithText{
 				{Text: `0`, Role: parser.TokenRoleNumber},
-				{Text: `_xBadFace`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -393,8 +375,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "0x.p1",
 			expected: []TokenWithText{
 				{Text: `0`, Role: parser.TokenRoleNumber},
-				{Text: `x`, Role: parser.TokenRoleIdentifier},
-				{Text: `p1`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -402,7 +382,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1p-2",
 			expected: []TokenWithText{
 				{Text: `1`, Role: parser.TokenRoleNumber},
-				{Text: `p`, Role: parser.TokenRoleIdentifier},
 				{Text: `-`, Role: parser.TokenRoleOperator},
 				{Text: `2`, Role: parser.TokenRoleNumber},
 			},
@@ -420,7 +399,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1_.5",
 			expected: []TokenWithText{
 				{Text: `1`, Role: parser.TokenRoleNumber},
-				{Text: `_`, Role: parser.TokenRoleIdentifier},
 				{Text: `.5`, Role: parser.TokenRoleNumber},
 			},
 		},
@@ -429,7 +407,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1._5",
 			expected: []TokenWithText{
 				{Text: `1.`, Role: parser.TokenRoleNumber},
-				{Text: `_5`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -437,7 +414,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1.5_e1",
 			expected: []TokenWithText{
 				{Text: `1.5`, Role: parser.TokenRoleNumber},
-				{Text: `_e1`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -445,7 +421,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1.5e_1",
 			expected: []TokenWithText{
 				{Text: `1.5`, Role: parser.TokenRoleNumber},
-				{Text: `e_1`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -453,7 +428,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: "1.5e1_",
 			expected: []TokenWithText{
 				{Text: `1.5e1`, Role: parser.TokenRoleNumber},
-				{Text: `_`, Role: parser.TokenRoleIdentifier},
 			},
 		},
 		{
@@ -545,7 +519,6 @@ func TestGolangParseFunc(t *testing.T) {
 			text: `const foo = "test"`,
 			expected: []TokenWithText{
 				{Text: "const", Role: parser.TokenRoleKeyword},
-				{Text: "foo", Role: parser.TokenRoleIdentifier},
 				{Text: "=", Role: parser.TokenRoleOperator},
 				{Text: `"test"`, Role: parser.TokenRoleString},
 			},
@@ -561,7 +534,6 @@ interface {
 				{Text: "interface", Role: parser.TokenRoleKeyword},
 				{Text: "~", Role: parser.TokenRoleOperator},
 				{Text: "int", Role: parser.TokenRoleKeyword},
-				{Text: "String", Role: parser.TokenRoleIdentifier},
 				{Text: "string", Role: parser.TokenRoleKeyword},
 			},
 		},

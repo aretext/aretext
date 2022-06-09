@@ -234,8 +234,6 @@ func rustConsumeIdentifierOrKeyword() parser.Func {
 }
 
 func rustIdentifierOrKeywordParseFunc() parser.Func {
-	recognizeIdentifier := recognizeToken(parser.TokenRoleIdentifier)
-
 	// Highlight strict and reserved keywords.
 	// Ignore weak keywords.
 	keywords := []string{
@@ -252,12 +250,5 @@ func rustIdentifierOrKeywordParseFunc() parser.Func {
 		MapWithInput(failIfMatchTerm([]string{"r#crate", "r#self", "r#super", "r#Self"}))
 
 	return consumeRawIdentifier.Or(consumeIdentifierOrKeyword).
-		MapWithInput(recognizeKeywordOrConsume(keywords)).
-		Map(func(r parser.Result) parser.Result {
-			if len(r.ComputedTokens) == 0 {
-				return recognizeIdentifier(r)
-			}
-			return r
-		})
-
+		MapWithInput(recognizeKeywordOrConsume(keywords))
 }

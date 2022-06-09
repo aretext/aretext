@@ -36,7 +36,6 @@ func golangGeneralCommentParseFunc() parser.Func {
 func golangIdentifierOrKeywordParseFunc() parser.Func {
 	isLetter := func(r rune) bool { return unicode.IsLetter(r) || r == '_' }
 	isLetterOrDigit := func(r rune) bool { return isLetter(r) || unicode.IsDigit(r) }
-	recognizeIdentifier := recognizeToken(parser.TokenRoleIdentifier)
 	keywords := []string{
 		"break", "default", "func", "interface", "select", "case",
 		"defer", "go", "map", "struct", "chan", "else", "goto", "package",
@@ -53,13 +52,7 @@ func golangIdentifierOrKeywordParseFunc() parser.Func {
 	}
 	return consumeSingleRuneLike(isLetter).
 		ThenMaybe(consumeRunesLike(isLetterOrDigit)).
-		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...))).
-		Map(func(r parser.Result) parser.Result {
-			if len(r.ComputedTokens) == 0 {
-				return recognizeIdentifier(r)
-			}
-			return r
-		})
+		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...)))
 }
 
 func golangOperatorParseFunc() parser.Func {

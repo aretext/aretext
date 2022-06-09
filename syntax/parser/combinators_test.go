@@ -33,7 +33,7 @@ func TestMaybeBefore(t *testing.T) {
 		}
 	}
 
-	// Parse alpha characters as identifiers.
+	// Parse alpha characters as keywords.
 	secondParseFunc := func(iter TrackingRuneIter, state State) Result {
 		var n uint64
 		for {
@@ -48,7 +48,7 @@ func TestMaybeBefore(t *testing.T) {
 			ComputedTokens: []ComputedToken{
 				{
 					Length: n,
-					Role:   TokenRoleIdentifier,
+					Role:   TokenRoleKeyword,
 				},
 			},
 			NextState: state,
@@ -67,7 +67,7 @@ func TestMaybeBefore(t *testing.T) {
 			name: "only second parse func",
 			text: "abc",
 			expected: []Token{
-				{StartPos: 0, EndPos: 3, Role: TokenRoleIdentifier},
+				{StartPos: 0, EndPos: 3, Role: TokenRoleKeyword},
 			},
 		},
 		{
@@ -75,7 +75,7 @@ func TestMaybeBefore(t *testing.T) {
 			text: "1234abc",
 			expected: []Token{
 				{StartPos: 0, EndPos: 4, Role: TokenRoleNumber},
-				{StartPos: 4, EndPos: 7, Role: TokenRoleIdentifier},
+				{StartPos: 4, EndPos: 7, Role: TokenRoleKeyword},
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func TestMaybeBefore(t *testing.T) {
 }
 
 func TestThenCombinatorShiftTokens(t *testing.T) {
-	// Parse up to ":" as an identifier.
+	// Parse up to ":" as a keyword.
 	firstParseFunc := func(iter TrackingRuneIter, state State) Result {
 		var n uint64
 		for {
@@ -116,7 +116,7 @@ func TestThenCombinatorShiftTokens(t *testing.T) {
 			ComputedTokens: []ComputedToken{
 				{
 					Length: n,
-					Role:   TokenRoleIdentifier,
+					Role:   TokenRoleKeyword,
 				},
 			},
 		}
@@ -152,7 +152,7 @@ func TestThenCombinatorShiftTokens(t *testing.T) {
 	p.ParseAll(tree)
 	tokens := p.TokensIntersectingRange(0, math.MaxUint64)
 	expectedTokens := []Token{
-		{StartPos: 0, EndPos: 3, Role: TokenRoleIdentifier},
+		{StartPos: 0, EndPos: 3, Role: TokenRoleKeyword},
 		{StartPos: 3, EndPos: 7, Role: TokenRoleNumber},
 	}
 	assert.Equal(t, expectedTokens, tokens)

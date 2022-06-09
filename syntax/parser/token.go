@@ -8,7 +8,6 @@ const (
 	TokenRoleNone = TokenRole(iota)
 	TokenRoleOperator
 	TokenRoleKeyword
-	TokenRoleIdentifier
 	TokenRoleNumber
 	TokenRoleString
 	TokenRoleComment

@@ -152,7 +152,6 @@ func protobufKeywordParseFunc() parser.Func {
 
 	recognizeTopLevelKeywordOrConsume := recognizeKeywordOrConsume(topLevelKeywords)
 	recognizeNestedLevelKeywordOrConsume := recognizeKeywordOrConsume(nestedLevelKeywords)
-	recognizeIdentifier := recognizeToken(parser.TokenRoleIdentifier)
 
 	// Consume an identifier, then check whether it's a keyword.
 	// The parser recognizes different keywords at the top-level than within a block (nested in open/close parens).
@@ -165,12 +164,6 @@ func protobufKeywordParseFunc() parser.Func {
 			} else {
 				return recognizeNestedLevelKeywordOrConsume(result, iter, state)
 			}
-		}).
-		Map(func(result parser.Result) parser.Result {
-			if len(result.ComputedTokens) == 0 {
-				return recognizeIdentifier(result)
-			}
-			return result
 		})
 }
 

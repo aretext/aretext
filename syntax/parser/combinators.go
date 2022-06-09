@@ -107,9 +107,9 @@ func (f Func) MaybeBefore(nextFn Func) Func {
 }
 
 // combineSeqResults combines two adjacent results into a single result.
+// The input results may be mutated.
 func combineSeqResults(r1, r2 Result) Result {
-	tokens := make([]ComputedToken, 0, len(r1.ComputedTokens)+len(r2.ComputedTokens))
-	tokens = append(tokens, r1.ComputedTokens...)
+	tokens := r1.ComputedTokens
 	for _, tok := range r2.ComputedTokens {
 		tokens = append(tokens, ComputedToken{
 			Offset: r1.NumConsumed + tok.Offset,

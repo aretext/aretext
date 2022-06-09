@@ -16,8 +16,6 @@ import (
 	"github.com/aretext/aretext/state"
 )
 
-const redrawInterval = 20 * time.Millisecond
-
 // Editor is a terminal-based text editing program.
 type Editor struct {
 	inputInterpreter  *input.Interpreter

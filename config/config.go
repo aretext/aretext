@@ -175,11 +175,11 @@ func intOrDefault(m map[string]any, key string, defaultVal int) int {
 		return defaultVal
 	}
 
-	switch v.(type) {
+	switch v := v.(type) {
 	case int:
-		return v.(int)
+		return v
 	case float64:
-		return int(v.(float64))
+		return int(v)
 	default:
 		log.Printf("Could not decode int for config key '%s'\n", key)
 		return defaultVal

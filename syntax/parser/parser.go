@@ -68,6 +68,10 @@ type P struct {
 func New(f Func) *P {
 	// This ensures that the parse func always makes progress.
 	f = f.recoverFromFailure()
+
+	// This reduces the number of computations to save memory.
+	f = f.coalesce(512)
+
 	return &P{parseFunc: f}
 }
 

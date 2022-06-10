@@ -297,7 +297,6 @@ func nextWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint6
 				// Can't go past the end of the text.
 				return pos + offset
 			}
-			break
 		case boundaryBefore:
 			return pos + prevOffset
 		case boundaryAfter:
@@ -331,8 +330,6 @@ func prevWordBoundary(textTree *text.Tree, pos uint64, f wordBoundaryFunc) uint6
 		// Pass the grapheme clusters in the order they appear in the text
 		// (reverse of the order in which we read them).
 		switch f(gcOffset, seg, prevSeg) {
-		case noBoundary:
-			break
 		case boundaryBefore:
 			return pos - offset - seg.NumRunes()
 		case boundaryAfter:

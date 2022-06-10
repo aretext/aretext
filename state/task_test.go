@@ -32,7 +32,7 @@ func TestStartTask(t *testing.T) {
 }
 
 func TestCancelTaskIfRunning(t *testing.T) {
-	cancelChan := make(chan struct{}, 0)
+	cancelChan := make(chan struct{})
 	state := NewEditorState(100, 100, nil, nil)
 	StartTask(state, func(ctx context.Context) func(*EditorState) {
 		select {

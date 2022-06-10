@@ -93,7 +93,7 @@ func validateExpr(expr Expr) error {
 			break
 		case EventRangeExpr:
 			if expr.StartEvent >= expr.EndEvent {
-				return fmt.Errorf("Invalid event range [%d, %d]", expr.StartEvent, expr.EndEvent)
+				return fmt.Errorf("invalid event range [%d, %d]", expr.StartEvent, expr.EndEvent)
 			}
 		case ConcatExpr:
 			for _, child := range expr.Children {
@@ -114,12 +114,12 @@ func validateExpr(expr Expr) error {
 		case CaptureExpr:
 			for _, id := range parentCaptureIds {
 				if id == expr.CaptureId {
-					return fmt.Errorf("Conflicting capture ID %d", expr.CaptureId)
+					return fmt.Errorf("conflicting capture ID %d", expr.CaptureId)
 				}
 			}
 			return validateRecursively(expr.Child, append(parentCaptureIds, expr.CaptureId))
 		default:
-			return fmt.Errorf("Invalid expression type %T", expr)
+			return fmt.Errorf("invalid expression type %T", expr)
 		}
 
 		return nil

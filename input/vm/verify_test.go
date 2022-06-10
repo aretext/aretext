@@ -32,21 +32,21 @@ func TestVerifyProgram(t *testing.T) {
 			prog: []bytecode{
 				{op: opJump, arg1: 0},
 			},
-			errMsg: "Program loop must contain at least one read: [0]",
+			errMsg: "program loop must contain at least one read: [0]",
 		},
 		{
 			name: "invalid bytecode op",
 			prog: []bytecode{
 				{op: op(14)},
 			},
-			errMsg: "Invalid bytecode op 14",
+			errMsg: "invalid bytecode op 14",
 		},
 		{
 			name: "bytecode opNone",
 			prog: []bytecode{
 				{op: opNone},
 			},
-			errMsg: "Bytecode opNone is not allowed",
+			errMsg: "bytecode opNone is not allowed",
 		},
 		{
 			name: "negative jump target",
@@ -54,7 +54,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opJump, arg1: -1},
 				{op: opAccept},
 			},
-			errMsg: "Program target -1 is negative",
+			errMsg: "program target -1 is negative",
 		},
 		{
 			name: "jump target past end of program",
@@ -62,7 +62,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opJump, arg1: 3},
 				{op: opAccept},
 			},
-			errMsg: "Program target 3 is past end of program",
+			errMsg: "program target 3 is past end of program",
 		},
 		{
 			name: "negative fork target",
@@ -70,7 +70,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opFork, arg1: -1, arg2: 1},
 				{op: opAccept},
 			},
-			errMsg: "Program target -1 is negative",
+			errMsg: "program target -1 is negative",
 		},
 		{
 			name: "fork target past end of program",
@@ -78,7 +78,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opFork, arg1: 1, arg2: 2},
 				{op: opAccept},
 			},
-			errMsg: "Program target 2 is past end of program",
+			errMsg: "program target 2 is past end of program",
 		},
 		{
 			name: "unreachable bytecode",
@@ -88,7 +88,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opJump, arg1: 0},
 				{op: opAccept},
 			},
-			errMsg: "Program bytecode 3 is not reachable",
+			errMsg: "program bytecode 3 is not reachable",
 		},
 		{
 			name: "no accept at end",
@@ -97,7 +97,7 @@ func TestVerifyProgram(t *testing.T) {
 				{op: opRead},
 				{op: opRead},
 			},
-			errMsg: "Program target 3 is past end of program",
+			errMsg: "program target 3 is past end of program",
 		},
 	}
 

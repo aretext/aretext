@@ -20,7 +20,7 @@ func TestCompilerValidation(t *testing.T) {
 		{
 			name:   "nil expression",
 			expr:   nil,
-			errMsg: "Invalid expression type <nil>",
+			errMsg: "invalid expression type <nil>",
 		},
 		{
 			name: "invalid event range",
@@ -28,7 +28,7 @@ func TestCompilerValidation(t *testing.T) {
 				StartEvent: 5,
 				EndEvent:   4,
 			},
-			errMsg: "Invalid event range [5, 4]",
+			errMsg: "invalid event range [5, 4]",
 		},
 		{
 			name: "duplicate capture ID, non-overlapping",
@@ -60,7 +60,7 @@ func TestCompilerValidation(t *testing.T) {
 					},
 				},
 			},
-			errMsg: "Conflicting capture ID 1",
+			errMsg: "conflicting capture ID 1",
 		},
 	}
 

@@ -7,7 +7,7 @@ import "fmt"
 // programs are safe to execute.
 func VerifyProgram(prog Program) error {
 	if len(prog) == 0 {
-		return fmt.Errorf("Program must have at least one bytecode")
+		return fmt.Errorf("program must have at least one bytecode")
 	}
 
 	edges := buildExecutionGraph(prog)
@@ -15,11 +15,11 @@ func VerifyProgram(prog Program) error {
 	var verifyRecursively func(int, []int) error
 	verifyRecursively = func(i int, path []int) error {
 		if i < 0 {
-			return fmt.Errorf("Program target %d is negative", i)
+			return fmt.Errorf("program target %d is negative", i)
 		}
 
 		if i >= len(prog) {
-			return fmt.Errorf("Program target %d is past end of program", i)
+			return fmt.Errorf("program target %d is past end of program", i)
 		}
 
 		var isLoop, hasRead bool
@@ -29,7 +29,7 @@ func VerifyProgram(prog Program) error {
 		}
 
 		if isLoop && !hasRead {
-			return fmt.Errorf("Program loop must contain at least one read: %v", path)
+			return fmt.Errorf("program loop must contain at least one read: %v", path)
 		}
 
 		if _, ok := seen[i]; ok {
@@ -56,7 +56,7 @@ func VerifyProgram(prog Program) error {
 
 	for i := 0; i < len(prog); i++ {
 		if _, ok := seen[i]; !ok {
-			return fmt.Errorf("Program bytecode %d is not reachable", i)
+			return fmt.Errorf("program bytecode %d is not reachable", i)
 		}
 	}
 
@@ -81,11 +81,11 @@ func buildExecutionGraph(prog Program) [][]int {
 func verifyBytecode(bc bytecode) error {
 	switch bc.op {
 	case opNone:
-		return fmt.Errorf("Bytecode opNone is not allowed")
+		return fmt.Errorf("bytecode opNone is not allowed")
 	case opRead, opJump, opFork, opStartCapture, opEndCapture, opAccept:
 		// Allowed bytecode ops.
 		return nil
 	default:
-		return fmt.Errorf("Invalid bytecode op %d", bc.op)
+		return fmt.Errorf("invalid bytecode op %d", bc.op)
 	}
 }

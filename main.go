@@ -87,7 +87,7 @@ func main() {
 
 	var lineNum uint64
 	if *line < 1 {
-		exitWithError(errors.New("Line number must be at least 1"))
+		exitWithError(errors.New("line number must be at least 1"))
 	} else {
 		lineNum = uint64(*line) - 1 // convert 1-based line arg to 0-based lineNum.
 	}

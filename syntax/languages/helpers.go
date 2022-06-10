@@ -109,29 +109,6 @@ func consumeRunesLike(predicateFn func(rune) bool) parser.Func {
 	}
 }
 
-// consumeUntilEofOrRuneLike consumes up to, but not including, a rune matching a predicate or EOF.
-func consumeUntilEofOrRuneLike(predicate func(r rune) bool) parser.Func {
-	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-		for {
-			r, err := iter.NextRune()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return parser.FailedResult
-			} else if predicate(r) {
-				break
-			}
-			numConsumed++
-		}
-
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
-	}
-}
-
 // consumeToEofOrRuneLike consumes up to and including a rune matching a predicate or EOF.
 func consumeToEofOrRuneLike(predicate func(r rune) bool) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {

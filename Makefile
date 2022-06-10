@@ -1,3 +1,5 @@
+.PHONY: all fmt generate build build-debug test install install-devtools vet staticcheck bench clean
+
 all: generate fmt build vet staticcheck test
 
 fmt:

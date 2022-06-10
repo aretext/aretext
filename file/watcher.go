@@ -32,8 +32,8 @@ func NewWatcher(pollInterval time.Duration, path string, lastModified time.Time,
 		size:         size,
 		lastModified: lastModified,
 		checksum:     checksum,
-		changedChan:  make(chan struct{}, 0),
-		quitChan:     make(chan struct{}, 0),
+		changedChan:  make(chan struct{}),
+		quitChan:     make(chan struct{}),
 	}
 	go w.checkFileLoop(pollInterval)
 	return w
@@ -41,7 +41,7 @@ func NewWatcher(pollInterval time.Duration, path string, lastModified time.Time,
 
 // NewEmptyWatcher returns a watcher that has an empty path and never triggers.
 func NewEmptyWatcher() *Watcher {
-	return &Watcher{changedChan: make(chan struct{}, 0)}
+	return &Watcher{changedChan: make(chan struct{})}
 }
 
 // Path returns the path to the file being watched.

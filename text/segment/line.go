@@ -100,17 +100,13 @@ func (iter *WrappedLineIter) NextSegment(segment *Segment) error {
 			// of the current line and start a new line with the next grapheme cluster.
 			segment.Extend(iter.buffer)
 			iter.buffer = iter.buffer[:0]
-			for _, r := range iter.gcSegment.Runes() {
-				iter.buffer = append(iter.buffer, r)
-			}
+			iter.buffer = append(iter.buffer, iter.gcSegment.Runes()...)
 			iter.currentWidth = gcWidth
 			return nil
 		}
 
 		// The next grapheme cluster fits in the current line.
-		for _, r := range iter.gcSegment.Runes() {
-			iter.buffer = append(iter.buffer, r)
-		}
+		iter.buffer = append(iter.buffer, iter.gcSegment.Runes()...)
 		iter.currentWidth += gcWidth
 	}
 }

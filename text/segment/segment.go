@@ -28,9 +28,7 @@ func (seg *Segment) Append(r rune) *Segment {
 
 // Extend appends all runes from the slice.
 func (seg *Segment) Extend(runes []rune) *Segment {
-	for _, r := range runes {
-		seg.runes = append(seg.runes, r)
-	}
+	seg.runes = append(seg.runes, runes...)
 	return seg
 }
 

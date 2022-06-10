@@ -51,7 +51,7 @@ func (v *Validator) processByte(b byte) {
 	switch v.state {
 
 	case stateValid:
-		if b >= 0x00 && b <= 0x7f {
+		if b <= 0x7f {
 			v.state = stateValid
 		} else if b >= 0xc2 && b <= 0xdf {
 			v.state = stateAwaitingOneByte

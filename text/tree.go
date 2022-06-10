@@ -252,7 +252,7 @@ func (g *innerNodeGroup) keys() []indexKey {
 }
 
 func (g *innerNodeGroup) insertAtPosition(nodeIdx uint64, charPos uint64, c rune) (invalidateKeys bool, splitNodeGroup nodeGroup, err error) {
-	invalidateKeys, splitNode, err := g.nodes[nodeIdx].insertAtPosition(charPos, c)
+	_, splitNode, err := g.nodes[nodeIdx].insertAtPosition(charPos, c)
 	if err != nil {
 		return false, nil, err
 	}
@@ -358,9 +358,7 @@ func (n *innerNode) numNewlines() uint64 {
 
 func (n *innerNode) recalculateChildKeys() {
 	childKeys := n.child.keys()
-	for i, key := range childKeys {
-		n.keys[i] = key
-	}
+	copy(n.keys[:], childKeys)
 	n.numKeys = uint64(len(childKeys))
 }
 

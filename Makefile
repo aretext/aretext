@@ -1,4 +1,4 @@
-all: generate fmt build vet test
+all: generate fmt build vet staticcheck test
 
 fmt:
 	gofmt -s -w .
@@ -20,8 +20,16 @@ test:
 install:
 	go install
 
+install-devtools:
+	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/shurcooL/markdownfmt@latest
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+
 vet:
 	go vet ./...
+
+staticcheck:
+	staticcheck ./...
 
 bench:
 	go test ./... -bench=.

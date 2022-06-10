@@ -6,11 +6,10 @@ Building
 
 To build aretext, you will first need to [install go](https://golang.org/doc/install).
 
-Next, install `goimports` and `markdownfmt`:
+Next, install development tools:
 
 ```
-go install golang.org/x/tools/cmd/goimports@latest
-go install github.com/shurcooL/markdownfmt@latest
+make install-devtools
 ```
 
 You can then build aretext and run tests using `make`. See the [Makefile](Makefile) for available commands.

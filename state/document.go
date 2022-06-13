@@ -235,13 +235,30 @@ func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
 }
 
 func customMenuItems(config config.Config) []menu.Item {
-	items := make([]menu.Item, 0, len(config.MenuCommands))
+	// Deduplicate commands with the same name.
+	// Later commands take priority.
+	uniqueItemMap := make(map[string]menu.Item, len(config.MenuCommands))
 	for _, cmd := range config.MenuCommands {
-		items = append(items, menu.Item{
+		uniqueItemMap[cmd.Name] = menu.Item{
 			Name:   cmd.Name,
 			Action: actionForCustomMenuItem(cmd),
-		})
+		}
 	}
+
+	// Convert the map to a slice.
+	items := make([]menu.Item, 0, len(uniqueItemMap))
+	for _, item := range uniqueItemMap {
+		items = append(items, item)
+	}
+
+	// Sort the slice ascending by name.
+	// This isn't strictly necessary since menu search will reorder
+	// the commands based on the user's search query, but do it anyway
+	// so the output is deterministic.
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Name < items[j].Name
+	})
+
 	return items
 }
 

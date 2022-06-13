@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/syntax"
 )
 
@@ -364,4 +366,65 @@ func TestAbortIfFileExistsWithChangedContentFileDeleted(t *testing.T) {
 	})
 	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
 	assert.Equal(t, "Operation executed", state.statusMsg.Text)
+}
+
+func TestDeduplicateCustomMenuItems(t *testing.T) {
+	// Configure custom menu items with duplicate names.
+	configRuleSet := config.RuleSet{
+		{
+			Name:    "customMenuCommands",
+			Pattern: "**",
+			Config: map[string]any{
+				"menuCommands": []any{
+					map[string]any{
+						"name":     "foo",
+						"shellCmd": "echo 'foo'",
+						"mode":     "insert",
+					},
+					map[string]any{
+						"name":     "bar",
+						"shellCmd": "echo 'bar'",
+						"mode":     "insert",
+					},
+					map[string]any{
+						"name":     "foo", // duplicate
+						"shellCmd": "echo 'foo2'",
+						"mode":     "insert",
+					},
+				},
+			},
+		},
+	}
+
+	// Load the document.
+	path, cleanup := createTestFile(t, "")
+	state := NewEditorState(100, 100, configRuleSet, nil)
+	LoadDocument(state, path, true, startOfDocLocator)
+	defer cleanup()
+
+	// Show the menu and search for 'f', which should match all custom items.
+	ShowMenu(state, MenuStyleCommand, nil)
+	AppendRuneToMenuSearch(state, 'f')
+
+	// Expect that the search results include only two items,
+	// since "foo" was deduplicated.
+	results, selectedIdx := state.Menu().SearchResults()
+	assert.Equal(t, len(results), 2)
+	assert.Equal(t, selectedIdx, 0)
+	assert.Equal(t, results[0].Name, "foo")
+	assert.Equal(t, results[1].Name, "bar")
+
+	// Execute the "foo" item and wait for the shell cmd to complete.
+	ExecuteSelectedMenuItem(state)
+	select {
+	case action := <-state.TaskResultChan():
+		action(state)
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "Timed out")
+	}
+
+	// Check that the second "foo" command was invoked, which should
+	// have inserted "foo2" into the document.
+	text := state.DocumentBuffer().TextTree().String()
+	assert.Equal(t, text, "foo2\n")
 }

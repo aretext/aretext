@@ -36,6 +36,8 @@ In addition, the following environment variables are provided to the shell comma
 -	`$LINE` is the line number of the cursor, starting from one.
 -	`$SELECTION` is the currently selected text (if any).
 
+If there are multiple commands with the same name, only the last of these commands will appear in the menu.
+
 Examples
 --------
 

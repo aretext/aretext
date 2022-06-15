@@ -1202,11 +1202,16 @@ func BenchmarkRead(b *testing.B) {
 				b.Fatalf("err = %v", err)
 			}
 
+			var buf [1024]byte
 			for n := 0; n < b.N; n++ {
 				reader := tree.ReaderAtPosition(0)
-				_, err := io.ReadAll(&reader)
-				if err != nil {
-					b.Fatalf("err = %v", err)
+				for {
+					_, err := reader.Read(buf[:])
+					if err == io.EOF {
+						break
+					} else if err != nil {
+						b.Fatalf("err = %v", err)
+					}
 				}
 			}
 		})

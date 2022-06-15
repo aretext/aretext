@@ -1218,6 +1218,39 @@ func BenchmarkRead(b *testing.B) {
 	}
 }
 
+func BenchmarkReadRune(b *testing.B) {
+	benchmarks := []struct {
+		name     string
+		numBytes int
+	}{
+		{name: "small", numBytes: 16},
+		{name: "medium", numBytes: 4096},
+		{name: "large", numBytes: 1048576},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			text := Repeat('a', bm.numBytes)
+			tree, err := NewTreeFromString(text)
+			if err != nil {
+				b.Fatalf("err = %v", err)
+			}
+
+			for n := 0; n < b.N; n++ {
+				reader := tree.ReaderAtPosition(0)
+				for {
+					_, _, err := reader.ReadRune()
+					if err == io.EOF {
+						break
+					} else if err != nil {
+						b.Fatalf("err = %v", err)
+					}
+				}
+			}
+		})
+	}
+}
+
 func BenchmarkInsert(b *testing.B) {
 	benchmarks := []struct {
 		name           string

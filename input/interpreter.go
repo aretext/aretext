@@ -2,6 +2,7 @@ package input
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"strings"
 
@@ -161,12 +162,23 @@ func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
 			if int(capture.Id) < len(m.commands) {
 				command := m.commands[capture.Id]
 				params := capturesToCommandParams(result.Captures, m.eventBuffer)
-				action = command.BuildAction(ctx, params)
 				log.Printf(
 					"%s mode accepted input for command %q with params %+v and ctx %+v\n",
 					m.name, command.Name,
 					params, ctx,
 				)
+
+				if err := m.validateParams(command, params); err != nil {
+					action = func(s *state.EditorState) {
+						state.SetStatusMsg(s, state.StatusMsg{
+							Style: state.StatusMsgStyleError,
+							Text:  err.Error(),
+						})
+					}
+				} else {
+					action = command.BuildAction(ctx, params)
+				}
+
 				break
 			}
 		}
@@ -178,6 +190,13 @@ func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
 	}
 
 	return action
+}
+
+func (m *mode) validateParams(command Command, params CommandParams) error {
+	if command.MaxCount > 0 && params.Count > command.MaxCount {
+		return fmt.Errorf("count must be less than or equal to %d", command.MaxCount)
+	}
+	return nil
 }
 
 func (m *mode) InputBufferString() string {

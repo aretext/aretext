@@ -1,6 +1,8 @@
 package input
 
 import (
+	"math"
+
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/clipboard"
@@ -23,8 +25,15 @@ type CommandParams struct {
 type Command struct {
 	Name        string
 	BuildExpr   func() vm.Expr
+	MaxCount    uint64 // Zero means no limit.
 	BuildAction func(Context, CommandParams) Action
 }
+
+// Users should hardly ever need to repeat a command
+// more than a few dozen times. The limit 1024 is chosen
+// arbitrarily such that users should intentionally hit it,
+// and all commands should complete within ~1 second.
+const defaultMaxCount = uint64(1024)
 
 // These commands control cursor movement in normal and visual mode.
 func cursorCommands() []Command {
@@ -137,6 +146,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("f", "", captureOpts{count: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, true))
 			},
@@ -146,6 +156,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("F", "", captureOpts{count: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, true))
 			},
@@ -155,6 +166,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("t", "", captureOpts{count: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToNextMatchingChar(p.MatchChar, p.Count, false))
 			},
@@ -164,6 +176,7 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("T", "", captureOpts{count: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorToPrevMatchingChar(p.MatchChar, p.Count, false))
 			},
@@ -200,6 +213,9 @@ func cursorCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("gg", "", captureOpts{count: true})
 			},
+			// The text data structure allows efficient lookup by line
+			// number, so we don't need to set a limit on the count.
+			MaxCount: math.MaxUint64,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorStartOfLineNum(p.Count))
 			},
@@ -345,6 +361,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("dd", "", captureOpts{count: true, clipboardPage: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteLines(p.Count, p.ClipboardPage),
@@ -392,6 +409,7 @@ func NormalModeCommands() []Command {
 					cmdExpr("x", "", captureOpts{count: true, clipboardPage: true}),
 				)
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteNextCharInLine(p.Count, p.ClipboardPage),
@@ -447,6 +465,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
@@ -458,6 +477,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
@@ -469,6 +489,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
@@ -480,6 +501,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					DeleteToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
@@ -557,6 +579,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
@@ -568,6 +591,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
@@ -579,6 +603,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
@@ -590,6 +615,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
@@ -810,6 +836,7 @@ func NormalModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr(".", "", captureOpts{count: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReplayLastActionMacro(p.Count),

@@ -1570,6 +1570,45 @@ func TestVerifyGeneratedPrograms(t *testing.T) {
 	}
 }
 
+func TestCountLimits(t *testing.T) {
+	testCases := []string{
+		"1025fx",
+		"1025Fx",
+		"1025tx",
+		"1025Tx",
+		"1025dd",
+		"1025dl",
+		"1025x",
+		"1025dfx",
+		"1025dFx",
+		"1025dtx",
+		"1025dTx",
+		"1025cfx",
+		"1025cFx",
+		"1025ctx",
+		"1025cTx",
+		"1025.",
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc, func(t *testing.T) {
+			interpreter := NewInterpreter()
+			editorState := state.NewEditorState(100, 100, nil, nil)
+
+			for _, r := range tc {
+				event := tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone)
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
+				action(editorState)
+			}
+
+			msg := editorState.StatusMsg()
+			assert.Equal(t, state.StatusMsgStyleError, msg.Style)
+			assert.Contains(t, msg.Text, "count")
+		})
+	}
+}
+
 func BenchmarkNewInterpreter(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		NewInterpreter()

@@ -1179,6 +1179,17 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "adipiscing elit",
 		},
 		{
+			name:        "visual linewise delete all lines",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "",
+		},
+		{
 			name:        "visual charwise delete",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

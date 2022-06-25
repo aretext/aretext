@@ -31,32 +31,14 @@ func runShellCmdAndApplyAction(t *testing.T, state *EditorState, cmd string, mod
 }
 
 func TestRunShellCmd(t *testing.T) {
-	testCases := []struct {
-		name string
-		mode string
-	}{
-		{
-			name: "mode silent",
-			mode: config.CmdModeSilent,
-		},
-		{
-			name: "mode terminal",
-			mode: config.CmdModeTerminal,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			setupShellCmdTest(t, func(state *EditorState, dir string) {
-				p := path.Join(dir, "test-output.txt")
-				cmd := fmt.Sprintf(`printf "hello" > %s`, p)
-				runShellCmdAndApplyAction(t, state, cmd, tc.mode)
-				data, err := os.ReadFile(p)
-				require.NoError(t, err)
-				assert.Equal(t, "hello", string(data))
-			})
-		})
-	}
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
+		p := path.Join(dir, "test-output.txt")
+		cmd := fmt.Sprintf(`printf "hello" > %s`, p)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
+		data, err := os.ReadFile(p)
+		require.NoError(t, err)
+		assert.Equal(t, "hello", string(data))
+	})
 }
 
 func TestRunShellCmdFilePathEnvVar(t *testing.T) {

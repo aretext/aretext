@@ -166,33 +166,43 @@ func ClearAutoIndentWhitespaceLine(state *EditorState, startOfLineLoc Locator) {
 // InsertTab inserts a tab at the current cursor position.
 func InsertTab(state *EditorState) {
 	cursorPos := state.documentBuffer.cursor.position
-	newCursorPos := insertTabAtPos(state, cursorPos)
+	newCursorPos := insertTabsAtPos(state, cursorPos, 1)
 	state.documentBuffer.cursor = cursorState{position: newCursorPos}
 }
 
-func insertTabAtPos(state *EditorState, pos uint64) uint64 {
+func insertTabsAtPos(state *EditorState, pos uint64, count uint64) uint64 {
 	if state.documentBuffer.tabExpand {
-		return insertSpacesForTabAtPos(state, pos)
+		return insertSpacesForTabsAtPos(state, pos, count)
 	} else {
-		return insertTabRuneAtPos(state, pos)
+		return insertTabRunesAtPos(state, pos, count)
 	}
 }
 
-func insertTabRuneAtPos(state *EditorState, pos uint64) uint64 {
-	mustInsertRuneAtPosition(state, '\t', pos, true)
-	return pos + 1
+func insertTabRunesAtPos(state *EditorState, pos uint64, count uint64) uint64 {
+	text := make([]byte, count)
+	for i := 0; i < len(text); i++ {
+		text[i] = '\t'
+	}
+	mustInsertTextAtPosition(state, string(text), pos, true)
+	return pos + uint64(len(text))
 }
 
-func insertSpacesForTabAtPos(state *EditorState, pos uint64) uint64 {
+func insertSpacesForTabsAtPos(state *EditorState, pos uint64, count uint64) uint64 {
 	buffer := state.documentBuffer
 	tabSize := buffer.tabSize
-	offset := offsetInLine(buffer, pos)
-	numSpaces := tabSize - (offset % tabSize)
-	for i := uint64(0); i < numSpaces; i++ {
-		mustInsertRuneAtPosition(state, ' ', pos, true)
-		pos++
+	var numSpaces uint64
+	if offset := offsetInLine(buffer, pos); offset%tabSize > 0 {
+		numSpaces += tabSize - offset
+		count--
 	}
-	return pos
+	numSpaces += count * tabSize
+
+	text := make([]byte, numSpaces)
+	for i := 0; i < len(text); i++ {
+		text[i] = ' '
+	}
+	mustInsertTextAtPosition(state, string(text), pos, true)
+	return pos + uint64(len(text))
 }
 
 func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
@@ -497,13 +507,26 @@ func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 }
 
 // IndentLines indents every line from the current cursor position to the position found by targetLineLoc.
-func IndentLines(state *EditorState, targetLineLoc Locator) {
-	changeIndentationOfLines(state, targetLineLoc, indentLineNum)
+func IndentLines(state *EditorState, targetLineLoc Locator, count uint64) {
+	changeIndentationOfLines(state, targetLineLoc, func(state *EditorState, lineNum uint64) {
+		buffer := state.documentBuffer
+		startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
+		endOfLinePos := locate.NextLineBoundary(buffer.textTree, true, startOfLinePos)
+		if startOfLinePos < endOfLinePos {
+			// Indent if line is non-empty.
+			insertTabsAtPos(state, startOfLinePos, count)
+		}
+	})
 }
 
 // OutdentLines outdents every line from the current cursor position to the position found by targetLineLoc.
-func OutdentLines(state *EditorState, targetLineLoc Locator) {
-	changeIndentationOfLines(state, targetLineLoc, outdentLineNum)
+func OutdentLines(state *EditorState, targetLineLoc Locator, count uint64) {
+	changeIndentationOfLines(state, targetLineLoc, func(state *EditorState, lineNum uint64) {
+		buffer := state.documentBuffer
+		startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
+		numToDelete := numRunesInIndent(buffer, startOfLinePos, count)
+		deleteRunes(state, startOfLinePos, numToDelete, true)
+	})
 }
 
 func changeIndentationOfLines(state *EditorState, targetLineLoc Locator, f func(*EditorState, uint64)) {
@@ -524,31 +547,14 @@ func changeIndentationOfLines(state *EditorState, targetLineLoc Locator, f func(
 	buffer.cursor = cursorState{position: newCursorPos}
 }
 
-func indentLineNum(state *EditorState, lineNum uint64) {
-	buffer := state.documentBuffer
-	startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
-	endOfLinePos := locate.NextLineBoundary(buffer.textTree, true, startOfLinePos)
-	if startOfLinePos < endOfLinePos {
-		// Indent if line is non-empty.
-		insertTabAtPos(state, startOfLinePos)
-	}
-}
-
-func outdentLineNum(state *EditorState, lineNum uint64) {
-	buffer := state.documentBuffer
-	startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
-	numToDelete := numRunesInFirstIndent(buffer, startOfLinePos)
-	deleteRunes(state, startOfLinePos, numToDelete, true)
-}
-
-func numRunesInFirstIndent(buffer *BufferState, startOfLinePos uint64) uint64 {
+func numRunesInIndent(buffer *BufferState, startOfLinePos uint64, count uint64) uint64 {
 	var offset uint64
 	pos := startOfLinePos
 	endOfIndentPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
 	reader := buffer.textTree.ReaderAtPosition(pos)
 	iter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	for pos < endOfIndentPos && offset < buffer.tabSize {
+	for pos < endOfIndentPos && offset < (buffer.tabSize*count) {
 		err := iter.NextSegment(seg)
 		if err == io.EOF {
 			break

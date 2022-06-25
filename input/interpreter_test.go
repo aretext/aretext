@@ -1258,6 +1258,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "LoREM IPSUm dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "visual mode indent with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '4', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '>', tcell.ModNone),
+			},
+			expectedCursorPos: 22,
+			expectedText:      "Lorem ipsum dolor\n\t\t\t\tsit amet consectetur\n\t\t\t\tadipiscing elit",
+		},
+		{
 			name:        "visual mode indent, then repeat last action",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -1277,6 +1290,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '<', tcell.ModNone),
+			},
+			expectedCursorPos: 18,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\n\tadipiscing\nelit\n\n",
+		},
+		{
+			name:        "visual mode outdent with count",
+			initialText: "Lorem ipsum dolor\n\t\tsit amet consectetur\n\t\t\tadipiscing\nelit\n\n",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'V', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, '<', tcell.ModNone),
 			},
 			expectedCursorPos: 18,

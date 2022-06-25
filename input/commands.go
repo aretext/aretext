@@ -937,22 +937,22 @@ func VisualModeCommands() []Command {
 		{
 			Name: "indent selection (>)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr(">", "", captureOpts{})
+				return cmdExpr(">", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					IndentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator),
+					IndentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator, p.Count),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "outdent selection (<)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("<", "", captureOpts{})
+				return cmdExpr("<", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					OutdentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator),
+					OutdentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator, p.Count),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

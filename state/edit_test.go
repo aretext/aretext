@@ -856,6 +856,7 @@ func TestIndentLines(t *testing.T) {
 		inputString    string
 		cursorPos      uint64
 		targetLinePos  uint64
+		count          uint64
 		tabExpand      bool
 		expectedCursor cursorState
 		expectedText   string
@@ -865,6 +866,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 		},
@@ -873,6 +875,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\n\ndef",
 			cursorPos:      4,
 			targetLinePos:  4,
+			count:          1,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "abc\n\ndef",
 		},
@@ -881,6 +884,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\r\n\r\ndef",
 			cursorPos:      5,
 			targetLinePos:  5,
+			count:          1,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\r\n\r\ndef",
 		},
@@ -889,6 +893,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "a",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\ta",
 		},
@@ -898,6 +903,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "a",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "    a",
 		},
@@ -906,6 +912,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\tabc\ndef\nghi",
 		},
@@ -914,6 +921,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      1,
 			targetLinePos:  1,
+			count:          1,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   "\tabc\ndef\nghi",
 		},
@@ -922,6 +930,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      4,
 			targetLinePos:  4,
+			count:          1,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
 		},
@@ -930,6 +939,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      6,
 			targetLinePos:  6,
+			count:          1,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
 		},
@@ -938,6 +948,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      11,
 			targetLinePos:  11,
+			count:          1,
 			expectedCursor: cursorState{position: 9},
 			expectedText:   "abc\ndef\n\tghi",
 		},
@@ -946,6 +957,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\ndef\nghi",
 			cursorPos:      6,
 			targetLinePos:  6,
+			count:          1,
 			tabExpand:      true,
 			expectedCursor: cursorState{position: 8},
 			expectedText:   "abc\n    def\nghi",
@@ -955,6 +967,7 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "abc\n  def\nghi",
 			cursorPos:      7,
 			targetLinePos:  7,
+			count:          1,
 			tabExpand:      true,
 			expectedCursor: cursorState{position: 10},
 			expectedText:   "abc\n      def\nghi",
@@ -964,8 +977,28 @@ func TestIndentLines(t *testing.T) {
 			inputString:    "ab\ncd\nef\ngh",
 			cursorPos:      4,
 			targetLinePos:  7,
+			count:          1,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "ab\n\tcd\n\tef\ngh",
+		},
+		{
+			name:           "repeat count times",
+			inputString:    "ab\ncd\nef\ngh",
+			cursorPos:      4,
+			targetLinePos:  7,
+			count:          3,
+			expectedCursor: cursorState{position: 6},
+			expectedText:   "ab\n\t\t\tcd\n\t\t\tef\ngh",
+		},
+		{
+			name:           "tab expand, repeat count times",
+			inputString:    "abc\n  def\nghi",
+			cursorPos:      7,
+			targetLinePos:  7,
+			count:          3,
+			tabExpand:      true,
+			expectedCursor: cursorState{position: 18},
+			expectedText:   "abc\n              def\nghi",
 		},
 	}
 
@@ -978,7 +1011,7 @@ func TestIndentLines(t *testing.T) {
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabExpand = tc.tabExpand
 			targetLineLoc := func(p LocatorParams) uint64 { return tc.targetLinePos }
-			IndentLines(state, targetLineLoc)
+			IndentLines(state, targetLineLoc, tc.count)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})
@@ -991,6 +1024,7 @@ func TestOutdentLines(t *testing.T) {
 		inputString    string
 		cursorPos      uint64
 		targetLinePos  uint64
+		count          uint64
 		tabSize        uint64
 		expectedCursor cursorState
 		expectedText   string
@@ -1000,6 +1034,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
@@ -1009,6 +1044,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "\tabc",
 			cursorPos:      0,
 			targetLinePos:  0,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1018,6 +1054,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "\tabc",
 			cursorPos:      1,
 			targetLinePos:  1,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1027,6 +1064,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "\tabc",
 			cursorPos:      3,
 			targetLinePos:  3,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1036,6 +1074,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "\t\t\tabc",
 			cursorPos:      4,
 			targetLinePos:  4,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 2},
 			expectedText:   "\t\tabc",
@@ -1045,6 +1084,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "  abc",
 			cursorPos:      2,
 			targetLinePos:  2,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1054,6 +1094,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "    abc",
 			cursorPos:      2,
 			targetLinePos:  2,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abc",
@@ -1063,6 +1104,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "    abc",
 			cursorPos:      2,
 			targetLinePos:  2,
+			count:          1,
 			tabSize:        2,
 			expectedCursor: cursorState{position: 2},
 			expectedText:   "  abc",
@@ -1072,6 +1114,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "abc\n\ndef",
 			cursorPos:      5,
 			targetLinePos:  5,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\ndef",
@@ -1081,6 +1124,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "abc\n      \ndef",
 			cursorPos:      5,
 			targetLinePos:  5,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 6},
 			expectedText:   "abc\n  \ndef",
@@ -1090,6 +1134,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "abc\n\t\tdef\nghi",
 			cursorPos:      7,
 			targetLinePos:  7,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abc\n\tdef\nghi",
@@ -1099,6 +1144,7 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "  \t abc",
 			cursorPos:      5,
 			targetLinePos:  5,
+			count:          1,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 1},
 			expectedText:   " abc",
@@ -1108,6 +1154,17 @@ func TestOutdentLines(t *testing.T) {
 			inputString:    "ab\n\tcd\n\t\tef\ngh",
 			cursorPos:      5,
 			targetLinePos:  8,
+			count:          1,
+			tabSize:        4,
+			expectedCursor: cursorState{position: 3},
+			expectedText:   "ab\ncd\n\tef\ngh",
+		},
+		{
+			name:           "repeat count times",
+			inputString:    "ab\n\t\t\tcd\n\t\t\t\tef\ngh",
+			cursorPos:      5,
+			targetLinePos:  14,
+			count:          3,
 			tabSize:        4,
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\ncd\n\tef\ngh",
@@ -1123,7 +1180,7 @@ func TestOutdentLines(t *testing.T) {
 			state.documentBuffer.cursor = cursorState{position: tc.cursorPos}
 			state.documentBuffer.tabSize = tc.tabSize
 			targetLineLoc := func(p LocatorParams) uint64 { return tc.targetLinePos }
-			OutdentLines(state, targetLineLoc)
+			OutdentLines(state, targetLineLoc, tc.count)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 		})

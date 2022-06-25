@@ -463,12 +463,12 @@ func ToggleCaseAtCursor(s *state.EditorState) {
 
 func IndentLine(s *state.EditorState) {
 	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
-	state.IndentLines(s, targetLineLoc)
+	state.IndentLines(s, targetLineLoc, 1)
 }
 
 func OutdentLine(s *state.EditorState) {
 	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
-	state.OutdentLines(s, targetLineLoc)
+	state.OutdentLines(s, targetLineLoc, 1)
 }
 
 func CopyToStartOfNextWord(clipboardPage clipboard.PageId) Action {
@@ -646,18 +646,18 @@ func ToggleCaseInSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) A
 	}
 }
 
-func IndentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action {
+func IndentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator, count uint64) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursorToStartOfSelection(s)
-		state.IndentLines(s, selectionEndLoc)
+		state.IndentLines(s, selectionEndLoc, count)
 		ReturnToNormalMode(s)
 	}
 }
 
-func OutdentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator) Action {
+func OutdentSelectionAndReturnToNormalMode(selectionEndLoc state.Locator, count uint64) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursorToStartOfSelection(s)
-		state.OutdentLines(s, selectionEndLoc)
+		state.OutdentLines(s, selectionEndLoc, count)
 		ReturnToNormalMode(s)
 	}
 }

@@ -1654,6 +1654,10 @@ func TestCountLimits(t *testing.T) {
 		"1025ctx",
 		"1025cTx",
 		"1025.",
+		"1025>>",
+		"1025<<",
+		"v33>",
+		"v33<",
 	}
 
 	for _, tc := range testCases {

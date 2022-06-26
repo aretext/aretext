@@ -941,6 +941,7 @@ func VisualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr(">", "", captureOpts{count: true})
 			},
+			MaxCount: 32, // Reparsing is expensive, so set this lower.
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					IndentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator, p.Count),
@@ -952,6 +953,7 @@ func VisualModeCommands() []Command {
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("<", "", captureOpts{count: true})
 			},
+			MaxCount: 32, // Reparsing is expensive, so set this lower.
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					OutdentSelectionAndReturnToNormalMode(ctx.SelectionEndLocator, p.Count),

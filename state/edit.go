@@ -166,43 +166,39 @@ func ClearAutoIndentWhitespaceLine(state *EditorState, startOfLineLoc Locator) {
 // InsertTab inserts a tab at the current cursor position.
 func InsertTab(state *EditorState) {
 	cursorPos := state.documentBuffer.cursor.position
-	newCursorPos := insertTabsAtPos(state, cursorPos, 1)
+	newCursorPos := insertTabsAtPos(state, cursorPos, tabText(state, 1))
 	state.documentBuffer.cursor = cursorState{position: newCursorPos}
 }
 
-func insertTabsAtPos(state *EditorState, pos uint64, count uint64) uint64 {
+func tabText(state *EditorState, count uint64) string {
+	var buf []byte
 	if state.documentBuffer.tabExpand {
-		return insertSpacesForTabsAtPos(state, pos, count)
+		buf = make([]byte, count*state.documentBuffer.tabSize)
+		for i := 0; i < len(buf); i++ {
+			buf[i] = ' '
+		}
 	} else {
-		return insertTabRunesAtPos(state, pos, count)
+		buf = make([]byte, count)
+		for i := 0; i < len(buf); i++ {
+			buf[i] = '\t'
+		}
 	}
+	return string(buf)
 }
 
-func insertTabRunesAtPos(state *EditorState, pos uint64, count uint64) uint64 {
-	text := make([]byte, count)
-	for i := 0; i < len(text); i++ {
-		text[i] = '\t'
-	}
-	mustInsertTextAtPosition(state, string(text), pos, true)
-	return pos + uint64(len(text))
-}
+func insertTabsAtPos(state *EditorState, pos uint64, tabs string) uint64 {
+	n := uint64(len(tabs))
 
-func insertSpacesForTabsAtPos(state *EditorState, pos uint64, count uint64) uint64 {
-	buffer := state.documentBuffer
-	tabSize := buffer.tabSize
-	var numSpaces uint64
-	if offset := offsetInLine(buffer, pos); offset%tabSize > 0 {
-		numSpaces += tabSize - offset
-		count--
+	if state.documentBuffer.tabExpand {
+		// Inserted tab should end at a tab stop (aligned to multiples of tabSize from start of line).
+		offset := offsetInLine(state.documentBuffer, pos) % state.documentBuffer.tabSize
+		if offset > 0 {
+			n -= offset
+		}
 	}
-	numSpaces += count * tabSize
 
-	text := make([]byte, numSpaces)
-	for i := 0; i < len(text); i++ {
-		text[i] = ' '
-	}
-	mustInsertTextAtPosition(state, string(text), pos, true)
-	return pos + uint64(len(text))
+	mustInsertTextAtPosition(state, tabs[:n], pos, true)
+	return pos + n
 }
 
 func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
@@ -508,13 +504,14 @@ func toggleCaseForRange(state *EditorState, startPos uint64, endPos uint64) {
 
 // IndentLines indents every line from the current cursor position to the position found by targetLineLoc.
 func IndentLines(state *EditorState, targetLineLoc Locator, count uint64) {
+	tabs := tabText(state, count) // Allocate once for all lines.
 	changeIndentationOfLines(state, targetLineLoc, func(state *EditorState, lineNum uint64) {
 		buffer := state.documentBuffer
 		startOfLinePos := locate.StartOfLineNum(buffer.textTree, lineNum)
 		endOfLinePos := locate.NextLineBoundary(buffer.textTree, true, startOfLinePos)
 		if startOfLinePos < endOfLinePos {
 			// Indent if line is non-empty.
-			insertTabsAtPos(state, startOfLinePos, count)
+			insertTabsAtPos(state, startOfLinePos, tabs)
 		}
 	})
 }

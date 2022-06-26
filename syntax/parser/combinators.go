@@ -160,20 +160,3 @@ func (f Func) recoverFromFailure() Func {
 		}
 	}
 }
-
-// coalesce combines computations that consume too few runes.
-func (f Func) coalesce(minNumConsumed uint64) Func {
-	return func(iter TrackingRuneIter, state State) Result {
-		result := f(iter, state)
-		iter.Skip(result.NumConsumed)
-		for result.NumConsumed < minNumConsumed {
-			nextResult := f(iter, result.NextState)
-			if nextResult.IsFailure() {
-				break
-			}
-			iter.Skip(nextResult.NumConsumed)
-			result = combineSeqResults(result, nextResult)
-		}
-		return result
-	}
-}

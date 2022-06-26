@@ -461,14 +461,22 @@ func ToggleCaseAtCursor(s *state.EditorState) {
 	state.ToggleCaseAtCursor(s)
 }
 
-func IndentLine(s *state.EditorState) {
-	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
-	state.IndentLines(s, targetLineLoc, 1)
+func IndentLine(count uint64) Action {
+	return func(s *state.EditorState) {
+		targetLineLoc := func(p state.LocatorParams) uint64 {
+			return locate.StartOfLineBelow(p.TextTree, count-1, p.CursorPos)
+		}
+		state.IndentLines(s, targetLineLoc, 1)
+	}
 }
 
-func OutdentLine(s *state.EditorState) {
-	targetLineLoc := func(p state.LocatorParams) uint64 { return p.CursorPos }
-	state.OutdentLines(s, targetLineLoc, 1)
+func OutdentLine(count uint64) Action {
+	return func(s *state.EditorState) {
+		targetLineLoc := func(p state.LocatorParams) uint64 {
+			return locate.StartOfLineBelow(p.TextTree, count-1, p.CursorPos)
+		}
+		state.OutdentLines(s, targetLineLoc, 1)
+	}
 }
 
 func CopyToStartOfNextWord(clipboardPage clipboard.PageId) Action {

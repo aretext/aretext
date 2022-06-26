@@ -971,6 +971,17 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "\tLorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "indent line with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '>', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '>', tcell.ModNone),
+			},
+			expectedCursorPos: 1,
+			expectedText:      "\tLorem ipsum dolor\n\tsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "outdent line",
 			initialText: "Lorem ipsum dolor\n\tsit amet consectetur\n\t\tadipiscing\nelit\n\n",
 			events: []tcell.Event{
@@ -986,6 +997,24 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 18,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\n\t\tadipiscing\nelit\n\n",
+		},
+		{
+			name:        "outdent line with count",
+			initialText: "Lorem ipsum dolor\n\tsit amet consectetur\n\t\tadipiscing\nelit\n\n",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '<', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '<', tcell.ModNone),
+			},
+			expectedCursorPos: 18,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\n\tadipiscing\nelit\n\n",
 		},
 		{
 			name:        "yank to start of next word",

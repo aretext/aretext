@@ -647,22 +647,24 @@ func NormalModeCommands() []Command {
 		{
 			Name: "indent (>>)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr(">>", "", captureOpts{})
+				return cmdExpr(">>", "", captureOpts{count: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					IndentLine,
+					IndentLine(p.Count),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "outdent (<<)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("<<", "", captureOpts{})
+				return cmdExpr("<<", "", captureOpts{count: true})
 			},
+			MaxCount: defaultMaxCount,
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					OutdentLine,
+					OutdentLine(p.Count),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

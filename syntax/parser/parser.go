@@ -76,9 +76,13 @@ func (p *P) TokensIntersectingRange(startPos, endPos uint64) []Token {
 	return p.lastComputation.TokensIntersectingRange(startPos, endPos)
 }
 
+// Minimum consumed length for leaf computations on initial parse.
+const minInitialConsumedLen = 1024
+
 // ParseAll parses the entire document.
 func (p *P) ParseAll(tree *text.Tree) {
 	var pos uint64
+	var prevComputation *computation
 	state := State(EmptyState{})
 	leafComputations := make([]*computation, 0)
 	n := tree.NumChars()
@@ -86,10 +90,28 @@ func (p *P) ParseAll(tree *text.Tree) {
 		c := p.runParseFunc(tree, pos, state)
 		pos += c.ConsumedLength()
 		state = c.EndState()
-		leafComputations = append(leafComputations, c)
+
+		if prevComputation != nil && prevComputation.ConsumedLength() < minInitialConsumedLen {
+			// For the initial parse, combine small leaves. This saves memory by reducing both
+			// the number of leaves and parent nodes we need to allocate.
+			combineLeaves(prevComputation, c)
+		} else {
+			leafComputations = append(leafComputations, c)
+			prevComputation = c
+		}
 	}
 	c := concatLeafComputations(leafComputations)
 	p.lastComputation = c
+}
+
+func combineLeaves(prev, next *computation) {
+	for _, tok := range next.tokens {
+		tok.Offset += prev.consumedLength
+		prev.tokens = append(prev.tokens, tok)
+	}
+	prev.consumedLength += next.consumedLength
+	prev.readLength += next.readLength
+	prev.endState = next.endState
 }
 
 // ReparseAfterEdit parses a document after an edit (insertion/deletion),

@@ -21,30 +21,22 @@ type GraphemeClusterBreaker struct {
 func (gb *GraphemeClusterBreaker) ProcessRune(r rune) (canBreakBefore bool) {
 	prop := gbPropForRune(r)
 
-	defer func() {
-		gb.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && gb.lastPropsWereRIOdd)
-		gb.lastPropsWereRIOdd = bool(prop == gbPropRegional_Indicator && !gb.lastPropsWereRIOdd)
-		gb.afterExtendedPictographicPlusZWJ = bool(gb.inExtendedPictographic && prop == gbPropZWJ)
-		gb.inExtendedPictographic = bool(
-			prop == gbPropExtended_Pictographic ||
-				gb.inExtendedPictographic && prop == gbPropExtend)
-		gb.lastProp = prop
-	}()
-
 	// GB1: sot ÷ Any
 	// GB2: Any ÷ eot
 	// We don't need to implement these because we're only interested in non-empty segments.
 
 	// GB3: CR × LF
 	if prop == gbPropLF && gb.lastProp == gbPropCR {
-		return false
+		canBreakBefore = false
+		goto done
 	}
 
 	// GB4: (Control | CR | LF) ÷
 	if gb.lastProp == gbPropControl || gb.lastProp == gbPropCR || gb.lastProp == gbPropLF ||
 		// GB5: ÷ (Control | CR | LF)
 		prop == gbPropControl || prop == gbPropCR || prop == gbPropLF {
-		return true
+		canBreakBefore = true
+		goto done
 	}
 
 	// GB6: L × (L | V | LV | LVT)
@@ -70,11 +62,23 @@ func (gb *GraphemeClusterBreaker) ProcessRune(r rune) (canBreakBefore bool) {
 		// GB12: sot (RI RI)* RI × RI
 		// GB13: [^RI] (RI RI)* RI × RI
 		(gb.lastPropsWereRIOdd && prop == gbPropRegional_Indicator) {
-		return false
+		canBreakBefore = false
+		goto done
 	}
 
 	// GB999: Any ÷ Any
-	return true
+	canBreakBefore = true
+
+done:
+	gb.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && gb.lastPropsWereRIOdd)
+	gb.lastPropsWereRIOdd = bool(prop == gbPropRegional_Indicator && !gb.lastPropsWereRIOdd)
+	gb.afterExtendedPictographicPlusZWJ = bool(gb.inExtendedPictographic && prop == gbPropZWJ)
+	gb.inExtendedPictographic = bool(
+		prop == gbPropExtended_Pictographic ||
+			gb.inExtendedPictographic && prop == gbPropExtend)
+	gb.lastProp = prop
+
+	return canBreakBefore
 }
 
 // GraphemeClusterIter segments text into grapheme clusters.

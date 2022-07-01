@@ -14,13 +14,21 @@ import (
 	"text/template"
 )
 
-var dataPath string
-var outputPath string
+var (
+	prefix     string
+	dataPath   string
+	outputPath string
+)
 
 func main() {
+	flag.StringVar(&prefix, "prefix", "", "Prefix for test case names")
 	flag.StringVar(&dataPath, "dataPath", "", "Input data file with unicode test cases")
 	flag.StringVar(&outputPath, "outputPath", "", "Output path for generated go file")
 	flag.Parse()
+
+	if len(prefix) < 1 {
+		log.Fatalf("Must specify a prefix")
+	}
 
 	if len(dataPath) < 1 {
 		log.Fatalf("Must specify input data path")
@@ -37,7 +45,7 @@ func main() {
 		log.Fatalf("error loading test cases from data file at %s\n: %v", dataPath, err)
 	}
 
-	if err := writeOutputFile(outputPath, testCases); err != nil {
+	if err := writeOutputFile(prefix, outputPath, testCases); err != nil {
 		log.Fatalf("error generating output file %s: %v", outputPath, err)
 	}
 }
@@ -129,7 +137,7 @@ func parseLine(line string) (bool, TestCase, error) {
 	return true, tc, nil
 }
 
-func writeOutputFile(path string, testCases []TestCase) error {
+func writeOutputFile(prefix string, path string, testCases []TestCase) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -141,15 +149,15 @@ func writeOutputFile(path string, testCases []TestCase) error {
 
 	package segment
 
-	type graphemeBreakTestCase struct {
+	type {{ .Prefix }}TestCase struct {
 		inputString string
 		segments [][]rune
 		description string
 	}
 
-	func graphemeBreakTestCases() []graphemeBreakTestCase {
-		return []graphemeBreakTestCase{
-			{{ range . -}}
+	func {{ .Prefix }}TestCases() []{{ .Prefix }}TestCase {
+		return []{{ .Prefix }}TestCase{
+			{{ range .TestCases -}}
 			{
 				inputString: {{ printf "%#v" .InputString }},
 				segments: {{ printf "%#v" .Segments }},
@@ -164,5 +172,8 @@ func writeOutputFile(path string, testCases []TestCase) error {
 		return err
 	}
 
-	return tmpl.Execute(file, testCases)
+	return tmpl.Execute(file, map[string]any{
+		"Prefix":    prefix,
+		"TestCases": testCases,
+	})
 }

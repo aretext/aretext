@@ -14,7 +14,6 @@ type GraphemeClusterBreaker struct {
 	inExtendedPictographic           bool
 	afterExtendedPictographicPlusZWJ bool
 	lastPropsWereRIOdd               bool
-	lastPropsWereRIEven              bool
 }
 
 // ProcessRune determines whether the position before the rune is a valid breakpoint (starts a new grapheme cluster).
@@ -70,7 +69,6 @@ func (gb *GraphemeClusterBreaker) ProcessRune(r rune) (canBreakBefore bool) {
 	canBreakBefore = true
 
 done:
-	gb.lastPropsWereRIEven = bool(prop == gbPropRegional_Indicator && gb.lastPropsWereRIOdd)
 	gb.lastPropsWereRIOdd = bool(prop == gbPropRegional_Indicator && !gb.lastPropsWereRIOdd)
 	gb.afterExtendedPictographicPlusZWJ = bool(gb.inExtendedPictographic && prop == gbPropZWJ)
 	gb.inExtendedPictographic = bool(

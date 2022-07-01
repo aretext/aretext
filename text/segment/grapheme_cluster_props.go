@@ -5,5502 +5,7425 @@ package segment
 type gbProp byte
 
 const (
-	gbPropCR                    = gbProp(iota)
-	gbPropControl               = gbProp(iota)
-	gbPropExtend                = gbProp(iota)
-	gbPropExtended_Pictographic = gbProp(iota)
-	gbPropL                     = gbProp(iota)
-	gbPropLF                    = gbProp(iota)
-	gbPropLV                    = gbProp(iota)
-	gbPropLVT                   = gbProp(iota)
-	gbPropOther                 = gbProp(iota)
-	gbPropPrepend               = gbProp(iota)
-	gbPropRegional_Indicator    = gbProp(iota)
-	gbPropSpacingMark           = gbProp(iota)
-	gbPropT                     = gbProp(iota)
-	gbPropV                     = gbProp(iota)
-	gbPropZWJ                   = gbProp(iota)
+	gbPropNone = gbProp(iota)
+	gbPropCR
+	gbPropControl
+	gbPropExtend
+	gbPropExtended_Pictographic
+	gbPropL
+	gbPropLF
+	gbPropLV
+	gbPropLVT
+	gbPropPrepend
+	gbPropRegional_Indicator
+	gbPropSpacingMark
+	gbPropT
+	gbPropV
+	gbPropZWJ
 )
 
+var gbAsciiLookupTbl = [256]gbProp{
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropLF,
+	gbPropControl,
+	gbPropControl,
+	gbPropCR,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropControl,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropExtended_Pictographic,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropControl,
+	gbPropExtended_Pictographic,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+	gbPropNone,
+}
+
+var gbRanges = [1433]struct {
+	Prop  gbProp
+	Start rune
+	End   rune
+}{
+	{
+		Prop:  gbPropExtend,
+		Start: 768,
+		End:   879,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1155,
+		End:   1161,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1425,
+		End:   1469,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1471,
+		End:   1471,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1473,
+		End:   1474,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1476,
+		End:   1477,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1479,
+		End:   1479,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 1536,
+		End:   1541,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1552,
+		End:   1562,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 1564,
+		End:   1564,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1611,
+		End:   1631,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1648,
+		End:   1648,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1750,
+		End:   1756,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 1757,
+		End:   1757,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1759,
+		End:   1764,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1767,
+		End:   1768,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1770,
+		End:   1773,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 1807,
+		End:   1807,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1809,
+		End:   1809,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1840,
+		End:   1866,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 1958,
+		End:   1968,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2027,
+		End:   2035,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2045,
+		End:   2045,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2070,
+		End:   2073,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2075,
+		End:   2083,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2085,
+		End:   2087,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2089,
+		End:   2093,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2137,
+		End:   2139,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 2192,
+		End:   2193,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2200,
+		End:   2207,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2250,
+		End:   2273,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 2274,
+		End:   2274,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2275,
+		End:   2306,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2307,
+		End:   2307,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2362,
+		End:   2362,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2363,
+		End:   2363,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2364,
+		End:   2364,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2366,
+		End:   2368,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2369,
+		End:   2376,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2377,
+		End:   2380,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2381,
+		End:   2381,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2382,
+		End:   2383,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2385,
+		End:   2391,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2402,
+		End:   2403,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2433,
+		End:   2433,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2434,
+		End:   2435,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2492,
+		End:   2492,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2494,
+		End:   2494,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2495,
+		End:   2496,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2497,
+		End:   2500,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2503,
+		End:   2504,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2507,
+		End:   2508,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2509,
+		End:   2509,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2519,
+		End:   2519,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2530,
+		End:   2531,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2558,
+		End:   2558,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2561,
+		End:   2562,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2563,
+		End:   2563,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2620,
+		End:   2620,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2622,
+		End:   2624,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2625,
+		End:   2626,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2631,
+		End:   2632,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2635,
+		End:   2637,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2641,
+		End:   2641,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2672,
+		End:   2673,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2677,
+		End:   2677,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2689,
+		End:   2690,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2691,
+		End:   2691,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2748,
+		End:   2748,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2750,
+		End:   2752,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2753,
+		End:   2757,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2759,
+		End:   2760,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2761,
+		End:   2761,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2763,
+		End:   2764,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2765,
+		End:   2765,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2786,
+		End:   2787,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2810,
+		End:   2815,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2817,
+		End:   2817,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2818,
+		End:   2819,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2876,
+		End:   2876,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2878,
+		End:   2879,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2880,
+		End:   2880,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2881,
+		End:   2884,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2887,
+		End:   2888,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 2891,
+		End:   2892,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2893,
+		End:   2893,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2901,
+		End:   2903,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2914,
+		End:   2915,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 2946,
+		End:   2946,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3006,
+		End:   3006,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3007,
+		End:   3007,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3008,
+		End:   3008,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3009,
+		End:   3010,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3014,
+		End:   3016,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3018,
+		End:   3020,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3021,
+		End:   3021,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3031,
+		End:   3031,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3072,
+		End:   3072,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3073,
+		End:   3075,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3076,
+		End:   3076,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3132,
+		End:   3132,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3134,
+		End:   3136,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3137,
+		End:   3140,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3142,
+		End:   3144,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3146,
+		End:   3149,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3157,
+		End:   3158,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3170,
+		End:   3171,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3201,
+		End:   3201,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3202,
+		End:   3203,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3260,
+		End:   3260,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3262,
+		End:   3262,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3263,
+		End:   3263,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3264,
+		End:   3265,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3266,
+		End:   3266,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3267,
+		End:   3268,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3270,
+		End:   3270,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3271,
+		End:   3272,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3274,
+		End:   3275,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3276,
+		End:   3277,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3285,
+		End:   3286,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3298,
+		End:   3299,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3328,
+		End:   3329,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3330,
+		End:   3331,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3387,
+		End:   3388,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3390,
+		End:   3390,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3391,
+		End:   3392,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3393,
+		End:   3396,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3398,
+		End:   3400,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3402,
+		End:   3404,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3405,
+		End:   3405,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 3406,
+		End:   3406,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3415,
+		End:   3415,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3426,
+		End:   3427,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3457,
+		End:   3457,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3458,
+		End:   3459,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3530,
+		End:   3530,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3535,
+		End:   3535,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3536,
+		End:   3537,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3538,
+		End:   3540,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3542,
+		End:   3542,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3544,
+		End:   3550,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3551,
+		End:   3551,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3570,
+		End:   3571,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3633,
+		End:   3633,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3635,
+		End:   3635,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3636,
+		End:   3642,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3655,
+		End:   3662,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3761,
+		End:   3761,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3763,
+		End:   3763,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3764,
+		End:   3772,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3784,
+		End:   3789,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3864,
+		End:   3865,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3893,
+		End:   3893,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3895,
+		End:   3895,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3897,
+		End:   3897,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3902,
+		End:   3903,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3953,
+		End:   3966,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 3967,
+		End:   3967,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3968,
+		End:   3972,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3974,
+		End:   3975,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3981,
+		End:   3991,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 3993,
+		End:   4028,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4038,
+		End:   4038,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4141,
+		End:   4144,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 4145,
+		End:   4145,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4146,
+		End:   4151,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4153,
+		End:   4154,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 4155,
+		End:   4156,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4157,
+		End:   4158,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 4182,
+		End:   4183,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4184,
+		End:   4185,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4190,
+		End:   4192,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4209,
+		End:   4212,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4226,
+		End:   4226,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 4228,
+		End:   4228,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4229,
+		End:   4230,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4237,
+		End:   4237,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4253,
+		End:   4253,
+	},
+	{
+		Prop:  gbPropL,
+		Start: 4352,
+		End:   4447,
+	},
+	{
+		Prop:  gbPropV,
+		Start: 4448,
+		End:   4519,
+	},
+	{
+		Prop:  gbPropT,
+		Start: 4520,
+		End:   4607,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 4957,
+		End:   4959,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 5906,
+		End:   5908,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 5909,
+		End:   5909,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 5938,
+		End:   5939,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 5940,
+		End:   5940,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 5970,
+		End:   5971,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6002,
+		End:   6003,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6068,
+		End:   6069,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6070,
+		End:   6070,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6071,
+		End:   6077,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6078,
+		End:   6085,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6086,
+		End:   6086,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6087,
+		End:   6088,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6089,
+		End:   6099,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6109,
+		End:   6109,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6155,
+		End:   6157,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 6158,
+		End:   6158,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6159,
+		End:   6159,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6277,
+		End:   6278,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6313,
+		End:   6313,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6432,
+		End:   6434,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6435,
+		End:   6438,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6439,
+		End:   6440,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6441,
+		End:   6443,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6448,
+		End:   6449,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6450,
+		End:   6450,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6451,
+		End:   6456,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6457,
+		End:   6459,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6679,
+		End:   6680,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6681,
+		End:   6682,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6683,
+		End:   6683,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6741,
+		End:   6741,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6742,
+		End:   6742,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6743,
+		End:   6743,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6744,
+		End:   6750,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6752,
+		End:   6752,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6754,
+		End:   6754,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6757,
+		End:   6764,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6765,
+		End:   6770,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6771,
+		End:   6780,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6783,
+		End:   6783,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6832,
+		End:   6862,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6912,
+		End:   6915,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6916,
+		End:   6916,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6964,
+		End:   6970,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6971,
+		End:   6971,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6972,
+		End:   6972,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6973,
+		End:   6977,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6978,
+		End:   6978,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 6979,
+		End:   6980,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7019,
+		End:   7027,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7040,
+		End:   7041,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7042,
+		End:   7042,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7073,
+		End:   7073,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7074,
+		End:   7077,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7078,
+		End:   7079,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7080,
+		End:   7081,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7082,
+		End:   7082,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7083,
+		End:   7085,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7142,
+		End:   7142,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7143,
+		End:   7143,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7144,
+		End:   7145,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7146,
+		End:   7148,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7149,
+		End:   7149,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7150,
+		End:   7150,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7151,
+		End:   7153,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7154,
+		End:   7155,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7204,
+		End:   7211,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7212,
+		End:   7219,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7220,
+		End:   7221,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7222,
+		End:   7223,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7376,
+		End:   7378,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7380,
+		End:   7392,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7393,
+		End:   7393,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7394,
+		End:   7400,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7405,
+		End:   7405,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7412,
+		End:   7412,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 7415,
+		End:   7415,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7416,
+		End:   7417,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 7616,
+		End:   7679,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 8203,
+		End:   8203,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 8204,
+		End:   8204,
+	},
+	{
+		Prop:  gbPropZWJ,
+		Start: 8205,
+		End:   8205,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 8206,
+		End:   8207,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 8232,
+		End:   8238,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8252,
+		End:   8252,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8265,
+		End:   8265,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 8288,
+		End:   8303,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 8400,
+		End:   8432,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8482,
+		End:   8482,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8505,
+		End:   8505,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8596,
+		End:   8601,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8617,
+		End:   8618,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 8986,
+		End:   8987,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9000,
+		End:   9000,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9096,
+		End:   9096,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9167,
+		End:   9167,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9193,
+		End:   9203,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9208,
+		End:   9210,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9410,
+		End:   9410,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9642,
+		End:   9643,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9654,
+		End:   9654,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9664,
+		End:   9664,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9723,
+		End:   9726,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9728,
+		End:   9733,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9735,
+		End:   9746,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9748,
+		End:   9861,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9872,
+		End:   9989,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9992,
+		End:   10002,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10004,
+		End:   10004,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10006,
+		End:   10006,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10013,
+		End:   10013,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10017,
+		End:   10017,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10024,
+		End:   10024,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10035,
+		End:   10036,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10052,
+		End:   10052,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10055,
+		End:   10055,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10060,
+		End:   10060,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10062,
+		End:   10062,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10067,
+		End:   10069,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10071,
+		End:   10071,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10083,
+		End:   10087,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10133,
+		End:   10135,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10145,
+		End:   10145,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10160,
+		End:   10160,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10175,
+		End:   10175,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10548,
+		End:   10549,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 11013,
+		End:   11015,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 11035,
+		End:   11036,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 11088,
+		End:   11088,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 11093,
+		End:   11093,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 11503,
+		End:   11505,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 11647,
+		End:   11647,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 11744,
+		End:   11775,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 12330,
+		End:   12335,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 12336,
+		End:   12336,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 12349,
+		End:   12349,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 12441,
+		End:   12442,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 12951,
+		End:   12951,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 12953,
+		End:   12953,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 42607,
+		End:   42610,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 42612,
+		End:   42621,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 42654,
+		End:   42655,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 42736,
+		End:   42737,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43010,
+		End:   43010,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43014,
+		End:   43014,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43019,
+		End:   43019,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43043,
+		End:   43044,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43045,
+		End:   43046,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43047,
+		End:   43047,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43052,
+		End:   43052,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43136,
+		End:   43137,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43188,
+		End:   43203,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43204,
+		End:   43205,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43232,
+		End:   43249,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43263,
+		End:   43263,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43302,
+		End:   43309,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43335,
+		End:   43345,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43346,
+		End:   43347,
+	},
+	{
+		Prop:  gbPropL,
+		Start: 43360,
+		End:   43388,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43392,
+		End:   43394,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43395,
+		End:   43395,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43443,
+		End:   43443,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43444,
+		End:   43445,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43446,
+		End:   43449,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43450,
+		End:   43451,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43452,
+		End:   43453,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43454,
+		End:   43456,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43493,
+		End:   43493,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43561,
+		End:   43566,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43567,
+		End:   43568,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43569,
+		End:   43570,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43571,
+		End:   43572,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43573,
+		End:   43574,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43587,
+		End:   43587,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43596,
+		End:   43596,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43597,
+		End:   43597,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43644,
+		End:   43644,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43696,
+		End:   43696,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43698,
+		End:   43700,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43703,
+		End:   43704,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43710,
+		End:   43711,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43713,
+		End:   43713,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43755,
+		End:   43755,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43756,
+		End:   43757,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43758,
+		End:   43759,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 43765,
+		End:   43765,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43766,
+		End:   43766,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 44003,
+		End:   44004,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 44005,
+		End:   44005,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 44006,
+		End:   44007,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 44008,
+		End:   44008,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 44009,
+		End:   44010,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 44012,
+		End:   44012,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 44013,
+		End:   44013,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44032,
+		End:   44032,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44033,
+		End:   44059,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44060,
+		End:   44060,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44061,
+		End:   44087,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44088,
+		End:   44088,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44089,
+		End:   44115,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44116,
+		End:   44116,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44117,
+		End:   44143,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44144,
+		End:   44144,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44145,
+		End:   44171,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44172,
+		End:   44172,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44173,
+		End:   44199,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44200,
+		End:   44200,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44201,
+		End:   44227,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44228,
+		End:   44228,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44229,
+		End:   44255,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44256,
+		End:   44256,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44257,
+		End:   44283,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44284,
+		End:   44284,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44285,
+		End:   44311,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44312,
+		End:   44312,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44313,
+		End:   44339,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44340,
+		End:   44340,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44341,
+		End:   44367,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44368,
+		End:   44368,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44369,
+		End:   44395,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44396,
+		End:   44396,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44397,
+		End:   44423,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44424,
+		End:   44424,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44425,
+		End:   44451,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44452,
+		End:   44452,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44453,
+		End:   44479,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44480,
+		End:   44480,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44481,
+		End:   44507,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44508,
+		End:   44508,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44509,
+		End:   44535,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44536,
+		End:   44536,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44537,
+		End:   44563,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44564,
+		End:   44564,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44565,
+		End:   44591,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44592,
+		End:   44592,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44593,
+		End:   44619,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44620,
+		End:   44620,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44621,
+		End:   44647,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44648,
+		End:   44648,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44649,
+		End:   44675,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44676,
+		End:   44676,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44677,
+		End:   44703,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44704,
+		End:   44704,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44705,
+		End:   44731,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44732,
+		End:   44732,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44733,
+		End:   44759,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44760,
+		End:   44760,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44761,
+		End:   44787,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44788,
+		End:   44788,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44789,
+		End:   44815,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44816,
+		End:   44816,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44817,
+		End:   44843,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44844,
+		End:   44844,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44845,
+		End:   44871,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44872,
+		End:   44872,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44873,
+		End:   44899,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44900,
+		End:   44900,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44901,
+		End:   44927,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44928,
+		End:   44928,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44929,
+		End:   44955,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44956,
+		End:   44956,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44957,
+		End:   44983,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 44984,
+		End:   44984,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 44985,
+		End:   45011,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45012,
+		End:   45012,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45013,
+		End:   45039,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45040,
+		End:   45040,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45041,
+		End:   45067,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45068,
+		End:   45068,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45069,
+		End:   45095,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45096,
+		End:   45096,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45097,
+		End:   45123,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45124,
+		End:   45124,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45125,
+		End:   45151,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45152,
+		End:   45152,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45153,
+		End:   45179,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45180,
+		End:   45180,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45181,
+		End:   45207,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45208,
+		End:   45208,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45209,
+		End:   45235,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45236,
+		End:   45236,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45237,
+		End:   45263,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45264,
+		End:   45264,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45265,
+		End:   45291,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45292,
+		End:   45292,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45293,
+		End:   45319,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45320,
+		End:   45320,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45321,
+		End:   45347,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45348,
+		End:   45348,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45349,
+		End:   45375,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45376,
+		End:   45376,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45377,
+		End:   45403,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45404,
+		End:   45404,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45405,
+		End:   45431,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45432,
+		End:   45432,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45433,
+		End:   45459,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45460,
+		End:   45460,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45461,
+		End:   45487,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45488,
+		End:   45488,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45489,
+		End:   45515,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45516,
+		End:   45516,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45517,
+		End:   45543,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45544,
+		End:   45544,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45545,
+		End:   45571,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45572,
+		End:   45572,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45573,
+		End:   45599,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45600,
+		End:   45600,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45601,
+		End:   45627,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45628,
+		End:   45628,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45629,
+		End:   45655,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45656,
+		End:   45656,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45657,
+		End:   45683,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45684,
+		End:   45684,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45685,
+		End:   45711,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45712,
+		End:   45712,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45713,
+		End:   45739,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45740,
+		End:   45740,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45741,
+		End:   45767,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45768,
+		End:   45768,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45769,
+		End:   45795,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45796,
+		End:   45796,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45797,
+		End:   45823,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45824,
+		End:   45824,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45825,
+		End:   45851,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45852,
+		End:   45852,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45853,
+		End:   45879,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45880,
+		End:   45880,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45881,
+		End:   45907,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45908,
+		End:   45908,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45909,
+		End:   45935,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45936,
+		End:   45936,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45937,
+		End:   45963,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45964,
+		End:   45964,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45965,
+		End:   45991,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 45992,
+		End:   45992,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 45993,
+		End:   46019,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46020,
+		End:   46020,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46021,
+		End:   46047,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46048,
+		End:   46048,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46049,
+		End:   46075,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46076,
+		End:   46076,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46077,
+		End:   46103,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46104,
+		End:   46104,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46105,
+		End:   46131,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46132,
+		End:   46132,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46133,
+		End:   46159,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46160,
+		End:   46160,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46161,
+		End:   46187,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46188,
+		End:   46188,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46189,
+		End:   46215,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46216,
+		End:   46216,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46217,
+		End:   46243,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46244,
+		End:   46244,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46245,
+		End:   46271,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46272,
+		End:   46272,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46273,
+		End:   46299,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46300,
+		End:   46300,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46301,
+		End:   46327,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46328,
+		End:   46328,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46329,
+		End:   46355,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46356,
+		End:   46356,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46357,
+		End:   46383,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46384,
+		End:   46384,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46385,
+		End:   46411,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46412,
+		End:   46412,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46413,
+		End:   46439,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46440,
+		End:   46440,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46441,
+		End:   46467,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46468,
+		End:   46468,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46469,
+		End:   46495,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46496,
+		End:   46496,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46497,
+		End:   46523,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46524,
+		End:   46524,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46525,
+		End:   46551,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46552,
+		End:   46552,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46553,
+		End:   46579,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46580,
+		End:   46580,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46581,
+		End:   46607,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46608,
+		End:   46608,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46609,
+		End:   46635,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46636,
+		End:   46636,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46637,
+		End:   46663,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46664,
+		End:   46664,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46665,
+		End:   46691,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46692,
+		End:   46692,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46693,
+		End:   46719,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46720,
+		End:   46720,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46721,
+		End:   46747,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46748,
+		End:   46748,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46749,
+		End:   46775,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46776,
+		End:   46776,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46777,
+		End:   46803,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46804,
+		End:   46804,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46805,
+		End:   46831,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46832,
+		End:   46832,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46833,
+		End:   46859,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46860,
+		End:   46860,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46861,
+		End:   46887,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46888,
+		End:   46888,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46889,
+		End:   46915,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46916,
+		End:   46916,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46917,
+		End:   46943,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46944,
+		End:   46944,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46945,
+		End:   46971,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 46972,
+		End:   46972,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 46973,
+		End:   46999,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47000,
+		End:   47000,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47001,
+		End:   47027,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47028,
+		End:   47028,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47029,
+		End:   47055,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47056,
+		End:   47056,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47057,
+		End:   47083,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47084,
+		End:   47084,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47085,
+		End:   47111,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47112,
+		End:   47112,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47113,
+		End:   47139,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47140,
+		End:   47140,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47141,
+		End:   47167,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47168,
+		End:   47168,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47169,
+		End:   47195,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47196,
+		End:   47196,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47197,
+		End:   47223,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47224,
+		End:   47224,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47225,
+		End:   47251,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47252,
+		End:   47252,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47253,
+		End:   47279,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47280,
+		End:   47280,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47281,
+		End:   47307,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47308,
+		End:   47308,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47309,
+		End:   47335,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47336,
+		End:   47336,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47337,
+		End:   47363,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47364,
+		End:   47364,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47365,
+		End:   47391,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47392,
+		End:   47392,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47393,
+		End:   47419,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47420,
+		End:   47420,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47421,
+		End:   47447,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47448,
+		End:   47448,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47449,
+		End:   47475,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47476,
+		End:   47476,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47477,
+		End:   47503,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47504,
+		End:   47504,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47505,
+		End:   47531,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47532,
+		End:   47532,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47533,
+		End:   47559,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47560,
+		End:   47560,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47561,
+		End:   47587,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47588,
+		End:   47588,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47589,
+		End:   47615,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47616,
+		End:   47616,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47617,
+		End:   47643,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47644,
+		End:   47644,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47645,
+		End:   47671,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47672,
+		End:   47672,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47673,
+		End:   47699,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47700,
+		End:   47700,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47701,
+		End:   47727,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47728,
+		End:   47728,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47729,
+		End:   47755,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47756,
+		End:   47756,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47757,
+		End:   47783,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47784,
+		End:   47784,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47785,
+		End:   47811,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47812,
+		End:   47812,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47813,
+		End:   47839,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47840,
+		End:   47840,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47841,
+		End:   47867,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47868,
+		End:   47868,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47869,
+		End:   47895,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47896,
+		End:   47896,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47897,
+		End:   47923,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47924,
+		End:   47924,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47925,
+		End:   47951,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47952,
+		End:   47952,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47953,
+		End:   47979,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 47980,
+		End:   47980,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 47981,
+		End:   48007,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48008,
+		End:   48008,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48009,
+		End:   48035,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48036,
+		End:   48036,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48037,
+		End:   48063,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48064,
+		End:   48064,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48065,
+		End:   48091,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48092,
+		End:   48092,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48093,
+		End:   48119,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48120,
+		End:   48120,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48121,
+		End:   48147,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48148,
+		End:   48148,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48149,
+		End:   48175,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48176,
+		End:   48176,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48177,
+		End:   48203,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48204,
+		End:   48204,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48205,
+		End:   48231,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48232,
+		End:   48232,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48233,
+		End:   48259,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48260,
+		End:   48260,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48261,
+		End:   48287,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48288,
+		End:   48288,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48289,
+		End:   48315,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48316,
+		End:   48316,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48317,
+		End:   48343,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48344,
+		End:   48344,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48345,
+		End:   48371,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48372,
+		End:   48372,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48373,
+		End:   48399,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48400,
+		End:   48400,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48401,
+		End:   48427,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48428,
+		End:   48428,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48429,
+		End:   48455,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48456,
+		End:   48456,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48457,
+		End:   48483,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48484,
+		End:   48484,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48485,
+		End:   48511,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48512,
+		End:   48512,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48513,
+		End:   48539,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48540,
+		End:   48540,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48541,
+		End:   48567,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48568,
+		End:   48568,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48569,
+		End:   48595,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48596,
+		End:   48596,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48597,
+		End:   48623,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48624,
+		End:   48624,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48625,
+		End:   48651,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48652,
+		End:   48652,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48653,
+		End:   48679,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48680,
+		End:   48680,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48681,
+		End:   48707,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48708,
+		End:   48708,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48709,
+		End:   48735,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48736,
+		End:   48736,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48737,
+		End:   48763,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48764,
+		End:   48764,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48765,
+		End:   48791,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48792,
+		End:   48792,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48793,
+		End:   48819,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48820,
+		End:   48820,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48821,
+		End:   48847,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48848,
+		End:   48848,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48849,
+		End:   48875,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48876,
+		End:   48876,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48877,
+		End:   48903,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48904,
+		End:   48904,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48905,
+		End:   48931,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48932,
+		End:   48932,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48933,
+		End:   48959,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48960,
+		End:   48960,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48961,
+		End:   48987,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 48988,
+		End:   48988,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 48989,
+		End:   49015,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49016,
+		End:   49016,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49017,
+		End:   49043,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49044,
+		End:   49044,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49045,
+		End:   49071,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49072,
+		End:   49072,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49073,
+		End:   49099,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49100,
+		End:   49100,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49101,
+		End:   49127,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49128,
+		End:   49128,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49129,
+		End:   49155,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49156,
+		End:   49156,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49157,
+		End:   49183,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49184,
+		End:   49184,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49185,
+		End:   49211,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49212,
+		End:   49212,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49213,
+		End:   49239,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49240,
+		End:   49240,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49241,
+		End:   49267,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49268,
+		End:   49268,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49269,
+		End:   49295,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49296,
+		End:   49296,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49297,
+		End:   49323,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49324,
+		End:   49324,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49325,
+		End:   49351,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49352,
+		End:   49352,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49353,
+		End:   49379,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49380,
+		End:   49380,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49381,
+		End:   49407,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49408,
+		End:   49408,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49409,
+		End:   49435,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49436,
+		End:   49436,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49437,
+		End:   49463,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49464,
+		End:   49464,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49465,
+		End:   49491,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49492,
+		End:   49492,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49493,
+		End:   49519,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49520,
+		End:   49520,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49521,
+		End:   49547,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49548,
+		End:   49548,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49549,
+		End:   49575,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49576,
+		End:   49576,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49577,
+		End:   49603,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49604,
+		End:   49604,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49605,
+		End:   49631,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49632,
+		End:   49632,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49633,
+		End:   49659,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49660,
+		End:   49660,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49661,
+		End:   49687,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49688,
+		End:   49688,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49689,
+		End:   49715,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49716,
+		End:   49716,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49717,
+		End:   49743,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49744,
+		End:   49744,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49745,
+		End:   49771,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49772,
+		End:   49772,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49773,
+		End:   49799,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49800,
+		End:   49800,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49801,
+		End:   49827,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49828,
+		End:   49828,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49829,
+		End:   49855,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49856,
+		End:   49856,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49857,
+		End:   49883,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49884,
+		End:   49884,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49885,
+		End:   49911,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49912,
+		End:   49912,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49913,
+		End:   49939,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49940,
+		End:   49940,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49941,
+		End:   49967,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49968,
+		End:   49968,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49969,
+		End:   49995,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 49996,
+		End:   49996,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 49997,
+		End:   50023,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50024,
+		End:   50024,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50025,
+		End:   50051,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50052,
+		End:   50052,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50053,
+		End:   50079,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50080,
+		End:   50080,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50081,
+		End:   50107,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50108,
+		End:   50108,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50109,
+		End:   50135,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50136,
+		End:   50136,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50137,
+		End:   50163,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50164,
+		End:   50164,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50165,
+		End:   50191,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50192,
+		End:   50192,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50193,
+		End:   50219,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50220,
+		End:   50220,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50221,
+		End:   50247,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50248,
+		End:   50248,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50249,
+		End:   50275,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50276,
+		End:   50276,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50277,
+		End:   50303,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50304,
+		End:   50304,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50305,
+		End:   50331,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50332,
+		End:   50332,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50333,
+		End:   50359,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50360,
+		End:   50360,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50361,
+		End:   50387,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50388,
+		End:   50388,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50389,
+		End:   50415,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50416,
+		End:   50416,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50417,
+		End:   50443,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50444,
+		End:   50444,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50445,
+		End:   50471,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50472,
+		End:   50472,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50473,
+		End:   50499,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50500,
+		End:   50500,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50501,
+		End:   50527,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50528,
+		End:   50528,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50529,
+		End:   50555,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50556,
+		End:   50556,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50557,
+		End:   50583,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50584,
+		End:   50584,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50585,
+		End:   50611,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50612,
+		End:   50612,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50613,
+		End:   50639,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50640,
+		End:   50640,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50641,
+		End:   50667,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50668,
+		End:   50668,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50669,
+		End:   50695,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50696,
+		End:   50696,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50697,
+		End:   50723,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50724,
+		End:   50724,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50725,
+		End:   50751,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50752,
+		End:   50752,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50753,
+		End:   50779,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50780,
+		End:   50780,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50781,
+		End:   50807,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50808,
+		End:   50808,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50809,
+		End:   50835,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50836,
+		End:   50836,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50837,
+		End:   50863,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50864,
+		End:   50864,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50865,
+		End:   50891,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50892,
+		End:   50892,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50893,
+		End:   50919,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50920,
+		End:   50920,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50921,
+		End:   50947,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50948,
+		End:   50948,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50949,
+		End:   50975,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 50976,
+		End:   50976,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 50977,
+		End:   51003,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51004,
+		End:   51004,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51005,
+		End:   51031,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51032,
+		End:   51032,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51033,
+		End:   51059,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51060,
+		End:   51060,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51061,
+		End:   51087,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51088,
+		End:   51088,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51089,
+		End:   51115,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51116,
+		End:   51116,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51117,
+		End:   51143,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51144,
+		End:   51144,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51145,
+		End:   51171,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51172,
+		End:   51172,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51173,
+		End:   51199,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51200,
+		End:   51200,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51201,
+		End:   51227,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51228,
+		End:   51228,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51229,
+		End:   51255,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51256,
+		End:   51256,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51257,
+		End:   51283,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51284,
+		End:   51284,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51285,
+		End:   51311,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51312,
+		End:   51312,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51313,
+		End:   51339,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51340,
+		End:   51340,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51341,
+		End:   51367,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51368,
+		End:   51368,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51369,
+		End:   51395,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51396,
+		End:   51396,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51397,
+		End:   51423,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51424,
+		End:   51424,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51425,
+		End:   51451,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51452,
+		End:   51452,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51453,
+		End:   51479,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51480,
+		End:   51480,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51481,
+		End:   51507,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51508,
+		End:   51508,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51509,
+		End:   51535,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51536,
+		End:   51536,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51537,
+		End:   51563,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51564,
+		End:   51564,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51565,
+		End:   51591,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51592,
+		End:   51592,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51593,
+		End:   51619,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51620,
+		End:   51620,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51621,
+		End:   51647,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51648,
+		End:   51648,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51649,
+		End:   51675,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51676,
+		End:   51676,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51677,
+		End:   51703,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51704,
+		End:   51704,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51705,
+		End:   51731,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51732,
+		End:   51732,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51733,
+		End:   51759,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51760,
+		End:   51760,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51761,
+		End:   51787,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51788,
+		End:   51788,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51789,
+		End:   51815,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51816,
+		End:   51816,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51817,
+		End:   51843,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51844,
+		End:   51844,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51845,
+		End:   51871,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51872,
+		End:   51872,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51873,
+		End:   51899,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51900,
+		End:   51900,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51901,
+		End:   51927,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51928,
+		End:   51928,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51929,
+		End:   51955,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51956,
+		End:   51956,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51957,
+		End:   51983,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 51984,
+		End:   51984,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 51985,
+		End:   52011,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52012,
+		End:   52012,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52013,
+		End:   52039,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52040,
+		End:   52040,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52041,
+		End:   52067,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52068,
+		End:   52068,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52069,
+		End:   52095,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52096,
+		End:   52096,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52097,
+		End:   52123,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52124,
+		End:   52124,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52125,
+		End:   52151,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52152,
+		End:   52152,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52153,
+		End:   52179,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52180,
+		End:   52180,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52181,
+		End:   52207,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52208,
+		End:   52208,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52209,
+		End:   52235,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52236,
+		End:   52236,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52237,
+		End:   52263,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52264,
+		End:   52264,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52265,
+		End:   52291,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52292,
+		End:   52292,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52293,
+		End:   52319,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52320,
+		End:   52320,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52321,
+		End:   52347,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52348,
+		End:   52348,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52349,
+		End:   52375,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52376,
+		End:   52376,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52377,
+		End:   52403,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52404,
+		End:   52404,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52405,
+		End:   52431,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52432,
+		End:   52432,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52433,
+		End:   52459,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52460,
+		End:   52460,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52461,
+		End:   52487,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52488,
+		End:   52488,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52489,
+		End:   52515,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52516,
+		End:   52516,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52517,
+		End:   52543,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52544,
+		End:   52544,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52545,
+		End:   52571,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52572,
+		End:   52572,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52573,
+		End:   52599,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52600,
+		End:   52600,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52601,
+		End:   52627,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52628,
+		End:   52628,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52629,
+		End:   52655,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52656,
+		End:   52656,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52657,
+		End:   52683,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52684,
+		End:   52684,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52685,
+		End:   52711,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52712,
+		End:   52712,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52713,
+		End:   52739,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52740,
+		End:   52740,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52741,
+		End:   52767,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52768,
+		End:   52768,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52769,
+		End:   52795,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52796,
+		End:   52796,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52797,
+		End:   52823,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52824,
+		End:   52824,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52825,
+		End:   52851,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52852,
+		End:   52852,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52853,
+		End:   52879,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52880,
+		End:   52880,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52881,
+		End:   52907,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52908,
+		End:   52908,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52909,
+		End:   52935,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52936,
+		End:   52936,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52937,
+		End:   52963,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52964,
+		End:   52964,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52965,
+		End:   52991,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 52992,
+		End:   52992,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 52993,
+		End:   53019,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53020,
+		End:   53020,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53021,
+		End:   53047,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53048,
+		End:   53048,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53049,
+		End:   53075,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53076,
+		End:   53076,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53077,
+		End:   53103,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53104,
+		End:   53104,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53105,
+		End:   53131,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53132,
+		End:   53132,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53133,
+		End:   53159,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53160,
+		End:   53160,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53161,
+		End:   53187,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53188,
+		End:   53188,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53189,
+		End:   53215,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53216,
+		End:   53216,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53217,
+		End:   53243,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53244,
+		End:   53244,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53245,
+		End:   53271,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53272,
+		End:   53272,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53273,
+		End:   53299,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53300,
+		End:   53300,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53301,
+		End:   53327,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53328,
+		End:   53328,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53329,
+		End:   53355,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53356,
+		End:   53356,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53357,
+		End:   53383,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53384,
+		End:   53384,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53385,
+		End:   53411,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53412,
+		End:   53412,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53413,
+		End:   53439,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53440,
+		End:   53440,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53441,
+		End:   53467,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53468,
+		End:   53468,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53469,
+		End:   53495,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53496,
+		End:   53496,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53497,
+		End:   53523,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53524,
+		End:   53524,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53525,
+		End:   53551,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53552,
+		End:   53552,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53553,
+		End:   53579,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53580,
+		End:   53580,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53581,
+		End:   53607,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53608,
+		End:   53608,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53609,
+		End:   53635,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53636,
+		End:   53636,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53637,
+		End:   53663,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53664,
+		End:   53664,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53665,
+		End:   53691,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53692,
+		End:   53692,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53693,
+		End:   53719,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53720,
+		End:   53720,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53721,
+		End:   53747,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53748,
+		End:   53748,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53749,
+		End:   53775,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53776,
+		End:   53776,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53777,
+		End:   53803,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53804,
+		End:   53804,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53805,
+		End:   53831,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53832,
+		End:   53832,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53833,
+		End:   53859,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53860,
+		End:   53860,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53861,
+		End:   53887,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53888,
+		End:   53888,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53889,
+		End:   53915,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53916,
+		End:   53916,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53917,
+		End:   53943,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53944,
+		End:   53944,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53945,
+		End:   53971,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 53972,
+		End:   53972,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 53973,
+		End:   53999,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54000,
+		End:   54000,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54001,
+		End:   54027,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54028,
+		End:   54028,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54029,
+		End:   54055,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54056,
+		End:   54056,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54057,
+		End:   54083,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54084,
+		End:   54084,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54085,
+		End:   54111,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54112,
+		End:   54112,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54113,
+		End:   54139,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54140,
+		End:   54140,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54141,
+		End:   54167,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54168,
+		End:   54168,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54169,
+		End:   54195,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54196,
+		End:   54196,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54197,
+		End:   54223,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54224,
+		End:   54224,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54225,
+		End:   54251,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54252,
+		End:   54252,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54253,
+		End:   54279,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54280,
+		End:   54280,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54281,
+		End:   54307,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54308,
+		End:   54308,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54309,
+		End:   54335,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54336,
+		End:   54336,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54337,
+		End:   54363,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54364,
+		End:   54364,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54365,
+		End:   54391,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54392,
+		End:   54392,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54393,
+		End:   54419,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54420,
+		End:   54420,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54421,
+		End:   54447,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54448,
+		End:   54448,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54449,
+		End:   54475,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54476,
+		End:   54476,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54477,
+		End:   54503,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54504,
+		End:   54504,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54505,
+		End:   54531,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54532,
+		End:   54532,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54533,
+		End:   54559,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54560,
+		End:   54560,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54561,
+		End:   54587,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54588,
+		End:   54588,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54589,
+		End:   54615,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54616,
+		End:   54616,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54617,
+		End:   54643,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54644,
+		End:   54644,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54645,
+		End:   54671,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54672,
+		End:   54672,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54673,
+		End:   54699,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54700,
+		End:   54700,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54701,
+		End:   54727,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54728,
+		End:   54728,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54729,
+		End:   54755,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54756,
+		End:   54756,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54757,
+		End:   54783,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54784,
+		End:   54784,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54785,
+		End:   54811,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54812,
+		End:   54812,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54813,
+		End:   54839,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54840,
+		End:   54840,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54841,
+		End:   54867,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54868,
+		End:   54868,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54869,
+		End:   54895,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54896,
+		End:   54896,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54897,
+		End:   54923,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54924,
+		End:   54924,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54925,
+		End:   54951,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54952,
+		End:   54952,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54953,
+		End:   54979,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 54980,
+		End:   54980,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 54981,
+		End:   55007,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55008,
+		End:   55008,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55009,
+		End:   55035,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55036,
+		End:   55036,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55037,
+		End:   55063,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55064,
+		End:   55064,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55065,
+		End:   55091,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55092,
+		End:   55092,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55093,
+		End:   55119,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55120,
+		End:   55120,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55121,
+		End:   55147,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55148,
+		End:   55148,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55149,
+		End:   55175,
+	},
+	{
+		Prop:  gbPropLV,
+		Start: 55176,
+		End:   55176,
+	},
+	{
+		Prop:  gbPropLVT,
+		Start: 55177,
+		End:   55203,
+	},
+	{
+		Prop:  gbPropV,
+		Start: 55216,
+		End:   55238,
+	},
+	{
+		Prop:  gbPropT,
+		Start: 55243,
+		End:   55291,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 64286,
+		End:   64286,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 65024,
+		End:   65039,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 65056,
+		End:   65071,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 65279,
+		End:   65279,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 65438,
+		End:   65439,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 65520,
+		End:   65531,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 66045,
+		End:   66045,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 66272,
+		End:   66272,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 66422,
+		End:   66426,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68097,
+		End:   68099,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68101,
+		End:   68102,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68108,
+		End:   68111,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68152,
+		End:   68154,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68159,
+		End:   68159,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68325,
+		End:   68326,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 68900,
+		End:   68903,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69291,
+		End:   69292,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69446,
+		End:   69456,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69506,
+		End:   69509,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69632,
+		End:   69632,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69633,
+		End:   69633,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69634,
+		End:   69634,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69688,
+		End:   69702,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69744,
+		End:   69744,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69747,
+		End:   69748,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69759,
+		End:   69761,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69762,
+		End:   69762,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69808,
+		End:   69810,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69811,
+		End:   69814,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69815,
+		End:   69816,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69817,
+		End:   69818,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 69821,
+		End:   69821,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69826,
+		End:   69826,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 69837,
+		End:   69837,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69888,
+		End:   69890,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69927,
+		End:   69931,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69932,
+		End:   69932,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 69933,
+		End:   69940,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 69957,
+		End:   69958,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70003,
+		End:   70003,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70016,
+		End:   70017,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70018,
+		End:   70018,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70067,
+		End:   70069,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70070,
+		End:   70078,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70079,
+		End:   70080,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 70082,
+		End:   70083,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70089,
+		End:   70092,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70094,
+		End:   70094,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70095,
+		End:   70095,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70188,
+		End:   70190,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70191,
+		End:   70193,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70194,
+		End:   70195,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70196,
+		End:   70196,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70197,
+		End:   70197,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70198,
+		End:   70199,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70206,
+		End:   70206,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70367,
+		End:   70367,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70368,
+		End:   70370,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70371,
+		End:   70378,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70400,
+		End:   70401,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70402,
+		End:   70403,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70459,
+		End:   70460,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70462,
+		End:   70462,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70463,
+		End:   70463,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70464,
+		End:   70464,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70465,
+		End:   70468,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70471,
+		End:   70472,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70475,
+		End:   70477,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70487,
+		End:   70487,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70498,
+		End:   70499,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70502,
+		End:   70508,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70512,
+		End:   70516,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70709,
+		End:   70711,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70712,
+		End:   70719,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70720,
+		End:   70721,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70722,
+		End:   70724,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70725,
+		End:   70725,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70726,
+		End:   70726,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70750,
+		End:   70750,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70832,
+		End:   70832,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70833,
+		End:   70834,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70835,
+		End:   70840,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70841,
+		End:   70841,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70842,
+		End:   70842,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70843,
+		End:   70844,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70845,
+		End:   70845,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70846,
+		End:   70846,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70847,
+		End:   70848,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70849,
+		End:   70849,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70850,
+		End:   70851,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71087,
+		End:   71087,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71088,
+		End:   71089,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71090,
+		End:   71093,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71096,
+		End:   71099,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71100,
+		End:   71101,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71102,
+		End:   71102,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71103,
+		End:   71104,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71132,
+		End:   71133,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71216,
+		End:   71218,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71219,
+		End:   71226,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71227,
+		End:   71228,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71229,
+		End:   71229,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71230,
+		End:   71230,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71231,
+		End:   71232,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71339,
+		End:   71339,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71340,
+		End:   71340,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71341,
+		End:   71341,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71342,
+		End:   71343,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71344,
+		End:   71349,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71350,
+		End:   71350,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71351,
+		End:   71351,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71453,
+		End:   71455,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71458,
+		End:   71461,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71462,
+		End:   71462,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71463,
+		End:   71467,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71724,
+		End:   71726,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71727,
+		End:   71735,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71736,
+		End:   71736,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71737,
+		End:   71738,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71984,
+		End:   71984,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71985,
+		End:   71989,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71991,
+		End:   71992,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71995,
+		End:   71996,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71997,
+		End:   71997,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71998,
+		End:   71998,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 71999,
+		End:   71999,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72000,
+		End:   72000,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 72001,
+		End:   72001,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72002,
+		End:   72002,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72003,
+		End:   72003,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72145,
+		End:   72147,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72148,
+		End:   72151,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72154,
+		End:   72155,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72156,
+		End:   72159,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72160,
+		End:   72160,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72164,
+		End:   72164,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72193,
+		End:   72202,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72243,
+		End:   72248,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72249,
+		End:   72249,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 72250,
+		End:   72250,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72251,
+		End:   72254,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72263,
+		End:   72263,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72273,
+		End:   72278,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72279,
+		End:   72280,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72281,
+		End:   72283,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 72324,
+		End:   72329,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72330,
+		End:   72342,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72343,
+		End:   72343,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72344,
+		End:   72345,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72751,
+		End:   72751,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72752,
+		End:   72758,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72760,
+		End:   72765,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72766,
+		End:   72766,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72767,
+		End:   72767,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72850,
+		End:   72871,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72873,
+		End:   72873,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72874,
+		End:   72880,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72881,
+		End:   72881,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72882,
+		End:   72883,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72884,
+		End:   72884,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72885,
+		End:   72886,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73009,
+		End:   73014,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73018,
+		End:   73018,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73020,
+		End:   73021,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73023,
+		End:   73029,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 73030,
+		End:   73030,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73031,
+		End:   73031,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73098,
+		End:   73102,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73104,
+		End:   73105,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73107,
+		End:   73108,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73109,
+		End:   73109,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73110,
+		End:   73110,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73111,
+		End:   73111,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73459,
+		End:   73460,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73461,
+		End:   73462,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 78896,
+		End:   78904,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 92912,
+		End:   92916,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 92976,
+		End:   92982,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 94031,
+		End:   94031,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 94033,
+		End:   94087,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 94095,
+		End:   94098,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 94180,
+		End:   94180,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 94192,
+		End:   94193,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 113821,
+		End:   113822,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 113824,
+		End:   113827,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 118528,
+		End:   118573,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 118576,
+		End:   118598,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119141,
+		End:   119141,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 119142,
+		End:   119142,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119143,
+		End:   119145,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 119149,
+		End:   119149,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119150,
+		End:   119154,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 119155,
+		End:   119162,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119163,
+		End:   119170,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119173,
+		End:   119179,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119210,
+		End:   119213,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 119362,
+		End:   119364,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121344,
+		End:   121398,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121403,
+		End:   121452,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121461,
+		End:   121461,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121476,
+		End:   121476,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121499,
+		End:   121503,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 121505,
+		End:   121519,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 122880,
+		End:   122886,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 122888,
+		End:   122904,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 122907,
+		End:   122913,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 122915,
+		End:   122916,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 122918,
+		End:   122922,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 123184,
+		End:   123190,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 123566,
+		End:   123566,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 123628,
+		End:   123631,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 125136,
+		End:   125142,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 125252,
+		End:   125258,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 126976,
+		End:   127231,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127245,
+		End:   127247,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127279,
+		End:   127279,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127340,
+		End:   127345,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127358,
+		End:   127359,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127374,
+		End:   127374,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127377,
+		End:   127386,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127405,
+		End:   127461,
+	},
+	{
+		Prop:  gbPropRegional_Indicator,
+		Start: 127462,
+		End:   127487,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127489,
+		End:   127503,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127514,
+		End:   127514,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127535,
+		End:   127535,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127538,
+		End:   127546,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127548,
+		End:   127551,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127561,
+		End:   127994,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 127995,
+		End:   127999,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128000,
+		End:   128317,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128326,
+		End:   128591,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128640,
+		End:   128767,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128884,
+		End:   128895,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128981,
+		End:   129023,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129036,
+		End:   129039,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129096,
+		End:   129103,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129114,
+		End:   129119,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129160,
+		End:   129167,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129198,
+		End:   129279,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129292,
+		End:   129338,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129340,
+		End:   129349,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129351,
+		End:   129791,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 130048,
+		End:   131069,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 917504,
+		End:   917535,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 917536,
+		End:   917631,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 917632,
+		End:   917759,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 917760,
+		End:   917999,
+	},
+	{
+		Prop:  gbPropControl,
+		Start: 918000,
+		End:   921599,
+	},
+}
+
 func gbPropForRune(r rune) gbProp {
-	switch {
-
-	case r <= 9:
-		return gbPropControl
-
-	case r <= 10:
-		return gbPropLF
-
-	case r <= 12:
-		return gbPropControl
-
-	case r <= 13:
-		return gbPropCR
-
-	case r <= 31:
-		return gbPropControl
-
-	case r <= 126:
-		return gbPropOther
-
-	case r <= 159:
-		return gbPropControl
-
-	case r <= 168:
-		return gbPropOther
-
-	case r <= 169:
-		return gbPropExtended_Pictographic
-
-	case r <= 172:
-		return gbPropOther
-
-	case r <= 173:
-		return gbPropControl
-
-	case r <= 174:
-		return gbPropExtended_Pictographic
-
-	case r <= 767:
-		return gbPropOther
-
-	case r <= 879:
-		return gbPropExtend
-
-	case r <= 1154:
-		return gbPropOther
-
-	case r <= 1161:
-		return gbPropExtend
-
-	case r <= 1424:
-		return gbPropOther
-
-	case r <= 1469:
-		return gbPropExtend
-
-	case r <= 1470:
-		return gbPropOther
-
-	case r <= 1471:
-		return gbPropExtend
-
-	case r <= 1472:
-		return gbPropOther
-
-	case r <= 1474:
-		return gbPropExtend
-
-	case r <= 1475:
-		return gbPropOther
-
-	case r <= 1477:
-		return gbPropExtend
-
-	case r <= 1478:
-		return gbPropOther
-
-	case r <= 1479:
-		return gbPropExtend
-
-	case r <= 1535:
-		return gbPropOther
-
-	case r <= 1541:
-		return gbPropPrepend
-
-	case r <= 1551:
-		return gbPropOther
-
-	case r <= 1562:
-		return gbPropExtend
-
-	case r <= 1563:
-		return gbPropOther
-
-	case r <= 1564:
-		return gbPropControl
-
-	case r <= 1610:
-		return gbPropOther
-
-	case r <= 1631:
-		return gbPropExtend
-
-	case r <= 1647:
-		return gbPropOther
-
-	case r <= 1648:
-		return gbPropExtend
-
-	case r <= 1749:
-		return gbPropOther
-
-	case r <= 1756:
-		return gbPropExtend
-
-	case r <= 1757:
-		return gbPropPrepend
-
-	case r <= 1758:
-		return gbPropOther
-
-	case r <= 1764:
-		return gbPropExtend
-
-	case r <= 1766:
-		return gbPropOther
-
-	case r <= 1768:
-		return gbPropExtend
-
-	case r <= 1769:
-		return gbPropOther
-
-	case r <= 1773:
-		return gbPropExtend
-
-	case r <= 1806:
-		return gbPropOther
-
-	case r <= 1807:
-		return gbPropPrepend
-
-	case r <= 1808:
-		return gbPropOther
-
-	case r <= 1809:
-		return gbPropExtend
-
-	case r <= 1839:
-		return gbPropOther
-
-	case r <= 1866:
-		return gbPropExtend
-
-	case r <= 1957:
-		return gbPropOther
-
-	case r <= 1968:
-		return gbPropExtend
-
-	case r <= 2026:
-		return gbPropOther
-
-	case r <= 2035:
-		return gbPropExtend
-
-	case r <= 2044:
-		return gbPropOther
-
-	case r <= 2045:
-		return gbPropExtend
-
-	case r <= 2069:
-		return gbPropOther
-
-	case r <= 2073:
-		return gbPropExtend
-
-	case r <= 2074:
-		return gbPropOther
-
-	case r <= 2083:
-		return gbPropExtend
-
-	case r <= 2084:
-		return gbPropOther
-
-	case r <= 2087:
-		return gbPropExtend
-
-	case r <= 2088:
-		return gbPropOther
-
-	case r <= 2093:
-		return gbPropExtend
-
-	case r <= 2136:
-		return gbPropOther
-
-	case r <= 2139:
-		return gbPropExtend
-
-	case r <= 2191:
-		return gbPropOther
-
-	case r <= 2193:
-		return gbPropPrepend
-
-	case r <= 2199:
-		return gbPropOther
-
-	case r <= 2207:
-		return gbPropExtend
-
-	case r <= 2249:
-		return gbPropOther
-
-	case r <= 2273:
-		return gbPropExtend
-
-	case r <= 2274:
-		return gbPropPrepend
-
-	case r <= 2306:
-		return gbPropExtend
-
-	case r <= 2307:
-		return gbPropSpacingMark
-
-	case r <= 2361:
-		return gbPropOther
-
-	case r <= 2362:
-		return gbPropExtend
-
-	case r <= 2363:
-		return gbPropSpacingMark
-
-	case r <= 2364:
-		return gbPropExtend
-
-	case r <= 2365:
-		return gbPropOther
-
-	case r <= 2368:
-		return gbPropSpacingMark
-
-	case r <= 2376:
-		return gbPropExtend
-
-	case r <= 2380:
-		return gbPropSpacingMark
-
-	case r <= 2381:
-		return gbPropExtend
-
-	case r <= 2383:
-		return gbPropSpacingMark
-
-	case r <= 2384:
-		return gbPropOther
-
-	case r <= 2391:
-		return gbPropExtend
-
-	case r <= 2401:
-		return gbPropOther
-
-	case r <= 2403:
-		return gbPropExtend
-
-	case r <= 2432:
-		return gbPropOther
-
-	case r <= 2433:
-		return gbPropExtend
-
-	case r <= 2435:
-		return gbPropSpacingMark
-
-	case r <= 2491:
-		return gbPropOther
-
-	case r <= 2492:
-		return gbPropExtend
-
-	case r <= 2493:
-		return gbPropOther
-
-	case r <= 2494:
-		return gbPropExtend
-
-	case r <= 2496:
-		return gbPropSpacingMark
-
-	case r <= 2500:
-		return gbPropExtend
-
-	case r <= 2502:
-		return gbPropOther
-
-	case r <= 2504:
-		return gbPropSpacingMark
-
-	case r <= 2506:
-		return gbPropOther
-
-	case r <= 2508:
-		return gbPropSpacingMark
-
-	case r <= 2509:
-		return gbPropExtend
-
-	case r <= 2518:
-		return gbPropOther
-
-	case r <= 2519:
-		return gbPropExtend
-
-	case r <= 2529:
-		return gbPropOther
-
-	case r <= 2531:
-		return gbPropExtend
-
-	case r <= 2557:
-		return gbPropOther
-
-	case r <= 2558:
-		return gbPropExtend
-
-	case r <= 2560:
-		return gbPropOther
-
-	case r <= 2562:
-		return gbPropExtend
-
-	case r <= 2563:
-		return gbPropSpacingMark
-
-	case r <= 2619:
-		return gbPropOther
-
-	case r <= 2620:
-		return gbPropExtend
-
-	case r <= 2621:
-		return gbPropOther
-
-	case r <= 2624:
-		return gbPropSpacingMark
-
-	case r <= 2626:
-		return gbPropExtend
-
-	case r <= 2630:
-		return gbPropOther
-
-	case r <= 2632:
-		return gbPropExtend
-
-	case r <= 2634:
-		return gbPropOther
-
-	case r <= 2637:
-		return gbPropExtend
-
-	case r <= 2640:
-		return gbPropOther
-
-	case r <= 2641:
-		return gbPropExtend
-
-	case r <= 2671:
-		return gbPropOther
-
-	case r <= 2673:
-		return gbPropExtend
-
-	case r <= 2676:
-		return gbPropOther
-
-	case r <= 2677:
-		return gbPropExtend
-
-	case r <= 2688:
-		return gbPropOther
-
-	case r <= 2690:
-		return gbPropExtend
-
-	case r <= 2691:
-		return gbPropSpacingMark
-
-	case r <= 2747:
-		return gbPropOther
-
-	case r <= 2748:
-		return gbPropExtend
-
-	case r <= 2749:
-		return gbPropOther
-
-	case r <= 2752:
-		return gbPropSpacingMark
-
-	case r <= 2757:
-		return gbPropExtend
-
-	case r <= 2758:
-		return gbPropOther
-
-	case r <= 2760:
-		return gbPropExtend
-
-	case r <= 2761:
-		return gbPropSpacingMark
-
-	case r <= 2762:
-		return gbPropOther
-
-	case r <= 2764:
-		return gbPropSpacingMark
-
-	case r <= 2765:
-		return gbPropExtend
-
-	case r <= 2785:
-		return gbPropOther
-
-	case r <= 2787:
-		return gbPropExtend
-
-	case r <= 2809:
-		return gbPropOther
-
-	case r <= 2815:
-		return gbPropExtend
-
-	case r <= 2816:
-		return gbPropOther
-
-	case r <= 2817:
-		return gbPropExtend
-
-	case r <= 2819:
-		return gbPropSpacingMark
-
-	case r <= 2875:
-		return gbPropOther
-
-	case r <= 2876:
-		return gbPropExtend
-
-	case r <= 2877:
-		return gbPropOther
-
-	case r <= 2879:
-		return gbPropExtend
-
-	case r <= 2880:
-		return gbPropSpacingMark
-
-	case r <= 2884:
-		return gbPropExtend
-
-	case r <= 2886:
-		return gbPropOther
-
-	case r <= 2888:
-		return gbPropSpacingMark
-
-	case r <= 2890:
-		return gbPropOther
-
-	case r <= 2892:
-		return gbPropSpacingMark
-
-	case r <= 2893:
-		return gbPropExtend
-
-	case r <= 2900:
-		return gbPropOther
-
-	case r <= 2903:
-		return gbPropExtend
-
-	case r <= 2913:
-		return gbPropOther
-
-	case r <= 2915:
-		return gbPropExtend
-
-	case r <= 2945:
-		return gbPropOther
-
-	case r <= 2946:
-		return gbPropExtend
-
-	case r <= 3005:
-		return gbPropOther
-
-	case r <= 3006:
-		return gbPropExtend
-
-	case r <= 3007:
-		return gbPropSpacingMark
-
-	case r <= 3008:
-		return gbPropExtend
-
-	case r <= 3010:
-		return gbPropSpacingMark
-
-	case r <= 3013:
-		return gbPropOther
-
-	case r <= 3016:
-		return gbPropSpacingMark
-
-	case r <= 3017:
-		return gbPropOther
-
-	case r <= 3020:
-		return gbPropSpacingMark
-
-	case r <= 3021:
-		return gbPropExtend
-
-	case r <= 3030:
-		return gbPropOther
-
-	case r <= 3031:
-		return gbPropExtend
-
-	case r <= 3071:
-		return gbPropOther
-
-	case r <= 3072:
-		return gbPropExtend
-
-	case r <= 3075:
-		return gbPropSpacingMark
-
-	case r <= 3076:
-		return gbPropExtend
-
-	case r <= 3131:
-		return gbPropOther
-
-	case r <= 3132:
-		return gbPropExtend
-
-	case r <= 3133:
-		return gbPropOther
-
-	case r <= 3136:
-		return gbPropExtend
-
-	case r <= 3140:
-		return gbPropSpacingMark
-
-	case r <= 3141:
-		return gbPropOther
-
-	case r <= 3144:
-		return gbPropExtend
-
-	case r <= 3145:
-		return gbPropOther
-
-	case r <= 3149:
-		return gbPropExtend
-
-	case r <= 3156:
-		return gbPropOther
-
-	case r <= 3158:
-		return gbPropExtend
-
-	case r <= 3169:
-		return gbPropOther
-
-	case r <= 3171:
-		return gbPropExtend
-
-	case r <= 3200:
-		return gbPropOther
-
-	case r <= 3201:
-		return gbPropExtend
-
-	case r <= 3203:
-		return gbPropSpacingMark
-
-	case r <= 3259:
-		return gbPropOther
-
-	case r <= 3260:
-		return gbPropExtend
-
-	case r <= 3261:
-		return gbPropOther
-
-	case r <= 3262:
-		return gbPropSpacingMark
-
-	case r <= 3263:
-		return gbPropExtend
-
-	case r <= 3265:
-		return gbPropSpacingMark
-
-	case r <= 3266:
-		return gbPropExtend
-
-	case r <= 3268:
-		return gbPropSpacingMark
-
-	case r <= 3269:
-		return gbPropOther
-
-	case r <= 3270:
-		return gbPropExtend
-
-	case r <= 3272:
-		return gbPropSpacingMark
-
-	case r <= 3273:
-		return gbPropOther
-
-	case r <= 3275:
-		return gbPropSpacingMark
-
-	case r <= 3277:
-		return gbPropExtend
-
-	case r <= 3284:
-		return gbPropOther
-
-	case r <= 3286:
-		return gbPropExtend
-
-	case r <= 3297:
-		return gbPropOther
-
-	case r <= 3299:
-		return gbPropExtend
-
-	case r <= 3327:
-		return gbPropOther
-
-	case r <= 3329:
-		return gbPropExtend
-
-	case r <= 3331:
-		return gbPropSpacingMark
-
-	case r <= 3386:
-		return gbPropOther
-
-	case r <= 3388:
-		return gbPropExtend
-
-	case r <= 3389:
-		return gbPropOther
-
-	case r <= 3390:
-		return gbPropExtend
-
-	case r <= 3392:
-		return gbPropSpacingMark
-
-	case r <= 3396:
-		return gbPropExtend
-
-	case r <= 3397:
-		return gbPropOther
-
-	case r <= 3400:
-		return gbPropSpacingMark
-
-	case r <= 3401:
-		return gbPropOther
-
-	case r <= 3404:
-		return gbPropSpacingMark
-
-	case r <= 3405:
-		return gbPropExtend
-
-	case r <= 3406:
-		return gbPropPrepend
-
-	case r <= 3414:
-		return gbPropOther
-
-	case r <= 3415:
-		return gbPropExtend
-
-	case r <= 3425:
-		return gbPropOther
-
-	case r <= 3427:
-		return gbPropExtend
-
-	case r <= 3456:
-		return gbPropOther
-
-	case r <= 3457:
-		return gbPropExtend
-
-	case r <= 3459:
-		return gbPropSpacingMark
-
-	case r <= 3529:
-		return gbPropOther
-
-	case r <= 3530:
-		return gbPropExtend
-
-	case r <= 3534:
-		return gbPropOther
-
-	case r <= 3535:
-		return gbPropExtend
-
-	case r <= 3537:
-		return gbPropSpacingMark
-
-	case r <= 3540:
-		return gbPropExtend
-
-	case r <= 3541:
-		return gbPropOther
-
-	case r <= 3542:
-		return gbPropExtend
-
-	case r <= 3543:
-		return gbPropOther
-
-	case r <= 3550:
-		return gbPropSpacingMark
-
-	case r <= 3551:
-		return gbPropExtend
-
-	case r <= 3569:
-		return gbPropOther
-
-	case r <= 3571:
-		return gbPropSpacingMark
-
-	case r <= 3632:
-		return gbPropOther
-
-	case r <= 3633:
-		return gbPropExtend
-
-	case r <= 3634:
-		return gbPropOther
-
-	case r <= 3635:
-		return gbPropSpacingMark
-
-	case r <= 3642:
-		return gbPropExtend
-
-	case r <= 3654:
-		return gbPropOther
-
-	case r <= 3662:
-		return gbPropExtend
-
-	case r <= 3760:
-		return gbPropOther
-
-	case r <= 3761:
-		return gbPropExtend
-
-	case r <= 3762:
-		return gbPropOther
-
-	case r <= 3763:
-		return gbPropSpacingMark
-
-	case r <= 3772:
-		return gbPropExtend
-
-	case r <= 3783:
-		return gbPropOther
-
-	case r <= 3789:
-		return gbPropExtend
-
-	case r <= 3863:
-		return gbPropOther
-
-	case r <= 3865:
-		return gbPropExtend
-
-	case r <= 3892:
-		return gbPropOther
-
-	case r <= 3893:
-		return gbPropExtend
-
-	case r <= 3894:
-		return gbPropOther
-
-	case r <= 3895:
-		return gbPropExtend
-
-	case r <= 3896:
-		return gbPropOther
-
-	case r <= 3897:
-		return gbPropExtend
-
-	case r <= 3901:
-		return gbPropOther
-
-	case r <= 3903:
-		return gbPropSpacingMark
-
-	case r <= 3952:
-		return gbPropOther
-
-	case r <= 3966:
-		return gbPropExtend
-
-	case r <= 3967:
-		return gbPropSpacingMark
-
-	case r <= 3972:
-		return gbPropExtend
-
-	case r <= 3973:
-		return gbPropOther
-
-	case r <= 3975:
-		return gbPropExtend
-
-	case r <= 3980:
-		return gbPropOther
-
-	case r <= 3991:
-		return gbPropExtend
-
-	case r <= 3992:
-		return gbPropOther
-
-	case r <= 4028:
-		return gbPropExtend
-
-	case r <= 4037:
-		return gbPropOther
-
-	case r <= 4038:
-		return gbPropExtend
-
-	case r <= 4140:
-		return gbPropOther
-
-	case r <= 4144:
-		return gbPropExtend
-
-	case r <= 4145:
-		return gbPropSpacingMark
-
-	case r <= 4151:
-		return gbPropExtend
-
-	case r <= 4152:
-		return gbPropOther
-
-	case r <= 4154:
-		return gbPropExtend
-
-	case r <= 4156:
-		return gbPropSpacingMark
-
-	case r <= 4158:
-		return gbPropExtend
-
-	case r <= 4181:
-		return gbPropOther
-
-	case r <= 4183:
-		return gbPropSpacingMark
-
-	case r <= 4185:
-		return gbPropExtend
-
-	case r <= 4189:
-		return gbPropOther
-
-	case r <= 4192:
-		return gbPropExtend
-
-	case r <= 4208:
-		return gbPropOther
-
-	case r <= 4212:
-		return gbPropExtend
-
-	case r <= 4225:
-		return gbPropOther
-
-	case r <= 4226:
-		return gbPropExtend
-
-	case r <= 4227:
-		return gbPropOther
-
-	case r <= 4228:
-		return gbPropSpacingMark
-
-	case r <= 4230:
-		return gbPropExtend
-
-	case r <= 4236:
-		return gbPropOther
-
-	case r <= 4237:
-		return gbPropExtend
-
-	case r <= 4252:
-		return gbPropOther
-
-	case r <= 4253:
-		return gbPropExtend
-
-	case r <= 4351:
-		return gbPropOther
-
-	case r <= 4447:
-		return gbPropL
-
-	case r <= 4519:
-		return gbPropV
-
-	case r <= 4607:
-		return gbPropT
-
-	case r <= 4956:
-		return gbPropOther
-
-	case r <= 4959:
-		return gbPropExtend
-
-	case r <= 5905:
-		return gbPropOther
-
-	case r <= 5908:
-		return gbPropExtend
-
-	case r <= 5909:
-		return gbPropSpacingMark
-
-	case r <= 5937:
-		return gbPropOther
-
-	case r <= 5939:
-		return gbPropExtend
-
-	case r <= 5940:
-		return gbPropSpacingMark
-
-	case r <= 5969:
-		return gbPropOther
-
-	case r <= 5971:
-		return gbPropExtend
-
-	case r <= 6001:
-		return gbPropOther
-
-	case r <= 6003:
-		return gbPropExtend
-
-	case r <= 6067:
-		return gbPropOther
-
-	case r <= 6069:
-		return gbPropExtend
-
-	case r <= 6070:
-		return gbPropSpacingMark
-
-	case r <= 6077:
-		return gbPropExtend
-
-	case r <= 6085:
-		return gbPropSpacingMark
-
-	case r <= 6086:
-		return gbPropExtend
-
-	case r <= 6088:
-		return gbPropSpacingMark
-
-	case r <= 6099:
-		return gbPropExtend
-
-	case r <= 6108:
-		return gbPropOther
-
-	case r <= 6109:
-		return gbPropExtend
-
-	case r <= 6154:
-		return gbPropOther
-
-	case r <= 6157:
-		return gbPropExtend
-
-	case r <= 6158:
-		return gbPropControl
-
-	case r <= 6159:
-		return gbPropExtend
-
-	case r <= 6276:
-		return gbPropOther
-
-	case r <= 6278:
-		return gbPropExtend
-
-	case r <= 6312:
-		return gbPropOther
-
-	case r <= 6313:
-		return gbPropExtend
-
-	case r <= 6431:
-		return gbPropOther
-
-	case r <= 6434:
-		return gbPropExtend
-
-	case r <= 6438:
-		return gbPropSpacingMark
-
-	case r <= 6440:
-		return gbPropExtend
-
-	case r <= 6443:
-		return gbPropSpacingMark
-
-	case r <= 6447:
-		return gbPropOther
-
-	case r <= 6449:
-		return gbPropSpacingMark
-
-	case r <= 6450:
-		return gbPropExtend
-
-	case r <= 6456:
-		return gbPropSpacingMark
-
-	case r <= 6459:
-		return gbPropExtend
-
-	case r <= 6678:
-		return gbPropOther
-
-	case r <= 6680:
-		return gbPropExtend
-
-	case r <= 6682:
-		return gbPropSpacingMark
-
-	case r <= 6683:
-		return gbPropExtend
-
-	case r <= 6740:
-		return gbPropOther
-
-	case r <= 6741:
-		return gbPropSpacingMark
-
-	case r <= 6742:
-		return gbPropExtend
-
-	case r <= 6743:
-		return gbPropSpacingMark
-
-	case r <= 6750:
-		return gbPropExtend
-
-	case r <= 6751:
-		return gbPropOther
-
-	case r <= 6752:
-		return gbPropExtend
-
-	case r <= 6753:
-		return gbPropOther
-
-	case r <= 6754:
-		return gbPropExtend
-
-	case r <= 6756:
-		return gbPropOther
-
-	case r <= 6764:
-		return gbPropExtend
-
-	case r <= 6770:
-		return gbPropSpacingMark
-
-	case r <= 6780:
-		return gbPropExtend
-
-	case r <= 6782:
-		return gbPropOther
-
-	case r <= 6783:
-		return gbPropExtend
-
-	case r <= 6831:
-		return gbPropOther
-
-	case r <= 6862:
-		return gbPropExtend
-
-	case r <= 6911:
-		return gbPropOther
-
-	case r <= 6915:
-		return gbPropExtend
-
-	case r <= 6916:
-		return gbPropSpacingMark
-
-	case r <= 6963:
-		return gbPropOther
-
-	case r <= 6970:
-		return gbPropExtend
-
-	case r <= 6971:
-		return gbPropSpacingMark
-
-	case r <= 6972:
-		return gbPropExtend
-
-	case r <= 6977:
-		return gbPropSpacingMark
-
-	case r <= 6978:
-		return gbPropExtend
-
-	case r <= 6980:
-		return gbPropSpacingMark
-
-	case r <= 7018:
-		return gbPropOther
-
-	case r <= 7027:
-		return gbPropExtend
-
-	case r <= 7039:
-		return gbPropOther
-
-	case r <= 7041:
-		return gbPropExtend
-
-	case r <= 7042:
-		return gbPropSpacingMark
-
-	case r <= 7072:
-		return gbPropOther
-
-	case r <= 7073:
-		return gbPropSpacingMark
-
-	case r <= 7077:
-		return gbPropExtend
-
-	case r <= 7079:
-		return gbPropSpacingMark
-
-	case r <= 7081:
-		return gbPropExtend
-
-	case r <= 7082:
-		return gbPropSpacingMark
-
-	case r <= 7085:
-		return gbPropExtend
-
-	case r <= 7141:
-		return gbPropOther
-
-	case r <= 7142:
-		return gbPropExtend
-
-	case r <= 7143:
-		return gbPropSpacingMark
-
-	case r <= 7145:
-		return gbPropExtend
-
-	case r <= 7148:
-		return gbPropSpacingMark
-
-	case r <= 7149:
-		return gbPropExtend
-
-	case r <= 7150:
-		return gbPropSpacingMark
-
-	case r <= 7153:
-		return gbPropExtend
-
-	case r <= 7155:
-		return gbPropSpacingMark
-
-	case r <= 7203:
-		return gbPropOther
-
-	case r <= 7211:
-		return gbPropSpacingMark
-
-	case r <= 7219:
-		return gbPropExtend
-
-	case r <= 7221:
-		return gbPropSpacingMark
-
-	case r <= 7223:
-		return gbPropExtend
-
-	case r <= 7375:
-		return gbPropOther
-
-	case r <= 7378:
-		return gbPropExtend
-
-	case r <= 7379:
-		return gbPropOther
-
-	case r <= 7392:
-		return gbPropExtend
-
-	case r <= 7393:
-		return gbPropSpacingMark
-
-	case r <= 7400:
-		return gbPropExtend
-
-	case r <= 7404:
-		return gbPropOther
-
-	case r <= 7405:
-		return gbPropExtend
-
-	case r <= 7411:
-		return gbPropOther
-
-	case r <= 7412:
-		return gbPropExtend
-
-	case r <= 7414:
-		return gbPropOther
-
-	case r <= 7415:
-		return gbPropSpacingMark
-
-	case r <= 7417:
-		return gbPropExtend
-
-	case r <= 7615:
-		return gbPropOther
-
-	case r <= 7679:
-		return gbPropExtend
-
-	case r <= 8202:
-		return gbPropOther
-
-	case r <= 8203:
-		return gbPropControl
-
-	case r <= 8204:
-		return gbPropExtend
-
-	case r <= 8205:
-		return gbPropZWJ
-
-	case r <= 8207:
-		return gbPropControl
-
-	case r <= 8231:
-		return gbPropOther
-
-	case r <= 8238:
-		return gbPropControl
-
-	case r <= 8251:
-		return gbPropOther
-
-	case r <= 8252:
-		return gbPropExtended_Pictographic
-
-	case r <= 8264:
-		return gbPropOther
-
-	case r <= 8265:
-		return gbPropExtended_Pictographic
-
-	case r <= 8287:
-		return gbPropOther
-
-	case r <= 8303:
-		return gbPropControl
-
-	case r <= 8399:
-		return gbPropOther
-
-	case r <= 8432:
-		return gbPropExtend
-
-	case r <= 8481:
-		return gbPropOther
-
-	case r <= 8482:
-		return gbPropExtended_Pictographic
-
-	case r <= 8504:
-		return gbPropOther
-
-	case r <= 8505:
-		return gbPropExtended_Pictographic
-
-	case r <= 8595:
-		return gbPropOther
-
-	case r <= 8601:
-		return gbPropExtended_Pictographic
-
-	case r <= 8616:
-		return gbPropOther
-
-	case r <= 8618:
-		return gbPropExtended_Pictographic
-
-	case r <= 8985:
-		return gbPropOther
-
-	case r <= 8987:
-		return gbPropExtended_Pictographic
-
-	case r <= 8999:
-		return gbPropOther
-
-	case r <= 9000:
-		return gbPropExtended_Pictographic
-
-	case r <= 9095:
-		return gbPropOther
-
-	case r <= 9096:
-		return gbPropExtended_Pictographic
-
-	case r <= 9166:
-		return gbPropOther
-
-	case r <= 9167:
-		return gbPropExtended_Pictographic
-
-	case r <= 9192:
-		return gbPropOther
-
-	case r <= 9203:
-		return gbPropExtended_Pictographic
-
-	case r <= 9207:
-		return gbPropOther
-
-	case r <= 9210:
-		return gbPropExtended_Pictographic
-
-	case r <= 9409:
-		return gbPropOther
-
-	case r <= 9410:
-		return gbPropExtended_Pictographic
-
-	case r <= 9641:
-		return gbPropOther
-
-	case r <= 9643:
-		return gbPropExtended_Pictographic
-
-	case r <= 9653:
-		return gbPropOther
-
-	case r <= 9654:
-		return gbPropExtended_Pictographic
-
-	case r <= 9663:
-		return gbPropOther
-
-	case r <= 9664:
-		return gbPropExtended_Pictographic
-
-	case r <= 9722:
-		return gbPropOther
-
-	case r <= 9726:
-		return gbPropExtended_Pictographic
-
-	case r <= 9727:
-		return gbPropOther
-
-	case r <= 9733:
-		return gbPropExtended_Pictographic
-
-	case r <= 9734:
-		return gbPropOther
-
-	case r <= 9746:
-		return gbPropExtended_Pictographic
-
-	case r <= 9747:
-		return gbPropOther
-
-	case r <= 9861:
-		return gbPropExtended_Pictographic
-
-	case r <= 9871:
-		return gbPropOther
-
-	case r <= 9989:
-		return gbPropExtended_Pictographic
-
-	case r <= 9991:
-		return gbPropOther
-
-	case r <= 10002:
-		return gbPropExtended_Pictographic
-
-	case r <= 10003:
-		return gbPropOther
-
-	case r <= 10004:
-		return gbPropExtended_Pictographic
-
-	case r <= 10005:
-		return gbPropOther
-
-	case r <= 10006:
-		return gbPropExtended_Pictographic
-
-	case r <= 10012:
-		return gbPropOther
-
-	case r <= 10013:
-		return gbPropExtended_Pictographic
-
-	case r <= 10016:
-		return gbPropOther
-
-	case r <= 10017:
-		return gbPropExtended_Pictographic
-
-	case r <= 10023:
-		return gbPropOther
-
-	case r <= 10024:
-		return gbPropExtended_Pictographic
-
-	case r <= 10034:
-		return gbPropOther
-
-	case r <= 10036:
-		return gbPropExtended_Pictographic
-
-	case r <= 10051:
-		return gbPropOther
-
-	case r <= 10052:
-		return gbPropExtended_Pictographic
-
-	case r <= 10054:
-		return gbPropOther
-
-	case r <= 10055:
-		return gbPropExtended_Pictographic
-
-	case r <= 10059:
-		return gbPropOther
-
-	case r <= 10060:
-		return gbPropExtended_Pictographic
-
-	case r <= 10061:
-		return gbPropOther
-
-	case r <= 10062:
-		return gbPropExtended_Pictographic
-
-	case r <= 10066:
-		return gbPropOther
-
-	case r <= 10069:
-		return gbPropExtended_Pictographic
-
-	case r <= 10070:
-		return gbPropOther
-
-	case r <= 10071:
-		return gbPropExtended_Pictographic
-
-	case r <= 10082:
-		return gbPropOther
-
-	case r <= 10087:
-		return gbPropExtended_Pictographic
-
-	case r <= 10132:
-		return gbPropOther
-
-	case r <= 10135:
-		return gbPropExtended_Pictographic
-
-	case r <= 10144:
-		return gbPropOther
-
-	case r <= 10145:
-		return gbPropExtended_Pictographic
-
-	case r <= 10159:
-		return gbPropOther
-
-	case r <= 10160:
-		return gbPropExtended_Pictographic
-
-	case r <= 10174:
-		return gbPropOther
-
-	case r <= 10175:
-		return gbPropExtended_Pictographic
-
-	case r <= 10547:
-		return gbPropOther
-
-	case r <= 10549:
-		return gbPropExtended_Pictographic
-
-	case r <= 11012:
-		return gbPropOther
-
-	case r <= 11015:
-		return gbPropExtended_Pictographic
-
-	case r <= 11034:
-		return gbPropOther
-
-	case r <= 11036:
-		return gbPropExtended_Pictographic
-
-	case r <= 11087:
-		return gbPropOther
-
-	case r <= 11088:
-		return gbPropExtended_Pictographic
-
-	case r <= 11092:
-		return gbPropOther
-
-	case r <= 11093:
-		return gbPropExtended_Pictographic
-
-	case r <= 11502:
-		return gbPropOther
-
-	case r <= 11505:
-		return gbPropExtend
-
-	case r <= 11646:
-		return gbPropOther
-
-	case r <= 11647:
-		return gbPropExtend
-
-	case r <= 11743:
-		return gbPropOther
-
-	case r <= 11775:
-		return gbPropExtend
-
-	case r <= 12329:
-		return gbPropOther
-
-	case r <= 12335:
-		return gbPropExtend
-
-	case r <= 12336:
-		return gbPropExtended_Pictographic
-
-	case r <= 12348:
-		return gbPropOther
-
-	case r <= 12349:
-		return gbPropExtended_Pictographic
-
-	case r <= 12440:
-		return gbPropOther
-
-	case r <= 12442:
-		return gbPropExtend
-
-	case r <= 12950:
-		return gbPropOther
-
-	case r <= 12951:
-		return gbPropExtended_Pictographic
-
-	case r <= 12952:
-		return gbPropOther
-
-	case r <= 12953:
-		return gbPropExtended_Pictographic
-
-	case r <= 42606:
-		return gbPropOther
-
-	case r <= 42610:
-		return gbPropExtend
-
-	case r <= 42611:
-		return gbPropOther
-
-	case r <= 42621:
-		return gbPropExtend
-
-	case r <= 42653:
-		return gbPropOther
-
-	case r <= 42655:
-		return gbPropExtend
-
-	case r <= 42735:
-		return gbPropOther
-
-	case r <= 42737:
-		return gbPropExtend
-
-	case r <= 43009:
-		return gbPropOther
-
-	case r <= 43010:
-		return gbPropExtend
-
-	case r <= 43013:
-		return gbPropOther
-
-	case r <= 43014:
-		return gbPropExtend
-
-	case r <= 43018:
-		return gbPropOther
-
-	case r <= 43019:
-		return gbPropExtend
-
-	case r <= 43042:
-		return gbPropOther
-
-	case r <= 43044:
-		return gbPropSpacingMark
-
-	case r <= 43046:
-		return gbPropExtend
-
-	case r <= 43047:
-		return gbPropSpacingMark
-
-	case r <= 43051:
-		return gbPropOther
-
-	case r <= 43052:
-		return gbPropExtend
-
-	case r <= 43135:
-		return gbPropOther
-
-	case r <= 43137:
-		return gbPropSpacingMark
-
-	case r <= 43187:
-		return gbPropOther
-
-	case r <= 43203:
-		return gbPropSpacingMark
-
-	case r <= 43205:
-		return gbPropExtend
-
-	case r <= 43231:
-		return gbPropOther
-
-	case r <= 43249:
-		return gbPropExtend
-
-	case r <= 43262:
-		return gbPropOther
-
-	case r <= 43263:
-		return gbPropExtend
-
-	case r <= 43301:
-		return gbPropOther
-
-	case r <= 43309:
-		return gbPropExtend
-
-	case r <= 43334:
-		return gbPropOther
-
-	case r <= 43345:
-		return gbPropExtend
-
-	case r <= 43347:
-		return gbPropSpacingMark
-
-	case r <= 43359:
-		return gbPropOther
-
-	case r <= 43388:
-		return gbPropL
-
-	case r <= 43391:
-		return gbPropOther
-
-	case r <= 43394:
-		return gbPropExtend
-
-	case r <= 43395:
-		return gbPropSpacingMark
-
-	case r <= 43442:
-		return gbPropOther
-
-	case r <= 43443:
-		return gbPropExtend
-
-	case r <= 43445:
-		return gbPropSpacingMark
-
-	case r <= 43449:
-		return gbPropExtend
-
-	case r <= 43451:
-		return gbPropSpacingMark
-
-	case r <= 43453:
-		return gbPropExtend
-
-	case r <= 43456:
-		return gbPropSpacingMark
-
-	case r <= 43492:
-		return gbPropOther
-
-	case r <= 43493:
-		return gbPropExtend
-
-	case r <= 43560:
-		return gbPropOther
-
-	case r <= 43566:
-		return gbPropExtend
-
-	case r <= 43568:
-		return gbPropSpacingMark
-
-	case r <= 43570:
-		return gbPropExtend
-
-	case r <= 43572:
-		return gbPropSpacingMark
-
-	case r <= 43574:
-		return gbPropExtend
-
-	case r <= 43586:
-		return gbPropOther
-
-	case r <= 43587:
-		return gbPropExtend
-
-	case r <= 43595:
-		return gbPropOther
-
-	case r <= 43596:
-		return gbPropExtend
-
-	case r <= 43597:
-		return gbPropSpacingMark
-
-	case r <= 43643:
-		return gbPropOther
-
-	case r <= 43644:
-		return gbPropExtend
-
-	case r <= 43695:
-		return gbPropOther
-
-	case r <= 43696:
-		return gbPropExtend
-
-	case r <= 43697:
-		return gbPropOther
-
-	case r <= 43700:
-		return gbPropExtend
-
-	case r <= 43702:
-		return gbPropOther
-
-	case r <= 43704:
-		return gbPropExtend
-
-	case r <= 43709:
-		return gbPropOther
-
-	case r <= 43711:
-		return gbPropExtend
-
-	case r <= 43712:
-		return gbPropOther
-
-	case r <= 43713:
-		return gbPropExtend
-
-	case r <= 43754:
-		return gbPropOther
-
-	case r <= 43755:
-		return gbPropSpacingMark
-
-	case r <= 43757:
-		return gbPropExtend
-
-	case r <= 43759:
-		return gbPropSpacingMark
-
-	case r <= 43764:
-		return gbPropOther
-
-	case r <= 43765:
-		return gbPropSpacingMark
-
-	case r <= 43766:
-		return gbPropExtend
-
-	case r <= 44002:
-		return gbPropOther
-
-	case r <= 44004:
-		return gbPropSpacingMark
-
-	case r <= 44005:
-		return gbPropExtend
-
-	case r <= 44007:
-		return gbPropSpacingMark
-
-	case r <= 44008:
-		return gbPropExtend
-
-	case r <= 44010:
-		return gbPropSpacingMark
-
-	case r <= 44011:
-		return gbPropOther
-
-	case r <= 44012:
-		return gbPropSpacingMark
-
-	case r <= 44013:
-		return gbPropExtend
-
-	case r <= 44031:
-		return gbPropOther
-
-	case r <= 44032:
-		return gbPropLV
-
-	case r <= 44059:
-		return gbPropLVT
-
-	case r <= 44060:
-		return gbPropLV
-
-	case r <= 44087:
-		return gbPropLVT
-
-	case r <= 44088:
-		return gbPropLV
-
-	case r <= 44115:
-		return gbPropLVT
-
-	case r <= 44116:
-		return gbPropLV
-
-	case r <= 44143:
-		return gbPropLVT
-
-	case r <= 44144:
-		return gbPropLV
-
-	case r <= 44171:
-		return gbPropLVT
-
-	case r <= 44172:
-		return gbPropLV
-
-	case r <= 44199:
-		return gbPropLVT
-
-	case r <= 44200:
-		return gbPropLV
-
-	case r <= 44227:
-		return gbPropLVT
-
-	case r <= 44228:
-		return gbPropLV
-
-	case r <= 44255:
-		return gbPropLVT
-
-	case r <= 44256:
-		return gbPropLV
-
-	case r <= 44283:
-		return gbPropLVT
-
-	case r <= 44284:
-		return gbPropLV
-
-	case r <= 44311:
-		return gbPropLVT
-
-	case r <= 44312:
-		return gbPropLV
-
-	case r <= 44339:
-		return gbPropLVT
-
-	case r <= 44340:
-		return gbPropLV
-
-	case r <= 44367:
-		return gbPropLVT
-
-	case r <= 44368:
-		return gbPropLV
-
-	case r <= 44395:
-		return gbPropLVT
-
-	case r <= 44396:
-		return gbPropLV
-
-	case r <= 44423:
-		return gbPropLVT
-
-	case r <= 44424:
-		return gbPropLV
-
-	case r <= 44451:
-		return gbPropLVT
-
-	case r <= 44452:
-		return gbPropLV
-
-	case r <= 44479:
-		return gbPropLVT
-
-	case r <= 44480:
-		return gbPropLV
-
-	case r <= 44507:
-		return gbPropLVT
-
-	case r <= 44508:
-		return gbPropLV
-
-	case r <= 44535:
-		return gbPropLVT
-
-	case r <= 44536:
-		return gbPropLV
-
-	case r <= 44563:
-		return gbPropLVT
-
-	case r <= 44564:
-		return gbPropLV
-
-	case r <= 44591:
-		return gbPropLVT
-
-	case r <= 44592:
-		return gbPropLV
-
-	case r <= 44619:
-		return gbPropLVT
-
-	case r <= 44620:
-		return gbPropLV
-
-	case r <= 44647:
-		return gbPropLVT
-
-	case r <= 44648:
-		return gbPropLV
-
-	case r <= 44675:
-		return gbPropLVT
-
-	case r <= 44676:
-		return gbPropLV
-
-	case r <= 44703:
-		return gbPropLVT
-
-	case r <= 44704:
-		return gbPropLV
-
-	case r <= 44731:
-		return gbPropLVT
-
-	case r <= 44732:
-		return gbPropLV
-
-	case r <= 44759:
-		return gbPropLVT
-
-	case r <= 44760:
-		return gbPropLV
-
-	case r <= 44787:
-		return gbPropLVT
-
-	case r <= 44788:
-		return gbPropLV
-
-	case r <= 44815:
-		return gbPropLVT
-
-	case r <= 44816:
-		return gbPropLV
-
-	case r <= 44843:
-		return gbPropLVT
-
-	case r <= 44844:
-		return gbPropLV
-
-	case r <= 44871:
-		return gbPropLVT
-
-	case r <= 44872:
-		return gbPropLV
-
-	case r <= 44899:
-		return gbPropLVT
-
-	case r <= 44900:
-		return gbPropLV
-
-	case r <= 44927:
-		return gbPropLVT
-
-	case r <= 44928:
-		return gbPropLV
-
-	case r <= 44955:
-		return gbPropLVT
-
-	case r <= 44956:
-		return gbPropLV
-
-	case r <= 44983:
-		return gbPropLVT
-
-	case r <= 44984:
-		return gbPropLV
-
-	case r <= 45011:
-		return gbPropLVT
-
-	case r <= 45012:
-		return gbPropLV
-
-	case r <= 45039:
-		return gbPropLVT
-
-	case r <= 45040:
-		return gbPropLV
-
-	case r <= 45067:
-		return gbPropLVT
-
-	case r <= 45068:
-		return gbPropLV
-
-	case r <= 45095:
-		return gbPropLVT
-
-	case r <= 45096:
-		return gbPropLV
-
-	case r <= 45123:
-		return gbPropLVT
-
-	case r <= 45124:
-		return gbPropLV
-
-	case r <= 45151:
-		return gbPropLVT
-
-	case r <= 45152:
-		return gbPropLV
-
-	case r <= 45179:
-		return gbPropLVT
-
-	case r <= 45180:
-		return gbPropLV
-
-	case r <= 45207:
-		return gbPropLVT
-
-	case r <= 45208:
-		return gbPropLV
-
-	case r <= 45235:
-		return gbPropLVT
-
-	case r <= 45236:
-		return gbPropLV
-
-	case r <= 45263:
-		return gbPropLVT
-
-	case r <= 45264:
-		return gbPropLV
-
-	case r <= 45291:
-		return gbPropLVT
-
-	case r <= 45292:
-		return gbPropLV
-
-	case r <= 45319:
-		return gbPropLVT
-
-	case r <= 45320:
-		return gbPropLV
-
-	case r <= 45347:
-		return gbPropLVT
-
-	case r <= 45348:
-		return gbPropLV
-
-	case r <= 45375:
-		return gbPropLVT
-
-	case r <= 45376:
-		return gbPropLV
-
-	case r <= 45403:
-		return gbPropLVT
-
-	case r <= 45404:
-		return gbPropLV
-
-	case r <= 45431:
-		return gbPropLVT
-
-	case r <= 45432:
-		return gbPropLV
-
-	case r <= 45459:
-		return gbPropLVT
-
-	case r <= 45460:
-		return gbPropLV
-
-	case r <= 45487:
-		return gbPropLVT
-
-	case r <= 45488:
-		return gbPropLV
-
-	case r <= 45515:
-		return gbPropLVT
-
-	case r <= 45516:
-		return gbPropLV
-
-	case r <= 45543:
-		return gbPropLVT
-
-	case r <= 45544:
-		return gbPropLV
-
-	case r <= 45571:
-		return gbPropLVT
-
-	case r <= 45572:
-		return gbPropLV
-
-	case r <= 45599:
-		return gbPropLVT
-
-	case r <= 45600:
-		return gbPropLV
-
-	case r <= 45627:
-		return gbPropLVT
-
-	case r <= 45628:
-		return gbPropLV
-
-	case r <= 45655:
-		return gbPropLVT
-
-	case r <= 45656:
-		return gbPropLV
-
-	case r <= 45683:
-		return gbPropLVT
-
-	case r <= 45684:
-		return gbPropLV
-
-	case r <= 45711:
-		return gbPropLVT
-
-	case r <= 45712:
-		return gbPropLV
-
-	case r <= 45739:
-		return gbPropLVT
-
-	case r <= 45740:
-		return gbPropLV
-
-	case r <= 45767:
-		return gbPropLVT
-
-	case r <= 45768:
-		return gbPropLV
-
-	case r <= 45795:
-		return gbPropLVT
-
-	case r <= 45796:
-		return gbPropLV
-
-	case r <= 45823:
-		return gbPropLVT
-
-	case r <= 45824:
-		return gbPropLV
-
-	case r <= 45851:
-		return gbPropLVT
-
-	case r <= 45852:
-		return gbPropLV
-
-	case r <= 45879:
-		return gbPropLVT
-
-	case r <= 45880:
-		return gbPropLV
-
-	case r <= 45907:
-		return gbPropLVT
-
-	case r <= 45908:
-		return gbPropLV
-
-	case r <= 45935:
-		return gbPropLVT
-
-	case r <= 45936:
-		return gbPropLV
-
-	case r <= 45963:
-		return gbPropLVT
-
-	case r <= 45964:
-		return gbPropLV
-
-	case r <= 45991:
-		return gbPropLVT
-
-	case r <= 45992:
-		return gbPropLV
-
-	case r <= 46019:
-		return gbPropLVT
-
-	case r <= 46020:
-		return gbPropLV
-
-	case r <= 46047:
-		return gbPropLVT
-
-	case r <= 46048:
-		return gbPropLV
-
-	case r <= 46075:
-		return gbPropLVT
-
-	case r <= 46076:
-		return gbPropLV
-
-	case r <= 46103:
-		return gbPropLVT
-
-	case r <= 46104:
-		return gbPropLV
-
-	case r <= 46131:
-		return gbPropLVT
-
-	case r <= 46132:
-		return gbPropLV
-
-	case r <= 46159:
-		return gbPropLVT
-
-	case r <= 46160:
-		return gbPropLV
-
-	case r <= 46187:
-		return gbPropLVT
-
-	case r <= 46188:
-		return gbPropLV
-
-	case r <= 46215:
-		return gbPropLVT
-
-	case r <= 46216:
-		return gbPropLV
-
-	case r <= 46243:
-		return gbPropLVT
-
-	case r <= 46244:
-		return gbPropLV
-
-	case r <= 46271:
-		return gbPropLVT
-
-	case r <= 46272:
-		return gbPropLV
-
-	case r <= 46299:
-		return gbPropLVT
-
-	case r <= 46300:
-		return gbPropLV
-
-	case r <= 46327:
-		return gbPropLVT
-
-	case r <= 46328:
-		return gbPropLV
-
-	case r <= 46355:
-		return gbPropLVT
-
-	case r <= 46356:
-		return gbPropLV
-
-	case r <= 46383:
-		return gbPropLVT
-
-	case r <= 46384:
-		return gbPropLV
-
-	case r <= 46411:
-		return gbPropLVT
-
-	case r <= 46412:
-		return gbPropLV
-
-	case r <= 46439:
-		return gbPropLVT
-
-	case r <= 46440:
-		return gbPropLV
-
-	case r <= 46467:
-		return gbPropLVT
-
-	case r <= 46468:
-		return gbPropLV
-
-	case r <= 46495:
-		return gbPropLVT
-
-	case r <= 46496:
-		return gbPropLV
-
-	case r <= 46523:
-		return gbPropLVT
-
-	case r <= 46524:
-		return gbPropLV
-
-	case r <= 46551:
-		return gbPropLVT
-
-	case r <= 46552:
-		return gbPropLV
-
-	case r <= 46579:
-		return gbPropLVT
-
-	case r <= 46580:
-		return gbPropLV
-
-	case r <= 46607:
-		return gbPropLVT
-
-	case r <= 46608:
-		return gbPropLV
-
-	case r <= 46635:
-		return gbPropLVT
-
-	case r <= 46636:
-		return gbPropLV
-
-	case r <= 46663:
-		return gbPropLVT
-
-	case r <= 46664:
-		return gbPropLV
-
-	case r <= 46691:
-		return gbPropLVT
-
-	case r <= 46692:
-		return gbPropLV
-
-	case r <= 46719:
-		return gbPropLVT
-
-	case r <= 46720:
-		return gbPropLV
-
-	case r <= 46747:
-		return gbPropLVT
-
-	case r <= 46748:
-		return gbPropLV
-
-	case r <= 46775:
-		return gbPropLVT
-
-	case r <= 46776:
-		return gbPropLV
-
-	case r <= 46803:
-		return gbPropLVT
-
-	case r <= 46804:
-		return gbPropLV
-
-	case r <= 46831:
-		return gbPropLVT
-
-	case r <= 46832:
-		return gbPropLV
-
-	case r <= 46859:
-		return gbPropLVT
-
-	case r <= 46860:
-		return gbPropLV
-
-	case r <= 46887:
-		return gbPropLVT
-
-	case r <= 46888:
-		return gbPropLV
-
-	case r <= 46915:
-		return gbPropLVT
-
-	case r <= 46916:
-		return gbPropLV
-
-	case r <= 46943:
-		return gbPropLVT
-
-	case r <= 46944:
-		return gbPropLV
-
-	case r <= 46971:
-		return gbPropLVT
-
-	case r <= 46972:
-		return gbPropLV
-
-	case r <= 46999:
-		return gbPropLVT
-
-	case r <= 47000:
-		return gbPropLV
-
-	case r <= 47027:
-		return gbPropLVT
-
-	case r <= 47028:
-		return gbPropLV
-
-	case r <= 47055:
-		return gbPropLVT
-
-	case r <= 47056:
-		return gbPropLV
-
-	case r <= 47083:
-		return gbPropLVT
-
-	case r <= 47084:
-		return gbPropLV
-
-	case r <= 47111:
-		return gbPropLVT
-
-	case r <= 47112:
-		return gbPropLV
-
-	case r <= 47139:
-		return gbPropLVT
-
-	case r <= 47140:
-		return gbPropLV
-
-	case r <= 47167:
-		return gbPropLVT
-
-	case r <= 47168:
-		return gbPropLV
-
-	case r <= 47195:
-		return gbPropLVT
-
-	case r <= 47196:
-		return gbPropLV
-
-	case r <= 47223:
-		return gbPropLVT
-
-	case r <= 47224:
-		return gbPropLV
-
-	case r <= 47251:
-		return gbPropLVT
-
-	case r <= 47252:
-		return gbPropLV
-
-	case r <= 47279:
-		return gbPropLVT
-
-	case r <= 47280:
-		return gbPropLV
-
-	case r <= 47307:
-		return gbPropLVT
-
-	case r <= 47308:
-		return gbPropLV
-
-	case r <= 47335:
-		return gbPropLVT
-
-	case r <= 47336:
-		return gbPropLV
-
-	case r <= 47363:
-		return gbPropLVT
-
-	case r <= 47364:
-		return gbPropLV
-
-	case r <= 47391:
-		return gbPropLVT
-
-	case r <= 47392:
-		return gbPropLV
-
-	case r <= 47419:
-		return gbPropLVT
-
-	case r <= 47420:
-		return gbPropLV
-
-	case r <= 47447:
-		return gbPropLVT
-
-	case r <= 47448:
-		return gbPropLV
-
-	case r <= 47475:
-		return gbPropLVT
-
-	case r <= 47476:
-		return gbPropLV
-
-	case r <= 47503:
-		return gbPropLVT
-
-	case r <= 47504:
-		return gbPropLV
-
-	case r <= 47531:
-		return gbPropLVT
-
-	case r <= 47532:
-		return gbPropLV
-
-	case r <= 47559:
-		return gbPropLVT
-
-	case r <= 47560:
-		return gbPropLV
-
-	case r <= 47587:
-		return gbPropLVT
-
-	case r <= 47588:
-		return gbPropLV
-
-	case r <= 47615:
-		return gbPropLVT
-
-	case r <= 47616:
-		return gbPropLV
-
-	case r <= 47643:
-		return gbPropLVT
-
-	case r <= 47644:
-		return gbPropLV
-
-	case r <= 47671:
-		return gbPropLVT
-
-	case r <= 47672:
-		return gbPropLV
-
-	case r <= 47699:
-		return gbPropLVT
-
-	case r <= 47700:
-		return gbPropLV
-
-	case r <= 47727:
-		return gbPropLVT
-
-	case r <= 47728:
-		return gbPropLV
-
-	case r <= 47755:
-		return gbPropLVT
-
-	case r <= 47756:
-		return gbPropLV
-
-	case r <= 47783:
-		return gbPropLVT
-
-	case r <= 47784:
-		return gbPropLV
-
-	case r <= 47811:
-		return gbPropLVT
-
-	case r <= 47812:
-		return gbPropLV
-
-	case r <= 47839:
-		return gbPropLVT
-
-	case r <= 47840:
-		return gbPropLV
-
-	case r <= 47867:
-		return gbPropLVT
-
-	case r <= 47868:
-		return gbPropLV
-
-	case r <= 47895:
-		return gbPropLVT
-
-	case r <= 47896:
-		return gbPropLV
-
-	case r <= 47923:
-		return gbPropLVT
-
-	case r <= 47924:
-		return gbPropLV
-
-	case r <= 47951:
-		return gbPropLVT
-
-	case r <= 47952:
-		return gbPropLV
-
-	case r <= 47979:
-		return gbPropLVT
-
-	case r <= 47980:
-		return gbPropLV
-
-	case r <= 48007:
-		return gbPropLVT
-
-	case r <= 48008:
-		return gbPropLV
-
-	case r <= 48035:
-		return gbPropLVT
-
-	case r <= 48036:
-		return gbPropLV
-
-	case r <= 48063:
-		return gbPropLVT
-
-	case r <= 48064:
-		return gbPropLV
-
-	case r <= 48091:
-		return gbPropLVT
-
-	case r <= 48092:
-		return gbPropLV
-
-	case r <= 48119:
-		return gbPropLVT
-
-	case r <= 48120:
-		return gbPropLV
-
-	case r <= 48147:
-		return gbPropLVT
-
-	case r <= 48148:
-		return gbPropLV
-
-	case r <= 48175:
-		return gbPropLVT
-
-	case r <= 48176:
-		return gbPropLV
-
-	case r <= 48203:
-		return gbPropLVT
-
-	case r <= 48204:
-		return gbPropLV
-
-	case r <= 48231:
-		return gbPropLVT
-
-	case r <= 48232:
-		return gbPropLV
-
-	case r <= 48259:
-		return gbPropLVT
-
-	case r <= 48260:
-		return gbPropLV
-
-	case r <= 48287:
-		return gbPropLVT
-
-	case r <= 48288:
-		return gbPropLV
-
-	case r <= 48315:
-		return gbPropLVT
-
-	case r <= 48316:
-		return gbPropLV
-
-	case r <= 48343:
-		return gbPropLVT
-
-	case r <= 48344:
-		return gbPropLV
-
-	case r <= 48371:
-		return gbPropLVT
-
-	case r <= 48372:
-		return gbPropLV
-
-	case r <= 48399:
-		return gbPropLVT
-
-	case r <= 48400:
-		return gbPropLV
-
-	case r <= 48427:
-		return gbPropLVT
-
-	case r <= 48428:
-		return gbPropLV
-
-	case r <= 48455:
-		return gbPropLVT
-
-	case r <= 48456:
-		return gbPropLV
-
-	case r <= 48483:
-		return gbPropLVT
-
-	case r <= 48484:
-		return gbPropLV
-
-	case r <= 48511:
-		return gbPropLVT
-
-	case r <= 48512:
-		return gbPropLV
-
-	case r <= 48539:
-		return gbPropLVT
-
-	case r <= 48540:
-		return gbPropLV
-
-	case r <= 48567:
-		return gbPropLVT
-
-	case r <= 48568:
-		return gbPropLV
-
-	case r <= 48595:
-		return gbPropLVT
-
-	case r <= 48596:
-		return gbPropLV
-
-	case r <= 48623:
-		return gbPropLVT
-
-	case r <= 48624:
-		return gbPropLV
-
-	case r <= 48651:
-		return gbPropLVT
-
-	case r <= 48652:
-		return gbPropLV
-
-	case r <= 48679:
-		return gbPropLVT
-
-	case r <= 48680:
-		return gbPropLV
-
-	case r <= 48707:
-		return gbPropLVT
-
-	case r <= 48708:
-		return gbPropLV
-
-	case r <= 48735:
-		return gbPropLVT
-
-	case r <= 48736:
-		return gbPropLV
-
-	case r <= 48763:
-		return gbPropLVT
-
-	case r <= 48764:
-		return gbPropLV
-
-	case r <= 48791:
-		return gbPropLVT
-
-	case r <= 48792:
-		return gbPropLV
-
-	case r <= 48819:
-		return gbPropLVT
-
-	case r <= 48820:
-		return gbPropLV
-
-	case r <= 48847:
-		return gbPropLVT
-
-	case r <= 48848:
-		return gbPropLV
-
-	case r <= 48875:
-		return gbPropLVT
-
-	case r <= 48876:
-		return gbPropLV
-
-	case r <= 48903:
-		return gbPropLVT
-
-	case r <= 48904:
-		return gbPropLV
-
-	case r <= 48931:
-		return gbPropLVT
-
-	case r <= 48932:
-		return gbPropLV
-
-	case r <= 48959:
-		return gbPropLVT
-
-	case r <= 48960:
-		return gbPropLV
-
-	case r <= 48987:
-		return gbPropLVT
-
-	case r <= 48988:
-		return gbPropLV
-
-	case r <= 49015:
-		return gbPropLVT
-
-	case r <= 49016:
-		return gbPropLV
-
-	case r <= 49043:
-		return gbPropLVT
-
-	case r <= 49044:
-		return gbPropLV
-
-	case r <= 49071:
-		return gbPropLVT
-
-	case r <= 49072:
-		return gbPropLV
-
-	case r <= 49099:
-		return gbPropLVT
-
-	case r <= 49100:
-		return gbPropLV
-
-	case r <= 49127:
-		return gbPropLVT
-
-	case r <= 49128:
-		return gbPropLV
-
-	case r <= 49155:
-		return gbPropLVT
-
-	case r <= 49156:
-		return gbPropLV
-
-	case r <= 49183:
-		return gbPropLVT
-
-	case r <= 49184:
-		return gbPropLV
-
-	case r <= 49211:
-		return gbPropLVT
-
-	case r <= 49212:
-		return gbPropLV
-
-	case r <= 49239:
-		return gbPropLVT
-
-	case r <= 49240:
-		return gbPropLV
-
-	case r <= 49267:
-		return gbPropLVT
-
-	case r <= 49268:
-		return gbPropLV
-
-	case r <= 49295:
-		return gbPropLVT
-
-	case r <= 49296:
-		return gbPropLV
-
-	case r <= 49323:
-		return gbPropLVT
-
-	case r <= 49324:
-		return gbPropLV
-
-	case r <= 49351:
-		return gbPropLVT
-
-	case r <= 49352:
-		return gbPropLV
-
-	case r <= 49379:
-		return gbPropLVT
-
-	case r <= 49380:
-		return gbPropLV
-
-	case r <= 49407:
-		return gbPropLVT
-
-	case r <= 49408:
-		return gbPropLV
-
-	case r <= 49435:
-		return gbPropLVT
-
-	case r <= 49436:
-		return gbPropLV
-
-	case r <= 49463:
-		return gbPropLVT
-
-	case r <= 49464:
-		return gbPropLV
-
-	case r <= 49491:
-		return gbPropLVT
-
-	case r <= 49492:
-		return gbPropLV
-
-	case r <= 49519:
-		return gbPropLVT
-
-	case r <= 49520:
-		return gbPropLV
-
-	case r <= 49547:
-		return gbPropLVT
-
-	case r <= 49548:
-		return gbPropLV
-
-	case r <= 49575:
-		return gbPropLVT
-
-	case r <= 49576:
-		return gbPropLV
-
-	case r <= 49603:
-		return gbPropLVT
-
-	case r <= 49604:
-		return gbPropLV
-
-	case r <= 49631:
-		return gbPropLVT
-
-	case r <= 49632:
-		return gbPropLV
-
-	case r <= 49659:
-		return gbPropLVT
-
-	case r <= 49660:
-		return gbPropLV
-
-	case r <= 49687:
-		return gbPropLVT
-
-	case r <= 49688:
-		return gbPropLV
-
-	case r <= 49715:
-		return gbPropLVT
-
-	case r <= 49716:
-		return gbPropLV
-
-	case r <= 49743:
-		return gbPropLVT
-
-	case r <= 49744:
-		return gbPropLV
-
-	case r <= 49771:
-		return gbPropLVT
-
-	case r <= 49772:
-		return gbPropLV
-
-	case r <= 49799:
-		return gbPropLVT
-
-	case r <= 49800:
-		return gbPropLV
-
-	case r <= 49827:
-		return gbPropLVT
-
-	case r <= 49828:
-		return gbPropLV
-
-	case r <= 49855:
-		return gbPropLVT
-
-	case r <= 49856:
-		return gbPropLV
-
-	case r <= 49883:
-		return gbPropLVT
-
-	case r <= 49884:
-		return gbPropLV
-
-	case r <= 49911:
-		return gbPropLVT
-
-	case r <= 49912:
-		return gbPropLV
-
-	case r <= 49939:
-		return gbPropLVT
-
-	case r <= 49940:
-		return gbPropLV
-
-	case r <= 49967:
-		return gbPropLVT
-
-	case r <= 49968:
-		return gbPropLV
-
-	case r <= 49995:
-		return gbPropLVT
-
-	case r <= 49996:
-		return gbPropLV
-
-	case r <= 50023:
-		return gbPropLVT
-
-	case r <= 50024:
-		return gbPropLV
-
-	case r <= 50051:
-		return gbPropLVT
-
-	case r <= 50052:
-		return gbPropLV
-
-	case r <= 50079:
-		return gbPropLVT
-
-	case r <= 50080:
-		return gbPropLV
-
-	case r <= 50107:
-		return gbPropLVT
-
-	case r <= 50108:
-		return gbPropLV
-
-	case r <= 50135:
-		return gbPropLVT
-
-	case r <= 50136:
-		return gbPropLV
-
-	case r <= 50163:
-		return gbPropLVT
-
-	case r <= 50164:
-		return gbPropLV
-
-	case r <= 50191:
-		return gbPropLVT
-
-	case r <= 50192:
-		return gbPropLV
-
-	case r <= 50219:
-		return gbPropLVT
-
-	case r <= 50220:
-		return gbPropLV
-
-	case r <= 50247:
-		return gbPropLVT
-
-	case r <= 50248:
-		return gbPropLV
-
-	case r <= 50275:
-		return gbPropLVT
-
-	case r <= 50276:
-		return gbPropLV
-
-	case r <= 50303:
-		return gbPropLVT
-
-	case r <= 50304:
-		return gbPropLV
-
-	case r <= 50331:
-		return gbPropLVT
-
-	case r <= 50332:
-		return gbPropLV
-
-	case r <= 50359:
-		return gbPropLVT
-
-	case r <= 50360:
-		return gbPropLV
-
-	case r <= 50387:
-		return gbPropLVT
-
-	case r <= 50388:
-		return gbPropLV
-
-	case r <= 50415:
-		return gbPropLVT
-
-	case r <= 50416:
-		return gbPropLV
-
-	case r <= 50443:
-		return gbPropLVT
-
-	case r <= 50444:
-		return gbPropLV
-
-	case r <= 50471:
-		return gbPropLVT
-
-	case r <= 50472:
-		return gbPropLV
-
-	case r <= 50499:
-		return gbPropLVT
-
-	case r <= 50500:
-		return gbPropLV
-
-	case r <= 50527:
-		return gbPropLVT
-
-	case r <= 50528:
-		return gbPropLV
-
-	case r <= 50555:
-		return gbPropLVT
-
-	case r <= 50556:
-		return gbPropLV
-
-	case r <= 50583:
-		return gbPropLVT
-
-	case r <= 50584:
-		return gbPropLV
-
-	case r <= 50611:
-		return gbPropLVT
-
-	case r <= 50612:
-		return gbPropLV
-
-	case r <= 50639:
-		return gbPropLVT
-
-	case r <= 50640:
-		return gbPropLV
-
-	case r <= 50667:
-		return gbPropLVT
-
-	case r <= 50668:
-		return gbPropLV
-
-	case r <= 50695:
-		return gbPropLVT
-
-	case r <= 50696:
-		return gbPropLV
-
-	case r <= 50723:
-		return gbPropLVT
-
-	case r <= 50724:
-		return gbPropLV
-
-	case r <= 50751:
-		return gbPropLVT
-
-	case r <= 50752:
-		return gbPropLV
-
-	case r <= 50779:
-		return gbPropLVT
-
-	case r <= 50780:
-		return gbPropLV
-
-	case r <= 50807:
-		return gbPropLVT
-
-	case r <= 50808:
-		return gbPropLV
-
-	case r <= 50835:
-		return gbPropLVT
-
-	case r <= 50836:
-		return gbPropLV
-
-	case r <= 50863:
-		return gbPropLVT
-
-	case r <= 50864:
-		return gbPropLV
-
-	case r <= 50891:
-		return gbPropLVT
-
-	case r <= 50892:
-		return gbPropLV
-
-	case r <= 50919:
-		return gbPropLVT
-
-	case r <= 50920:
-		return gbPropLV
-
-	case r <= 50947:
-		return gbPropLVT
-
-	case r <= 50948:
-		return gbPropLV
-
-	case r <= 50975:
-		return gbPropLVT
-
-	case r <= 50976:
-		return gbPropLV
-
-	case r <= 51003:
-		return gbPropLVT
-
-	case r <= 51004:
-		return gbPropLV
-
-	case r <= 51031:
-		return gbPropLVT
-
-	case r <= 51032:
-		return gbPropLV
-
-	case r <= 51059:
-		return gbPropLVT
-
-	case r <= 51060:
-		return gbPropLV
-
-	case r <= 51087:
-		return gbPropLVT
-
-	case r <= 51088:
-		return gbPropLV
-
-	case r <= 51115:
-		return gbPropLVT
-
-	case r <= 51116:
-		return gbPropLV
-
-	case r <= 51143:
-		return gbPropLVT
-
-	case r <= 51144:
-		return gbPropLV
-
-	case r <= 51171:
-		return gbPropLVT
-
-	case r <= 51172:
-		return gbPropLV
-
-	case r <= 51199:
-		return gbPropLVT
-
-	case r <= 51200:
-		return gbPropLV
-
-	case r <= 51227:
-		return gbPropLVT
-
-	case r <= 51228:
-		return gbPropLV
-
-	case r <= 51255:
-		return gbPropLVT
-
-	case r <= 51256:
-		return gbPropLV
-
-	case r <= 51283:
-		return gbPropLVT
-
-	case r <= 51284:
-		return gbPropLV
-
-	case r <= 51311:
-		return gbPropLVT
-
-	case r <= 51312:
-		return gbPropLV
-
-	case r <= 51339:
-		return gbPropLVT
-
-	case r <= 51340:
-		return gbPropLV
-
-	case r <= 51367:
-		return gbPropLVT
-
-	case r <= 51368:
-		return gbPropLV
-
-	case r <= 51395:
-		return gbPropLVT
-
-	case r <= 51396:
-		return gbPropLV
-
-	case r <= 51423:
-		return gbPropLVT
-
-	case r <= 51424:
-		return gbPropLV
-
-	case r <= 51451:
-		return gbPropLVT
-
-	case r <= 51452:
-		return gbPropLV
-
-	case r <= 51479:
-		return gbPropLVT
-
-	case r <= 51480:
-		return gbPropLV
-
-	case r <= 51507:
-		return gbPropLVT
-
-	case r <= 51508:
-		return gbPropLV
-
-	case r <= 51535:
-		return gbPropLVT
-
-	case r <= 51536:
-		return gbPropLV
-
-	case r <= 51563:
-		return gbPropLVT
-
-	case r <= 51564:
-		return gbPropLV
-
-	case r <= 51591:
-		return gbPropLVT
-
-	case r <= 51592:
-		return gbPropLV
-
-	case r <= 51619:
-		return gbPropLVT
-
-	case r <= 51620:
-		return gbPropLV
-
-	case r <= 51647:
-		return gbPropLVT
-
-	case r <= 51648:
-		return gbPropLV
-
-	case r <= 51675:
-		return gbPropLVT
-
-	case r <= 51676:
-		return gbPropLV
-
-	case r <= 51703:
-		return gbPropLVT
-
-	case r <= 51704:
-		return gbPropLV
-
-	case r <= 51731:
-		return gbPropLVT
-
-	case r <= 51732:
-		return gbPropLV
-
-	case r <= 51759:
-		return gbPropLVT
-
-	case r <= 51760:
-		return gbPropLV
-
-	case r <= 51787:
-		return gbPropLVT
-
-	case r <= 51788:
-		return gbPropLV
-
-	case r <= 51815:
-		return gbPropLVT
-
-	case r <= 51816:
-		return gbPropLV
-
-	case r <= 51843:
-		return gbPropLVT
-
-	case r <= 51844:
-		return gbPropLV
-
-	case r <= 51871:
-		return gbPropLVT
-
-	case r <= 51872:
-		return gbPropLV
-
-	case r <= 51899:
-		return gbPropLVT
-
-	case r <= 51900:
-		return gbPropLV
-
-	case r <= 51927:
-		return gbPropLVT
-
-	case r <= 51928:
-		return gbPropLV
-
-	case r <= 51955:
-		return gbPropLVT
-
-	case r <= 51956:
-		return gbPropLV
-
-	case r <= 51983:
-		return gbPropLVT
-
-	case r <= 51984:
-		return gbPropLV
-
-	case r <= 52011:
-		return gbPropLVT
-
-	case r <= 52012:
-		return gbPropLV
-
-	case r <= 52039:
-		return gbPropLVT
-
-	case r <= 52040:
-		return gbPropLV
-
-	case r <= 52067:
-		return gbPropLVT
-
-	case r <= 52068:
-		return gbPropLV
-
-	case r <= 52095:
-		return gbPropLVT
-
-	case r <= 52096:
-		return gbPropLV
-
-	case r <= 52123:
-		return gbPropLVT
-
-	case r <= 52124:
-		return gbPropLV
-
-	case r <= 52151:
-		return gbPropLVT
-
-	case r <= 52152:
-		return gbPropLV
-
-	case r <= 52179:
-		return gbPropLVT
-
-	case r <= 52180:
-		return gbPropLV
-
-	case r <= 52207:
-		return gbPropLVT
-
-	case r <= 52208:
-		return gbPropLV
-
-	case r <= 52235:
-		return gbPropLVT
-
-	case r <= 52236:
-		return gbPropLV
-
-	case r <= 52263:
-		return gbPropLVT
-
-	case r <= 52264:
-		return gbPropLV
-
-	case r <= 52291:
-		return gbPropLVT
-
-	case r <= 52292:
-		return gbPropLV
-
-	case r <= 52319:
-		return gbPropLVT
-
-	case r <= 52320:
-		return gbPropLV
-
-	case r <= 52347:
-		return gbPropLVT
-
-	case r <= 52348:
-		return gbPropLV
-
-	case r <= 52375:
-		return gbPropLVT
-
-	case r <= 52376:
-		return gbPropLV
-
-	case r <= 52403:
-		return gbPropLVT
-
-	case r <= 52404:
-		return gbPropLV
-
-	case r <= 52431:
-		return gbPropLVT
-
-	case r <= 52432:
-		return gbPropLV
-
-	case r <= 52459:
-		return gbPropLVT
-
-	case r <= 52460:
-		return gbPropLV
-
-	case r <= 52487:
-		return gbPropLVT
-
-	case r <= 52488:
-		return gbPropLV
-
-	case r <= 52515:
-		return gbPropLVT
-
-	case r <= 52516:
-		return gbPropLV
-
-	case r <= 52543:
-		return gbPropLVT
-
-	case r <= 52544:
-		return gbPropLV
-
-	case r <= 52571:
-		return gbPropLVT
-
-	case r <= 52572:
-		return gbPropLV
-
-	case r <= 52599:
-		return gbPropLVT
-
-	case r <= 52600:
-		return gbPropLV
-
-	case r <= 52627:
-		return gbPropLVT
-
-	case r <= 52628:
-		return gbPropLV
-
-	case r <= 52655:
-		return gbPropLVT
-
-	case r <= 52656:
-		return gbPropLV
-
-	case r <= 52683:
-		return gbPropLVT
-
-	case r <= 52684:
-		return gbPropLV
-
-	case r <= 52711:
-		return gbPropLVT
-
-	case r <= 52712:
-		return gbPropLV
-
-	case r <= 52739:
-		return gbPropLVT
-
-	case r <= 52740:
-		return gbPropLV
-
-	case r <= 52767:
-		return gbPropLVT
-
-	case r <= 52768:
-		return gbPropLV
-
-	case r <= 52795:
-		return gbPropLVT
-
-	case r <= 52796:
-		return gbPropLV
-
-	case r <= 52823:
-		return gbPropLVT
-
-	case r <= 52824:
-		return gbPropLV
-
-	case r <= 52851:
-		return gbPropLVT
-
-	case r <= 52852:
-		return gbPropLV
-
-	case r <= 52879:
-		return gbPropLVT
-
-	case r <= 52880:
-		return gbPropLV
-
-	case r <= 52907:
-		return gbPropLVT
-
-	case r <= 52908:
-		return gbPropLV
-
-	case r <= 52935:
-		return gbPropLVT
-
-	case r <= 52936:
-		return gbPropLV
-
-	case r <= 52963:
-		return gbPropLVT
-
-	case r <= 52964:
-		return gbPropLV
-
-	case r <= 52991:
-		return gbPropLVT
-
-	case r <= 52992:
-		return gbPropLV
-
-	case r <= 53019:
-		return gbPropLVT
-
-	case r <= 53020:
-		return gbPropLV
-
-	case r <= 53047:
-		return gbPropLVT
-
-	case r <= 53048:
-		return gbPropLV
-
-	case r <= 53075:
-		return gbPropLVT
-
-	case r <= 53076:
-		return gbPropLV
-
-	case r <= 53103:
-		return gbPropLVT
-
-	case r <= 53104:
-		return gbPropLV
-
-	case r <= 53131:
-		return gbPropLVT
-
-	case r <= 53132:
-		return gbPropLV
-
-	case r <= 53159:
-		return gbPropLVT
-
-	case r <= 53160:
-		return gbPropLV
-
-	case r <= 53187:
-		return gbPropLVT
-
-	case r <= 53188:
-		return gbPropLV
-
-	case r <= 53215:
-		return gbPropLVT
-
-	case r <= 53216:
-		return gbPropLV
-
-	case r <= 53243:
-		return gbPropLVT
-
-	case r <= 53244:
-		return gbPropLV
-
-	case r <= 53271:
-		return gbPropLVT
-
-	case r <= 53272:
-		return gbPropLV
-
-	case r <= 53299:
-		return gbPropLVT
-
-	case r <= 53300:
-		return gbPropLV
-
-	case r <= 53327:
-		return gbPropLVT
-
-	case r <= 53328:
-		return gbPropLV
-
-	case r <= 53355:
-		return gbPropLVT
-
-	case r <= 53356:
-		return gbPropLV
-
-	case r <= 53383:
-		return gbPropLVT
-
-	case r <= 53384:
-		return gbPropLV
-
-	case r <= 53411:
-		return gbPropLVT
-
-	case r <= 53412:
-		return gbPropLV
-
-	case r <= 53439:
-		return gbPropLVT
-
-	case r <= 53440:
-		return gbPropLV
-
-	case r <= 53467:
-		return gbPropLVT
-
-	case r <= 53468:
-		return gbPropLV
-
-	case r <= 53495:
-		return gbPropLVT
-
-	case r <= 53496:
-		return gbPropLV
-
-	case r <= 53523:
-		return gbPropLVT
-
-	case r <= 53524:
-		return gbPropLV
-
-	case r <= 53551:
-		return gbPropLVT
-
-	case r <= 53552:
-		return gbPropLV
-
-	case r <= 53579:
-		return gbPropLVT
-
-	case r <= 53580:
-		return gbPropLV
-
-	case r <= 53607:
-		return gbPropLVT
-
-	case r <= 53608:
-		return gbPropLV
-
-	case r <= 53635:
-		return gbPropLVT
-
-	case r <= 53636:
-		return gbPropLV
-
-	case r <= 53663:
-		return gbPropLVT
-
-	case r <= 53664:
-		return gbPropLV
-
-	case r <= 53691:
-		return gbPropLVT
-
-	case r <= 53692:
-		return gbPropLV
-
-	case r <= 53719:
-		return gbPropLVT
-
-	case r <= 53720:
-		return gbPropLV
-
-	case r <= 53747:
-		return gbPropLVT
-
-	case r <= 53748:
-		return gbPropLV
-
-	case r <= 53775:
-		return gbPropLVT
-
-	case r <= 53776:
-		return gbPropLV
-
-	case r <= 53803:
-		return gbPropLVT
-
-	case r <= 53804:
-		return gbPropLV
-
-	case r <= 53831:
-		return gbPropLVT
-
-	case r <= 53832:
-		return gbPropLV
-
-	case r <= 53859:
-		return gbPropLVT
-
-	case r <= 53860:
-		return gbPropLV
-
-	case r <= 53887:
-		return gbPropLVT
-
-	case r <= 53888:
-		return gbPropLV
-
-	case r <= 53915:
-		return gbPropLVT
-
-	case r <= 53916:
-		return gbPropLV
-
-	case r <= 53943:
-		return gbPropLVT
-
-	case r <= 53944:
-		return gbPropLV
-
-	case r <= 53971:
-		return gbPropLVT
-
-	case r <= 53972:
-		return gbPropLV
-
-	case r <= 53999:
-		return gbPropLVT
-
-	case r <= 54000:
-		return gbPropLV
-
-	case r <= 54027:
-		return gbPropLVT
-
-	case r <= 54028:
-		return gbPropLV
-
-	case r <= 54055:
-		return gbPropLVT
-
-	case r <= 54056:
-		return gbPropLV
-
-	case r <= 54083:
-		return gbPropLVT
-
-	case r <= 54084:
-		return gbPropLV
-
-	case r <= 54111:
-		return gbPropLVT
-
-	case r <= 54112:
-		return gbPropLV
-
-	case r <= 54139:
-		return gbPropLVT
-
-	case r <= 54140:
-		return gbPropLV
-
-	case r <= 54167:
-		return gbPropLVT
-
-	case r <= 54168:
-		return gbPropLV
-
-	case r <= 54195:
-		return gbPropLVT
-
-	case r <= 54196:
-		return gbPropLV
-
-	case r <= 54223:
-		return gbPropLVT
-
-	case r <= 54224:
-		return gbPropLV
-
-	case r <= 54251:
-		return gbPropLVT
-
-	case r <= 54252:
-		return gbPropLV
-
-	case r <= 54279:
-		return gbPropLVT
-
-	case r <= 54280:
-		return gbPropLV
-
-	case r <= 54307:
-		return gbPropLVT
-
-	case r <= 54308:
-		return gbPropLV
-
-	case r <= 54335:
-		return gbPropLVT
-
-	case r <= 54336:
-		return gbPropLV
-
-	case r <= 54363:
-		return gbPropLVT
-
-	case r <= 54364:
-		return gbPropLV
-
-	case r <= 54391:
-		return gbPropLVT
-
-	case r <= 54392:
-		return gbPropLV
-
-	case r <= 54419:
-		return gbPropLVT
-
-	case r <= 54420:
-		return gbPropLV
-
-	case r <= 54447:
-		return gbPropLVT
-
-	case r <= 54448:
-		return gbPropLV
-
-	case r <= 54475:
-		return gbPropLVT
-
-	case r <= 54476:
-		return gbPropLV
-
-	case r <= 54503:
-		return gbPropLVT
-
-	case r <= 54504:
-		return gbPropLV
-
-	case r <= 54531:
-		return gbPropLVT
-
-	case r <= 54532:
-		return gbPropLV
-
-	case r <= 54559:
-		return gbPropLVT
-
-	case r <= 54560:
-		return gbPropLV
-
-	case r <= 54587:
-		return gbPropLVT
-
-	case r <= 54588:
-		return gbPropLV
-
-	case r <= 54615:
-		return gbPropLVT
-
-	case r <= 54616:
-		return gbPropLV
-
-	case r <= 54643:
-		return gbPropLVT
-
-	case r <= 54644:
-		return gbPropLV
-
-	case r <= 54671:
-		return gbPropLVT
-
-	case r <= 54672:
-		return gbPropLV
-
-	case r <= 54699:
-		return gbPropLVT
-
-	case r <= 54700:
-		return gbPropLV
-
-	case r <= 54727:
-		return gbPropLVT
-
-	case r <= 54728:
-		return gbPropLV
-
-	case r <= 54755:
-		return gbPropLVT
-
-	case r <= 54756:
-		return gbPropLV
-
-	case r <= 54783:
-		return gbPropLVT
-
-	case r <= 54784:
-		return gbPropLV
-
-	case r <= 54811:
-		return gbPropLVT
-
-	case r <= 54812:
-		return gbPropLV
-
-	case r <= 54839:
-		return gbPropLVT
-
-	case r <= 54840:
-		return gbPropLV
-
-	case r <= 54867:
-		return gbPropLVT
-
-	case r <= 54868:
-		return gbPropLV
-
-	case r <= 54895:
-		return gbPropLVT
-
-	case r <= 54896:
-		return gbPropLV
-
-	case r <= 54923:
-		return gbPropLVT
-
-	case r <= 54924:
-		return gbPropLV
-
-	case r <= 54951:
-		return gbPropLVT
-
-	case r <= 54952:
-		return gbPropLV
-
-	case r <= 54979:
-		return gbPropLVT
-
-	case r <= 54980:
-		return gbPropLV
-
-	case r <= 55007:
-		return gbPropLVT
-
-	case r <= 55008:
-		return gbPropLV
-
-	case r <= 55035:
-		return gbPropLVT
-
-	case r <= 55036:
-		return gbPropLV
-
-	case r <= 55063:
-		return gbPropLVT
-
-	case r <= 55064:
-		return gbPropLV
-
-	case r <= 55091:
-		return gbPropLVT
-
-	case r <= 55092:
-		return gbPropLV
-
-	case r <= 55119:
-		return gbPropLVT
-
-	case r <= 55120:
-		return gbPropLV
-
-	case r <= 55147:
-		return gbPropLVT
-
-	case r <= 55148:
-		return gbPropLV
-
-	case r <= 55175:
-		return gbPropLVT
-
-	case r <= 55176:
-		return gbPropLV
-
-	case r <= 55203:
-		return gbPropLVT
-
-	case r <= 55215:
-		return gbPropOther
-
-	case r <= 55238:
-		return gbPropV
-
-	case r <= 55242:
-		return gbPropOther
-
-	case r <= 55291:
-		return gbPropT
-
-	case r <= 64285:
-		return gbPropOther
-
-	case r <= 64286:
-		return gbPropExtend
-
-	case r <= 65023:
-		return gbPropOther
-
-	case r <= 65039:
-		return gbPropExtend
-
-	case r <= 65055:
-		return gbPropOther
-
-	case r <= 65071:
-		return gbPropExtend
-
-	case r <= 65278:
-		return gbPropOther
-
-	case r <= 65279:
-		return gbPropControl
-
-	case r <= 65437:
-		return gbPropOther
-
-	case r <= 65439:
-		return gbPropExtend
-
-	case r <= 65519:
-		return gbPropOther
-
-	case r <= 65531:
-		return gbPropControl
-
-	case r <= 66044:
-		return gbPropOther
-
-	case r <= 66045:
-		return gbPropExtend
-
-	case r <= 66271:
-		return gbPropOther
-
-	case r <= 66272:
-		return gbPropExtend
-
-	case r <= 66421:
-		return gbPropOther
-
-	case r <= 66426:
-		return gbPropExtend
-
-	case r <= 68096:
-		return gbPropOther
-
-	case r <= 68099:
-		return gbPropExtend
-
-	case r <= 68100:
-		return gbPropOther
-
-	case r <= 68102:
-		return gbPropExtend
-
-	case r <= 68107:
-		return gbPropOther
-
-	case r <= 68111:
-		return gbPropExtend
-
-	case r <= 68151:
-		return gbPropOther
-
-	case r <= 68154:
-		return gbPropExtend
-
-	case r <= 68158:
-		return gbPropOther
-
-	case r <= 68159:
-		return gbPropExtend
-
-	case r <= 68324:
-		return gbPropOther
-
-	case r <= 68326:
-		return gbPropExtend
-
-	case r <= 68899:
-		return gbPropOther
-
-	case r <= 68903:
-		return gbPropExtend
-
-	case r <= 69290:
-		return gbPropOther
-
-	case r <= 69292:
-		return gbPropExtend
-
-	case r <= 69445:
-		return gbPropOther
-
-	case r <= 69456:
-		return gbPropExtend
-
-	case r <= 69505:
-		return gbPropOther
-
-	case r <= 69509:
-		return gbPropExtend
-
-	case r <= 69631:
-		return gbPropOther
-
-	case r <= 69632:
-		return gbPropSpacingMark
-
-	case r <= 69633:
-		return gbPropExtend
-
-	case r <= 69634:
-		return gbPropSpacingMark
-
-	case r <= 69687:
-		return gbPropOther
-
-	case r <= 69702:
-		return gbPropExtend
-
-	case r <= 69743:
-		return gbPropOther
-
-	case r <= 69744:
-		return gbPropExtend
-
-	case r <= 69746:
-		return gbPropOther
-
-	case r <= 69748:
-		return gbPropExtend
-
-	case r <= 69758:
-		return gbPropOther
-
-	case r <= 69761:
-		return gbPropExtend
-
-	case r <= 69762:
-		return gbPropSpacingMark
-
-	case r <= 69807:
-		return gbPropOther
-
-	case r <= 69810:
-		return gbPropSpacingMark
-
-	case r <= 69814:
-		return gbPropExtend
-
-	case r <= 69816:
-		return gbPropSpacingMark
-
-	case r <= 69818:
-		return gbPropExtend
-
-	case r <= 69820:
-		return gbPropOther
-
-	case r <= 69821:
-		return gbPropPrepend
-
-	case r <= 69825:
-		return gbPropOther
-
-	case r <= 69826:
-		return gbPropExtend
-
-	case r <= 69836:
-		return gbPropOther
-
-	case r <= 69837:
-		return gbPropPrepend
-
-	case r <= 69887:
-		return gbPropOther
-
-	case r <= 69890:
-		return gbPropExtend
-
-	case r <= 69926:
-		return gbPropOther
-
-	case r <= 69931:
-		return gbPropExtend
-
-	case r <= 69932:
-		return gbPropSpacingMark
-
-	case r <= 69940:
-		return gbPropExtend
-
-	case r <= 69956:
-		return gbPropOther
-
-	case r <= 69958:
-		return gbPropSpacingMark
-
-	case r <= 70002:
-		return gbPropOther
-
-	case r <= 70003:
-		return gbPropExtend
-
-	case r <= 70015:
-		return gbPropOther
-
-	case r <= 70017:
-		return gbPropExtend
-
-	case r <= 70018:
-		return gbPropSpacingMark
-
-	case r <= 70066:
-		return gbPropOther
-
-	case r <= 70069:
-		return gbPropSpacingMark
-
-	case r <= 70078:
-		return gbPropExtend
-
-	case r <= 70080:
-		return gbPropSpacingMark
-
-	case r <= 70081:
-		return gbPropOther
-
-	case r <= 70083:
-		return gbPropPrepend
-
-	case r <= 70088:
-		return gbPropOther
-
-	case r <= 70092:
-		return gbPropExtend
-
-	case r <= 70093:
-		return gbPropOther
-
-	case r <= 70094:
-		return gbPropSpacingMark
-
-	case r <= 70095:
-		return gbPropExtend
-
-	case r <= 70187:
-		return gbPropOther
-
-	case r <= 70190:
-		return gbPropSpacingMark
-
-	case r <= 70193:
-		return gbPropExtend
-
-	case r <= 70195:
-		return gbPropSpacingMark
-
-	case r <= 70196:
-		return gbPropExtend
-
-	case r <= 70197:
-		return gbPropSpacingMark
-
-	case r <= 70199:
-		return gbPropExtend
-
-	case r <= 70205:
-		return gbPropOther
-
-	case r <= 70206:
-		return gbPropExtend
-
-	case r <= 70366:
-		return gbPropOther
-
-	case r <= 70367:
-		return gbPropExtend
-
-	case r <= 70370:
-		return gbPropSpacingMark
-
-	case r <= 70378:
-		return gbPropExtend
-
-	case r <= 70399:
-		return gbPropOther
-
-	case r <= 70401:
-		return gbPropExtend
-
-	case r <= 70403:
-		return gbPropSpacingMark
-
-	case r <= 70458:
-		return gbPropOther
-
-	case r <= 70460:
-		return gbPropExtend
-
-	case r <= 70461:
-		return gbPropOther
-
-	case r <= 70462:
-		return gbPropExtend
-
-	case r <= 70463:
-		return gbPropSpacingMark
-
-	case r <= 70464:
-		return gbPropExtend
-
-	case r <= 70468:
-		return gbPropSpacingMark
-
-	case r <= 70470:
-		return gbPropOther
-
-	case r <= 70472:
-		return gbPropSpacingMark
-
-	case r <= 70474:
-		return gbPropOther
-
-	case r <= 70477:
-		return gbPropSpacingMark
-
-	case r <= 70486:
-		return gbPropOther
-
-	case r <= 70487:
-		return gbPropExtend
-
-	case r <= 70497:
-		return gbPropOther
-
-	case r <= 70499:
-		return gbPropSpacingMark
-
-	case r <= 70501:
-		return gbPropOther
-
-	case r <= 70508:
-		return gbPropExtend
-
-	case r <= 70511:
-		return gbPropOther
-
-	case r <= 70516:
-		return gbPropExtend
-
-	case r <= 70708:
-		return gbPropOther
-
-	case r <= 70711:
-		return gbPropSpacingMark
-
-	case r <= 70719:
-		return gbPropExtend
-
-	case r <= 70721:
-		return gbPropSpacingMark
-
-	case r <= 70724:
-		return gbPropExtend
-
-	case r <= 70725:
-		return gbPropSpacingMark
-
-	case r <= 70726:
-		return gbPropExtend
-
-	case r <= 70749:
-		return gbPropOther
-
-	case r <= 70750:
-		return gbPropExtend
-
-	case r <= 70831:
-		return gbPropOther
-
-	case r <= 70832:
-		return gbPropExtend
-
-	case r <= 70834:
-		return gbPropSpacingMark
-
-	case r <= 70840:
-		return gbPropExtend
-
-	case r <= 70841:
-		return gbPropSpacingMark
-
-	case r <= 70842:
-		return gbPropExtend
-
-	case r <= 70844:
-		return gbPropSpacingMark
-
-	case r <= 70845:
-		return gbPropExtend
-
-	case r <= 70846:
-		return gbPropSpacingMark
-
-	case r <= 70848:
-		return gbPropExtend
-
-	case r <= 70849:
-		return gbPropSpacingMark
-
-	case r <= 70851:
-		return gbPropExtend
-
-	case r <= 71086:
-		return gbPropOther
-
-	case r <= 71087:
-		return gbPropExtend
-
-	case r <= 71089:
-		return gbPropSpacingMark
-
-	case r <= 71093:
-		return gbPropExtend
-
-	case r <= 71095:
-		return gbPropOther
-
-	case r <= 71099:
-		return gbPropSpacingMark
-
-	case r <= 71101:
-		return gbPropExtend
-
-	case r <= 71102:
-		return gbPropSpacingMark
-
-	case r <= 71104:
-		return gbPropExtend
-
-	case r <= 71131:
-		return gbPropOther
-
-	case r <= 71133:
-		return gbPropExtend
-
-	case r <= 71215:
-		return gbPropOther
-
-	case r <= 71218:
-		return gbPropSpacingMark
-
-	case r <= 71226:
-		return gbPropExtend
-
-	case r <= 71228:
-		return gbPropSpacingMark
-
-	case r <= 71229:
-		return gbPropExtend
-
-	case r <= 71230:
-		return gbPropSpacingMark
-
-	case r <= 71232:
-		return gbPropExtend
-
-	case r <= 71338:
-		return gbPropOther
-
-	case r <= 71339:
-		return gbPropExtend
-
-	case r <= 71340:
-		return gbPropSpacingMark
-
-	case r <= 71341:
-		return gbPropExtend
-
-	case r <= 71343:
-		return gbPropSpacingMark
-
-	case r <= 71349:
-		return gbPropExtend
-
-	case r <= 71350:
-		return gbPropSpacingMark
-
-	case r <= 71351:
-		return gbPropExtend
-
-	case r <= 71452:
-		return gbPropOther
-
-	case r <= 71455:
-		return gbPropExtend
-
-	case r <= 71457:
-		return gbPropOther
-
-	case r <= 71461:
-		return gbPropExtend
-
-	case r <= 71462:
-		return gbPropSpacingMark
-
-	case r <= 71467:
-		return gbPropExtend
-
-	case r <= 71723:
-		return gbPropOther
-
-	case r <= 71726:
-		return gbPropSpacingMark
-
-	case r <= 71735:
-		return gbPropExtend
-
-	case r <= 71736:
-		return gbPropSpacingMark
-
-	case r <= 71738:
-		return gbPropExtend
-
-	case r <= 71983:
-		return gbPropOther
-
-	case r <= 71984:
-		return gbPropExtend
-
-	case r <= 71989:
-		return gbPropSpacingMark
-
-	case r <= 71990:
-		return gbPropOther
-
-	case r <= 71992:
-		return gbPropSpacingMark
-
-	case r <= 71994:
-		return gbPropOther
-
-	case r <= 71996:
-		return gbPropExtend
-
-	case r <= 71997:
-		return gbPropSpacingMark
-
-	case r <= 71998:
-		return gbPropExtend
-
-	case r <= 71999:
-		return gbPropPrepend
-
-	case r <= 72000:
-		return gbPropSpacingMark
-
-	case r <= 72001:
-		return gbPropPrepend
-
-	case r <= 72002:
-		return gbPropSpacingMark
-
-	case r <= 72003:
-		return gbPropExtend
-
-	case r <= 72144:
-		return gbPropOther
-
-	case r <= 72147:
-		return gbPropSpacingMark
-
-	case r <= 72151:
-		return gbPropExtend
-
-	case r <= 72153:
-		return gbPropOther
-
-	case r <= 72155:
-		return gbPropExtend
-
-	case r <= 72159:
-		return gbPropSpacingMark
-
-	case r <= 72160:
-		return gbPropExtend
-
-	case r <= 72163:
-		return gbPropOther
-
-	case r <= 72164:
-		return gbPropSpacingMark
-
-	case r <= 72192:
-		return gbPropOther
-
-	case r <= 72202:
-		return gbPropExtend
-
-	case r <= 72242:
-		return gbPropOther
-
-	case r <= 72248:
-		return gbPropExtend
-
-	case r <= 72249:
-		return gbPropSpacingMark
-
-	case r <= 72250:
-		return gbPropPrepend
-
-	case r <= 72254:
-		return gbPropExtend
-
-	case r <= 72262:
-		return gbPropOther
-
-	case r <= 72263:
-		return gbPropExtend
-
-	case r <= 72272:
-		return gbPropOther
-
-	case r <= 72278:
-		return gbPropExtend
-
-	case r <= 72280:
-		return gbPropSpacingMark
-
-	case r <= 72283:
-		return gbPropExtend
-
-	case r <= 72323:
-		return gbPropOther
-
-	case r <= 72329:
-		return gbPropPrepend
-
-	case r <= 72342:
-		return gbPropExtend
-
-	case r <= 72343:
-		return gbPropSpacingMark
-
-	case r <= 72345:
-		return gbPropExtend
-
-	case r <= 72750:
-		return gbPropOther
-
-	case r <= 72751:
-		return gbPropSpacingMark
-
-	case r <= 72758:
-		return gbPropExtend
-
-	case r <= 72759:
-		return gbPropOther
-
-	case r <= 72765:
-		return gbPropExtend
-
-	case r <= 72766:
-		return gbPropSpacingMark
-
-	case r <= 72767:
-		return gbPropExtend
-
-	case r <= 72849:
-		return gbPropOther
-
-	case r <= 72871:
-		return gbPropExtend
-
-	case r <= 72872:
-		return gbPropOther
-
-	case r <= 72873:
-		return gbPropSpacingMark
-
-	case r <= 72880:
-		return gbPropExtend
-
-	case r <= 72881:
-		return gbPropSpacingMark
-
-	case r <= 72883:
-		return gbPropExtend
-
-	case r <= 72884:
-		return gbPropSpacingMark
-
-	case r <= 72886:
-		return gbPropExtend
-
-	case r <= 73008:
-		return gbPropOther
-
-	case r <= 73014:
-		return gbPropExtend
-
-	case r <= 73017:
-		return gbPropOther
-
-	case r <= 73018:
-		return gbPropExtend
-
-	case r <= 73019:
-		return gbPropOther
-
-	case r <= 73021:
-		return gbPropExtend
-
-	case r <= 73022:
-		return gbPropOther
-
-	case r <= 73029:
-		return gbPropExtend
-
-	case r <= 73030:
-		return gbPropPrepend
-
-	case r <= 73031:
-		return gbPropExtend
-
-	case r <= 73097:
-		return gbPropOther
-
-	case r <= 73102:
-		return gbPropSpacingMark
-
-	case r <= 73103:
-		return gbPropOther
-
-	case r <= 73105:
-		return gbPropExtend
-
-	case r <= 73106:
-		return gbPropOther
-
-	case r <= 73108:
-		return gbPropSpacingMark
-
-	case r <= 73109:
-		return gbPropExtend
-
-	case r <= 73110:
-		return gbPropSpacingMark
-
-	case r <= 73111:
-		return gbPropExtend
-
-	case r <= 73458:
-		return gbPropOther
-
-	case r <= 73460:
-		return gbPropExtend
-
-	case r <= 73462:
-		return gbPropSpacingMark
-
-	case r <= 78895:
-		return gbPropOther
-
-	case r <= 78904:
-		return gbPropControl
-
-	case r <= 92911:
-		return gbPropOther
-
-	case r <= 92916:
-		return gbPropExtend
-
-	case r <= 92975:
-		return gbPropOther
-
-	case r <= 92982:
-		return gbPropExtend
-
-	case r <= 94030:
-		return gbPropOther
-
-	case r <= 94031:
-		return gbPropExtend
-
-	case r <= 94032:
-		return gbPropOther
-
-	case r <= 94087:
-		return gbPropSpacingMark
-
-	case r <= 94094:
-		return gbPropOther
-
-	case r <= 94098:
-		return gbPropExtend
-
-	case r <= 94179:
-		return gbPropOther
-
-	case r <= 94180:
-		return gbPropExtend
-
-	case r <= 94191:
-		return gbPropOther
-
-	case r <= 94193:
-		return gbPropSpacingMark
-
-	case r <= 113820:
-		return gbPropOther
-
-	case r <= 113822:
-		return gbPropExtend
-
-	case r <= 113823:
-		return gbPropOther
-
-	case r <= 113827:
-		return gbPropControl
-
-	case r <= 118527:
-		return gbPropOther
-
-	case r <= 118573:
-		return gbPropExtend
-
-	case r <= 118575:
-		return gbPropOther
-
-	case r <= 118598:
-		return gbPropExtend
-
-	case r <= 119140:
-		return gbPropOther
-
-	case r <= 119141:
-		return gbPropExtend
-
-	case r <= 119142:
-		return gbPropSpacingMark
-
-	case r <= 119145:
-		return gbPropExtend
-
-	case r <= 119148:
-		return gbPropOther
-
-	case r <= 119149:
-		return gbPropSpacingMark
-
-	case r <= 119154:
-		return gbPropExtend
-
-	case r <= 119162:
-		return gbPropControl
-
-	case r <= 119170:
-		return gbPropExtend
-
-	case r <= 119172:
-		return gbPropOther
-
-	case r <= 119179:
-		return gbPropExtend
-
-	case r <= 119209:
-		return gbPropOther
-
-	case r <= 119213:
-		return gbPropExtend
-
-	case r <= 119361:
-		return gbPropOther
-
-	case r <= 119364:
-		return gbPropExtend
-
-	case r <= 121343:
-		return gbPropOther
-
-	case r <= 121398:
-		return gbPropExtend
-
-	case r <= 121402:
-		return gbPropOther
-
-	case r <= 121452:
-		return gbPropExtend
-
-	case r <= 121460:
-		return gbPropOther
-
-	case r <= 121461:
-		return gbPropExtend
-
-	case r <= 121475:
-		return gbPropOther
-
-	case r <= 121476:
-		return gbPropExtend
-
-	case r <= 121498:
-		return gbPropOther
-
-	case r <= 121503:
-		return gbPropExtend
-
-	case r <= 121504:
-		return gbPropOther
-
-	case r <= 121519:
-		return gbPropExtend
-
-	case r <= 122879:
-		return gbPropOther
-
-	case r <= 122886:
-		return gbPropExtend
-
-	case r <= 122887:
-		return gbPropOther
-
-	case r <= 122904:
-		return gbPropExtend
-
-	case r <= 122906:
-		return gbPropOther
-
-	case r <= 122913:
-		return gbPropExtend
-
-	case r <= 122914:
-		return gbPropOther
-
-	case r <= 122916:
-		return gbPropExtend
-
-	case r <= 122917:
-		return gbPropOther
-
-	case r <= 122922:
-		return gbPropExtend
-
-	case r <= 123183:
-		return gbPropOther
-
-	case r <= 123190:
-		return gbPropExtend
-
-	case r <= 123565:
-		return gbPropOther
-
-	case r <= 123566:
-		return gbPropExtend
-
-	case r <= 123627:
-		return gbPropOther
-
-	case r <= 123631:
-		return gbPropExtend
-
-	case r <= 125135:
-		return gbPropOther
-
-	case r <= 125142:
-		return gbPropExtend
-
-	case r <= 125251:
-		return gbPropOther
-
-	case r <= 125258:
-		return gbPropExtend
-
-	case r <= 126975:
-		return gbPropOther
-
-	case r <= 127231:
-		return gbPropExtended_Pictographic
-
-	case r <= 127244:
-		return gbPropOther
-
-	case r <= 127247:
-		return gbPropExtended_Pictographic
-
-	case r <= 127278:
-		return gbPropOther
-
-	case r <= 127279:
-		return gbPropExtended_Pictographic
-
-	case r <= 127339:
-		return gbPropOther
-
-	case r <= 127345:
-		return gbPropExtended_Pictographic
-
-	case r <= 127357:
-		return gbPropOther
-
-	case r <= 127359:
-		return gbPropExtended_Pictographic
-
-	case r <= 127373:
-		return gbPropOther
-
-	case r <= 127374:
-		return gbPropExtended_Pictographic
-
-	case r <= 127376:
-		return gbPropOther
-
-	case r <= 127386:
-		return gbPropExtended_Pictographic
-
-	case r <= 127404:
-		return gbPropOther
-
-	case r <= 127461:
-		return gbPropExtended_Pictographic
-
-	case r <= 127487:
-		return gbPropRegional_Indicator
-
-	case r <= 127488:
-		return gbPropOther
-
-	case r <= 127503:
-		return gbPropExtended_Pictographic
-
-	case r <= 127513:
-		return gbPropOther
-
-	case r <= 127514:
-		return gbPropExtended_Pictographic
-
-	case r <= 127534:
-		return gbPropOther
-
-	case r <= 127535:
-		return gbPropExtended_Pictographic
-
-	case r <= 127537:
-		return gbPropOther
-
-	case r <= 127546:
-		return gbPropExtended_Pictographic
-
-	case r <= 127547:
-		return gbPropOther
-
-	case r <= 127551:
-		return gbPropExtended_Pictographic
-
-	case r <= 127560:
-		return gbPropOther
-
-	case r <= 127994:
-		return gbPropExtended_Pictographic
-
-	case r <= 127999:
-		return gbPropExtend
-
-	case r <= 128317:
-		return gbPropExtended_Pictographic
-
-	case r <= 128325:
-		return gbPropOther
-
-	case r <= 128591:
-		return gbPropExtended_Pictographic
-
-	case r <= 128639:
-		return gbPropOther
-
-	case r <= 128767:
-		return gbPropExtended_Pictographic
-
-	case r <= 128883:
-		return gbPropOther
-
-	case r <= 128895:
-		return gbPropExtended_Pictographic
-
-	case r <= 128980:
-		return gbPropOther
-
-	case r <= 129023:
-		return gbPropExtended_Pictographic
-
-	case r <= 129035:
-		return gbPropOther
-
-	case r <= 129039:
-		return gbPropExtended_Pictographic
-
-	case r <= 129095:
-		return gbPropOther
-
-	case r <= 129103:
-		return gbPropExtended_Pictographic
-
-	case r <= 129113:
-		return gbPropOther
-
-	case r <= 129119:
-		return gbPropExtended_Pictographic
-
-	case r <= 129159:
-		return gbPropOther
-
-	case r <= 129167:
-		return gbPropExtended_Pictographic
-
-	case r <= 129197:
-		return gbPropOther
-
-	case r <= 129279:
-		return gbPropExtended_Pictographic
-
-	case r <= 129291:
-		return gbPropOther
-
-	case r <= 129338:
-		return gbPropExtended_Pictographic
-
-	case r <= 129339:
-		return gbPropOther
-
-	case r <= 129349:
-		return gbPropExtended_Pictographic
-
-	case r <= 129350:
-		return gbPropOther
-
-	case r <= 129791:
-		return gbPropExtended_Pictographic
-
-	case r <= 130047:
-		return gbPropOther
-
-	case r <= 131069:
-		return gbPropExtended_Pictographic
-
-	case r <= 917503:
-		return gbPropOther
-
-	case r <= 917535:
-		return gbPropControl
-
-	case r <= 917631:
-		return gbPropExtend
-
-	case r <= 917759:
-		return gbPropControl
-
-	case r <= 917999:
-		return gbPropExtend
-
-	case r <= 921599:
-		return gbPropControl
-
-	default:
-		return gbPropOther
+	if r < 256 {
+		return gbAsciiLookupTbl[r]
 	}
+
+	i, j := 0, len(gbRanges)
+	for i < j {
+		mid := i + (j-i)/2
+		rng := gbRanges[mid]
+		if rng.Start <= r && r <= rng.End {
+			return rng.Prop
+		} else if r < rng.Start {
+			j = mid
+		} else {
+			i = mid + 1
+		}
+	}
+	return gbPropNone
 }

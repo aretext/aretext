@@ -61,11 +61,11 @@ func main() {
 	})
 
 	checkNonOverlapping(ranges)
-	ranges = fillGaps(ranges)
 	ranges = coalesce(ranges)
 	propNames := uniquePropNames(ranges)
+	lookupTbl := calculateLookupTbl(ranges)
 
-	if err := writeOutputFile(prefix, outputPath, propNames, ranges); err != nil {
+	if err := writeOutputFile(prefix, outputPath, propNames, ranges, lookupTbl); err != nil {
 		log.Fatalf("error generating output file %s: %v", outputPath, err)
 	}
 }
@@ -86,6 +86,8 @@ type propRange struct {
 	End      uint64
 	PropName string
 }
+
+type propAsciiLookupTbl [256]string // Lookup from ASCII to PropName
 
 type propFilter struct {
 	filterProps map[string]struct{}
@@ -179,40 +181,6 @@ func checkNonOverlapping(ranges []propRange) {
 	}
 }
 
-func fillGaps(ranges []propRange) []propRange {
-	// Assume that ranges are sorted by start and non-overlapping.
-	var lastRng propRange
-	result := make([]propRange, 0, len(ranges))
-	for i := 0; i < len(ranges); i++ {
-		rng := ranges[i]
-		if i == 0 {
-			if rng.Start > 0 {
-				result = append(result, propRange{
-					Start:    0,
-					End:      rng.Start - 1,
-					PropName: "Other",
-				})
-			}
-
-			result = append(result, rng)
-			lastRng = rng
-			continue
-		}
-
-		if lastRng.End+1 < rng.Start {
-			result = append(result, propRange{
-				Start:    lastRng.End + 1,
-				End:      rng.Start - 1,
-				PropName: "Other",
-			})
-		}
-
-		result = append(result, rng)
-		lastRng = rng
-	}
-	return result
-}
-
 func coalesce(ranges []propRange) []propRange {
 	// Assume that ranges are sorted by start and non-overlapping.
 	var lastRng propRange
@@ -246,7 +214,22 @@ func uniquePropNames(ranges []propRange) []string {
 	return result
 }
 
-func writeOutputFile(prefix string, path string, propNames []string, ranges []propRange) error {
+func calculateLookupTbl(ranges []propRange) propAsciiLookupTbl {
+	var tbl propAsciiLookupTbl
+	for _, rng := range ranges {
+		if rng.Start > 255 {
+			break
+		}
+		for r := rng.Start; r <= rng.End; r++ {
+			if r < 255 {
+				tbl[r] = rng.PropName
+			}
+		}
+	}
+	return tbl
+}
+
+func writeOutputFile(prefix string, path string, propNames []string, ranges []propRange, asciiLookupTbl propAsciiLookupTbl) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -263,30 +246,67 @@ func writeOutputFile(prefix string, path string, propNames []string, ranges []pr
 	type {{ $input.Prefix }}Prop byte
 
 	const (
+		{{ $input.Prefix }}PropNone = {{ $input.Prefix }}Prop(iota)
 		{{ range $propName := $input.PropNames -}}
-		{{ $input.Prefix }}Prop{{ $propName }} = {{ $input.Prefix }}Prop(iota)
+		{{ $input.Prefix }}Prop{{ $propName }}
 		{{ end  }}
 	)
 
-	func {{ $input.Prefix }}PropForRune(r rune) {{ $input.Prefix }}Prop {
-		switch {
-		{{ range $rng := $input.PropRanges }}
-		case r <= {{ $rng.End }}:
-		return {{ $input.Prefix }}Prop{{ $rng.PropName }}
+	var {{ $input.Prefix }}AsciiLookupTbl = [256]{{ $input.Prefix }}Prop{
+		{{ range $input.AsciiLookupTbl -}}
+		{{ if . -}}
+		{{ $input.Prefix }}Prop{{ . }},
+		{{ else -}}
+		{{ $input.Prefix }}PropNone,
+		{{ end -}}
 		{{ end }}
+	}
 
-		default:
-		return {{ $input.Prefix }}PropOther
+	var {{ $input.Prefix }}Ranges = [{{ $input.NumRanges }}]struct{
+		Prop  {{ $input.Prefix }}Prop
+		Start rune
+		End   rune
+	}{
+		{{ range $propRange := $input.PropRanges -}}
+		{{ if gt .End 255 -}}
+		{
+			Prop: {{ $input.Prefix }}Prop{{ $propRange.PropName }},
+			Start: {{ $propRange.Start }},
+			End: {{ $propRange.End }},
+		},
+		{{ end -}}
+		{{ end }}
+	}
+
+	func {{ $input.Prefix }}PropForRune(r rune) {{ $input.Prefix }}Prop {
+		if r < 256 {
+			return {{ $input.Prefix }}AsciiLookupTbl[r]
 		}
+
+		i, j := 0, len({{ $input.Prefix }}Ranges)
+		for i < j {
+			mid := i + (j-i)/2
+			rng := {{ $input.Prefix }}Ranges[mid]
+			if rng.Start <= r && r <= rng.End {
+				return rng.Prop
+			} else if r < rng.Start {
+				j = mid
+			} else {
+				i = mid + 1
+			}
+		}
+		return {{ $input.Prefix }}PropNone
 	}
 	`)
 	if err != nil {
 		return err
 	}
 
-	return tmpl.Execute(file, map[string]interface{}{
-		"Prefix":     prefix,
-		"PropNames":  propNames,
-		"PropRanges": ranges,
+	return tmpl.Execute(file, map[string]any{
+		"Prefix":         prefix,
+		"PropNames":      propNames,
+		"AsciiLookupTbl": asciiLookupTbl,
+		"NumRanges":      len(ranges),
+		"PropRanges":     ranges,
 	})
 }

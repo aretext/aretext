@@ -131,7 +131,7 @@ func parseDataFile(dataPath string, propFilter *propFilter, ranges []propRange) 
 	return ranges, nil
 }
 
-var LINE_RE = regexp.MustCompile(`^([A-Z0-9]+)(..[A-Z0-9]+)?\s*;\s*([A-z]+)`)
+var LINE_RE = regexp.MustCompile(`^([A-Z0-9]+)(..[A-Z0-9]+)?\s*;\s*([A-z0-9]+)`)
 
 func parseLine(line string, propFilter *propFilter) (bool, propRange, error) {
 	match := LINE_RE.FindStringSubmatch(line)

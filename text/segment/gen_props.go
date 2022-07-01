@@ -241,36 +241,36 @@ func writeOutputFile(prefix string, path string, propNames []string, ranges []pr
 
 	package segment
 
-	{{ $input := . }}
+	{{ $prefix := .Prefix }}
 
-	type {{ $input.Prefix }}Prop byte
+	type {{ $prefix }}Prop byte
 
 	const (
-		{{ $input.Prefix }}PropNone = {{ $input.Prefix }}Prop(iota)
-		{{ range $propName := $input.PropNames -}}
-		{{ $input.Prefix }}Prop{{ $propName }}
+		{{ $prefix }}PropNone = {{ $prefix }}Prop(iota)
+		{{ range $propName := .PropNames -}}
+		{{ $prefix }}Prop{{ $propName }}
 		{{ end  }}
 	)
 
-	var {{ $input.Prefix }}AsciiLookupTbl = [256]{{ $input.Prefix }}Prop{
-		{{ range $input.AsciiLookupTbl -}}
+	var {{ $prefix }}AsciiLookupTbl = [256]{{ $prefix }}Prop{
+		{{ range .AsciiLookupTbl -}}
 		{{ if . -}}
-		{{ $input.Prefix }}Prop{{ . }},
+		{{ $prefix }}Prop{{ . }},
 		{{ else -}}
-		{{ $input.Prefix }}PropNone,
+		{{ $prefix }}PropNone,
 		{{ end -}}
 		{{ end }}
 	}
 
-	var {{ $input.Prefix }}Ranges = [{{ $input.NumRanges }}]struct{
-		Prop  {{ $input.Prefix }}Prop
+	var {{ $prefix }}Ranges = [{{ .NumRanges }}]struct{
+		Prop  {{ $prefix }}Prop
 		Start rune
 		End   rune
 	}{
-		{{ range $propRange := $input.PropRanges -}}
+		{{ range $propRange := .PropRanges -}}
 		{{ if gt .End 255 -}}
 		{
-			Prop: {{ $input.Prefix }}Prop{{ $propRange.PropName }},
+			Prop: {{ $prefix }}Prop{{ $propRange.PropName }},
 			Start: {{ $propRange.Start }},
 			End: {{ $propRange.End }},
 		},
@@ -278,15 +278,15 @@ func writeOutputFile(prefix string, path string, propNames []string, ranges []pr
 		{{ end }}
 	}
 
-	func {{ $input.Prefix }}PropForRune(r rune) {{ $input.Prefix }}Prop {
+	func {{ $prefix }}PropForRune(r rune) {{ $prefix }}Prop {
 		if r < 256 {
-			return {{ $input.Prefix }}AsciiLookupTbl[r]
+			return {{ $prefix }}AsciiLookupTbl[r]
 		}
 
-		i, j := 0, len({{ $input.Prefix }}Ranges)
+		i, j := 0, len({{ $prefix }}Ranges)
 		for i < j {
 			mid := i + (j-i)/2
-			rng := {{ $input.Prefix }}Ranges[mid]
+			rng := {{ $prefix }}Ranges[mid]
 			if rng.Start <= r && r <= rng.End {
 				return rng.Prop
 			} else if r < rng.Start {
@@ -295,7 +295,7 @@ func writeOutputFile(prefix string, path string, propNames []string, ranges []pr
 				i = mid + 1
 			}
 		}
-		return {{ $input.Prefix }}PropNone
+		return {{ $prefix }}PropNone
 	}
 	`)
 	if err != nil {

@@ -9,6 +9,16 @@ type graphemeBreakTestCase struct {
 }
 
 func graphemeBreakTestCases() []graphemeBreakTestCase {
+	// Split test cases into groups as a workaround for
+	// https://github.com/golang/go/issues/33437
+	var testCases []graphemeBreakTestCase
+	testCases = append(testCases, graphemeBreaktestCaseGroup0()...)
+	testCases = append(testCases, graphemeBreaktestCaseGroup1()...)
+	testCases = append(testCases, graphemeBreaktestCaseGroup2()...)
+	return testCases
+}
+
+func graphemeBreaktestCaseGroup0() []graphemeBreakTestCase {
 	return []graphemeBreakTestCase{
 		{
 			inputString: "  ",
@@ -1290,6 +1300,11 @@ func graphemeBreakTestCases() []graphemeBreakTestCase {
 			segments:    [][]int32{{2307, 776}, {4352}},
 			description: "÷ [0.2] DEVANAGARI SIGN VISARGA (SpacingMark) × [9.0] COMBINING DIAERESIS (Extend_ExtCccZwj) ÷ [999.0] HANGUL CHOSEONG KIYEOK (L) ÷ [0.3]",
 		},
+	}
+}
+
+func graphemeBreaktestCaseGroup1() []graphemeBreakTestCase {
+	return []graphemeBreakTestCase{
 		{
 			inputString: "ःᅠ",
 			segments:    [][]int32{{2307}, {4448}},
@@ -2570,6 +2585,11 @@ func graphemeBreakTestCases() []graphemeBreakTestCase {
 			segments:    [][]int32{{8205, 776}, {32}},
 			description: "÷ [0.2] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.0] COMBINING DIAERESIS (Extend_ExtCccZwj) ÷ [999.0] SPACE (Other) ÷ [0.3]",
 		},
+	}
+}
+
+func graphemeBreaktestCaseGroup2() []graphemeBreakTestCase {
+	return []graphemeBreakTestCase{
 		{
 			inputString: "\u200d\r",
 			segments:    [][]int32{{8205}, {13}},

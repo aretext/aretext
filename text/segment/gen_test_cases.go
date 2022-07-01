@@ -45,7 +45,9 @@ func main() {
 		log.Fatalf("error loading test cases from data file at %s\n: %v", dataPath, err)
 	}
 
-	if err := writeOutputFile(prefix, outputPath, testCases); err != nil {
+	testCaseGroups := groupTestCases(testCases)
+
+	if err := writeOutputFile(prefix, outputPath, testCaseGroups); err != nil {
 		log.Fatalf("error generating output file %s: %v", outputPath, err)
 	}
 }
@@ -137,7 +139,20 @@ func parseLine(line string) (bool, TestCase, error) {
 	return true, tc, nil
 }
 
-func writeOutputFile(prefix string, path string, testCases []TestCase) error {
+func groupTestCases(testCases []TestCase) [][]TestCase {
+	const maxGroupSize = 256
+	var groups [][]TestCase
+	for start := 0; start < len(testCases); start += maxGroupSize {
+		end := len(testCases)
+		if end-start > maxGroupSize {
+			end = start + maxGroupSize
+		}
+		groups = append(groups, testCases[start:end])
+	}
+	return groups
+}
+
+func writeOutputFile(prefix string, path string, testCaseGroups [][]TestCase) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -149,15 +164,28 @@ func writeOutputFile(prefix string, path string, testCases []TestCase) error {
 
 	package segment
 
-	type {{ .Prefix }}TestCase struct {
+	{{ $prefix := .Prefix }}
+
+	type {{ $prefix }}TestCase struct {
 		inputString string
-		segments [][]rune
+		segments    [][]rune
 		description string
 	}
 
-	func {{ .Prefix }}TestCases() []{{ .Prefix }}TestCase {
-		return []{{ .Prefix }}TestCase{
-			{{ range .TestCases -}}
+	func {{ $prefix }}TestCases() []{{ $prefix }}TestCase {
+		// Split test cases into groups as a workaround for
+		// https://github.com/golang/go/issues/33437
+		var testCases []{{ $prefix }}TestCase
+		{{ range $i, $testCases := .TestCaseGroups -}}
+		testCases = append(testCases, {{ $prefix }}testCaseGroup{{ $i }}()...)
+		{{ end -}}
+		return testCases
+	}
+
+	{{ range $i, $testCases := .TestCaseGroups }}
+	func {{ $prefix }}testCaseGroup{{ $i }}() []{{ $prefix }}TestCase {
+		return []{{ $prefix }}TestCase{
+			{{ range $testCases -}}
 			{
 				inputString: {{ printf "%#v" .InputString }},
 				segments: {{ printf "%#v" .Segments }},
@@ -166,6 +194,7 @@ func writeOutputFile(prefix string, path string, testCases []TestCase) error {
 			{{ end }}
 		}
 	}
+	{{ end }}
 	`)
 
 	if err != nil {
@@ -173,7 +202,7 @@ func writeOutputFile(prefix string, path string, testCases []TestCase) error {
 	}
 
 	return tmpl.Execute(file, map[string]any{
-		"Prefix":    prefix,
-		"TestCases": testCases,
+		"Prefix":         prefix,
+		"TestCaseGroups": testCaseGroups,
 	})
 }

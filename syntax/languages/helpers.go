@@ -202,7 +202,7 @@ func maxStrLen(ss []string) uint64 {
 	return maxLength
 }
 
-// consumeLongestMatchingOption consumes the longest matching option from  a set of options.
+// consumeLongestMatchingOption consumes the longest matching option from a set of options.
 func consumeLongestMatchingOption(options []string) parser.Func {
 	// Sort options descending by length.
 	sort.SliceStable(options, func(i, j int) bool {

@@ -166,27 +166,17 @@ func cNumberParseFunc() parser.Func {
 	isHex := func(r rune) bool {
 		return isDigit(r) || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 	}
-	consumeIntTypeSuffix := consumeString("ULL").
-		Or(consumeString("LL")).
-		Or(consumeString("u")).
-		Or(consumeString("U")).
-		Or(consumeString("l")).
-		Or(consumeString("L"))
-
+	consumeIntTypeSuffix := consumeLongestMatchingOption([]string{"ULL", "LL", "u", "U", "l", "L"})
 	consumeHex := consumeString("0x").
 		Then(consumeRunesLike(isHex)).
 		ThenMaybe(consumeIntTypeSuffix)
-
 	consumeDecimal := consumeRunesLike(isDigit) // Implicitly handles octal (0 at start)
 	consumeInteger := consumeDecimal.ThenMaybe(consumeIntTypeSuffix)
 
 	consumeExponent := (consumeString("e").Or(consumeString("E"))).
 		ThenMaybe(consumeString("-")).
 		Then(consumeDecimal)
-	consumeRealTypeSuffix := consumeString("l").
-		Or(consumeString("L")).
-		Or(consumeString("f")).
-		Or(consumeString("F"))
+	consumeRealTypeSuffix := consumeLongestMatchingOption([]string{"l", "L", "f", "F"})
 	consumeRealWithDecimal := (consumeString(".").Then(consumeDecimal)).
 		Or(consumeDecimal.Then(consumeString(".")).ThenMaybe(consumeDecimal)).
 		ThenMaybe(consumeExponent)

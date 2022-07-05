@@ -2,6 +2,8 @@ package segment
 
 import (
 	"io"
+	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +11,8 @@ import (
 
 	"github.com/aretext/aretext/text"
 )
+
+//go:generate go run gen_test_cases.go --prefix lineBreak --dataPath data/LineBreakTest.txt --outputPath line_break_test_cases.go
 
 func gcWidthFunc(defaultWidth uint64) GraphemeClusterWidthFunc {
 	return func(gc []rune, offsetInLine uint64) uint64 {
@@ -21,6 +25,50 @@ func gcWidthFunc(defaultWidth uint64) GraphemeClusterWidthFunc {
 		}
 
 		return defaultWidth
+	}
+}
+
+func TestLineBreaker(t *testing.T) {
+	// The test cases assume the tailoring of numbers from Example 7 or Section 8.2,
+	// which we haven't implemented, so skip those.
+	// See https://www.unicode.org/reports/tr14/#Testing
+	skipTests := []int{
+		1132, 1134, 1136, 1138, 2844, 2846, 4396, 4398, 4444, 4446,
+		4568, 4570, 4616, 4618, 5080, 5082, 5334, 6120, 6122, 6124,
+		6126, 7448, 7457, 7462, 7547, 7548, 7549, 7550, 7551, 7552,
+		7554, 7555, 7556, 7557, 7558,
+	}
+
+	for i, tc := range lineBreakTestCases() {
+		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {
+			if x := sort.SearchInts(skipTests, i); x < len(skipTests) && skipTests[x] == i {
+				t.Skip()
+				return
+			}
+
+			var lb LineBreaker
+			var segments [][]rune
+			var seg []rune
+			for _, r := range tc.inputString {
+				decision := lb.ProcessRune(r)
+
+				if len(seg) > 0 && (decision == AllowLineBreakBefore || decision == RequireLineBreakBefore) {
+					segments = append(segments, seg)
+					seg = nil
+				}
+
+				seg = append(seg, r)
+
+				if len(seg) > 0 && (decision == RequireLineBreakAfter) {
+					segments = append(segments, seg)
+					seg = nil
+				}
+			}
+			if len(seg) > 0 {
+				segments = append(segments, seg)
+			}
+			assert.Equal(t, tc.segments, segments, tc.description)
+		})
 	}
 }
 

@@ -143,6 +143,20 @@ y = 5e-2;
 			text:     "#endifaaa",
 			expected: []TokenWithText{},
 		},
+		{
+			name: "preprocessor directive with whitepace before '#'",
+			text: "  #define FOOBAR 256",
+			expected: []TokenWithText{
+				{Text: "  #define FOOBAR 256", Role: cTokenRolePreprocessorDirective},
+			},
+		},
+		{
+			name: "preprocessor directive with whitepace after '#'",
+			text: "#   define FOOBAR 256",
+			expected: []TokenWithText{
+				{Text: "#   define FOOBAR 256", Role: cTokenRolePreprocessorDirective},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

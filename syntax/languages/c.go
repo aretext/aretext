@@ -36,6 +36,38 @@ func cCommentParseFunc() parser.Func {
 }
 
 func cPreprocessorDirective() parser.Func {
+	// Consume leading '#' with optional whitespace before/after.
+	consumeStartOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+		var sawHashmark bool
+		for {
+			r, err := iter.NextRune()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			if r == '#' && !sawHashmark {
+				sawHashmark = true
+				numConsumed++
+			} else if r == ' ' || r == '\t' {
+				numConsumed++
+			} else {
+				break
+			}
+		}
+
+		if !sawHashmark {
+			return parser.FailedResult
+		}
+
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState:   state,
+		}
+	}
+
 	// Consume to the end of line or EOF, unless the line ends with a backslash.
 	consumeToEndOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var numConsumed uint64
@@ -61,7 +93,7 @@ func cPreprocessorDirective() parser.Func {
 		}
 	}
 
-	return consumeString("#").
+	return parser.Func(consumeStartOfDirective).
 		Then(consumeString("include").
 			Or(consumeString("pragma")).
 			Or(consumeString("ifndef")).

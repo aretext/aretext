@@ -165,18 +165,10 @@ func rustNumberLiteralParseFunc() parser.Func {
 			return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' || r <= 'F')
 		}))
 
-	consumeIntegerSuffix := consumeString("u8").
-		Or(consumeString("u16")).
-		Or(consumeString("u32")).
-		Or(consumeString("u64")).
-		Or(consumeString("u128")).
-		Or(consumeString("usize")).
-		Or(consumeString("i8")).
-		Or(consumeString("i16")).
-		Or(consumeString("i32")).
-		Or(consumeString("i64")).
-		Or(consumeString("i128")).
-		Or(consumeString("isize"))
+	consumeIntegerSuffix := consumeLongestMatchingOption([]string{
+		"u8", "u16", "u32", "u64", "u128", "usize",
+		"i8", "i16", "i32", "i64", "i128", "isize",
+	})
 
 	consumeIntegerLiteral := (consumeBinaryLiteral.
 		Or(consumeOctalLiteral).
@@ -190,7 +182,7 @@ func rustNumberLiteralParseFunc() parser.Func {
 		return r == '+' || r == '-'
 	})).ThenMaybe(consumeDecimalLiteral)
 
-	consumeFloatSuffix := consumeString("f32").Or(consumeString("f64"))
+	consumeFloatSuffix := consumeLongestMatchingOption([]string{"f32", "f64"})
 
 	consumeFloatFormA := consumeDecimalLiteral.
 		Then(consumeString(".")).

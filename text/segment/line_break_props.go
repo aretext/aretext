@@ -307,7 +307,7 @@ var lbAsciiLookupTbl = [256]lbProp{
 	lbPropAL,
 	lbPropAL,
 	lbPropAL,
-	lbPropNone,
+	lbPropAL,
 }
 
 var lbRanges = [2738]struct {

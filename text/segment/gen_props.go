@@ -221,7 +221,7 @@ func calculateLookupTbl(ranges []propRange) propAsciiLookupTbl {
 			break
 		}
 		for r := rng.Start; r <= rng.End; r++ {
-			if r < 255 {
+			if r < 256 {
 				tbl[r] = rng.PropName
 			}
 		}

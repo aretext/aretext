@@ -72,6 +72,52 @@ func TestLineBreaker(t *testing.T) {
 	}
 }
 
+func TestLineBreakerForceBreaks(t *testing.T) {
+	testCases := []struct {
+		name              string
+		inputString       string
+		expectedDecisions []LineBreakDecision
+	}{
+		{
+			name:        "line feed",
+			inputString: "abc\ndef",
+			expectedDecisions: []LineBreakDecision{
+				AllowLineBreakBefore,
+				NoLineBreak,
+				NoLineBreak,
+				RequireLineBreakAfter,
+				AllowLineBreakBefore,
+				NoLineBreak,
+				NoLineBreak,
+			},
+		},
+		{
+			name:        "carriage return line feed",
+			inputString: "abc\r\ndef",
+			expectedDecisions: []LineBreakDecision{
+				AllowLineBreakBefore,
+				NoLineBreak,
+				NoLineBreak,
+				NoLineBreak,
+				RequireLineBreakAfter,
+				AllowLineBreakBefore,
+				NoLineBreak,
+				NoLineBreak,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var lb LineBreaker
+			for i, r := range tc.inputString {
+				decision := lb.ProcessRune(r)
+				assert.Equal(t, tc.expectedDecisions[i], decision, "Wrong line break decision at pos %d", i)
+			}
+		})
+	}
+}
+
 func TestWrappedLineIter(t *testing.T) {
 	testCases := []struct {
 		name          string

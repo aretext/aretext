@@ -68,6 +68,7 @@ func (lb *LineBreaker) ProcessRune(r rune) (decision LineBreakDecision) {
 
 	// LB5: Treat CR followed by LF, as well as CR, LF, and NL as hard line breaks.
 	if lb.lastProp == lbPropCR && prop == lbPropLF {
+		decision = RequireLineBreakAfter
 		goto done
 	} else if lb.lastProp == lbPropCR {
 		decision = RequireLineBreakBefore

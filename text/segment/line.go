@@ -326,20 +326,19 @@ func NewLineWrapConfig(maxLineWidth uint64, widthFunc GraphemeClusterWidthFunc) 
 
 // WrappedLineIter iterates through soft- and hard-wrapped lines.
 type WrappedLineIter struct {
-	wrapConfig   LineWrapConfig
-	gcIter       GraphemeClusterIter
-	gcSegment    *Segment
-	buffer       []rune
-	currentWidth uint64
+	wrapConfig LineWrapConfig
+	textTree   *text.Tree
+	pos        uint64
+	gc         []rune
 }
 
 // NewWrappedLineIter constructs a segment iterator for soft- and hard-wrapped lines.
-func NewWrappedLineIter(reader text.Reader, wrapConfig LineWrapConfig) WrappedLineIter {
+func NewWrappedLineIter(wrapConfig LineWrapConfig, textTree *text.Tree, startPos uint64) WrappedLineIter {
 	return WrappedLineIter{
 		wrapConfig: wrapConfig,
-		gcIter:     NewGraphemeClusterIter(reader),
-		gcSegment:  Empty(),
-		buffer:     make([]rune, 0, 256),
+		textTree:   textTree,
+		pos:        startPos,
+		gc:         make([]rune, 0, 4), // allocate once and reuse for all lines.
 	}
 }
 
@@ -348,62 +347,76 @@ func NewWrappedLineIter(reader text.Reader, wrapConfig LineWrapConfig) WrappedLi
 // If a segment is too long to fit on any line, put it in its own line.
 func (iter *WrappedLineIter) NextSegment(segment *Segment) error {
 	segment.Clear()
-	for {
-		err := iter.gcIter.NextSegment(iter.gcSegment)
-		if err == io.EOF {
-			if len(iter.buffer) > 0 {
-				// There are runes left in the current segment, so return that.
-				segment.Extend(iter.buffer)
-				iter.buffer = iter.buffer[:0]
-				return nil
-			}
 
-			// No runes left to process, so return EOF.
-			return io.EOF
-		}
+	lineBreakPos, err := iter.lookaheadLineBreakPos()
+	if err != nil {
+		return err
+	}
 
+	reader := iter.textTree.ReaderAtPosition(iter.pos)
+	for iter.pos < lineBreakPos {
+		r, _, err := reader.ReadRune()
 		if err != nil {
 			return err
 		}
-
-		if iter.gcSegment.HasNewline() {
-			// Hard line-break on newline.
-			segment.Extend(iter.buffer).Extend(iter.gcSegment.Runes())
-			iter.buffer = iter.buffer[:0]
-			iter.currentWidth = 0
-			return nil
-		}
-
-		gcWidth := iter.wrapConfig.widthFunc(iter.gcSegment.Runes(), iter.currentWidth)
-		if iter.currentWidth+gcWidth > iter.wrapConfig.maxLineWidth {
-			if iter.currentWidth == 0 {
-				segment.Extend(iter.gcSegment.Runes())
-
-				// This grapheme cluster is too large to fit on the line, so give it its own line.
-				gcIterClone := iter.gcIter
-				err := gcIterClone.NextSegment(iter.gcSegment)
-				if err == nil && iter.gcSegment.HasNewline() {
-					// There's a newline grapheme cluster after the too-large grapheme cluster.
-					// Include the newline in this line so we don't accidentally introduce an empty line.
-					if err := iter.gcIter.NextSegment(iter.gcSegment); err != nil {
-						log.Fatalf("%s", err)
-					}
-					segment.Extend(iter.gcSegment.Runes())
-				}
-				return nil
-			}
-
-			// Adding the next grapheme cluster would exceed the max line length, so break at the end
-			// of the current line and start a new line with the next grapheme cluster.
-			segment.Extend(iter.buffer)
-			iter.buffer = iter.buffer[:0]
-			iter.buffer = append(iter.buffer, iter.gcSegment.Runes()...)
-			iter.currentWidth = gcWidth
-			return nil
-		}
-
-		// The next grapheme cluster fits in the current line.
-		iter.buffer = append(iter.buffer, iter.gcSegment.Runes()...)
-		iter.currentWidth += gcWidth
+		segment.Append(r)
+		iter.pos++
 	}
+
+	return nil
+}
+
+func (iter *WrappedLineIter) lookaheadLineBreakPos() (uint64, error) {
+	var (
+		gcBreaker   GraphemeClusterBreaker
+		lineWidth   uint64
+		lineBreaker LineBreaker
+	)
+	iter.gc = iter.gc[:0]
+	pos := iter.pos
+	lineBreakPos := iter.pos
+	reader := iter.textTree.ReaderAtPosition(pos)
+	for {
+		r, _, err := reader.ReadRune()
+		if err == io.EOF && pos > iter.pos {
+			lineBreakPos = pos
+			break
+		} else if err != nil {
+			return 0, err
+		}
+
+		canBreakBeforeGc := gcBreaker.ProcessRune(r)
+		if canBreakBeforeGc {
+			lineWidth += iter.wrapConfig.widthFunc(iter.gc, lineWidth)
+			// Check if we've exceeded the max line width. If so, exit the loop and return
+			// the last breakpoint.
+			// If the rune is '\r' or '\n', continue so LineBreaker can hard-wrap on the next loop iteration.
+			if lineWidth >= iter.wrapConfig.maxLineWidth && r != '\r' && r != '\n' {
+				if lineBreakPos == iter.pos {
+					// No line break found within the max line width, so fallback to breaking
+					// at grapheme cluster boundaries.
+					lineBreakPos = pos
+				}
+				break
+			}
+			iter.gc = append(iter.gc[:0], r)
+		} else {
+			iter.gc = append(iter.gc, r)
+		}
+
+		decision := lineBreaker.ProcessRune(r)
+		if decision == AllowLineBreakBefore {
+			lineBreakPos = pos
+		} else if decision == RequireLineBreakBefore {
+			lineBreakPos = pos
+			break
+		} else if decision == RequireLineBreakAfter {
+			lineBreakPos = pos + 1
+			break
+		}
+
+		pos++
+	}
+
+	return lineBreakPos, nil
 }

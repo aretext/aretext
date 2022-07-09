@@ -217,6 +217,27 @@ func TestWrappedLineIter(t *testing.T) {
 			widthFunc:     gcWidthFunc(2),
 			expectedLines: []string{"a", "b", "c", "d\n", "e", "f", "g", "h", "i", "j", "k", "l\n", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z\n", "0", "1", "2", "3"},
 		},
+		{
+			name:          "line break at word boundaries",
+			inputString:   "Lorem ipsum dolor sit amet",
+			maxLineWidth:  13,
+			widthFunc:     gcWidthFunc(1),
+			expectedLines: []string{"Lorem ipsum ", "dolor sit ", "amet"},
+		},
+		{
+			name:          "hard line break at CR",
+			inputString:   "Lorem\ripsum dolor sit amet",
+			maxLineWidth:  13,
+			widthFunc:     gcWidthFunc(1),
+			expectedLines: []string{"Lorem\r", "ipsum dolor ", "sit amet"},
+		},
+		{
+			name:          "hard line break at CR LF",
+			inputString:   "Lorem\r\nipsum dolor sit amet",
+			maxLineWidth:  13,
+			widthFunc:     gcWidthFunc(1),
+			expectedLines: []string{"Lorem\r\n", "ipsum dolor ", "sit amet"},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -224,8 +245,7 @@ func TestWrappedLineIter(t *testing.T) {
 			wrapConfig := NewLineWrapConfig(tc.maxLineWidth, tc.widthFunc)
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			reader := tree.ReaderAtPosition(0)
-			wrappedLineIter := NewWrappedLineIter(reader, wrapConfig)
+			wrappedLineIter := NewWrappedLineIter(wrapConfig, tree, 0)
 			lines := make([]string, 0)
 			seg := Empty()
 			for {

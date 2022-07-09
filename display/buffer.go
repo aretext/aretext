@@ -23,7 +23,6 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	selectedRegion := buffer.SelectedRegion()
 	viewTextOrigin := buffer.ViewTextOrigin()
 	pos := viewTextOrigin
-	reader := textTree.ReaderAtPosition(pos)
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
 	}
@@ -32,7 +31,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	wrapWidth := uint64(width) - lineNumMargin
 	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
-	wrappedLineIter := segment.NewWrappedLineIter(reader, wrapConfig)
+	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
 

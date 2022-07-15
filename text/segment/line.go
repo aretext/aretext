@@ -2,7 +2,6 @@ package segment
 
 import (
 	"io"
-	"log"
 	"unicode"
 
 	"github.com/aretext/aretext/text"
@@ -309,21 +308,9 @@ type GraphemeClusterWidthFunc func(gc []rune, offsetInLine uint64) uint64
 
 // LineWrapConfig controls how lines should be soft-wrapped.
 type LineWrapConfig struct {
-	maxLineWidth    uint64
-	allowCharBreaks bool // Allow breaks at grapheme cluster boundaries.
-	widthFunc       GraphemeClusterWidthFunc
-}
-
-// NewLineWrapConfig constructs a configuration for soft-wrapping lines.
-// maxLineWidth is the maximum number of cells per line, which must be at least one.
-// allowCharBreaks controls whether breaks are allowed between adjacent grapheme clusters.
-// widthFunc returns the width in cells for a given grapheme cluster.
-func NewLineWrapConfig(maxLineWidth uint64, allowCharBreaks bool, widthFunc GraphemeClusterWidthFunc) LineWrapConfig {
-	if maxLineWidth == 0 {
-		log.Fatalf("maxLineWidth (%d) must be greater than zero", maxLineWidth)
-	}
-
-	return LineWrapConfig{maxLineWidth, allowCharBreaks, widthFunc}
+	MaxLineWidth    uint64 // Maximum number of cells per line, which must be at least one.
+	AllowCharBreaks bool   // Allow breaks at grapheme cluster boundaries.
+	WidthFunc       GraphemeClusterWidthFunc
 }
 
 // WrappedLineIter iterates through soft- and hard-wrapped lines.
@@ -336,6 +323,10 @@ type WrappedLineIter struct {
 
 // NewWrappedLineIter constructs a segment iterator for soft- and hard-wrapped lines.
 func NewWrappedLineIter(wrapConfig LineWrapConfig, textTree *text.Tree, startPos uint64) WrappedLineIter {
+	if wrapConfig.MaxLineWidth == 0 {
+		panic("MaxLineWidth must be greater than zero")
+	}
+
 	return WrappedLineIter{
 		wrapConfig: wrapConfig,
 		textTree:   textTree,
@@ -389,12 +380,12 @@ func (iter *WrappedLineIter) lookaheadLineBreakPos() (uint64, error) {
 
 		canBreakBeforeGc := gcBreaker.ProcessRune(r)
 		if canBreakBeforeGc {
-			lineWidth += iter.wrapConfig.widthFunc(iter.gc, lineWidth)
+			lineWidth += iter.wrapConfig.WidthFunc(iter.gc, lineWidth)
 			// Check if we've exceeded the max line width. If so, exit the loop and return
 			// the last breakpoint.
 			// If the rune is '\r' or '\n', continue so LineBreaker can hard-wrap on the next loop iteration.
-			if lineWidth >= iter.wrapConfig.maxLineWidth && r != '\r' && r != '\n' {
-				if lineBreakPos == iter.pos || iter.wrapConfig.allowCharBreaks {
+			if lineWidth >= iter.wrapConfig.MaxLineWidth && r != '\r' && r != '\n' {
+				if lineBreakPos == iter.pos || iter.wrapConfig.AllowCharBreaks {
 					// Break at the last grapheme cluster boundary if:
 					// 1) The user has configured lineWrap="character", or
 					// 2) There is no other break opportunity within maxLineWidth.

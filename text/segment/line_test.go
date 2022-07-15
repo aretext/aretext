@@ -120,141 +120,172 @@ func TestLineBreakerForceBreaks(t *testing.T) {
 
 func TestWrappedLineIter(t *testing.T) {
 	testCases := []struct {
-		name            string
-		inputString     string
-		maxLineWidth    uint64
-		allowCharBreaks bool
-		widthFunc       GraphemeClusterWidthFunc
-		expectedLines   []string
+		name          string
+		inputString   string
+		wrapConfig    LineWrapConfig
+		expectedLines []string
 	}{
 		{
-			name:          "empty",
-			inputString:   "",
-			maxLineWidth:  10,
-			widthFunc:     gcWidthFunc(1),
+			name:        "empty",
+			inputString: "",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 10,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{},
 		},
 		{
-			name:          "single rune, less than max line width",
-			inputString:   "a",
-			maxLineWidth:  2,
-			widthFunc:     gcWidthFunc(1),
+			name:        "single rune, less than max line width",
+			inputString: "a",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 2,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"a"},
 		},
 		{
-			name:          "single rune, equal to max line width",
-			inputString:   "a",
-			maxLineWidth:  1,
-			widthFunc:     gcWidthFunc(1),
+			name:        "single rune, equal to max line width",
+			inputString: "a",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 1,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"a"},
 		},
 		{
-			name:          "single rune, greater than max line width",
-			inputString:   "a",
-			maxLineWidth:  1,
-			widthFunc:     gcWidthFunc(2),
+			name:        "single rune, greater than max line width",
+			inputString: "a",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 1,
+				WidthFunc:    gcWidthFunc(2),
+			},
 			expectedLines: []string{"a"},
 		},
 		{
-			name:          "multiple runes, less than max line width",
-			inputString:   "abcd",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "multiple runes, less than max line width",
+			inputString: "abcd",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"abcd"},
 		},
 		{
-			name:          "multiple runes, equal to max line width",
-			inputString:   "abcde",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "multiple runes, equal to max line width",
+			inputString: "abcde",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"abcde"},
 		},
 		{
-			name:          "multiple runes, greater than max line width",
-			inputString:   "abcdef",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "multiple runes, greater than max line width",
+			inputString: "abcdef",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"abcde", "f"},
 		},
 		{
-			name:          "multiple runes, each greater than max line width",
-			inputString:   "abcdef",
-			maxLineWidth:  1,
-			widthFunc:     gcWidthFunc(2),
+			name:        "multiple runes, each greater than max line width",
+			inputString: "abcdef",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 1,
+				WidthFunc:    gcWidthFunc(2),
+			},
 			expectedLines: []string{"a", "b", "c", "d", "e", "f"},
 		},
 		{
-			name:          "single newline",
-			inputString:   "\n",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "single newline",
+			inputString: "\n",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"\n"},
 		},
 		{
-			name:          "multiple newlines",
-			inputString:   "\n\n\n",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "multiple newlines",
+			inputString: "\n\n\n",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"\n", "\n", "\n"},
 		},
 		{
-			name:          "runes with newlines, no soft wrapping",
-			inputString:   "abcd\nef\ngh\n",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "runes with newlines, no soft wrapping",
+			inputString: "abcd\nef\ngh\n",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"abcd\n", "ef\n", "gh\n"},
 		},
 		{
-			name:          "runes with newlines and soft wrapping",
-			inputString:   "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
-			maxLineWidth:  5,
-			widthFunc:     gcWidthFunc(1),
+			name:        "runes with newlines and soft wrapping",
+			inputString: "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 5,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"abcd\n", "efghi", "jkl\n", "mnopq", "rstuv", "wxyz\n", "0123"},
 		},
 		{
-			name:          "runes with newlines and soft wrapping, each rune width greater than max line width",
-			inputString:   "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
-			maxLineWidth:  1,
-			widthFunc:     gcWidthFunc(2),
+			name:        "runes with newlines and soft wrapping, each rune width greater than max line width",
+			inputString: "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 1,
+				WidthFunc:    gcWidthFunc(2),
+			},
 			expectedLines: []string{"a", "b", "c", "d\n", "e", "f", "g", "h", "i", "j", "k", "l\n", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z\n", "0", "1", "2", "3"},
 		},
 		{
-			name:          "line break at word boundaries",
-			inputString:   "Lorem ipsum dolor sit amet",
-			maxLineWidth:  13,
-			widthFunc:     gcWidthFunc(1),
+			name:        "line break at word boundaries",
+			inputString: "Lorem ipsum dolor sit amet",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 13,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"Lorem ipsum ", "dolor sit ", "amet"},
 		},
 		{
-			name:            "line break at character boundaries",
-			inputString:     "Lorem ipsum dolor sit amet",
-			maxLineWidth:    13,
-			allowCharBreaks: true,
-			widthFunc:       gcWidthFunc(1),
-			expectedLines:   []string{"Lorem ipsum d", "olor sit amet"},
+			name:        "line break at character boundaries",
+			inputString: "Lorem ipsum dolor sit amet",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth:    13,
+				AllowCharBreaks: true,
+				WidthFunc:       gcWidthFunc(1),
+			},
+			expectedLines: []string{"Lorem ipsum d", "olor sit amet"},
 		},
 		{
-			name:          "hard line break at CR",
-			inputString:   "Lorem\ripsum dolor sit amet",
-			maxLineWidth:  13,
-			widthFunc:     gcWidthFunc(1),
+			name:        "hard line break at CR",
+			inputString: "Lorem\ripsum dolor sit amet",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 13,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"Lorem\r", "ipsum dolor ", "sit amet"},
 		},
 		{
-			name:          "hard line break at CR LF",
-			inputString:   "Lorem\r\nipsum dolor sit amet",
-			maxLineWidth:  13,
-			widthFunc:     gcWidthFunc(1),
+			name:        "hard line break at CR LF",
+			inputString: "Lorem\r\nipsum dolor sit amet",
+			wrapConfig: LineWrapConfig{
+				MaxLineWidth: 13,
+				WidthFunc:    gcWidthFunc(1),
+			},
 			expectedLines: []string{"Lorem\r\n", "ipsum dolor ", "sit amet"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			wrapConfig := NewLineWrapConfig(tc.maxLineWidth, tc.allowCharBreaks, tc.widthFunc)
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			wrappedLineIter := NewWrappedLineIter(wrapConfig, tree, 0)
+			wrappedLineIter := NewWrappedLineIter(tc.wrapConfig, tree, 0)
 			lines := make([]string, 0)
 			seg := Empty()
 			for {

@@ -139,7 +139,7 @@ func (c Config) Validate() error {
 
 	for _, cmd := range c.MenuCommands {
 		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeFileLocations {
-			msg := fmt.Sprintf(
+			return fmt.Errorf(
 				"Menu command %q must have mode set to either %q, %q, %q, or %q",
 				cmd.Name,
 				CmdModeSilent,
@@ -147,7 +147,6 @@ func (c Config) Validate() error {
 				CmdModeInsert,
 				CmdModeFileLocations,
 			)
-			return errors.New(msg)
 		}
 	}
 

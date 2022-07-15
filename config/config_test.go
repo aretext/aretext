@@ -84,3 +84,50 @@ func TestConfigFromUntypedMap(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateConfig(t *testing.T) {
+	testCases := []struct {
+		name         string
+		updateFunc   func(c *Config)
+		expectErrMsg string
+	}{
+		{
+			name:         "default config is valid",
+			updateFunc:   nil,
+			expectErrMsg: "",
+		},
+		{
+			name: "tabSize zero is invalid",
+			updateFunc: func(c *Config) {
+				c.TabSize = 0
+			},
+			expectErrMsg: "TabSize must be greater than zero",
+		},
+		{
+			name: "menu mode is invalid",
+			updateFunc: func(c *Config) {
+				c.MenuCommands = append(c.MenuCommands, MenuCommandConfig{
+					Name: "testcmd",
+					Mode: "invalid",
+				})
+			},
+			expectErrMsg: "Menu command 'testcmd' must have mode set to either 'silent', 'terminal', 'insert', or 'fileLocations'",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := ConfigFromUntypedMap(nil)
+			if tc.updateFunc != nil {
+				tc.updateFunc(&config)
+			}
+
+			err := config.Validate()
+			if tc.expectErrMsg == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectErrMsg)
+			}
+		})
+	}
+}

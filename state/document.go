@@ -182,7 +182,7 @@ func currentTimelineState(state *EditorState) file.TimelineState {
 }
 
 func loadDocumentAndResetState(state *EditorState, path string, requireExists bool) (fileExists bool, err error) {
-	config := state.configRuleSet.ConfigForPath(path)
+	cfg := state.configRuleSet.ConfigForPath(path)
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if err := errors.Cause(err); errors.Is(err, fs.ErrNotExist) && !requireExists {
 		tree = text.NewTree()
@@ -204,18 +204,18 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.view.textOrigin = 0
 	state.documentBuffer.selector.Clear()
 	state.documentBuffer.search = searchState{}
-	state.documentBuffer.tabSize = uint64(config.TabSize) // safe b/c we validated the config.
-	state.documentBuffer.tabExpand = config.TabExpand
-	state.documentBuffer.showTabs = config.ShowTabs
-	state.documentBuffer.showSpaces = config.ShowSpaces
-	state.documentBuffer.autoIndent = config.AutoIndent
-	state.documentBuffer.showLineNum = config.ShowLineNumbers
+	state.documentBuffer.tabSize = uint64(cfg.TabSize) // safe b/c we validated the config.
+	state.documentBuffer.tabExpand = cfg.TabExpand
+	state.documentBuffer.showTabs = cfg.ShowTabs
+	state.documentBuffer.showSpaces = cfg.ShowSpaces
+	state.documentBuffer.autoIndent = cfg.AutoIndent
+	state.documentBuffer.showLineNum = cfg.ShowLineNumbers
 	state.documentBuffer.undoLog.TrackLoad()
 	state.menu = &MenuState{}
-	state.customMenuItems = customMenuItems(config)
-	state.dirPatternsToHide = config.HideDirectories
-	state.styles = config.Styles
-	setSyntaxAndRetokenize(state.documentBuffer, syntax.Language(config.SyntaxLanguage))
+	state.customMenuItems = customMenuItems(cfg)
+	state.dirPatternsToHide = cfg.HideDirectories
+	state.styles = cfg.Styles
+	setSyntaxAndRetokenize(state.documentBuffer, syntax.Language(cfg.SyntaxLanguage))
 
 	return fileExists, nil
 }
@@ -234,11 +234,11 @@ func setCursorAfterLoad(state *EditorState, cursorLoc Locator) {
 	ScrollViewToCursor(state)
 }
 
-func customMenuItems(config config.Config) []menu.Item {
+func customMenuItems(cfg config.Config) []menu.Item {
 	// Deduplicate commands with the same name.
 	// Later commands take priority.
-	uniqueItemMap := make(map[string]menu.Item, len(config.MenuCommands))
-	for _, cmd := range config.MenuCommands {
+	uniqueItemMap := make(map[string]menu.Item, len(cfg.MenuCommands))
+	for _, cmd := range cfg.MenuCommands {
 		uniqueItemMap[cmd.Name] = menu.Item{
 			Name:   cmd.Name,
 			Action: actionForCustomMenuItem(cmd),

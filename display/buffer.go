@@ -30,7 +30,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	showSpaces := buffer.ShowSpaces()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	wrapWidth := uint64(width) - lineNumMargin
-	wrapConfig := segment.NewLineWrapConfig(wrapWidth, gcWidthFunc)
+	wrapConfig := segment.NewLineWrapConfig(wrapWidth, false, gcWidthFunc)
 	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()

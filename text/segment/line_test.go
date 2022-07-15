@@ -120,11 +120,12 @@ func TestLineBreakerForceBreaks(t *testing.T) {
 
 func TestWrappedLineIter(t *testing.T) {
 	testCases := []struct {
-		name          string
-		inputString   string
-		maxLineWidth  uint64
-		widthFunc     GraphemeClusterWidthFunc
-		expectedLines []string
+		name            string
+		inputString     string
+		maxLineWidth    uint64
+		allowCharBreaks bool
+		widthFunc       GraphemeClusterWidthFunc
+		expectedLines   []string
 	}{
 		{
 			name:          "empty",
@@ -225,6 +226,14 @@ func TestWrappedLineIter(t *testing.T) {
 			expectedLines: []string{"Lorem ipsum ", "dolor sit ", "amet"},
 		},
 		{
+			name:            "line break at character boundaries",
+			inputString:     "Lorem ipsum dolor sit amet",
+			maxLineWidth:    13,
+			allowCharBreaks: true,
+			widthFunc:       gcWidthFunc(1),
+			expectedLines:   []string{"Lorem ipsum d", "olor sit amet"},
+		},
+		{
 			name:          "hard line break at CR",
 			inputString:   "Lorem\ripsum dolor sit amet",
 			maxLineWidth:  13,
@@ -242,7 +251,7 @@ func TestWrappedLineIter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			wrapConfig := NewLineWrapConfig(tc.maxLineWidth, tc.widthFunc)
+			wrapConfig := NewLineWrapConfig(tc.maxLineWidth, tc.allowCharBreaks, tc.widthFunc)
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			wrappedLineIter := NewWrappedLineIter(wrapConfig, tree, 0)

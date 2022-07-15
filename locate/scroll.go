@@ -25,7 +25,7 @@ func ViewOriginAfterScroll(cursorPos uint64, tree *text.Tree, viewOrigin, viewWi
 	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
 	}
-	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), gcWidthFunc)
+	wrapConfig := segment.NewLineWrapConfig(uint64(viewWidth), false, gcWidthFunc)
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)
 	if cursorPos < rng.startPos {
 		// scroll backward

@@ -140,7 +140,7 @@ func (c Config) Validate() error {
 	for _, cmd := range c.MenuCommands {
 		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeFileLocations {
 			msg := fmt.Sprintf(
-				"Menu command '%s' must have mode set to either '%s', '%s', '%s', or '%s'",
+				"Menu command %q must have mode set to either %q, %q, %q, or %q",
 				cmd.Name,
 				CmdModeSilent,
 				CmdModeTerminal,
@@ -162,7 +162,7 @@ func stringOrDefault(m map[string]any, key string, defaultVal string) string {
 
 	s, ok := v.(string)
 	if !ok {
-		log.Printf("Could not decode string for config key '%s'\n", key)
+		log.Printf("Could not decode string for config key %q\n", key)
 		return defaultVal
 	}
 
@@ -181,7 +181,7 @@ func intOrDefault(m map[string]any, key string, defaultVal int) int {
 	case float64:
 		return int(v)
 	default:
-		log.Printf("Could not decode int for config key '%s'\n", key)
+		log.Printf("Could not decode int for config key %q\n", key)
 		return defaultVal
 	}
 }
@@ -194,7 +194,7 @@ func boolOrDefault(m map[string]any, key string, defaultVal bool) bool {
 
 	b, ok := v.(bool)
 	if !ok {
-		log.Printf("Could not decode bool for config key '%s'\n", key)
+		log.Printf("Could not decode bool for config key %q\n", key)
 		return defaultVal
 	}
 
@@ -209,7 +209,7 @@ func sliceOrNil(m map[string]any, key string) []any {
 
 	s, ok := v.([]any)
 	if !ok {
-		log.Printf("Could not decode slice for config key '%s'\n", key)
+		log.Printf("Could not decode slice for config key %q\n", key)
 		return nil
 	}
 
@@ -226,7 +226,7 @@ func stringSliceOrNil(m map[string]any, key string) []string {
 	for i := 0; i < len(slice); i++ {
 		s, ok := (slice[i]).(string)
 		if !ok {
-			log.Printf("Could not decode string in slice for config key '%s'\n", key)
+			log.Printf("Could not decode string in slice for config key %q\n", key)
 			continue
 		}
 		stringSlice = append(stringSlice, s)
@@ -242,7 +242,7 @@ func mapOrNil(m map[string]any, key string) map[string]any {
 
 	subMap, ok := v.(map[string]any)
 	if !ok {
-		log.Printf("Could not decode map for config key '%s'\n", key)
+		log.Printf("Could not decode map for config key %q\n", key)
 		return nil
 	}
 

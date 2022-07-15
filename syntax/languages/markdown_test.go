@@ -26,6 +26,17 @@ func TestMarkdownParseFunc(t *testing.T) {
 	testCases, err := loadCommonmarkTests()
 	require.NoError(t, err)
 
+	testCases = append(testCases, markdownTest{
+		name: "fenced code block with underline",
+		text: "```\n  ---\n```",
+		expected: []TokenWithText{
+			{
+				Role: markdownCodeBlockRole,
+				Text: "```\n  ---\n```",
+			},
+		},
+	})
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.skipReason != "" {

@@ -59,14 +59,16 @@ func MarkdownParseFunc() parser.Func {
 		markdownParseStateNormal,
 		markdownThematicBreakParseFunc())
 
+	parseCodeBlock := markdownFencedCodeBlockParseFunc().
+		Map(setState(markdownParseStateNormal))
+
 	parseHeadings := matchState(
 		markdownParseStateNormal,
 		markdownAtxHeadingParseFunc().
 			Or(markdownSetextHeadingParseFunc()),
 	)
 
-	parseOtherBlocks := markdownFencedCodeBlockParseFunc().
-		Or(markdownParagraphParseFunc()).
+	parseOtherBlocks := markdownParagraphParseFunc().
 		Or(consumeToNextLineFeed).
 		Map(setState(markdownParseStateNormal))
 
@@ -74,6 +76,7 @@ func MarkdownParseFunc() parser.Func {
 		markdownParseStateNormal,
 		parseThematicBreak.
 			Or(parseListItem).
+			Or(parseCodeBlock).
 			Or(parseHeadings).
 			Or(parseOtherBlocks),
 	)

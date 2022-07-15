@@ -7,7 +7,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
@@ -23,17 +22,10 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	selectedRegion := buffer.SelectedRegion()
 	viewTextOrigin := buffer.ViewTextOrigin()
 	pos := viewTextOrigin
-	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, buffer.TabSize())
-	}
 	showTabs := buffer.ShowTabs()
 	showSpaces := buffer.ShowSpaces()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
-	wrapWidth := uint64(width) - lineNumMargin
-	wrapConfig := segment.LineWrapConfig{
-		MaxLineWidth: wrapWidth,
-		WidthFunc:    gcWidthFunc,
-	}
+	wrapConfig := buffer.LineWrapConfig()
 	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
@@ -56,7 +48,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			palette,
 			pos,
 			row,
-			int(wrapWidth),
+			int(wrapConfig.MaxLineWidth),
 			lineNum,
 			lineNumMargin,
 			lineStartPos,
@@ -65,7 +57,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			cursorPos,
 			selectedRegion,
 			searchMatch,
-			gcWidthFunc,
+			wrapConfig.WidthFunc,
 			showTabs,
 			showSpaces,
 		)

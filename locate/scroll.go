@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 
-	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
@@ -21,14 +20,7 @@ const ScrollMargin = 3
 
 // ViewOriginAfterScroll returns a new view origin such that the cursor is visible.
 // It attempts to display a few lines before/after the cursor to help the user navigate.
-func ViewOriginAfterScroll(cursorPos uint64, tree *text.Tree, viewOrigin, viewWidth, viewHeight, tabSize uint64) uint64 {
-	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
-	}
-	wrapConfig := segment.LineWrapConfig{
-		MaxLineWidth: uint64(viewWidth),
-		WidthFunc:    gcWidthFunc,
-	}
+func ViewOriginAfterScroll(cursorPos uint64, tree *text.Tree, wrapConfig segment.LineWrapConfig, viewOrigin, viewHeight uint64) uint64 {
 	rng := visibleRangeWithinMargin(tree, viewOrigin, wrapConfig, viewHeight)
 	if cursorPos < rng.startPos {
 		// scroll backward

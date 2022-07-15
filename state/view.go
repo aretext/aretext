@@ -36,10 +36,9 @@ func scrollViewToPosition(buffer *BufferState, pos uint64) {
 	buffer.view.textOrigin = locate.ViewOriginAfterScroll(
 		pos,
 		buffer.textTree,
+		buffer.LineWrapConfig(),
 		buffer.view.textOrigin,
-		buffer.view.width-buffer.LineNumMarginWidth(),
-		buffer.view.height,
-		buffer.tabSize)
+		buffer.view.height)
 }
 
 // ScrollViewByNumLines moves the view origin up or down by the specified number of lines.

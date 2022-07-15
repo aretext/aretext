@@ -6,7 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/text/segment"
 )
 
 func stringWithLen(n int) string {
@@ -186,7 +188,13 @@ func TestViewOriginAfterScroll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			updatedViewStartPos := ViewOriginAfterScroll(tc.cursorPos, tree, tc.viewStartPos, tc.viewWidth, tc.viewHeight, 4)
+			wrapConfig := segment.LineWrapConfig{
+				MaxLineWidth: tc.viewWidth,
+				WidthFunc: func(gc []rune, offsetInLine uint64) uint64 {
+					return cellwidth.GraphemeClusterWidth(gc, offsetInLine, 4)
+				},
+			}
+			updatedViewStartPos := ViewOriginAfterScroll(tc.cursorPos, tree, wrapConfig, tc.viewStartPos, tc.viewHeight)
 			assert.Equal(t, tc.expectedPos, updatedViewStartPos)
 		})
 	}

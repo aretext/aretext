@@ -1,6 +1,7 @@
 package state
 
 import (
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
@@ -9,6 +10,7 @@ import (
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/text/segment"
 	"github.com/aretext/aretext/undo"
 )
 
@@ -242,6 +244,18 @@ func (s *BufferState) LineNumMarginWidth() uint64 {
 	}
 
 	return width
+}
+
+func (s *BufferState) LineWrapConfig() segment.LineWrapConfig {
+	width := s.view.width - s.LineNumMarginWidth()
+	tabSize := s.tabSize
+	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
+		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
+	}
+	return segment.LineWrapConfig{
+		MaxLineWidth: width,
+		WidthFunc:    gcWidthFunc,
+	}
 }
 
 // viewState represents the current view of the document.

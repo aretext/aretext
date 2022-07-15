@@ -13,6 +13,7 @@ const DefaultShowTabs = false
 const DefaultShowSpaces = false
 const DefaultAutoIndent = false
 const DefaultShowLineNumbers = false
+const DefaultLineWrap = LineWrapCharacter
 
 // Config is a configuration for the editor.
 type Config struct {
@@ -37,6 +38,9 @@ type Config struct {
 	// If enabled, show line numbers in the left margin.
 	ShowLineNumbers bool
 
+	// LineWrap controls how lines are soft-wrapped.
+	LineWrap string
+
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
 
@@ -46,6 +50,11 @@ type Config struct {
 	// Style overrides.
 	Styles map[string]StyleConfig
 }
+
+const (
+	LineWrapCharacter = "character" // Break lines between any two characters.
+	LineWrapWord      = "word"      // Break lines only between words.
+)
 
 const (
 	CmdModeSilent        = "silent"        // accepts no input and any output is discarded.
@@ -125,6 +134,7 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		ShowSpaces:      boolOrDefault(m, "showSpaces", DefaultShowSpaces),
 		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
 		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
+		LineWrap:        stringOrDefault(m, "lineWrap", DefaultLineWrap),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
 		Styles:          stylesFromMap(mapOrNil(m, "styles")),
@@ -135,6 +145,10 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 func (c Config) Validate() error {
 	if c.TabSize < 1 {
 		return errors.New("TabSize must be greater than zero")
+	}
+
+	if c.LineWrap != LineWrapCharacter && c.LineWrap != LineWrapWord {
+		return fmt.Errorf("LineWrap must be either %q or %q", LineWrapCharacter, LineWrapWord)
 	}
 
 	for _, cmd := range c.MenuCommands {

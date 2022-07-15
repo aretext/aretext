@@ -18,6 +18,7 @@ func TestConfigFromUntypedMap(t *testing.T) {
 			expected: Config{
 				SyntaxLanguage: "plaintext",
 				TabSize:        4,
+				LineWrap:       "character",
 				MenuCommands:   []MenuCommandConfig{},
 				Styles:         map[string]StyleConfig{},
 			},
@@ -51,6 +52,7 @@ func TestConfigFromUntypedMap(t *testing.T) {
 			expected: Config{
 				SyntaxLanguage: "customLang",
 				TabSize:        4,
+				LineWrap:       "character",
 				MenuCommands:   []MenuCommandConfig{},
 				Styles: map[string]StyleConfig{
 					"lineNum": {
@@ -102,6 +104,13 @@ func TestValidateConfig(t *testing.T) {
 				c.TabSize = 0
 			},
 			expectErrMsg: "TabSize must be greater than zero",
+		},
+		{
+			name: "lineWrap is invalid",
+			updateFunc: func(c *Config) {
+				c.LineWrap = "invalid"
+			},
+			expectErrMsg: `LineWrap must be either "character" or "word"`,
 		},
 		{
 			name: "menu mode is invalid",

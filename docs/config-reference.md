@@ -12,6 +12,7 @@ This document lists every configuration option in aretext.
 | showSpaces      | boolean          | If true, display spaces in the document.                                                                                                    |
 | autoIndent      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                        |
 | showLineNumbers | boolean          | If true, display line numbers.                                                                                                              |
+| lineWrap        | enum             | Control soft line wrapping behavior. Either "character" for breaking at any character boundary or "word" to break only at word boundaries.  |
 | menuCommands    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields. |
 | hideDirectories | array of strings | Glob patterns matching directories to hide from file search. Patterns are matched against the absolute path to the directory.               |
 | styles          | dict             | Styles control how UI elements are displayed. See [Styles](#styles) below for details.                                                      |

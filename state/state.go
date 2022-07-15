@@ -140,20 +140,21 @@ func (s *EditorState) QuitFlag() bool {
 
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
-	textTree       *text.Tree
-	cursor         cursorState
-	selector       *selection.Selector
-	view           viewState
-	search         searchState
-	undoLog        *undo.Log
-	syntaxLanguage syntax.Language
-	syntaxParser   *parser.P
-	tabSize        uint64
-	tabExpand      bool
-	showTabs       bool
-	showSpaces     bool
-	autoIndent     bool
-	showLineNum    bool
+	textTree                *text.Tree
+	cursor                  cursorState
+	selector                *selection.Selector
+	view                    viewState
+	search                  searchState
+	undoLog                 *undo.Log
+	syntaxLanguage          syntax.Language
+	syntaxParser            *parser.P
+	tabSize                 uint64
+	tabExpand               bool
+	showTabs                bool
+	showSpaces              bool
+	autoIndent              bool
+	showLineNum             bool
+	lineWrapAllowCharBreaks bool
 }
 
 func (s *BufferState) TextTree() *text.Tree {
@@ -253,8 +254,9 @@ func (s *BufferState) LineWrapConfig() segment.LineWrapConfig {
 		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
 	}
 	return segment.LineWrapConfig{
-		MaxLineWidth: width,
-		WidthFunc:    gcWidthFunc,
+		MaxLineWidth:    width,
+		WidthFunc:       gcWidthFunc,
+		AllowCharBreaks: s.lineWrapAllowCharBreaks,
 	}
 }
 

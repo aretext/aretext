@@ -210,6 +210,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.showSpaces = cfg.ShowSpaces
 	state.documentBuffer.autoIndent = cfg.AutoIndent
 	state.documentBuffer.showLineNum = cfg.ShowLineNumbers
+	state.documentBuffer.lineWrapAllowCharBreaks = bool(cfg.LineWrap == config.LineWrapCharacter)
 	state.documentBuffer.undoLog.TrackLoad()
 	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(cfg)

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFuzzySearchIndex(t *testing.T) {
@@ -111,4 +112,18 @@ func TestFuzzySearchIndex(t *testing.T) {
 			assert.Equal(t, tc.expected, records)
 		})
 	}
+}
+
+func TestDroppedItemSliceGrowBug(t *testing.T) {
+	// This would trigger a bug where the trie node slice
+	// would grow just before updating a pointer to the
+	// old backing array, causing items to be dropped
+	// from the trie.
+	records := []string{
+		"configmap",
+		"cluster",
+	}
+	index := NewIndex(records)
+	recordIds := index.Search("cluster")
+	require.Equal(t, []int{1}, recordIds)
 }

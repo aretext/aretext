@@ -70,12 +70,16 @@ func (t *trie) insert(s string, recordId int) {
 				minRecordId:  child.minRecordId,
 				maxRecordId:  child.maxRecordId,
 			}
-			t.nodes = append(t.nodes, suffixNode)
 
 			// Truncate the child so it represents the shared suffix.
 			child.recordSlice = child.recordSlice[0:n]
 			child.childNodeIds = []int{suffixNodeId}
 			child.recordIds = nil
+
+			// Add the suffix node *after* we update the child.
+			// (If we did it before, the slice might grow and we'd update
+			// memory that isn't part of the new slice.)
+			t.nodes = append(t.nodes, suffixNode)
 
 			// Continue from the truncated child.
 			currentNodeId = childNodeId

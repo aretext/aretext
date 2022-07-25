@@ -23,11 +23,11 @@ Getting Started
 -	[Quickstart](https://aretext.org/docs/quickstart/)
 -	[User Documentation](https://aretext.org/docs/)
 
-Project Status: Beta
---------------------
+Project Status
+--------------
 
 -	The user interface is stable, and I am using it as my primary editor.
--	Syntax highlighting is available for several languages, including Go, Python, Rust, and C.
+-	Syntax highlighting is available for [several languages](https://aretext.org/docs/config-reference/#syntax-languages), including Go, Python, Rust, and C.
 -	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.

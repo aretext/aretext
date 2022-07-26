@@ -1,7 +1,7 @@
 Files
 =====
 
-Aretext is designed to integrate seamlessly with a terminal-based workflow. This strongly influences aretext's approach to managing files:
+Aretext is designed to integrate seamlessly with a terminal-based workflow. This strongly influences how aretext manages files:
 
 -	It delegates window management to your terminal multiplexer or emulator. Each instance of aretext opens a single document at a time; to edit multiple documents simultaneously, you can use [tmux](https://wiki.archlinux.org/title/Tmux) to run multiple instances of aretext in the same terminal.
 

@@ -72,8 +72,7 @@ This is a powerful mechanism for customizing configuration based on filename ext
 Troubleshooting
 ---------------
 
-Fixing errors on startup
-========================
+### Fixing errors on startup
 
 If your YAML config file has errors, aretext will exit with an error message. You can force aretext to ignore the config file by passing the "-noconfig" flag:
 
@@ -83,8 +82,7 @@ aretext -editconfig -noconfig
 
 This allows you to start the editor so you can fix the configuration.
 
-Checking which rules were applied
-=================================
+### Checking which rules were applied
 
 To see which configuration rules aretext applied when loading a file, start aretext with logging enabled:
 

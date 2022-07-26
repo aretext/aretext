@@ -9,7 +9,7 @@ Aretext is designed to integrate seamlessly with a terminal-based workflow. This
 
 -	It automatically reloads files that change on disk (unless there are unsaved changes). For example, if you run a code formatting tool that changes a file, aretext will automatically reload it.
 
-Aretext currently supports only UTF-8 encoded documents.
+Aretext currently supports only UTF-8 encoded documents with Unix-style (LF) line endings.
 
 Fuzzy file search
 -----------------

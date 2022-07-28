@@ -127,3 +127,17 @@ func TestDroppedItemSliceGrowBug(t *testing.T) {
 	recordIds := index.Search("cluster")
 	require.Equal(t, []int{1}, recordIds)
 }
+
+func TestLeafNodeMinMaxRecordIdNotSet(t *testing.T) {
+	// This would trigger a bug where the first keyword
+	// matches record 1, and the second keyword matches
+	// a leaf node with record 1, but the leaf node is
+	// skipped because min/max record IDs weren't updated.
+	records := []string{
+		"./allocation/xxxxxxxxx/allocator.go",
+		"./allocation/yyyyyyyyy/allocator.go",
+	}
+	index := NewIndex(records)
+	recordIds := index.Search("yyyyyyyy/allo")
+	require.Equal(t, []int{1}, recordIds)
+}

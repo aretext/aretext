@@ -90,6 +90,7 @@ func (t *trie) insert(s string, recordId int) {
 	}
 
 	t.nodes[currentNodeId].recordIds.add(recordId)
+	t.nodes[currentNodeId].updateMinAndMaxRecordId(recordId)
 }
 
 func (t *trie) findChildForChar(nodeId int, c byte) (int, bool) {

@@ -1039,7 +1039,7 @@ func InsertModeCommands() []Command {
 				return keyExpr(tcell.KeyRight)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorRight)
+				return decorate(CursorRightIncludeEndOfLineOrFile)
 			},
 		},
 		{

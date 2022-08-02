@@ -338,6 +338,18 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\ntest sit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "insert move cursor right at end of line",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRight, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 16,
+			expectedText:      "Lorem ipsum dolo\nsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "append",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

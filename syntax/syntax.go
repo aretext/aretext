@@ -12,18 +12,19 @@ type Language string
 var AllLanguages []Language
 
 const (
-	LanguagePlaintext = Language("plaintext")
-	LanguageJson      = Language("json")
-	LanguageYaml      = Language("yaml")
-	LanguageGo        = Language("go")
-	LanguagePython    = Language("python")
-	LanguageRust      = Language("rust")
-	LanguageC         = Language("c")
-	LanguageGitCommit = Language("gitcommit")
-	LanguageGitRebase = Language("gitrebase")
-	LanguageProtobuf  = Language("protobuf")
-	LanguageTodoTxt   = Language("todotxt")
-	LanguageMarkdown  = Language("markdown")
+	LanguagePlaintext    = Language("plaintext")
+	LanguageJson         = Language("json")
+	LanguageYaml         = Language("yaml")
+	LanguageGo           = Language("go")
+	LanguagePython       = Language("python")
+	LanguageRust         = Language("rust")
+	LanguageC            = Language("c")
+	LanguageGitCommit    = Language("gitcommit")
+	LanguageGitRebase    = Language("gitrebase")
+	LanguageProtobuf     = Language("protobuf")
+	LanguageTodoTxt      = Language("todotxt")
+	LanguageMarkdown     = Language("markdown")
+	LanguageCriticMarkup = Language("criticmarkup")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -31,18 +32,19 @@ var languageToParseFunc map[Language]parser.Func
 
 func init() {
 	languageToParseFunc = map[Language]parser.Func{
-		LanguagePlaintext: nil,
-		LanguageJson:      languages.JsonParseFunc(),
-		LanguageYaml:      languages.YamlParseFunc(),
-		LanguageGo:        languages.GolangParseFunc(),
-		LanguagePython:    languages.PythonParseFunc(),
-		LanguageRust:      languages.RustParseFunc(),
-		LanguageC:         languages.CParseFunc(),
-		LanguageGitCommit: languages.GitCommitParseFunc(),
-		LanguageGitRebase: languages.GitRebaseParseFunc(),
-		LanguageProtobuf:  languages.ProtobufParseFunc(),
-		LanguageTodoTxt:   languages.TodoTxtParseFunc(),
-		LanguageMarkdown:  languages.MarkdownParseFunc(),
+		LanguagePlaintext:    nil,
+		LanguageJson:         languages.JsonParseFunc(),
+		LanguageYaml:         languages.YamlParseFunc(),
+		LanguageGo:           languages.GolangParseFunc(),
+		LanguagePython:       languages.PythonParseFunc(),
+		LanguageRust:         languages.RustParseFunc(),
+		LanguageC:            languages.CParseFunc(),
+		LanguageGitCommit:    languages.GitCommitParseFunc(),
+		LanguageGitRebase:    languages.GitRebaseParseFunc(),
+		LanguageProtobuf:     languages.ProtobufParseFunc(),
+		LanguageTodoTxt:      languages.TodoTxtParseFunc(),
+		LanguageMarkdown:     languages.MarkdownParseFunc(),
+		LanguageCriticMarkup: languages.CriticMarkupParseFunc(),
 	}
 
 	for language := range languageToParseFunc {

@@ -172,6 +172,25 @@
       tokenCustom3: {color: "default", bold: true}     # Strong emphasis
       tokenCustom4: {color: "purple", underline: true} # Link
 
+# to enable criticmarkup for markdown files,
+# replace the "markdown" rule above with this one:
+#- name: criticmarkup
+#  pattern: "**/*.md"
+#  config:
+#    syntaxLanguage: criticmarkup
+#    lineWrap: "word"
+#    styles:
+#      tokenCustom1:  {color: "teal", bold: true}        # Heading
+#      tokenCustom2:  {color: "default", italic: true}   # Emphasis
+#      tokenCustom3:  {color: "default", bold: true}     # Strong emphasis
+#      tokenCustom4:  {color: "purple", underline: true} # Link
+#      tokenCustom9:  {color: "green"}  # Addition
+#      tokenCustom10: {color: "red"}    # Deletion
+#      tokenCustom11: {color: "purple"} # Substitution
+#      tokenCustom12:                   # Highlight
+#        color: "black"
+#        backgroundColor: "yellow"
+
 - name: protobuf
   pattern: "**/*.proto"
   config:

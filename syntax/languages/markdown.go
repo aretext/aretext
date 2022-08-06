@@ -389,7 +389,7 @@ func markdownFencedCodeBlockParseFunc() parser.Func {
 				n++
 				if r == '\n' {
 					break
-				} else if maybeFence && !(r == ' ' || r == '\t') {
+				} else if maybeFence && !(r == ' ' || r == '\t' || r == '\r') {
 					// Only trailing whitespace allowed after code fence.
 					maybeFence = false
 				}

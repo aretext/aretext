@@ -30,19 +30,7 @@ type Palette struct {
 	menuItemUnselectedStyle   tcell.Style
 	searchPrefixStyle         tcell.Style
 	searchQueryStyle          tcell.Style
-	tokenOperatorStyle        tcell.Style
-	tokenKeywordStyle         tcell.Style
-	tokenNumberStyle          tcell.Style
-	tokenStringStyle          tcell.Style
-	tokenCommentStyle         tcell.Style
-	tokenCustom1Style         tcell.Style
-	tokenCustom2Style         tcell.Style
-	tokenCustom3Style         tcell.Style
-	tokenCustom4Style         tcell.Style
-	tokenCustom5Style         tcell.Style
-	tokenCustom6Style         tcell.Style
-	tokenCustom7Style         tcell.Style
-	tokenCustom8Style         tcell.Style
+	tokenRoleStyle            map[parser.TokenRole]tcell.Style
 }
 
 func NewPalette() *Palette {
@@ -66,54 +54,57 @@ func NewPalette() *Palette {
 		menuItemUnselectedStyle:   s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
-		tokenOperatorStyle:        s.Foreground(tcell.ColorPurple),
-		tokenKeywordStyle:         s.Foreground(tcell.ColorOlive),
-		tokenNumberStyle:          s.Foreground(tcell.ColorGreen),
-		tokenStringStyle:          s.Foreground(tcell.ColorMaroon),
-		tokenCommentStyle:         s.Foreground(tcell.ColorNavy),
-		tokenCustom1Style:         s.Foreground(tcell.ColorTeal),
-		tokenCustom2Style:         s.Foreground(tcell.ColorDarkBlue),
-		tokenCustom3Style:         s.Foreground(tcell.ColorRed),
-		tokenCustom4Style:         s.Foreground(tcell.ColorLime),
-		tokenCustom5Style:         s.Foreground(tcell.ColorFuchsia),
-		tokenCustom6Style:         s.Foreground(tcell.ColorAqua),
-		tokenCustom7Style:         s.Foreground(tcell.ColorDarkGreen),
-		tokenCustom8Style:         s.Foreground(tcell.ColorDarkCyan),
+		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
+			parser.TokenRoleOperator: s.Foreground(tcell.ColorPurple),
+			parser.TokenRoleKeyword:  s.Foreground(tcell.ColorOlive),
+			parser.TokenRoleNumber:   s.Foreground(tcell.ColorGreen),
+			parser.TokenRoleString:   s.Foreground(tcell.ColorMaroon),
+			parser.TokenRoleComment:  s.Foreground(tcell.ColorNavy),
+			parser.TokenRoleCustom1:  s.Foreground(tcell.ColorTeal),
+			parser.TokenRoleCustom2:  s.Foreground(tcell.ColorDarkBlue),
+			parser.TokenRoleCustom3:  s.Foreground(tcell.ColorRed),
+			parser.TokenRoleCustom4:  s.Foreground(tcell.ColorLime),
+			parser.TokenRoleCustom5:  s.Foreground(tcell.ColorFuchsia),
+			parser.TokenRoleCustom6:  s.Foreground(tcell.ColorAqua),
+			parser.TokenRoleCustom7:  s.Foreground(tcell.ColorDarkGreen),
+			parser.TokenRoleCustom8:  s.Foreground(tcell.ColorDarkCyan),
+		},
 	}
 }
 
 func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
 	p := NewPalette()
 	for k, v := range styles {
+		s := styleFromConfig(v)
 		switch k {
 		case config.StyleLineNum:
-			p.lineNumStyle = styleFromConfig(v)
+			p.lineNumStyle = s
 		case config.StyleTokenOperator:
-			p.tokenOperatorStyle = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleOperator] = s
 		case config.StyleTokenKeyword:
-			p.tokenKeywordStyle = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleKeyword] = s
 		case config.StyleTokenNumber:
-			p.tokenNumberStyle = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleNumber] = s
 		case config.StyleTokenString:
-			p.tokenStringStyle = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleString] = s
 		case config.StyleTokenComment:
-			p.tokenCommentStyle = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleComment] = s
 		case config.StyleTokenCustom1:
-			p.tokenCustom1Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom1] = s
 		case config.StyleTokenCustom2:
-			p.tokenCustom2Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom2] = s
 		case config.StyleTokenCustom3:
-			p.tokenCustom3Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom3] = s
 		case config.StyleTokenCustom4:
-			p.tokenCustom4Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom4] = s
 		case config.StyleTokenCustom5:
-			p.tokenCustom5Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom5] = s
 		case config.StyleTokenCustom6:
-			p.tokenCustom6Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom6] = s
 		case config.StyleTokenCustom7:
-			p.tokenCustom7Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom7] = s
 		case config.StyleTokenCustom8:
-			p.tokenCustom8Style = styleFromConfig(v)
+			p.tokenRoleStyle[parser.TokenRoleCustom8] = s
 		default:
 			log.Printf("Unrecognized style key: %s\n", k)
 		}
@@ -197,36 +188,8 @@ func (p *Palette) StyleForSearchQuery() tcell.Style {
 }
 
 func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
-	switch tokenRole {
-	case parser.TokenRoleOperator:
-		return p.tokenOperatorStyle
-	case parser.TokenRoleKeyword:
-		return p.tokenKeywordStyle
-	case parser.TokenRoleNumber:
-		return p.tokenNumberStyle
-	case parser.TokenRoleString:
-		return p.tokenStringStyle
-	case parser.TokenRoleComment:
-		return p.tokenCommentStyle
-	case parser.TokenRoleCustom1:
-		return p.tokenCustom1Style
-	case parser.TokenRoleCustom2:
-		return p.tokenCustom2Style
-	case parser.TokenRoleCustom3:
-		return p.tokenCustom3Style
-	case parser.TokenRoleCustom4:
-		return p.tokenCustom4Style
-	case parser.TokenRoleCustom5:
-		return p.tokenCustom5Style
-	case parser.TokenRoleCustom6:
-		return p.tokenCustom6Style
-	case parser.TokenRoleCustom7:
-		return p.tokenCustom7Style
-	case parser.TokenRoleCustom8:
-		return p.tokenCustom8Style
-	default:
-		return tcell.StyleDefault
-	}
+	// If key is not set, returns tcell.StyleDefault (the zero value).
+	return p.tokenRoleStyle[tokenRole]
 }
 
 func styleFromConfig(s config.StyleConfig) tcell.Style {

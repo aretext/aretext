@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/config"
+	"github.com/aretext/aretext/syntax/parser"
 )
 
 func TestPaletteFromConfigStyles(t *testing.T) {
@@ -51,19 +52,21 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 		menuItemUnselectedStyle:   s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
-		tokenOperatorStyle:        s.Foreground(tcell.ColorPurple),
-		tokenKeywordStyle:         s.Foreground(tcell.ColorOlive),
-		tokenNumberStyle:          s.Foreground(tcell.ColorGreen),
-		tokenStringStyle:          s.Foreground(tcell.ColorMaroon),
-		tokenCommentStyle:         s.Foreground(tcell.ColorNavy),
-		tokenCustom1Style:         s.Foreground(tcell.ColorBlack).Bold(true),
-		tokenCustom2Style:         s.Foreground(tcell.ColorRed).Italic(true).Underline(true),
-		tokenCustom3Style:         s.Foreground(tcell.ColorGreen).StrikeThrough(true),
-		tokenCustom4Style:         s.Background(tcell.ColorYellow),
-		tokenCustom5Style:         s.Foreground(tcell.ColorFuchsia),
-		tokenCustom6Style:         s.Foreground(tcell.ColorAqua),
-		tokenCustom7Style:         s.Foreground(tcell.ColorDarkGreen),
-		tokenCustom8Style:         s.Foreground(tcell.ColorDarkCyan),
+		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
+			parser.TokenRoleOperator: s.Foreground(tcell.ColorPurple),
+			parser.TokenRoleKeyword:  s.Foreground(tcell.ColorOlive),
+			parser.TokenRoleNumber:   s.Foreground(tcell.ColorGreen),
+			parser.TokenRoleString:   s.Foreground(tcell.ColorMaroon),
+			parser.TokenRoleComment:  s.Foreground(tcell.ColorNavy),
+			parser.TokenRoleCustom1:  s.Foreground(tcell.ColorBlack).Bold(true),
+			parser.TokenRoleCustom2:  s.Foreground(tcell.ColorRed).Italic(true).Underline(true),
+			parser.TokenRoleCustom3:  s.Foreground(tcell.ColorGreen).StrikeThrough(true),
+			parser.TokenRoleCustom4:  s.Background(tcell.ColorYellow),
+			parser.TokenRoleCustom5:  s.Foreground(tcell.ColorFuchsia),
+			parser.TokenRoleCustom6:  s.Foreground(tcell.ColorAqua),
+			parser.TokenRoleCustom7:  s.Foreground(tcell.ColorDarkGreen),
+			parser.TokenRoleCustom8:  s.Foreground(tcell.ColorDarkCyan),
+		},
 	}
 
 	assert.Equal(t, expected, palette)

@@ -56,7 +56,7 @@ The `styles` configuration is an object with keys:
 -	`tokenNumber`: a number token recognized by the syntax language.
 -	`tokenString`: a string token recognized by the syntax language.
 -	`tokenComment`: a comment token recognized by the syntax language.
--	`tokenCustom1` through `tokenCustom8`: language-specific tokens recognized by the syntax language.
+-	`tokenCustom1` through `tokenCustom16`: language-specific tokens recognized by the syntax language.
 
 Each style object supports the following (optional) attributes:
 

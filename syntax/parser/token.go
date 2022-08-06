@@ -22,6 +22,14 @@ const (
 	TokenRoleCustom6
 	TokenRoleCustom7
 	TokenRoleCustom8
+	TokenRoleCustom9
+	TokenRoleCustom10
+	TokenRoleCustom11
+	TokenRoleCustom12
+	TokenRoleCustom13
+	TokenRoleCustom14
+	TokenRoleCustom15
+	TokenRoleCustom16
 )
 
 // Token represents a distinct element in a document.

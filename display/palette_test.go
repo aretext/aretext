@@ -66,6 +66,14 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 			parser.TokenRoleCustom6:  s.Foreground(tcell.ColorAqua),
 			parser.TokenRoleCustom7:  s.Foreground(tcell.ColorDarkGreen),
 			parser.TokenRoleCustom8:  s.Foreground(tcell.ColorDarkCyan),
+			parser.TokenRoleCustom9:  s.Foreground(tcell.ColorTeal),
+			parser.TokenRoleCustom10: s.Foreground(tcell.ColorDarkBlue),
+			parser.TokenRoleCustom11: s.Foreground(tcell.ColorRed),
+			parser.TokenRoleCustom12: s.Foreground(tcell.ColorLime),
+			parser.TokenRoleCustom13: s.Foreground(tcell.ColorFuchsia),
+			parser.TokenRoleCustom14: s.Foreground(tcell.ColorAqua),
+			parser.TokenRoleCustom15: s.Foreground(tcell.ColorDarkGreen),
+			parser.TokenRoleCustom16: s.Foreground(tcell.ColorDarkCyan),
 		},
 	}
 

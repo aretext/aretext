@@ -26,6 +26,11 @@ func locatorParamsForBuffer(buffer *BufferState) LocatorParams {
 // Locator is a function that locates a position in the document.
 type Locator func(LocatorParams) uint64
 
+// RangeLocator is a function that locates the start and end positions
+// of a range in the document (for example, a word or selection).
+// The (start, end] interval does NOT include the end position.
+type RangeLocator func(LocatorParams) (uint64, uint64)
+
 // SelectionEndLocator returns a locator for the end of a selection.
 // For example, suppose a user has selected the first two lines of a document.
 // When the user repeats an action for this selection (by using the "." command),

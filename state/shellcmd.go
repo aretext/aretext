@@ -119,8 +119,7 @@ func currentWordEnvVar(state *EditorState) string {
 	buffer := state.documentBuffer
 	textTree := buffer.textTree
 	cursorPos := buffer.cursor.position
-	wordStartPos := locate.CurrentWordStart(textTree, cursorPos)
-	wordEndPos := locate.CurrentWordEnd(textTree, cursorPos)
+	wordStartPos, wordEndPos := locate.InnerWordObject(textTree, cursorPos)
 	word := copyText(textTree, wordStartPos, wordEndPos-wordStartPos)
 	return strings.TrimSpace(word)
 }
@@ -151,7 +150,7 @@ func deleteCurrentSelection(state *EditorState) {
 	MoveCursor(state, func(p LocatorParams) uint64 { return selectedRegion.StartPos })
 	selectionEndLoc := func(p LocatorParams) uint64 { return selectedRegion.EndPos }
 	if selectionMode == selection.ModeChar {
-		DeleteRunes(state, selectionEndLoc, clipboard.PageDefault)
+		DeleteToPos(state, selectionEndLoc, clipboard.PageDefault)
 	} else if selectionMode == selection.ModeLine {
 		DeleteLines(state, selectionEndLoc, false, true, clipboard.PageDefault)
 	}

@@ -221,11 +221,11 @@ func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 	return offset
 }
 
-// DeleteRunes deletes characters from the cursor position up to (but not including) the position returned by the locator.
+// DeleteToPos deletes characters from the cursor position up to (but not including) the position returned by the locator.
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
-func DeleteRunes(state *EditorState, loc Locator, clipboardPage clipboard.PageId) {
+func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
@@ -245,6 +245,17 @@ func DeleteRunes(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 			Linewise: false,
 		})
 	}
+}
+
+// DeleteRange deletes all characters in a range (for example, a word or selection).
+// This moves the cursor to the start position of the range.
+func DeleteRange(state *EditorState, loc RangeLocator, clipboardPage clipboard.PageId) {
+	buffer := state.documentBuffer
+	startPos, endPos := loc(locatorParamsForBuffer(buffer))
+	startLoc := func(LocatorParams) uint64 { return startPos }
+	endLoc := func(LocatorParams) uint64 { return endPos }
+	MoveCursor(state, startLoc)
+	DeleteToPos(state, endLoc, clipboardPage)
 }
 
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.
@@ -565,14 +576,12 @@ func numRunesInIndent(buffer *BufferState, startOfLinePos uint64, count uint64) 
 	return pos - startOfLinePos
 }
 
-// CopyRegion copies the characters in a region from startLoc (inclusive) to endLoc (exclusive) to the default page in the clipboard.
-func CopyRegion(state *EditorState, page clipboard.PageId, startLoc Locator, endLoc Locator) {
-	locParams := locatorParamsForBuffer(state.documentBuffer)
-	startPos, endPos := startLoc(locParams), endLoc(locParams)
+// CopyRange copies the characters in a range to the default page in the clipboard.
+func CopyRange(state *EditorState, page clipboard.PageId, loc RangeLocator) {
+	startPos, endPos := loc(locatorParamsForBuffer(state.documentBuffer))
 	if startPos >= endPos {
 		return
 	}
-
 	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
 	state.clipboard.Set(page, clipboard.PageContent{Text: text})
 }

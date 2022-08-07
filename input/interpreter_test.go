@@ -609,6 +609,18 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "a\n  \nbcd",
 		},
 		{
+			name:        "delete to start of next word end of document",
+			initialText: "abcdef",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 1,
+			expectedText:      "ab",
+		},
+		{
 			name:        "delete a word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -627,7 +639,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedCursorPos: 6,
 			expectedText:      "Lorem dolor\nsit amet consectetur\nadipiscing elit",
 		},
-		// NOTE: aretext deletes the empty line, but vim deletes the word after the empty line as well.
+		// NOTE: vim removes the trailing empty line, but aretext keeps it.
 		{
 			name:        "delete a word on an empty line with next line indented",
 			initialText: "a\n\n    bcd",
@@ -637,10 +649,9 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
 			},
-			expectedCursorPos: 6,
-			expectedText:      "a\n    bcd",
+			expectedCursorPos: 2,
+			expectedText:      "a\n",
 		},
-		// NOTE: aretext deletes the whitespace up to the word, but vim deletes the word after the whitespace as well.
 		{
 			name:        "delete a word in whitespace before word",
 			initialText: "ab   cd   ef",
@@ -653,7 +664,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
 			},
 			expectedCursorPos: 2,
-			expectedText:      "abcd   ef",
+			expectedText:      "ab   ef",
 		},
 		// NOTE: aretext deletes the word, but vim deletes the leading whitespace as well.
 		{
@@ -665,7 +676,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
 			},
-			expectedCursorPos: 10,
+			expectedCursorPos: 9,
 			expectedText:      "ab   cd   ",
 		},
 		{
@@ -763,7 +774,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "ipsum dolor\nLorem \nsit amet consectetur\nadipiscing elit",
 		},
 		{
-			name:        "change word",
+			name:        "change word from start of word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
@@ -775,6 +786,56 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 2,
 			expectedText:      "foo ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "change word from middle of word",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 5,
+			expectedText:      "Lorfoo ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "change word from end of word",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "Lorefoo ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "change word in leading whitespace",
+			initialText: "abcd      efghi    jklm",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 8,
+			expectedText:      "abcd  fooefghi    jklm",
 		},
 		{
 			name:        "change a word",

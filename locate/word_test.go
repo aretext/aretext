@@ -84,6 +84,12 @@ func TestNextWordStart(t *testing.T) {
 			pos:         0,
 			expectedPos: 8,
 		},
+		{
+			name:        "last word in document",
+			inputString: "foo bar",
+			pos:         5,
+			expectedPos: 7,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -91,163 +97,6 @@ func TestNextWordStart(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			actualPos := NextWordStart(textTree, tc.pos)
-			assert.Equal(t, tc.expectedPos, actualPos)
-		})
-	}
-}
-
-func TestNextWordStartOrLineBoundary(t *testing.T) {
-	testCases := []struct {
-		name        string
-		inputString string
-		pos         uint64
-		expectedPos uint64
-	}{
-		{
-			name:        "empty",
-			inputString: "",
-			pos:         0,
-			expectedPos: 0,
-		},
-		{
-			name:        "start of word before another word",
-			inputString: "abc  def",
-			pos:         0,
-			expectedPos: 5,
-		},
-		{
-			name:        "middle of word before another word",
-			inputString: "abc  def",
-			pos:         1,
-			expectedPos: 5,
-		},
-		{
-			name:        "end of word before another word",
-			inputString: "abc  def",
-			pos:         2,
-			expectedPos: 5,
-		},
-		{
-			name:        "whitespace before word",
-			inputString: "abc  def",
-			pos:         3,
-			expectedPos: 5,
-		},
-		{
-			name:        "start of last word in document",
-			inputString: "abc",
-			pos:         0,
-			expectedPos: 3,
-		},
-		{
-			name:        "middle of last word in document",
-			inputString: "abc",
-			pos:         1,
-			expectedPos: 3,
-		},
-		{
-			name:        "end of last word in document",
-			inputString: "abc",
-			pos:         2,
-			expectedPos: 3,
-		},
-		{
-			name:        "last word in document single char",
-			inputString: "a",
-			pos:         0,
-			expectedPos: 1,
-		},
-		{
-			name:        "last word in line before next line",
-			inputString: "abc\ndef",
-			pos:         1,
-			expectedPos: 3,
-		},
-		{
-			name:        "last word in line with trailing whitespace before next line",
-			inputString: "abc   \ndef",
-			pos:         1,
-			expectedPos: 6,
-		},
-		{
-			name:        "single line, all whitespace, cursor at start",
-			inputString: "   ",
-			pos:         0,
-			expectedPos: 3,
-		},
-		{
-			name:        "single line, all whitespace, cursor in middle",
-			inputString: "   ",
-			pos:         1,
-			expectedPos: 3,
-		},
-		{
-			name:        "single line, all whitespace, cursor at end",
-			inputString: "   ",
-			pos:         2,
-			expectedPos: 3,
-		},
-		{
-			name:        "lines with all whitespace, first line",
-			inputString: "   \n   ",
-			pos:         1,
-			expectedPos: 3,
-		},
-		{
-			name:        "lines with all whitespace, last line",
-			inputString: "   \n   ",
-			pos:         5,
-			expectedPos: 7,
-		},
-		{
-			name:        "last word in line single char",
-			inputString: "a\nbcd",
-			pos:         0,
-			expectedPos: 1,
-		},
-		{
-			name:        "line starting with a space, single word, cursor at start of word",
-			inputString: " foo",
-			pos:         1,
-			expectedPos: 4,
-		},
-		{
-			name:        "line starting with space, two words, cursor at start of first word",
-			inputString: " foo bar",
-			pos:         1,
-			expectedPos: 5,
-		},
-		{
-			name:        "start of word after punctuation",
-			inputString: "foo,bar;baz",
-			pos:         4,
-			expectedPos: 7,
-		},
-		{
-			name:        "empty lines at start of document",
-			inputString: "\n\n\n",
-			pos:         1,
-			expectedPos: 2,
-		},
-		{
-			name:        "empty lines in middle of document",
-			inputString: "a\n\nbcd",
-			pos:         2,
-			expectedPos: 3,
-		},
-		{
-			name:        "empty lines at end of document",
-			inputString: "abc\n\n",
-			pos:         4,
-			expectedPos: 5,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			actualPos := NextWordStartOrLineBoundary(textTree, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -307,6 +156,24 @@ func TestNextWordEnd(t *testing.T) {
 			inputString: "abc/def/ghi",
 			pos:         1,
 			expectedPos: 2,
+		},
+		{
+			name:        "last word in document, third to last character",
+			inputString: "foo bar",
+			pos:         4,
+			expectedPos: 6,
+		},
+		{
+			name:        "last word in document, second to last character",
+			inputString: "foo bar",
+			pos:         5,
+			expectedPos: 6,
+		},
+		{
+			name:        "last word in document, last character",
+			inputString: "foo bar",
+			pos:         6,
+			expectedPos: 6,
 		},
 	}
 
@@ -387,96 +254,170 @@ func TestPrevWordStart(t *testing.T) {
 	}
 }
 
-func TestCurrentWordStart(t *testing.T) {
+func TestWordObject(t *testing.T) {
 	testCases := []struct {
-		name        string
-		inputString string
-		pos         uint64
-		expectedPos uint64
+		name             string
+		inputString      string
+		pos              uint64
+		expectedStartPos uint64
+		expectedEndPos   uint64
 	}{
 		{
-			name:        "empty",
-			inputString: "",
-			pos:         0,
-			expectedPos: 0,
+			name:             "empty",
+			inputString:      "",
+			pos:              0,
+			expectedStartPos: 0,
+			expectedEndPos:   0,
 		},
 		{
-			name:        "start of document",
-			inputString: "abc   defg   hij",
-			pos:         0,
-			expectedPos: 0,
+			name:             "on start of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   9,
 		},
 		{
-			name:        "start of word in middle of document",
-			inputString: "abc   defg   hij",
-			pos:         6,
-			expectedPos: 6,
+			name:             "on middle of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   9,
 		},
 		{
-			name:        "middle of word to start of word",
-			inputString: "abc   defg   hij",
-			pos:         8,
-			expectedPos: 6,
+			name:             "on end of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              5,
+			expectedStartPos: 3,
+			expectedEndPos:   9,
 		},
 		{
-			name:        "end of word to start of word",
-			inputString: "abc   defg   hij",
-			pos:         9,
-			expectedPos: 6,
+			name:             "on start of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   11,
 		},
 		{
-			name:        "start of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         3,
-			expectedPos: 3,
+			name:             "on middle of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              5,
+			expectedStartPos: 4,
+			expectedEndPos:   11,
 		},
 		{
-			name:        "middle of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         4,
-			expectedPos: 3,
+			name:             "on end of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   11,
 		},
 		{
-			name:        "end of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         5,
-			expectedPos: 3,
+			name:             "start of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "word at start of line",
-			inputString: "abc\nxyz",
-			pos:         5,
-			expectedPos: 4,
+			name:             "middle of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              5,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "whitespace at start of line",
-			inputString: "abc\n    xyz",
-			pos:         6,
-			expectedPos: 4,
+			name:             "end of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "empty line",
-			inputString: "abc\n\n   123",
-			pos:         4,
-			expectedPos: 4,
+			name:             "on punctuation surrounded by words",
+			inputString:      "abc/def/ghi",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   4,
 		},
 		{
-			name:        "from non-punctuation, stop at punctuation",
-			inputString: "abc/def/ghi",
-			pos:         5,
-			expectedPos: 4,
+			name:             "on punctuation surrounded by whitespace",
+			inputString:      "a   /   b",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   8,
 		},
 		{
-			name:        "on single punctuation char",
-			inputString: "abc/ghi",
-			pos:         3,
-			expectedPos: 3,
+			name:             "on multiple punctuation chars",
+			inputString:      "abc///ghi",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
 		},
 		{
-			name:        "on multiple punctuation chars",
-			inputString: "abc///ghi",
-			pos:         4,
-			expectedPos: 3,
+			name:             "on leading whitespace before punctuation",
+			inputString:      "foo  {bar",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
+		},
+		{
+			name:             "whitespace at start of line",
+			inputString:      "abc\n    xyz",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   11,
+		},
+		{
+
+			name:             "empty line, indentation",
+			inputString:      "abc\n\n   123",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   11,
+		},
+		{
+
+			name:             "empty line, no indentation",
+			inputString:      "abc\n\n123",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   8,
+		},
+		{
+			name:             "start of word at end of document",
+			inputString:      "abcd",
+			pos:              0,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+		{
+			name:             "middle of word at end of document",
+			inputString:      "abcd",
+			pos:              2,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+		{
+			name:             "end of word at end of document",
+			inputString:      "abcd",
+			pos:              3,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+
+		{
+			name:             "on word before whitespace at end of document",
+			inputString:      "abc    ",
+			pos:              2,
+			expectedStartPos: 0,
+			expectedEndPos:   7,
+		},
+		{
+			name:             "on whitespace at end of document",
+			inputString:      "abc    ",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   7,
 		},
 	}
 
@@ -484,108 +425,177 @@ func TestCurrentWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := CurrentWordStart(textTree, tc.pos)
-			assert.Equal(t, tc.expectedPos, actualPos)
+			startPos, endPos := WordObject(textTree, tc.pos)
+			assert.Equal(t, tc.expectedStartPos, startPos)
+			assert.Equal(t, tc.expectedEndPos, endPos)
 		})
 	}
 }
 
-func TestCurrentWordEnd(t *testing.T) {
+func TestInnerWordObject(t *testing.T) {
 	testCases := []struct {
-		name        string
-		inputString string
-		pos         uint64
-		expectedPos uint64
+		name             string
+		inputString      string
+		pos              uint64
+		expectedStartPos uint64
+		expectedEndPos   uint64
 	}{
 		{
-			name:        "empty",
-			inputString: "",
-			pos:         0,
-			expectedPos: 0,
+			name:             "empty",
+			inputString:      "",
+			pos:              0,
+			expectedStartPos: 0,
+			expectedEndPos:   0,
 		},
 		{
-			name:        "end of document",
-			inputString: "abc   defg   hijk",
-			pos:         14,
-			expectedPos: 17,
+			name:             "on start of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
 		},
 		{
-			name:        "start of word in middle of document",
-			inputString: "abc   defg   hij",
-			pos:         6,
-			expectedPos: 10,
+			name:             "on middle of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
 		},
 		{
-			name:        "middle of word to end of word",
-			inputString: "abc   defg   hij",
-			pos:         7,
-			expectedPos: 10,
+			name:             "on end of leading whitespace before word",
+			inputString:      "abc   def  ghi",
+			pos:              5,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
 		},
 		{
-			name:        "end of word",
-			inputString: "abc   defg   hij",
-			pos:         9,
-			expectedPos: 10,
+			name:             "on start of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "start of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         3,
-			expectedPos: 6,
+			name:             "on middle of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              5,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "middle of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         4,
-			expectedPos: 6,
+			name:             "on end of word with trailing whitespace",
+			inputString:      "abc def    ghi",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "end of whitespace",
-			inputString: "abc   defg   hij",
-			pos:         5,
-			expectedPos: 6,
+			name:             "start of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "word before end of line",
-			inputString: "abc\nxyz",
-			pos:         1,
-			expectedPos: 3,
+			name:             "middle of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              5,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "whitespace at end of line",
-			inputString: "abc     \nxyz",
-			pos:         4,
-			expectedPos: 8,
+			name:             "end of word after punctuation",
+			inputString:      "abc/def/ghi",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
 		},
 		{
-			name:        "empty line",
-			inputString: "abc\n\n   123",
-			pos:         4,
-			expectedPos: 4,
+			name:             "on punctuation surrounded by words",
+			inputString:      "abc/def/ghi",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   4,
 		},
 		{
-			name:        "punctuation",
-			inputString: "abc/def/ghi",
-			pos:         5,
-			expectedPos: 7,
+			name:             "on punctuation surrounded by whitespace",
+			inputString:      "a   /   b",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   5,
 		},
 		{
-			name:        "from non-punctuation, stop at punctuation",
-			inputString: "abc/def/ghi",
-			pos:         5,
-			expectedPos: 7,
+			name:             "on multiple punctuation chars",
+			inputString:      "abc///ghi",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   6,
 		},
 		{
-			name:        "on single punctuation char",
-			inputString: "abc/ghi",
-			pos:         3,
-			expectedPos: 4,
+			name:             "on leading whitespace before punctuation",
+			inputString:      "foo  {bar",
+			pos:              3,
+			expectedStartPos: 3,
+			expectedEndPos:   5,
 		},
 		{
-			name:        "on multiple punctuation chars",
-			inputString: "abc///ghi",
-			pos:         4,
-			expectedPos: 6,
+			name:             "whitespace at start of line",
+			inputString:      "abc\n    xyz",
+			pos:              6,
+			expectedStartPos: 4,
+			expectedEndPos:   8,
+		},
+		{
+
+			name:             "empty line, indentation",
+			inputString:      "abc\n\n   123",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   4,
+		},
+		{
+
+			name:             "empty line, no indentation",
+			inputString:      "abc\n\n123",
+			pos:              4,
+			expectedStartPos: 4,
+			expectedEndPos:   4,
+		},
+		{
+			name:             "start of word at end of document",
+			inputString:      "abcd",
+			pos:              0,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+		{
+			name:             "middle of word at end of document",
+			inputString:      "abcd",
+			pos:              2,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+		{
+			name:             "end of word at end of document",
+			inputString:      "abcd",
+			pos:              3,
+			expectedStartPos: 0,
+			expectedEndPos:   4,
+		},
+
+		{
+			name:             "on word before whitespace at end of document",
+			inputString:      "abc    ",
+			pos:              2,
+			expectedStartPos: 0,
+			expectedEndPos:   3,
+		},
+		{
+			name:             "on whitespace at end of document",
+			inputString:      "abc    ",
+			pos:              4,
+			expectedStartPos: 3,
+			expectedEndPos:   7,
 		},
 	}
 
@@ -593,117 +603,9 @@ func TestCurrentWordEnd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := CurrentWordEnd(textTree, tc.pos)
-			assert.Equal(t, tc.expectedPos, actualPos)
-		})
-	}
-}
-
-func TestCurrentWordEndWithTrailingWhitespace(t *testing.T) {
-	testCases := []struct {
-		name        string
-		inputString string
-		pos         uint64
-		expectedPos uint64
-	}{
-		{
-			name:        "empty",
-			inputString: "",
-			pos:         0,
-			expectedPos: 0,
-		},
-		{
-			name:        "start of word at end of document",
-			inputString: "abcd",
-			pos:         0,
-			expectedPos: 4,
-		},
-		{
-			name:        "middle of word at end of document",
-			inputString: "abcd",
-			pos:         2,
-			expectedPos: 4,
-		},
-		{
-			name:        "end of word at end of document",
-			inputString: "abcd",
-			pos:         3,
-			expectedPos: 4,
-		},
-		{
-			name:        "on word before whitespace at end of document",
-			inputString: "abc    ",
-			pos:         2,
-			expectedPos: 7,
-		},
-		{
-			name:        "on whitespace at end of document",
-			inputString: "abc    ",
-			pos:         4,
-			expectedPos: 7,
-		},
-		{
-			name:        "on word with trailing whitespace before next word",
-			inputString: "abc    def",
-			pos:         2,
-			expectedPos: 7,
-		},
-		{
-			name:        "on word at end of line",
-			inputString: "abc\ndef",
-			pos:         1,
-			expectedPos: 3,
-		},
-		{
-			name:        "on word before whitespace at end of line",
-			inputString: "abc   \ndef",
-			pos:         1,
-			expectedPos: 6,
-		},
-		{
-			name:        "on word with trailing whitespace before word at end of line",
-			inputString: "abc   def\nghi",
-			pos:         1,
-			expectedPos: 6,
-		},
-		{
-			name:        "on whitespace at end of line",
-			inputString: "abc   \nghi",
-			pos:         4,
-			expectedPos: 6,
-		},
-		{
-			name:        "on empty line",
-			inputString: "ab\n\ncd",
-			pos:         2,
-			expectedPos: 2,
-		},
-		{
-			name:        "on punctuation followed by non-whitespace",
-			inputString: "ab,cd",
-			pos:         2,
-			expectedPos: 3,
-		},
-		{
-			name:        "on punctuation followed by whitespace",
-			inputString: "ab,  cd",
-			pos:         2,
-			expectedPos: 5,
-		},
-		{
-			name:        "on empty line",
-			inputString: "ab\n\ncd",
-			pos:         3,
-			expectedPos: 4,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			actualPos := CurrentWordEndWithTrailingWhitespace(textTree, tc.pos)
-			assert.Equal(t, tc.expectedPos, actualPos)
+			startPos, endPos := InnerWordObject(textTree, tc.pos)
+			assert.Equal(t, tc.expectedStartPos, startPos)
+			assert.Equal(t, tc.expectedEndPos, endPos)
 		})
 	}
 }

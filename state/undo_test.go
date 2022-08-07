@@ -21,7 +21,7 @@ func TestUndoAndRedo(t *testing.T) {
 	InsertNewline(state)
 	InsertRune(state, 'd')
 	CheckpointUndoLog(state)
-	DeleteRunes(state, func(params LocatorParams) uint64 {
+	DeleteToPos(state, func(params LocatorParams) uint64 {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
 	}, clipboard.PageDefault)
 	CheckpointUndoLog(state)

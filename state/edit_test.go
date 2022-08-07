@@ -61,7 +61,7 @@ func TestInsertRune(t *testing.T) {
 	}
 }
 
-func TestDeleteRunes(t *testing.T) {
+func TestDeleteToPos(t *testing.T) {
 	testCases := []struct {
 		name                 string
 		inputString          string
@@ -127,7 +127,7 @@ func TestDeleteRunes(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			DeleteRunes(state, tc.locator, clipboard.PageDefault)
+			DeleteToPos(state, tc.locator, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
@@ -1376,40 +1376,35 @@ func TestJoinLines(t *testing.T) {
 	}
 }
 
-func TestCopyRegion(t *testing.T) {
+func TestCopyRange(t *testing.T) {
 	testCases := []struct {
 		name              string
 		inputString       string
-		startLoc          Locator
-		endLoc            Locator
+		loc               RangeLocator
 		expectedClipboard clipboard.PageContent
 	}{
 		{
 			name:              "empty",
 			inputString:       "",
-			startLoc:          func(p LocatorParams) uint64 { return 0 },
-			endLoc:            func(p LocatorParams) uint64 { return 0 },
+			loc:               func(p LocatorParams) (uint64, uint64) { return 0, 0 },
 			expectedClipboard: clipboard.PageContent{},
 		},
 		{
 			name:              "start pos equal to end pos",
 			inputString:       "abcd",
-			startLoc:          func(p LocatorParams) uint64 { return 2 },
-			endLoc:            func(p LocatorParams) uint64 { return 2 },
+			loc:               func(p LocatorParams) (uint64, uint64) { return 2, 2 },
 			expectedClipboard: clipboard.PageContent{},
 		},
 		{
 			name:              "start pos after  end pos",
 			inputString:       "abcd",
-			startLoc:          func(p LocatorParams) uint64 { return 3 },
-			endLoc:            func(p LocatorParams) uint64 { return 2 },
+			loc:               func(p LocatorParams) (uint64, uint64) { return 3, 2 },
 			expectedClipboard: clipboard.PageContent{},
 		},
 		{
 			name:              "start pos before end pos",
 			inputString:       "abcd",
-			startLoc:          func(p LocatorParams) uint64 { return 1 },
-			endLoc:            func(p LocatorParams) uint64 { return 3 },
+			loc:               func(p LocatorParams) (uint64, uint64) { return 1, 3 },
 			expectedClipboard: clipboard.PageContent{Text: "bc"},
 		},
 	}
@@ -1420,7 +1415,7 @@ func TestCopyRegion(t *testing.T) {
 			require.NoError(t, err)
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
-			CopyRegion(state, clipboard.PageDefault, tc.startLoc, tc.endLoc)
+			CopyRange(state, clipboard.PageDefault, tc.loc)
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
 		})
 	}

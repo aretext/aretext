@@ -49,6 +49,8 @@ build linux arm64
 build linux 386
 build darwin amd64
 build darwin arm64
+build freebsd amd64
+build freebsd arm64
 
 checksums=aretext_${RELEASE_VERSION}_checksums.txt
 echo "$RELEASE_DIR/$checksums"

@@ -8,13 +8,13 @@ Supported Platforms
 |----------|-----------------------|
 | Linux    | Fully supported       |
 | macOS    | Fully supported       |
+| \*BSD    | Fully supported       |
 | Windows  | Supported on WSL only |
-| \*BSD    | Will probably work    |
 
 Official Binaries
 -----------------
 
-You can download the official binaries for Linux and macOS from [the aretext releases page](https://github.com/aretext/aretext/releases).
+You can download the official binaries for Linux, macOS, and FreeBSD from [the aretext releases page](https://github.com/aretext/aretext/releases).
 
 ### Linux x86 64-bit
 

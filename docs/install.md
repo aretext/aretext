@@ -4,12 +4,9 @@ Install
 Supported Platforms
 -------------------
 
-| Platform | Status                |
-|----------|-----------------------|
-| Linux    | Fully supported       |
-| macOS    | Fully supported       |
-| \*BSD    | Fully supported       |
-| Windows  | Supported on WSL only |
+-	Linux
+-	macOS
+-	FreeBSD
 
 Official Binaries
 -----------------

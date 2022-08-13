@@ -13,11 +13,12 @@ import (
 
 func TestNextWordStart(t *testing.T) {
 	testCases := []struct {
-		name        string
-		inputString string
-		pos         uint64
-		count       uint64
-		expectedPos uint64
+		name                string
+		inputString         string
+		pos                 uint64
+		count               uint64
+		stopAtEndOfLastLine bool
+		expectedPos         uint64
 	}{
 		{
 			name:        "empty",
@@ -117,13 +118,37 @@ func TestNextWordStart(t *testing.T) {
 			count:       3,
 			expectedPos: 18,
 		},
+		{
+			name:                "stop at end of last line",
+			inputString:         "foo bar\nbaz bat\n",
+			pos:                 4,
+			count:               1,
+			stopAtEndOfLastLine: true,
+			expectedPos:         7,
+		},
+		{
+			name:                "stop at end of last line, on empty line",
+			inputString:         "foo\n\nbaz bat\n",
+			pos:                 3,
+			count:               1,
+			stopAtEndOfLastLine: true,
+			expectedPos:         3,
+		},
+		{
+			name:                "stop at end of last line with count",
+			inputString:         "foo bar\nbaz bat\nlorem",
+			pos:                 0,
+			count:               4,
+			stopAtEndOfLastLine: true,
+			expectedPos:         15,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.count)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.stopAtEndOfLastLine)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

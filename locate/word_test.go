@@ -244,55 +244,78 @@ func TestPrevWordStart(t *testing.T) {
 		name        string
 		inputString string
 		pos         uint64
+		count       uint64
 		expectedPos uint64
 	}{
 		{
 			name:        "empty",
 			inputString: "",
 			pos:         0,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "prev word from current word, same line",
 			inputString: "abc   defg   hij",
 			pos:         6,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "prev word from whitespace, same line",
 			inputString: "abc   defg   hij",
 			pos:         12,
+			count:       1,
 			expectedPos: 6,
 		},
 		{
 			name:        "prev word from different line",
 			inputString: "abc\n   123",
 			pos:         7,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "prev word to empty line",
 			inputString: "abc\n\n   123",
 			pos:         8,
+			count:       1,
 			expectedPos: 4,
 		},
 		{
 			name:        "empty line to prev word",
 			inputString: "abc\n\n   123",
 			pos:         4,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "multiple empty lines",
 			inputString: "\n\n\n\n",
 			pos:         2,
+			count:       1,
 			expectedPos: 1,
 		},
 		{
 			name:        "punctuation",
 			inputString: "abc/def/ghi",
 			pos:         5,
+			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "count zero",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         18,
+			count:       0,
+			expectedPos: 18,
+		},
+		{
+			name:        "count three",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         25,
+			count:       3,
+			expectedPos: 12,
 		},
 	}
 
@@ -300,7 +323,7 @@ func TestPrevWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := PrevWordStart(textTree, tc.pos)
+			actualPos := PrevWordStart(textTree, tc.pos, tc.count)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

@@ -74,7 +74,11 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 
 // PrevWordStart locates the start of the word before the cursor.
 // It is the inverse of NextWordStart.
-func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
+func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
+	if targetCount == 0 {
+		return pos
+	}
+
 	reader := textTree.ReverseReaderAtPosition(pos)
 	gcIter := segment.NewReverseGraphemeClusterIter(reader)
 	gc := segment.Empty()
@@ -91,6 +95,7 @@ func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
 	pos -= gc.NumRunes()
 
 	// Read backwards until we find a boundary.
+	var count uint64
 	for {
 		err = gcIter.NextSegment(gc)
 		if err != nil {
@@ -104,6 +109,10 @@ func PrevWordStart(textTree *text.Tree, pos uint64) uint64 {
 		if (isWhitespace && !prevWasWhitespace) ||
 			(isPunct != prevWasPunct) ||
 			(hasNewline && prevHasNewline) {
+			count++
+		}
+
+		if count == targetCount {
 			break
 		}
 

@@ -28,7 +28,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor till next matching character in line | t\{char\}   | count                 |
 | cursor till prev matching character in line | T\{char\}   | count                 |
 | cursor next word start                      | w           | count                 |
-| cursor prev word start                      | b           |                       |
+| cursor prev word start                      | b           | count                 |
 | cursor next word end                        | e           |                       |
 | cursor prev paragraph                       | \{          |                       |
 | cursor next paragraph                       | \}          |                       |

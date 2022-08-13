@@ -108,10 +108,10 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor prev word start (b)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("b", "", captureOpts{})
+				return cmdExpr("b", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorPrevWordStart)
+				return decorate(CursorPrevWordStart(p.Count))
 			},
 		},
 		{

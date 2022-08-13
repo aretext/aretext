@@ -150,6 +150,16 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "cursor next word start with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 27,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "cursor prev word start",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -619,6 +629,17 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 1,
 			expectedText:      "ab",
+		},
+		{
+			name:        "delete to start of next word with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '4', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "amet consectetur\nadipiscing elit",
 		},
 		{
 			name:        "delete a word",
@@ -1101,6 +1122,20 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 23,
 			expectedText:      "Lorem ipsum dolor\nLorem \nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "yank to start of next word with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '4', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'y', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModNone),
+			},
+			expectedCursorPos: 39,
+			expectedText:      "Lorem ipsum dolor\nLorem ipsum dolor\nsit \nsit amet consectetur\nadipiscing elit",
 		},
 		{
 			name:        "yank a word",

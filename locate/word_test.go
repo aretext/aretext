@@ -16,79 +16,106 @@ func TestNextWordStart(t *testing.T) {
 		name        string
 		inputString string
 		pos         uint64
+		count       uint64
 		expectedPos uint64
 	}{
 		{
 			name:        "empty",
 			inputString: "",
 			pos:         0,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "next word from current word, same line",
 			inputString: "abc   defg   hij",
 			pos:         1,
+			count:       1,
 			expectedPos: 6,
 		},
 		{
 			name:        "next word from whitespace, same line",
 			inputString: "abc   defg   hij",
 			pos:         4,
+			count:       1,
 			expectedPos: 6,
 		},
 		{
 			name:        "next word from different line",
 			inputString: "abc\n   123",
 			pos:         1,
+			count:       1,
 			expectedPos: 7,
 		},
 		{
 			name:        "next word to empty line",
 			inputString: "abc\n\n   123",
 			pos:         1,
+			count:       1,
 			expectedPos: 4,
 		},
 		{
 			name:        "empty line to next word",
 			inputString: "abc\n\n   123",
 			pos:         4,
+			count:       1,
 			expectedPos: 8,
 		},
 		{
 			name:        "multiple empty lines",
 			inputString: "\n\n\n\n",
 			pos:         1,
+			count:       1,
 			expectedPos: 2,
 		},
 		{
 			name:        "non-punctuation to punctuation",
 			inputString: "abc/def/ghi",
 			pos:         1,
+			count:       1,
 			expectedPos: 3,
 		},
 		{
 			name:        "punctuation to non-punctuation",
 			inputString: "abc/def/ghi",
 			pos:         3,
+			count:       1,
 			expectedPos: 4,
 		},
 		{
 			name:        "repeated punctuation",
 			inputString: "abc////cde",
 			pos:         3,
+			count:       1,
 			expectedPos: 7,
 		},
 		{
 			name:        "underscores treated as non-punctuation",
 			inputString: "abc_def ghi",
 			pos:         0,
+			count:       1,
 			expectedPos: 8,
 		},
 		{
 			name:        "last word in document",
 			inputString: "foo bar",
 			pos:         5,
+			count:       1,
 			expectedPos: 7,
+		},
+		{
+			name:        "count zero",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         2,
+			count:       0,
+			expectedPos: 2,
+		},
+		{
+			name:        "count three",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         2,
+			count:       3,
+			expectedPos: 18,
 		},
 	}
 
@@ -96,7 +123,7 @@ func TestNextWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

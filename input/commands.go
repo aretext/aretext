@@ -99,10 +99,10 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor next word start (w)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("w", "", captureOpts{})
+				return cmdExpr("w", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorNextWordStart)
+				return decorate(CursorNextWordStart(p.Count))
 			},
 		},
 		{
@@ -511,11 +511,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "delete to start of next word (dw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("d", "w", captureOpts{clipboardPage: true})
+				return cmdExpr("d", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToStartOfNextWord(p.ClipboardPage),
+					DeleteToStartOfNextWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -671,11 +671,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "yank to start of next word (yw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("y", "w", captureOpts{clipboardPage: true})
+				return cmdExpr("y", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyToStartOfNextWord(p.ClipboardPage),
+					CopyToStartOfNextWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

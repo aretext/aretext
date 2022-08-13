@@ -12,7 +12,11 @@ import (
 //  1) at the first non-whitespace after a whitespace
 //  2) at the start of an empty line
 //  3) between punctuation and non-punctuation
-func NextWordStart(textTree *text.Tree, pos uint64) uint64 {
+func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
+	if targetCount == 0 {
+		return pos
+	}
+
 	reader := textTree.ReaderAtPosition(pos)
 	gcIter := segment.NewGraphemeClusterIter(reader)
 	gc := segment.Empty()
@@ -29,6 +33,7 @@ func NextWordStart(textTree *text.Tree, pos uint64) uint64 {
 	pos += gc.NumRunes()
 
 	// Read subsequent runes to find the next word boundary.
+	var count uint64
 	for {
 		err = gcIter.NextSegment(gc)
 		if err != nil {
@@ -42,6 +47,10 @@ func NextWordStart(textTree *text.Tree, pos uint64) uint64 {
 		if (prevWasWhitespace && !isWhitespace) ||
 			(prevWasPunct != isPunct) ||
 			(prevHasNewline && hasNewline) {
+			count++
+		}
+
+		if count == targetCount {
 			break
 		}
 

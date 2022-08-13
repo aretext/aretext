@@ -45,10 +45,12 @@ func CursorDown(s *state.EditorState) {
 	state.MoveCursorToLineBelow(s, 1)
 }
 
-func CursorNextWordStart(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordStart(params.TextTree, params.CursorPos)
-	})
+func CursorNextWordStart(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextWordStart(params.TextTree, params.CursorPos, count)
+		})
+	}
 }
 
 func CursorPrevWordStart(s *state.EditorState) {
@@ -368,15 +370,17 @@ func DeleteToStartOfLineNonWhitespace(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func DeleteToStartOfNextWord(clipboardPage clipboard.PageId) Action {
+func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos)
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count)
 
 			// Stop at the end of the line if it comes first.
-			lineEndPos := locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
-			if lineEndPos < endPos {
-				endPos = lineEndPos
+			if count == 1 {
+				lineEndPos := locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+				if lineEndPos < endPos {
+					endPos = lineEndPos
+				}
 			}
 
 			if endPos == params.CursorPos {
@@ -485,15 +489,19 @@ func OutdentLine(count uint64) Action {
 	}
 }
 
-func CopyToStartOfNextWord(clipboardPage clipboard.PageId) Action {
+func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
 			startPos := params.CursorPos
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos)
-			lineEndPos := locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
-			if lineEndPos < endPos {
-				endPos = lineEndPos
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count)
+
+			if count == 1 {
+				lineEndPos := locate.NextLineBoundary(params.TextTree, true, params.CursorPos)
+				if lineEndPos < endPos {
+					endPos = lineEndPos
+				}
 			}
+
 			return startPos, endPos
 		})
 	}

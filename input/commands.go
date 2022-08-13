@@ -117,10 +117,10 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor next word end (e)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("e", "", captureOpts{})
+				return cmdExpr("e", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorNextWordEnd)
+				return decorate(CursorNextWordEnd(p.Count))
 			},
 		},
 		{

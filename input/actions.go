@@ -61,10 +61,12 @@ func CursorPrevWordStart(count uint64) Action {
 	}
 }
 
-func CursorNextWordEnd(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.NextWordEnd(params.TextTree, params.CursorPos)
-	})
+func CursorNextWordEnd(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextWordEnd(params.TextTree, params.CursorPos, count)
+		})
+	}
 }
 
 func CursorPrevParagraph(s *state.EditorState) {

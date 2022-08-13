@@ -128,7 +128,11 @@ func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 // NextWordEnd locates the next word-end boundary after the cursor.
 // The word break rules are the same as for NextWordStart, except
 // that empty lines are NOT treated as word boundaries.
-func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
+func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
+	if targetCount == 0 {
+		return pos
+	}
+
 	reader := textTree.ReaderAtPosition(pos)
 	gcIter := segment.NewGraphemeClusterIter(reader)
 	gc := segment.Empty()
@@ -155,6 +159,7 @@ func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
 	pos += gc.NumRunes()
 
 	// Read subsequent runes to find the next word boundary.
+	var count uint64
 	for {
 		err = gcIter.NextSegment(gc)
 		if err != nil {
@@ -166,6 +171,10 @@ func NextWordEnd(textTree *text.Tree, pos uint64) uint64 {
 
 		if (!prevWasWhitespace && isWhitespace) ||
 			(prevWasPunct != isPunct) {
+			count++
+		}
+
+		if count == targetCount {
 			break
 		}
 

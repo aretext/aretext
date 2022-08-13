@@ -159,73 +159,99 @@ func TestNextWordEnd(t *testing.T) {
 		name        string
 		inputString string
 		pos         uint64
+		count       uint64
 		expectedPos uint64
 	}{
 		{
 			name:        "empty",
 			inputString: "",
 			pos:         0,
+			count:       1,
 			expectedPos: 0,
 		},
 		{
 			name:        "end of word from start of current word",
 			inputString: "abc   defg   hij",
 			pos:         6,
+			count:       1,
 			expectedPos: 9,
 		},
 		{
 			name:        "end of word from middle of current word",
 			inputString: "abc   defg   hij",
 			pos:         7,
+			count:       1,
 			expectedPos: 9,
 		},
 		{
 			name:        "next word from end of current word",
 			inputString: "abc   defg   hij",
 			pos:         2,
+			count:       1,
 			expectedPos: 9,
 		},
 		{
 			name:        "next word from whitespace",
 			inputString: "abc   defg   hij",
 			pos:         4,
+			count:       1,
 			expectedPos: 9,
 		},
 		{
 			name:        "next word past empty line",
 			inputString: "abc\n\n   123   xyz",
 			pos:         2,
+			count:       1,
 			expectedPos: 10,
 		},
 		{
 			name:        "empty line to next word",
 			inputString: "abc\n\n   123  xyz",
 			pos:         4,
+			count:       1,
 			expectedPos: 10,
 		},
 		{
 			name:        "punctuation",
 			inputString: "abc/def/ghi",
 			pos:         1,
+			count:       1,
 			expectedPos: 2,
 		},
 		{
 			name:        "last word in document, third to last character",
 			inputString: "foo bar",
 			pos:         4,
+			count:       1,
 			expectedPos: 6,
 		},
 		{
 			name:        "last word in document, second to last character",
 			inputString: "foo bar",
 			pos:         5,
+			count:       1,
 			expectedPos: 6,
 		},
 		{
 			name:        "last word in document, last character",
 			inputString: "foo bar",
 			pos:         6,
+			count:       1,
 			expectedPos: 6,
+		},
+		{
+			name:        "count zero",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         2,
+			count:       0,
+			expectedPos: 2,
+		},
+		{
+			name:        "count three",
+			inputString: "lorem ipsum dolor sit amet",
+			pos:         2,
+			count:       3,
+			expectedPos: 16,
 		},
 	}
 
@@ -233,7 +259,7 @@ func TestNextWordEnd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordEnd(textTree, tc.pos)
+			actualPos := NextWordEnd(textTree, tc.pos, tc.count)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

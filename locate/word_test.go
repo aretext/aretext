@@ -56,6 +56,20 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 4,
 		},
 		{
+			name:        "line ending with punctuation",
+			inputString: "abc.\n123",
+			pos:         3,
+			count:       1,
+			expectedPos: 5,
+		},
+		{
+			name:        "punctuation before whitespace",
+			inputString: "-   foo",
+			pos:         0,
+			count:       1,
+			expectedPos: 4,
+		},
+		{
 			name:        "empty line to next word",
 			inputString: "abc\n\n   123",
 			pos:         4,
@@ -328,6 +342,20 @@ func TestPrevWordStart(t *testing.T) {
 			pos:         5,
 			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "line ending with punctuation",
+			inputString: "abc.\n123",
+			pos:         5,
+			count:       1,
+			expectedPos: 3,
+		},
+		{
+			name:        "punctuation before whitespace",
+			inputString: "-   foo",
+			pos:         4,
+			count:       1,
+			expectedPos: 0,
 		},
 		{
 			name:        "count zero",

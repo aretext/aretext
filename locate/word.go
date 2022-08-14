@@ -50,7 +50,8 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 		isPunct := isPunct(gc)
 
 		if (prevWasWhitespace && !isWhitespace) ||
-			(prevWasPunct != isPunct) ||
+			(prevWasPunct && !isPunct && !isWhitespace) ||
+			(!prevWasPunct && isPunct) ||
 			(prevHasNewline && hasNewline) {
 			count++
 		}
@@ -107,7 +108,8 @@ func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 		isPunct := isPunct(gc)
 
 		if (isWhitespace && !prevWasWhitespace) ||
-			(isPunct != prevWasPunct) ||
+			(isPunct && !prevWasPunct && !prevWasWhitespace) ||
+			(!isPunct && prevWasPunct) ||
 			(hasNewline && prevHasNewline) {
 			count++
 		}

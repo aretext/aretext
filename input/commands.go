@@ -533,22 +533,22 @@ func NormalModeCommands() []Command {
 		{
 			Name: "delete inner word (diw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("d", "iw", captureOpts{clipboardPage: true})
+				return cmdExpr("d", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteInnerWord(p.ClipboardPage),
+					DeleteInnerWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
 		{
 			Name: "change word (cw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("c", "w", captureOpts{clipboardPage: true})
+				return cmdExpr("c", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeWord(p.ClipboardPage),
+					ChangeWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -566,11 +566,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "change inner word (ciw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("c", "iw", captureOpts{clipboardPage: true})
+				return cmdExpr("c", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeInnerWord(p.ClipboardPage),
+					ChangeInnerWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -693,11 +693,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "yank inner word (yiw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("y", "iw", captureOpts{clipboardPage: true})
+				return cmdExpr("y", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyInnerWord(p.ClipboardPage),
+					CopyInnerWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

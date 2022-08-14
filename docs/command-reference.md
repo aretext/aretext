@@ -59,14 +59,14 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to end of line                       | D           | clipboard page        |
 | delete to start of next word                | dw          | count, clipboard page |
 | delete a word                               | daw         | clipboard page        |
-| delete inner word                           | diw         | clipboard page        |
+| delete inner word                           | diw         | count, clipboard page |
 | delete to next matching character in line   | df\{char\}  | count, clipboard page |
 | delete to prev matching character in line   | dF\{char\}  | count, clipboard page |
 | delete till next matching character in line | dt\{char\}  | count, clipboard page |
 | delete till prev matching character in line | dT\{char\}  | count, clipboard page |
 | change word                                 | cw          | clipboard page        |
 | change a word                               | caw         | clipboard page        |
-| change inner word                           | ciw         | clipboard page        |
+| change inner word                           | ciw         | count, clipboard page |
 | change to next matching character in line   | cf\{char\}  | count, clipboard page |
 | change to prev matching character in line   | cF\{char\}  | count, clipboard page |
 | change till next matching character in line | ct\{char\}  | count, clipboard page |
@@ -77,7 +77,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | outdent line                                | \<\<        |                       |
 | yank to start of next word                  | yw          | count, clipboard page |
 | yank a word                                 | yaw         | clipboard page        |
-| yank inner word                             | yiw         | clipboard page        |
+| yank inner word                             | yiw         | count, clipboard page |
 | yank line                                   | yy          | clipboard page        |
 | put after cursor                            | p           | clipboard page        |
 | put before cursor                           | P           | clipboard page        |

@@ -538,6 +538,7 @@ func TestInnerWordObject(t *testing.T) {
 		name             string
 		inputString      string
 		pos              uint64
+		count            uint64
 		expectedStartPos uint64
 		expectedEndPos   uint64
 	}{
@@ -545,6 +546,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "empty",
 			inputString:      "",
 			pos:              0,
+			count:            1,
 			expectedStartPos: 0,
 			expectedEndPos:   0,
 		},
@@ -552,6 +554,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on start of leading whitespace before word",
 			inputString:      "abc   def  ghi",
 			pos:              3,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   6,
 		},
@@ -559,6 +562,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on middle of leading whitespace before word",
 			inputString:      "abc   def  ghi",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   6,
 		},
@@ -566,6 +570,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on end of leading whitespace before word",
 			inputString:      "abc   def  ghi",
 			pos:              5,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   6,
 		},
@@ -573,6 +578,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on start of word with trailing whitespace",
 			inputString:      "abc def    ghi",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -580,6 +586,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on middle of word with trailing whitespace",
 			inputString:      "abc def    ghi",
 			pos:              5,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -587,6 +594,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on end of word with trailing whitespace",
 			inputString:      "abc def    ghi",
 			pos:              6,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -594,6 +602,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "start of word after punctuation",
 			inputString:      "abc/def/ghi",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -601,6 +610,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "middle of word after punctuation",
 			inputString:      "abc/def/ghi",
 			pos:              5,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -608,6 +618,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "end of word after punctuation",
 			inputString:      "abc/def/ghi",
 			pos:              6,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   7,
 		},
@@ -615,6 +626,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on punctuation surrounded by words",
 			inputString:      "abc/def/ghi",
 			pos:              3,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   4,
 		},
@@ -622,6 +634,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on punctuation surrounded by whitespace",
 			inputString:      "a   /   b",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   5,
 		},
@@ -629,6 +642,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on multiple punctuation chars",
 			inputString:      "abc///ghi",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   6,
 		},
@@ -636,6 +650,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on leading whitespace before punctuation",
 			inputString:      "foo  {bar",
 			pos:              3,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   5,
 		},
@@ -643,6 +658,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "whitespace at start of line",
 			inputString:      "abc\n    xyz",
 			pos:              6,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   8,
 		},
@@ -651,6 +667,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "empty line, indentation",
 			inputString:      "abc\n\n   123",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   4,
 		},
@@ -659,6 +676,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "empty line, no indentation",
 			inputString:      "abc\n\n123",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 4,
 			expectedEndPos:   4,
 		},
@@ -666,6 +684,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "start of word at end of document",
 			inputString:      "abcd",
 			pos:              0,
+			count:            1,
 			expectedStartPos: 0,
 			expectedEndPos:   4,
 		},
@@ -673,6 +692,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "middle of word at end of document",
 			inputString:      "abcd",
 			pos:              2,
+			count:            1,
 			expectedStartPos: 0,
 			expectedEndPos:   4,
 		},
@@ -680,6 +700,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "end of word at end of document",
 			inputString:      "abcd",
 			pos:              3,
+			count:            1,
 			expectedStartPos: 0,
 			expectedEndPos:   4,
 		},
@@ -688,6 +709,7 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on word before whitespace at end of document",
 			inputString:      "abc    ",
 			pos:              2,
+			count:            1,
 			expectedStartPos: 0,
 			expectedEndPos:   3,
 		},
@@ -695,8 +717,33 @@ func TestInnerWordObject(t *testing.T) {
 			name:             "on whitespace at end of document",
 			inputString:      "abc    ",
 			pos:              4,
+			count:            1,
 			expectedStartPos: 3,
 			expectedEndPos:   7,
+		},
+		{
+			name:             "count zero",
+			inputString:      "lorem ipsum dolor sit amet",
+			pos:              7,
+			count:            0,
+			expectedStartPos: 7,
+			expectedEndPos:   7,
+		},
+		{
+			name:             "count three",
+			inputString:      "lorem ipsum dolor sit amet",
+			pos:              7,
+			count:            3,
+			expectedStartPos: 6,
+			expectedEndPos:   17,
+		},
+		{
+			name:             "count past end of line",
+			inputString:      "lorem ipsum\ndolor\nsit amet",
+			pos:              1,
+			count:            5,
+			expectedStartPos: 0,
+			expectedEndPos:   21,
 		},
 	}
 
@@ -704,7 +751,7 @@ func TestInnerWordObject(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			startPos, endPos := InnerWordObject(textTree, tc.pos)
+			startPos, endPos := InnerWordObject(textTree, tc.pos, tc.count)
 			assert.Equal(t, tc.expectedStartPos, startPos)
 			assert.Equal(t, tc.expectedEndPos, endPos)
 		})

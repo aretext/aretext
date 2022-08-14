@@ -324,7 +324,11 @@ func wordObjectWithTrailingWhitespace(textTree *text.Tree, pos uint64) (uint64, 
 // InnerWordObject returns the start and end positions of the word object or whitespace regions under the cursor.
 // This is similar to WordObject, except that whitespace regions are counted as if they were words.
 // This is equivalent to vim's "iw" ("inner word") object.
-func InnerWordObject(textTree *text.Tree, pos uint64) (uint64, uint64) {
+func InnerWordObject(textTree *text.Tree, pos uint64, targetCount uint64) (uint64, uint64) {
+	if targetCount == 0 {
+		return pos, pos
+	}
+
 	startPos, endPos := pos, pos
 	reader := textTree.ReaderAtPosition(pos)
 	gcIter := segment.NewGraphemeClusterIter(reader)
@@ -356,24 +360,39 @@ func InnerWordObject(textTree *text.Tree, pos uint64) (uint64, uint64) {
 	}
 
 	// If the next gc is a newline, then stop there.
-	if firstHasNewline {
+	if targetCount == 1 && firstHasNewline {
 		return startPos, endPos
 	}
 
 	endPos += firstNumRunes
 
+	prevWasWhitespace := firstIsWhitespace
+	prevWasPunct := firstIsPunct
+
 	// Otherwise, scan forward to the next boundary.
+	var count uint64
 	for {
 		err = gcIter.NextSegment(gc)
 		if err != nil {
 			break
 		}
-		if (firstIsWhitespace != gc.IsWhitespace()) ||
-			(firstIsPunct != isPunct(gc)) ||
-			gc.HasNewline() {
+
+		isWhitespace := gc.IsWhitespace()
+		isPunct := isPunct(gc)
+
+		if (!prevWasWhitespace && isWhitespace && !gc.HasNewline()) ||
+			(prevWasWhitespace && !isWhitespace) ||
+			(prevWasPunct != isPunct) {
+			count++
+		}
+
+		if count == targetCount {
 			break
 		}
+
 		endPos += gc.NumRunes()
+		prevWasWhitespace = isWhitespace
+		prevWasPunct = isPunct
 	}
 
 	return startPos, endPos

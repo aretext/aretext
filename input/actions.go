@@ -403,20 +403,20 @@ func DeleteAWord(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func DeleteInnerWord(clipboardPage clipboard.PageId) Action {
+func DeleteInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.InnerWordObject(params.TextTree, params.CursorPos)
+			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
 		}, clipboardPage)
 	}
 }
 
-func ChangeWord(clipboardPage clipboard.PageId) Action {
+func ChangeWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
 			// Unlike "dw", "cw" within a word excludes whitespace after the word by default.
 			// See https://vimhelp.org/change.txt.html
-			_, endPos := locate.InnerWordObject(params.TextTree, params.CursorPos)
+			_, endPos := locate.InnerWordObject(params.TextTree, params.CursorPos, count)
 			return endPos
 		}, clipboardPage)
 		EnterInsertMode(s)
@@ -431,8 +431,8 @@ func ChangeAWord(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func ChangeInnerWord(clipboardPage clipboard.PageId) Action {
-	deleteInnerWordAction := DeleteInnerWord(clipboardPage)
+func ChangeInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
+	deleteInnerWordAction := DeleteInnerWord(count, clipboardPage)
 	return func(s *state.EditorState) {
 		deleteInnerWordAction(s)
 		EnterInsertMode(s)
@@ -501,10 +501,10 @@ func CopyAWord(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func CopyInnerWord(clipboardPage clipboard.PageId) Action {
+func CopyInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.InnerWordObject(params.TextTree, params.CursorPos)
+			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
 		})
 	}
 }

@@ -408,6 +408,9 @@ func DeleteInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
 		}, clipboardPage)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		})
 	}
 }
 

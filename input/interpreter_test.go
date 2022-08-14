@@ -741,6 +741,20 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\n amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "delete inner word at end of line",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 11,
+			expectedText:      "Lorem ipsum \nsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "delete inner word with count",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

@@ -681,6 +681,14 @@ func TestInnerWordObject(t *testing.T) {
 			expectedEndPos:   4,
 		},
 		{
+			name:             "word at end of line",
+			inputString:      "foo bar\nbaz\nbat",
+			pos:              5,
+			count:            1,
+			expectedStartPos: 4,
+			expectedEndPos:   7,
+		},
+		{
 			name:             "start of word at end of document",
 			inputString:      "abcd",
 			pos:              0,

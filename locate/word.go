@@ -366,6 +366,7 @@ func InnerWordObject(textTree *text.Tree, pos uint64, targetCount uint64) (uint6
 
 	endPos += firstNumRunes
 
+	prevHasNewline := firstHasNewline
 	prevWasWhitespace := firstIsWhitespace
 	prevWasPunct := firstIsPunct
 
@@ -377,11 +378,12 @@ func InnerWordObject(textTree *text.Tree, pos uint64, targetCount uint64) (uint6
 			break
 		}
 
+		hasNewline := gc.HasNewline()
 		isWhitespace := gc.IsWhitespace()
 		isPunct := isPunct(gc)
 
-		if (!prevWasWhitespace && isWhitespace && !gc.HasNewline()) ||
-			(prevWasWhitespace && !isWhitespace) ||
+		if (!prevWasWhitespace && isWhitespace) ||
+			(prevWasWhitespace && !prevHasNewline && !isWhitespace) ||
 			(prevWasPunct != isPunct) {
 			count++
 		}
@@ -391,6 +393,7 @@ func InnerWordObject(textTree *text.Tree, pos uint64, targetCount uint64) (uint6
 		}
 
 		endPos += gc.NumRunes()
+		prevHasNewline = hasNewline
 		prevWasWhitespace = isWhitespace
 		prevWasPunct = isPunct
 	}

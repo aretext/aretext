@@ -4,7 +4,7 @@ Configuration
 Editing Config
 --------------
 
-Aretext stores its configuration in a single YAML file. You can edit the config file using the `-editconfig` flag:
+Aretext stores its configuration in a single YAML file. You can edit the config file using the `editconfig` flag:
 
 ```
 aretext -editconfig
@@ -59,7 +59,7 @@ When merging configurations from different rules:
 -	For lists, the values from all rules are combined.
 -	For dictionaries, the keys from later rules are added to the merged dictionary, potentially overwriting keys set by previous rules.
 
-This is a powerful mechanism for customizing configuration based on filename extension and/or project location. For example, suppose that one project you work on uses four spaces to indent JSON files. You could add a new rule to your config that overwrites the tabSize for JSON files in that specific project:
+This is a powerful mechanism for customizing configuration based on filename extension and/or project location. For example, suppose that the style guidelines for a project mandate four spaces of indentation for JSON. You could add a new rule to your config that overwrites the tabSize for JSON files in that specific project:
 
 ```yaml
 # ... other rules above ...

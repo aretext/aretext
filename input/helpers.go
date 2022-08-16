@@ -36,7 +36,8 @@ func vmEventToRune(vmEvent vm.Event) rune {
 }
 
 const (
-	captureIdCount = vm.CaptureId(1<<16) + iota
+	captureIdVerbCount = vm.CaptureId(1<<16) + iota
+	captureIdObjectCount
 	captureIdClipboardPage
 	captureIdMatchChar
 	captureIdReplaceChar
@@ -63,12 +64,32 @@ func keyExpr(key tcell.Key) vm.Expr {
 }
 
 // Pre-compute and share these expressions to reduce number of allocations.
-var countExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr vm.Expr
+var verbCountExpr, objectCountExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr vm.Expr
 
 func init() {
-	countExpr = vm.OptionExpr{
+	verbCountExpr = vm.OptionExpr{
 		Child: vm.CaptureExpr{
-			CaptureId: captureIdCount,
+			CaptureId: captureIdVerbCount,
+			Child: vm.ConcatExpr{
+				Children: []vm.Expr{
+					vm.EventRangeExpr{
+						StartEvent: runeToVmEvent('1'),
+						EndEvent:   runeToVmEvent('9'),
+					},
+					vm.StarExpr{
+						Child: vm.EventRangeExpr{
+							StartEvent: runeToVmEvent('0'),
+							EndEvent:   runeToVmEvent('9'),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	objectCountExpr = vm.OptionExpr{
+		Child: vm.CaptureExpr{
+			CaptureId: captureIdObjectCount,
 			Child: vm.ConcatExpr{
 				Children: []vm.Expr{
 					vm.EventRangeExpr{
@@ -154,11 +175,16 @@ func cmdExpr(verb string, object string, opts captureOpts) vm.Expr {
 				Event: runeToVmEvent(r),
 			})
 		}
+
+		if opts.count {
+			objExpr = vm.ConcatExpr{Children: []vm.Expr{objectCountExpr, objExpr}}
+		}
+
 		expr = vm.ConcatExpr{Children: []vm.Expr{verbExpr, objExpr}}
 	}
 
 	if opts.count {
-		expr = vm.ConcatExpr{Children: []vm.Expr{countExpr, expr}}
+		expr = vm.ConcatExpr{Children: []vm.Expr{verbCountExpr, expr}}
 	}
 
 	if opts.clipboardPage {
@@ -187,8 +213,11 @@ func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandPa
 	for _, capture := range captures {
 		captureEvents := events[capture.StartIdx : capture.StartIdx+capture.Length]
 		switch capture.Id {
-		case captureIdCount:
-			p.Count = eventsToCount(captureEvents)
+		case captureIdVerbCount, captureIdObjectCount:
+			// Multiply here so that if both verb and object count are provided,
+			// the total count is the product of the two counts.
+			// For example, "2d3w" should delete 2*3=6 words.
+			p.Count *= eventsToCount(captureEvents)
 		case captureIdClipboardPage:
 			p.ClipboardPage = eventsToClipboardPage(captureEvents)
 		case captureIdMatchChar:

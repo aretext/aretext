@@ -7,7 +7,6 @@ import (
 
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
-	"github.com/aretext/aretext/syntax"
 )
 
 func TestShowMenu(t *testing.T) {
@@ -49,10 +48,8 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	items := []menu.Item{
 		{
-			Name: "set syntax json",
-			Action: func(s *EditorState) {
-				SetSyntax(s, syntax.LanguageJson)
-			},
+			Name:   "test item",
+			Action: func(s *EditorState) {},
 		},
 		{
 			Name:   "quit",

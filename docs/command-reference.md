@@ -130,12 +130,3 @@ Menu Commands
 | toggle auto-indent           | ai       |
 | start/stop recording macro   | m        |
 | replay macro                 | r        |
-| set syntax plaintext         |          |
-| set syntax json              |          |
-| set syntax yaml              |          |
-| set syntax go                |          |
-| set syntax python            |          |
-| set syntax rust              |          |
-| set syntax c                 |          |
-| set syntax gitcommit         |          |
-| set syntax gitrebase         |          |

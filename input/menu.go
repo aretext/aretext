@@ -1,11 +1,8 @@
 package input
 
 import (
-	"fmt"
-
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/state"
-	"github.com/aretext/aretext/syntax"
 )
 
 func menuItems(ctx Context) []menu.Item {
@@ -104,16 +101,6 @@ func menuItems(ctx Context) []menu.Item {
 			Aliases: []string{"ai"},
 			Action:  state.ToggleAutoIndent,
 		},
-	}
-
-	for _, language := range syntax.AllLanguages {
-		l := language // ensure each item refers to a different language
-		items = append(items, menu.Item{
-			Name: fmt.Sprintf("set syntax %s", language),
-			Action: func(s *state.EditorState) {
-				state.SetSyntax(s, l)
-			},
-		})
 	}
 
 	// User-defined macros are available only in normal mode, not visual mode.

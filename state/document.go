@@ -56,7 +56,6 @@ func ReloadDocument(state *EditorState) {
 	oldText := oldTextTree.String()
 	oldTextOriginLineNum := oldTextTree.LineNumForPosition(state.documentBuffer.view.textOrigin)
 	oldCursorLineNum, oldCursorCol := locate.PosToLineNumAndCol(oldTextTree, state.documentBuffer.cursor.position)
-	oldSyntaxLanguage := state.documentBuffer.syntaxLanguage
 	oldAutoIndent := state.documentBuffer.autoIndent
 	oldShowTabs := state.documentBuffer.showTabs
 	oldShowSpaces := state.documentBuffer.showSpaces
@@ -67,12 +66,6 @@ func ReloadDocument(state *EditorState) {
 	if err != nil {
 		reportLoadError(state, err, path)
 		return
-	}
-
-	// Retokenize if the configured language doesn't match the previous language.
-	// This can happen only when the language was changed through a menu command.
-	if oldSyntaxLanguage != state.documentBuffer.syntaxLanguage {
-		setSyntaxAndRetokenize(state.documentBuffer, oldSyntaxLanguage)
 	}
 
 	// Attempt to restore the original cursor and scroll positions, aligned to the new document.

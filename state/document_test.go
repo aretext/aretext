@@ -69,10 +69,6 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	ScrollViewToCursor(state)
 	assert.Equal(t, uint64(16), state.documentBuffer.view.textOrigin)
 
-	// Set the syntax.
-	SetSyntax(state, syntax.LanguageJson)
-	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
-
 	// Update the file with shorter text and reload.
 	err := os.WriteFile(path, []byte("ab"), 0644)
 	require.NoError(t, err)
@@ -80,12 +76,10 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	defer state.fileWatcher.Stop()
 
 	// Expect that the cursor moved back to the end of the text,
-	// the view scrolled to make the cursor visible,
-	// and the syntax language is preserved.
+	// and the view scrolled to make the cursor visible.
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 	assert.Equal(t, uint64(1), state.documentBuffer.cursor.position)
 	assert.Equal(t, uint64(0), state.documentBuffer.view.textOrigin)
-	assert.Equal(t, syntax.LanguageJson, state.documentBuffer.syntaxLanguage)
 }
 
 func TestLoadDocumentDifferentFile(t *testing.T) {

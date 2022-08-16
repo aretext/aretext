@@ -195,7 +195,11 @@ func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 // If the cursor is on whitespace, include it as leading whitespace.
 // Otherwise, include trailing whitespace.
 // This is equivalent to vim's "aw" ("a word") object.
-func WordObject(textTree *text.Tree, pos uint64) (uint64, uint64) {
+func WordObject(textTree *text.Tree, pos uint64, targetCount uint64) (uint64, uint64) {
+	if targetCount == 0 {
+		return pos, pos
+	}
+
 	// Lookahead one rune to detect whether we're in whitespace or not.
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
@@ -207,15 +211,15 @@ func WordObject(textTree *text.Tree, pos uint64) (uint64, uint64) {
 	if unicode.IsSpace(r) {
 		// If we're in whitespace, treat it as leading whitespace
 		// and move to the following word.
-		return wordObjectWithLeadingWhitespace(textTree, pos)
+		return wordObjectWithLeadingWhitespace(textTree, pos, targetCount)
 	} else {
 		// Otherwise, move past the end of the word and
 		// any trailing whitespace.
-		return wordObjectWithTrailingWhitespace(textTree, pos)
+		return wordObjectWithTrailingWhitespace(textTree, pos, targetCount)
 	}
 }
 
-func wordObjectWithLeadingWhitespace(textTree *text.Tree, pos uint64) (uint64, uint64) {
+func wordObjectWithLeadingWhitespace(textTree *text.Tree, pos uint64, targetCount uint64) (uint64, uint64) {
 	startPos, endPos := pos, pos
 
 	// Scan backwards to the start of leading whitespace.
@@ -242,6 +246,7 @@ func wordObjectWithLeadingWhitespace(textTree *text.Tree, pos uint64) (uint64, u
 
 	// Scan forward to the end of the word after leading whitespace.
 	prevWasWhitespace, prevWasPunct := true, false
+	var count uint64
 	for {
 		err := gcIter.NextSegment(gc)
 		if err != nil {
@@ -250,10 +255,13 @@ func wordObjectWithLeadingWhitespace(textTree *text.Tree, pos uint64) (uint64, u
 
 		isWhitespace := gc.IsWhitespace()
 		isPunct := isPunct(gc)
+		if (!prevWasWhitespace && isWhitespace) ||
+			(!prevWasPunct && !prevWasWhitespace && isPunct) ||
+			(prevWasPunct && !isPunct && !isWhitespace) {
+			count++
+		}
 
-		if gc.HasNewline() ||
-			(!prevWasWhitespace && isWhitespace) ||
-			(!prevWasWhitespace && prevWasPunct != isPunct) {
+		if count == targetCount {
 			break
 		}
 
@@ -265,7 +273,7 @@ func wordObjectWithLeadingWhitespace(textTree *text.Tree, pos uint64) (uint64, u
 	return startPos, endPos
 }
 
-func wordObjectWithTrailingWhitespace(textTree *text.Tree, pos uint64) (uint64, uint64) {
+func wordObjectWithTrailingWhitespace(textTree *text.Tree, pos uint64, targetCount uint64) (uint64, uint64) {
 	startPos, endPos := pos, pos
 	reader := textTree.ReaderAtPosition(pos)
 	gcIter := segment.NewGraphemeClusterIter(reader)
@@ -278,6 +286,7 @@ func wordObjectWithTrailingWhitespace(textTree *text.Tree, pos uint64) (uint64, 
 		panic(err)
 	}
 	firstIsPunct := isPunct(gc)
+	firstIsWhitespace := gc.IsWhitespace()
 	endPos += gc.NumRunes()
 
 	// Scan backwards to the previous word boundary.
@@ -295,11 +304,29 @@ func wordObjectWithTrailingWhitespace(textTree *text.Tree, pos uint64) (uint64, 
 	}
 
 	// Scan forward to the end of word.
+	prevWasWhitespace := firstIsWhitespace
+	prevWasPunct := firstIsPunct
+	var count uint64
 	for {
 		err = gcIter.NextSegment(gc)
-		if err != nil || gc.IsWhitespace() || isPunct(gc) != firstIsPunct {
+		if err != nil {
 			break
 		}
+
+		isWhitespace := gc.IsWhitespace()
+		isPunct := isPunct(gc)
+		if (!prevWasWhitespace && isWhitespace) ||
+			(!prevWasPunct && !prevWasWhitespace && isPunct) ||
+			(prevWasPunct && !isPunct && !isWhitespace) {
+			count++
+		}
+
+		if count == targetCount {
+			break
+		}
+
+		prevWasWhitespace = isWhitespace
+		prevWasPunct = isPunct
 		endPos += gc.NumRunes()
 	}
 

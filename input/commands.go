@@ -522,11 +522,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "delete a word (daw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("d", "aw", captureOpts{clipboardPage: true})
+				return cmdExpr("d", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteAWord(p.ClipboardPage),
+					DeleteAWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -555,11 +555,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "change a word (caw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("c", "aw", captureOpts{clipboardPage: true})
+				return cmdExpr("c", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeAWord(p.ClipboardPage),
+					ChangeAWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -682,11 +682,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "yank a word (yaw)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("y", "aw", captureOpts{clipboardPage: true})
+				return cmdExpr("y", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyAWord(p.ClipboardPage),
+					CopyAWord(p.Count, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

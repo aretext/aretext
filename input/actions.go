@@ -392,10 +392,10 @@ func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Actio
 	}
 }
 
-func DeleteAWord(clipboardPage clipboard.PageId) Action {
+func DeleteAWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.WordObject(params.TextTree, params.CursorPos)
+			return locate.WordObject(params.TextTree, params.CursorPos, count)
 		}, clipboardPage)
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
@@ -426,8 +426,8 @@ func ChangeWord(count uint64, clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func ChangeAWord(clipboardPage clipboard.PageId) Action {
-	deleteAWordAction := DeleteAWord(clipboardPage)
+func ChangeAWord(count uint64, clipboardPage clipboard.PageId) Action {
+	deleteAWordAction := DeleteAWord(count, clipboardPage)
 	return func(s *state.EditorState) {
 		deleteAWordAction(s)
 		EnterInsertMode(s)
@@ -496,10 +496,10 @@ func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action 
 	}
 }
 
-func CopyAWord(clipboardPage clipboard.PageId) Action {
+func CopyAWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.WordObject(params.TextTree, params.CursorPos)
+			return locate.WordObject(params.TextTree, params.CursorPos, count)
 		})
 	}
 }

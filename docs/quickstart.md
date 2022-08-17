@@ -73,4 +73,4 @@ The next sections explain how to use aretext effectively:
 -	[Configuration](configuration.md): How to configure settings.
 -	[Custom Menu Commands](custom-menu-commands.md): How to extend the editor with custom menu commands.
 
-For an overview of all available commands, please see the [Command Reference](command-reference.md).
+For a list of common commands, please see the [Cheat Sheet](cheat-sheet.html).

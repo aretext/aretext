@@ -1,0 +1,183 @@
+<html>
+  <head>
+    <title>aretext cheat sheet</title>
+    <style>
+    :root {
+      --fg-color: #1a1a1a;
+      --bg-color: #fdfdfd;
+      --card-bg-color: #f5f5f5;
+      --link-color: #007a6c;
+      --link-hover-color: #149a80;
+      --keys-fg-color: #fff;
+      --keys-bg-color: #333;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fg-color: #d0cfcc;
+        --bg-color: #2e303e;
+        --card-bg-color: #15171e;
+        --link-color: #18bc9c;
+        --link-hover-color: #149a80;
+      }
+    }
+
+    html {
+      color: var(--fg-color);
+      background-color: var(--bg-color);
+    }
+
+    header {
+      margin: 2em;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    article {
+      display: inline-block;
+      vertical-align: top;
+      margin: 2em;
+      padding: 2em;
+      background-color: var(--card-bg-color);
+      flex: 20em;
+      border-radius: 10px;
+    }
+
+    article > h2 {
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    a {
+      color: var(--link-color);
+    }
+
+    a:visited {
+      color: var(--link-color);
+    }
+
+    a:hover {
+      color: var(--link-hover-color);
+    }
+
+    .command {
+      padding: 0.5em;
+    }
+
+    .keys {
+      color: var(--keys-fg-color);
+      background: var(--keys-bg-color);
+      border-radius: 4px;
+      box-shadow: 2px 2px 2px #aaa;
+      padding: 5px 10px;
+      display: inline-block;
+      margin-bottom: 10px;
+      margin-right: 5px;
+    }
+
+    .description {
+      margin-left: 1em;
+    }
+    </style>
+  </head>
+  <body>
+    <header>
+    <h1>aretext cheat sheet</h1>
+    <p>aretext is a minimalist text editor with vim-compatible key bindings <a href=".">[user guide]</a></p>
+    </header>
+
+    <section>
+      <article>
+        <h2>menu</h2>
+        <div class="command"><span class="keys">:</span><span class="description">open menu</span></div>
+        <div class="command"><span class="keys">:q</span><span class="description">quit</span></div>
+        <div class="command"><span class="keys">:q!</span><span class="description">force quit</span></div>
+        <div class="command"><span class="keys">:s</span> (or <span class="keys">:w</span>)<span class="description">save</span></div>
+        <div class="command"><span class="keys">:sq</span> (or <span class="keys">:wq</span>)<span class="description">save and quit</span></div>
+        <div class="command"><span class="keys">:f</span><span class="description">find and open</span></div>
+        <div class="command"><span class="keys">:r</span><span class="description">reload</span></div>
+        <div class="command"><span class="keys">:r!</span><span class="description">force reload</span></div>
+      </article>
+
+      <article>
+        <h2>cursor</h2>
+        <div class="command"><span class="keys">h</span> (or <span class="keys">&larr;</span>)<span class="description">left</span></div>
+        <div class="command"><span class="keys">l</span> (or <span class="keys">&rarr;</span>)<span class="description">right</span></div>
+        <div class="command"><span class="keys">k</span> (or <span class="keys">&uarr;</span>)<span class="description">up</span></div>
+        <div class="command"><span class="keys">j</span> (or <span class="keys">&darr;</span>)<span class="description">down</span></div>
+        <div class="command"><span class="keys">w</span><span class="description">next word</span></div>
+        <div class="command"><span class="keys">b</span><span class="description">prev word</span></div>
+        <div class="command"><span class="keys">e</span><span class="description">end of word</span></div>
+        <div class="command"><span class="keys">^</span><span class="description">start of line</span></div>
+        <div class="command"><span class="keys">$</span><span class="description">end of line</span></div>
+        <div class="command"><span class="keys">{</span><span class="description">previous paragraph</span></div>
+        <div class="command"><span class="keys">}</span><span class="description">next paragraph</span></div>
+        <div class="command"><span class="keys">gg</span><span class="description">go to first line</span></div>
+        <div class="command"><span class="keys">G</span><span class="description">go to last line</span></div>
+        <div class="command"><span class="keys">123gg</span><span class="description">go to line 123</span></div>
+        <div class="command"><span class="keys">Ctrl</span>+<span class="keys">u</span><span class="description">scroll up</span></div>
+        <div class="command"><span class="keys">Ctrl</span>+<span class="keys">d</span><span class="description">scroll down</span></div>
+      </article>
+
+      <article>
+        <h2>edit</h2>
+        <div class="command"><span class="keys">i</span><span class="description">insert</span></div>
+        <div class="command"><span class="keys">Esc</span><span class="description">exit insert mode</span></div>
+        <div class="command"><span class="keys">a</span><span class="description">append</span></div>
+        <div class="command"><span class="keys">A</span><span class="description">append at end of line</span></div>
+        <div class="command"><span class="keys">x</span><span class="description">delete character</span></div>
+        <div class="command"><span class="keys">5x</span><span class="description">delete 5 characters</span></div>
+        <div class="command"><span class="keys">o</span><span class="description">new line below</span></div>
+        <div class="command"><span class="keys">J</span><span class="description">join lines</span></div>
+        <div class="command"><span class="keys">dd</span><span class="description">delete line</span></div>
+        <div class="command"><span class="keys">D</span><span class="description">delete to end of line</span></div>
+        <div class="command"><span class="keys">daw</span><span class="description">delete a word</span></div>
+        <div class="command"><span class="keys">dt{char}</span><span class="description">delete to next {char</span>}</div>
+        <div class="command"><span class="keys">caw</span><span class="description">change (replace) a word</span></div>
+        <div class="command"><span class="keys">r{char}</span><span class="description">replace with {char}</span></div>
+        <div class="command"><span class="keys">~</span><span class="description">toggle case</span></div>
+        <div class="command"><span class="keys">u</span><span class="description">undo</span></div>
+        <div class="command"><span class="keys">Ctrl</span>+<span class="keys">r</span><span class="description">redo</span></div>
+      </article>
+
+      <article>
+        <h2>search</h2>
+        <div class="command"><span class="keys">/</span><span class="description">search forward</span></div>
+        <div class="command"><span class="keys">?</span><span class="description">search backward</span></div>
+        <div class="command"><span class="keys">n</span><span class="description">next match</span></div>
+        <div class="command"><span class="keys">N</span><span class="description">previous match</span></div>
+      </article>
+
+      <article>
+        <h2>visual mode (selection)</h2>
+        <div class="command"><span class="keys">v</span><span class="description">start selecting characters</span></div>
+        <div class="command"><span class="keys">V</span><span class="description">start selecting lines</span></div>
+        <p>move cursor to select text, then:</p>
+        <div class="command"><span class="keys">x</span><span class="description">delete</span></div>
+        <div class="command"><span class="keys">&gt;</span><span class="description">indent</span></div>
+        <div class="command"><span class="keys">&lt;</span><span class="description">outdent</span></div>
+      </article>
+
+      <article>
+        <h2>clipboard</h2>
+        <div class="command"><span class="keys">yaw</span><span class="description">yank (copy) a word</span></div>
+        <div class="command"><span class="keys">yy</span><span class="description">yank (copy) line</span></div>
+        <div class="command"><span class="keys">p</span><span class="description">put (paste)</span></div>
+        <div class="command"><span class="keys">"ayy</span><span class="description">yank to clipboard "a"</span></div>
+        <div class="command"><span class="keys">"ap</span><span class="description">put from clipboard "a"</span></div>
+        <p>(to use the system clipboard, <a href="custom-menu-commands/#copy-and-paste-using-the-system-clipboard">add custom menu commands</a>.)</p>
+      </article>
+
+      <article>
+        <h2>macros</h2>
+        <div class="command"><span class="keys">.</span><span class="description">repeat last action</span></div>
+        <div class="command"><span class="keys">5.</span><span class="description">repeat last action 5 times</span></div>
+        <div class="command"><span class="keys">:m</span><span class="description">start/stop recording macro</span></div>
+        <div class="command"><span class="keys">:r</span><span class="description">replay macro</span></div>
+      </article>
+    </section>
+  </body>
+</html>

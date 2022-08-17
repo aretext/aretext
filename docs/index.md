@@ -25,6 +25,7 @@ Reference
 
 -	[Command Reference](command-reference.md)
 -	[Configuration Reference](config-reference.md)
+-	[Cheat Sheet](cheat-sheet.html)
 
 Contact
 -------

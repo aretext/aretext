@@ -73,8 +73,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change till prev matching character in line | cT\{char\}  | count, clipboard page |
 | replace character                           | r           |                       |
 | toggle case                                 | ~           |                       |
-| indent line                                 | >>          |                       |
-| outdent line                                | \<\<        |                       |
+| indent line                                 | &gt;&gt;    |                       |
+| outdent line                                | &lt;&lt;    |                       |
 | yank to start of next word                  | yw          | count, clipboard page |
 | yank a word                                 | yaw         | count, clipboard page |
 | yank inner word                             | yiw         | count, clipboard page |
@@ -105,8 +105,8 @@ Visual Mode Commands
 | delete selection            | d           | clipboard page |
 | change selection            | c           | clipboard page |
 | toggle case for selection   | ~           |                |
-| indent selection            | \>          |                |
-| outdent selection           | \<          |                |
+| indent selection            | &gt;        |                |
+| outdent selection           | &lt;        |                |
 | yank selection              | y           | clipboard page |
 
 Menu Commands

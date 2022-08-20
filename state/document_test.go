@@ -252,6 +252,39 @@ func TestSaveDocument(t *testing.T) {
 	assert.Equal(t, "x\n", string(contents))
 }
 
+func TestSaveDocumentIfUnsavedChanges(t *testing.T) {
+	// Start with an empty document.
+	state := NewEditorState(100, 100, nil, nil)
+	path := filepath.Join(t.TempDir(), "test-save-document-if-unsaved-changes.txt")
+	LoadDocument(state, path, false, func(LocatorParams) uint64 { return 0 })
+	defer state.fileWatcher.Stop()
+
+	// Save the document. The file should be created even though the document is empty.
+	SaveDocumentIfUnsavedChanges(state)
+	_, err := os.Stat(path)
+	require.NoError(t, err)
+
+	// Change the document on disk so we can detect if the file changes on next save.
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0644)
+	require.NoError(t, err)
+	defer f.Close()
+	_, err = io.WriteString(f, "abcdefg")
+	require.NoError(t, err)
+
+	// Save again, but expect that the file is NOT saved since there are no unsaved changes.
+	SaveDocumentIfUnsavedChanges(state)
+	contents, err := os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, "abcdefg", string(contents))
+
+	// Modify and save the document, then check that the file was changed.
+	InsertRune(state, 'x')
+	SaveDocumentIfUnsavedChanges(state)
+	contents, err = os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, "x\n", string(contents))
+}
+
 func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 	testCases := []struct {
 		name        string

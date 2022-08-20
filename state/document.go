@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -260,7 +261,7 @@ func actionForCustomMenuItem(cmd config.MenuCommandConfig) func(*EditorState) {
 	if cmd.Save {
 		return func(state *EditorState) {
 			AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
-				SaveDocument(state)
+				SaveDocumentIfUnsavedChanges(state)
 				RunShellCmd(state, cmd.ShellCmd, cmd.Mode)
 			})
 		}
@@ -320,6 +321,17 @@ func SaveDocument(state *EditorState) {
 	state.fileWatcher = newWatcher
 	state.documentBuffer.undoLog.TrackSave()
 	reportSaveSuccess(state, path)
+}
+
+// SaveDocumentIfUnsavedChanges saves the document only if it has been edited
+// or the file does not exist on disk.
+func SaveDocumentIfUnsavedChanges(state *EditorState) {
+	path := state.fileWatcher.Path()
+	_, err := os.Stat(path)
+	undoLog := state.documentBuffer.undoLog
+	if undoLog.HasUnsavedChanges() || errors.Is(err, os.ErrNotExist) {
+		SaveDocument(state)
+	}
 }
 
 func reportSaveError(state *EditorState, err error, path string) {

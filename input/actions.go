@@ -427,17 +427,19 @@ func ChangeWord(count uint64, clipboardPage clipboard.PageId) Action {
 }
 
 func ChangeAWord(count uint64, clipboardPage clipboard.PageId) Action {
-	deleteAWordAction := DeleteAWord(count, clipboardPage)
 	return func(s *state.EditorState) {
-		deleteAWordAction(s)
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.WordObject(params.TextTree, params.CursorPos, count)
+		}, clipboardPage)
 		EnterInsertMode(s)
 	}
 }
 
 func ChangeInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
-	deleteInnerWordAction := DeleteInnerWord(count, clipboardPage)
 	return func(s *state.EditorState) {
-		deleteInnerWordAction(s)
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
+		}, clipboardPage)
 		EnterInsertMode(s)
 	}
 }

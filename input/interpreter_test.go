@@ -976,6 +976,22 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit foobar consectetur\nadipiscing elit",
 		},
 		{
+			name:        "change a word at end of line",
+			initialText: "foo=bar\nbaz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "foo=xxx\nbaz",
+		},
+		{
 			name:        "change a word with count",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -1018,6 +1034,22 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit foobar consectetur\nadipiscing elit",
 		},
 		{
+			name:        "change inner word at end of line",
+			initialText: "foo=bar\nbaz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "foo=xxx\nbaz",
+		},
+		{
 			name:        "change inner word with count",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -1051,6 +1083,23 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 3,
 			expectedText:      "testsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name: "change to next matching char in line at end of line",
+
+			initialText: "foobar123\nbaz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '3', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 3,
+			expectedText:      "test3\nbaz",
 		},
 		{
 			name:        "change to prev matching character in line ",
@@ -1096,6 +1145,22 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 3,
 			expectedText:      "test ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "change till next matching char in line at end of line",
+			initialText: "foobar123\nbaz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '3', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 3,
+			expectedText:      "test\nbaz",
 		},
 		{
 			name:        "change till prev matching char in line",

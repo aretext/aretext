@@ -320,8 +320,8 @@ func (g *innerNodeGroup) numNewlinesBeforePosition(nodeIdx uint64, charPos uint6
 // +-----------------------------+
 // | child | numKeys |  keys[64] |
 // +-----------------------------+
-//    16        8         1024     = 1048 bytes
 //
+//	16 + 8 + 1024 = 1048 bytes
 type innerNode struct {
 	child   nodeGroup
 	numKeys uint64
@@ -556,8 +556,8 @@ func (g *leafNodeGroup) numNewlinesBeforePosition(nodeIdx uint64, charPos uint64
 // +---------------------------------+
 // |   numBytes  |   textBytes[63]   |
 // +---------------------------------+
-//        1               63          = 64 bytes
 //
+//	1 + 63 = 64 bytes
 type leafNode struct {
 	numBytes  byte
 	textBytes [maxBytesPerLeaf]byte

@@ -9,9 +9,9 @@ import (
 
 // NextWordStart locates the start of the next word after the cursor.
 // Word boundaries occur:
-//  1) at the first non-whitespace after a whitespace
-//  2) at the start of an empty line
-//  3) between punctuation and non-punctuation
+//  1. at the first non-whitespace after a whitespace
+//  2. at the start of an empty line
+//  3. between punctuation and non-punctuation
 func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEndOfLastLine bool) uint64 {
 	if targetCount == 0 {
 		return pos

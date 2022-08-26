@@ -195,8 +195,10 @@ func countLinesByHash(lineHashes []lineHash) map[lineHash]lineCount {
 
 // longestCommonSubsequence returns the LCS for unique shared lines.
 // This is the algorithm from:
-//   Szymanski, T. G. (1975) A special case of the maximal common subsequence problem.
-//   Computer Science Lab TR-170, Princeton University.
+//
+//	Szymanski, T. G. (1975) A special case of the maximal common subsequence problem.
+//	Computer Science Lab TR-170, Princeton University.
+//
 // The algorithm assumes that the two sequences have the same elements, possibly in a different
 // order, and runs in time O(n log n).
 func longestCommonSubsequence(lines []uniqueSharedLine) []LineMatch {

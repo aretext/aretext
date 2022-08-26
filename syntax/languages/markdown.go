@@ -47,7 +47,6 @@ func (s markdownParseState) Equals(other parser.State) bool {
 // * No restriction on indentation for lists, code fences, headings, etc.
 //
 // See https://spec.commonmark.org/0.30/ for details.
-//
 func MarkdownParseFunc() parser.Func {
 	// Incrementally parse one block at a time (headings, paragraphs, list items, etc.).
 	// This ensures that each parse func invocation starts at the beginning of a line.

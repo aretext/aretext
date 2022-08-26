@@ -40,10 +40,10 @@ type RangeLocator func(LocatorParams) (uint64, uint64)
 // For linewise selections, it attempts to select the same number of lines.
 // Example where cursor moves from line two to line three:
 //
-//    abcd        abcd
-//    [efg   -->  efg
-//    hij]        [hij
-//    klm         klm]
+//	abcd        abcd
+//	[efg   -->  efg
+//	hij]        [hij
+//	klm         klm]
 //
 // For charwise selections it attempts to select down the same number of lines
 // and over the same number of columns (grapheme clusters) on the final line
@@ -51,11 +51,10 @@ type RangeLocator func(LocatorParams) (uint64, uint64)
 // Example where the cursor moves from the second col in the first line
 // to the third col in the second line:
 //
-//   ab[cd        abcd
-//   ef]g    -->  ef[g
-//   hij          hi]j
-//   klm          klm
-//
+//	ab[cd        abcd
+//	ef]g    -->  ef[g
+//	hij          hi]j
+//	klm          klm
 func SelectionEndLocator(textTree *text.Tree, cursorPos uint64, selector *selection.Selector) Locator {
 	r := selector.Region(textTree, cursorPos)
 	switch selector.Mode() {

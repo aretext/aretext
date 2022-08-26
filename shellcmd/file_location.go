@@ -19,8 +19,10 @@ type FileLocation struct {
 
 // FileLocationsFromLines parses each non-empty line as a file location.
 // The supported file location formats are:
-//   <file>:<line>:<col>:<snippet>
-//   <file>:<line>:<snippet>
+//
+//	<file>:<line>:<col>:<snippet>
+//	<file>:<line>:<snippet>
+//
 // which correspond to the outputs to `grep -n` and `ripgrep --vimgrep`
 // If any line cannot be parsed, this function aborts and returns an error.
 func FileLocationsFromLines(r io.Reader) ([]FileLocation, error) {

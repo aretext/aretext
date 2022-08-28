@@ -1,7 +1,6 @@
 package menu
 
 import (
-	"sort"
 	"strings"
 
 	"github.com/aretext/aretext/menu/fuzzy"
@@ -36,7 +35,6 @@ func NewSearch(items []Item, emptyQueryShowAll bool) *Search {
 	var results []Item
 	if emptyQueryShowAll {
 		results = append(results, items...)
-		sortItemsInLexicographicOrder(results)
 	}
 
 	return &Search{
@@ -65,7 +63,6 @@ func (s *Search) SetQuery(q string) {
 		if s.emptyQueryShowAll {
 			s.results = make([]Item, 0, len(s.items))
 			s.results = append(s.results, s.items...)
-			sortItemsInLexicographicOrder(s.results)
 		} else {
 			s.results = nil
 		}
@@ -102,10 +99,4 @@ func truncateString(s string, maxLen int) string {
 	} else {
 		return s
 	}
-}
-
-func sortItemsInLexicographicOrder(items []Item) {
-	sort.SliceStable(items, func(i, j int) bool {
-		return items[i].Name < items[j].Name
-	})
 }

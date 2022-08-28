@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/pkg/errors"
 
@@ -64,6 +65,9 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 	if style == MenuStyleCommand {
 		items = append(items, state.customMenuItems...)
 	}
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Name < items[j].Name
+	})
 	search := menu.NewSearch(items, emptyQueryShowAll)
 	state.menu = &MenuState{
 		visible:           true,
@@ -112,7 +116,6 @@ func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.I
 			},
 		})
 	}
-
 	return items
 }
 

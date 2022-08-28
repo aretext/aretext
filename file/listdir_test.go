@@ -46,7 +46,10 @@ func TestListDir(t *testing.T) {
 
 	// List all paths in tmpdir.
 	ctx := context.Background()
-	foundPaths := ListDir(ctx, tmpDir, []string{"**/.hidden"})
+	options := ListDirOptions{
+		DirPatternsToHide: []string{"**/.hidden"},
+	}
+	foundPaths := ListDir(ctx, tmpDir, options)
 	relPaths := make([]string, 0, len(foundPaths))
 	for _, p := range foundPaths {
 		relPaths = append(relPaths, RelativePathCwd(p))

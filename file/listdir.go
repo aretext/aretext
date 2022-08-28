@@ -12,19 +12,23 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ListDirOptions struct {
+	DirPatternsToHide []string // Glob patterns for directories to skip.
+}
+
 // ListDir lists every file in a root directory and its subdirectories.
 // The returned paths are relative to the root directory.
 // The order of the returned paths is non-deterministic.
 // Symbolic links are not followed.
 // If an error occurs while accessing a directory, ListDir will skip that
 // directory and log the error.
-func ListDir(ctx context.Context, root string, dirPatternsToHide []string) []string {
+func ListDir(ctx context.Context, root string, options ListDirOptions) []string {
 	// Use a semaphore to limit the number of open files.
 	semaphoreChan := make(chan struct{}, runtime.NumCPU())
-	return listDirRec(ctx, root, dirPatternsToHide, semaphoreChan)
+	return listDirRec(ctx, root, options, semaphoreChan)
 }
 
-func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, semaphoreChan chan struct{}) []string {
+func listDirRec(ctx context.Context, root string, options ListDirOptions, semaphoreChan chan struct{}) []string {
 	select {
 	case <-ctx.Done():
 		log.Printf("Context done channel closed while listing subdirectories in %q: %s\n", root, ctx.Err())
@@ -55,7 +59,7 @@ func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, se
 			continue
 		}
 
-		if shouldSkipDir(path, dirPatternsToHide) {
+		if shouldSkipDir(path, options.DirPatternsToHide) {
 			continue
 		}
 
@@ -63,7 +67,7 @@ func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, se
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
-			subpaths := listDirRec(ctx, path, dirPatternsToHide, semaphoreChan)
+			subpaths := listDirRec(ctx, path, options, semaphoreChan)
 			mu.Lock()
 			results = append(results, subpaths...)
 			mu.Unlock()

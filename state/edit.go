@@ -377,7 +377,7 @@ func ReplaceChar(state *EditorState, newChar rune) {
 		newText := string(newChar)
 		if err := insertTextAtPosition(state, newText, pos, true); err != nil {
 			// invalid UTF-8 rune; ignore it.
-			log.Printf("Error inserting text '%s': %v\n", newText, err)
+			log.Printf("Error inserting text %q: %v\n", newText, err)
 		}
 		MoveCursor(state, func(p LocatorParams) uint64 {
 			return pos

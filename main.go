@@ -119,9 +119,9 @@ func runEditor(path string, lineNum uint64) error {
 	log.Printf("vcs.revision: %s\n", vcsRevision)
 	log.Printf("vcs.time: %s\n", vcsTime)
 	log.Printf("vcs.modified: %t\n", vcsModified)
-	log.Printf("path arg: '%s'\n", path)
+	log.Printf("path arg: %q\n", path)
 	log.Printf("lineNum: %d\n", lineNum)
-	log.Printf("$TERM env var: '%s'\n", os.Getenv("TERM"))
+	log.Printf("$TERM env var: %q\n", os.Getenv("TERM"))
 
 	configRuleSet, err := app.LoadOrCreateConfig(*noconfig)
 	if err != nil {

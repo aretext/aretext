@@ -57,7 +57,7 @@ func parseFileLocation(s string) (FileLocation, error) {
 	case 3: // <file>:<line>:<snippet>
 		filePart, lineNumPart, snippetPart = parts[0], parts[1], parts[2]
 	default:
-		msg := fmt.Sprintf("Unsupported format for file location: '%s'", s)
+		msg := fmt.Sprintf("Unsupported format for file location: %q", s)
 		return FileLocation{}, errors.New(msg)
 	}
 
@@ -77,7 +77,7 @@ func parseFileLocation(s string) (FileLocation, error) {
 func parseLineNum(s string) (uint64, error) {
 	lineNum, err := strconv.Atoi(s)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid line number in file location '%s'", s)
+		msg := fmt.Sprintf("Invalid line number in file location %q", s)
 		return 0, errors.New(msg)
 	}
 

@@ -24,7 +24,7 @@ func RelativePathCwd(p string) string {
 func RelativePath(p string, baseDir string) string {
 	relPath, err := filepath.Rel(baseDir, p)
 	if err != nil {
-		log.Printf("Error converting '%s' to relative path from base '%s': %v\n", p, baseDir, errors.Wrap(err, "filepath.Rel"))
+		log.Printf("Error converting %q to relative path from base %q: %v\n", p, baseDir, errors.Wrap(err, "filepath.Rel"))
 		return p
 	}
 	return relPath

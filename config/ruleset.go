@@ -24,11 +24,11 @@ func (rs RuleSet) ConfigForPath(path string) Config {
 	c := make(map[string]any, 0)
 	for _, rule := range rs {
 		if file.GlobMatch(rule.Pattern, path) {
-			log.Printf("Applying config rule '%s' with pattern '%s' for path '%s'\n", rule.Name, rule.Pattern, path)
+			log.Printf("Applying config rule %q with pattern %q for path %q\n", rule.Name, rule.Pattern, path)
 			c = MergeRecursive(c, rule.Config).(map[string]any)
 		}
 	}
-	log.Printf("Resolved config for path '%s': %#v\n", path, c)
+	log.Printf("Resolved config for path %q: %#v\n", path, c)
 	return ConfigFromUntypedMap(c)
 }
 

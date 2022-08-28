@@ -27,7 +27,7 @@ type SuspendScreenFunc func(func() error) error
 // All modes run as an asynchronous task that the user can cancel,
 // except for CmdModeTerminal which takes over stdin/stdout.
 func RunShellCmd(state *EditorState, shellCmd string, mode string) {
-	log.Printf("Running shell command: '%s'\n", shellCmd)
+	log.Printf("Running shell command: %q\n", shellCmd)
 
 	env := envVars(state) // Read-only copy of env vars is safe to pass to other goroutines.
 

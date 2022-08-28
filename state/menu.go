@@ -142,10 +142,10 @@ func ExecuteSelectedMenuItem(state *EditorState) {
 }
 
 func executeMenuItemAction(state *EditorState, item menu.Item) {
-	log.Printf("Executing menu item '%s'\n", item.Name)
+	log.Printf("Executing menu item %q\n", item.Name)
 	actionFunc, ok := item.Action.(func(*EditorState))
 	if !ok {
-		log.Printf("Invalid action for menu item '%s'\n", item.Name)
+		log.Printf("Invalid action for menu item %q\n", item.Name)
 		return
 	}
 	actionFunc(state)

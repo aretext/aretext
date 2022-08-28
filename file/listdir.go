@@ -27,7 +27,7 @@ func ListDir(ctx context.Context, root string, dirPatternsToHide []string) []str
 func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, semaphoreChan chan struct{}) []string {
 	select {
 	case <-ctx.Done():
-		log.Printf("Context done channel closed while listing subdirectories in '%s': %s\n", root, ctx.Err())
+		log.Printf("Context done channel closed while listing subdirectories in %q: %s\n", root, ctx.Err())
 		return nil
 	default:
 		break
@@ -38,7 +38,7 @@ func listDirRec(ctx context.Context, root string, dirPatternsToHide []string, se
 	<-semaphoreChan // Decrease open file count.
 
 	if err != nil {
-		log.Printf("Error listing subdirectories in '%s': %s\n", root, err)
+		log.Printf("Error listing subdirectories in %q: %s\n", root, err)
 		return nil
 	}
 

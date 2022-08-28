@@ -72,7 +72,7 @@ func effectivePath(path string) string {
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Printf("Error converting '%s' to absolute path: %v", path, errors.Wrap(err, "filepath.Abs"))
+		log.Printf("Error converting %q to absolute path: %v", path, errors.Wrap(err, "filepath.Abs"))
 		return path
 	}
 

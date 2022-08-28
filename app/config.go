@@ -34,16 +34,16 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 		return nil, err
 	}
 
-	log.Printf("Loading config from '%s'\n", path)
+	log.Printf("Loading config from %q\n", path)
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		log.Printf("Writing default config to '%s'\n", path)
+		log.Printf("Writing default config to %q\n", path)
 		if err := saveDefaultConfig(path); err != nil {
-			return nil, errors.Wrapf(err, "Error writing default config to '%s'", path)
+			return nil, errors.Wrapf(err, "Error writing default config to %q", path)
 		}
 		return unmarshalRuleSet(DefaultConfigYaml)
 	} else if err != nil {
-		return nil, errors.Wrapf(err, "Error loading config from '%s'", path)
+		return nil, errors.Wrapf(err, "Error loading config from %q", path)
 	}
 
 	ruleSet, err := unmarshalRuleSet(data)

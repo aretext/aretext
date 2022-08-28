@@ -272,7 +272,7 @@ func actionForCustomMenuItem(cmd config.MenuCommandConfig) func(*EditorState) {
 }
 
 func reportOpenSuccess(state *EditorState, path string) {
-	log.Printf("Successfully opened file from '%s'", path)
+	log.Printf("Successfully opened file from %q", path)
 	msg := fmt.Sprintf("Opened %s", file.RelativePathCwd(path))
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleSuccess,
@@ -281,7 +281,7 @@ func reportOpenSuccess(state *EditorState, path string) {
 }
 
 func reportCreateSuccess(state *EditorState, path string) {
-	log.Printf("Successfully created file at '%s'", path)
+	log.Printf("Successfully created file at %q", path)
 	msg := fmt.Sprintf("New file %s", file.RelativePathCwd(path))
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleSuccess,
@@ -290,7 +290,7 @@ func reportCreateSuccess(state *EditorState, path string) {
 }
 
 func reportReloadSuccess(state *EditorState, path string) {
-	log.Printf("Successfully reloaded file from '%s'", path)
+	log.Printf("Successfully reloaded file from %q", path)
 	msg := fmt.Sprintf("Reloaded %s", file.RelativePathCwd(path))
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleSuccess,
@@ -299,10 +299,10 @@ func reportReloadSuccess(state *EditorState, path string) {
 }
 
 func reportLoadError(state *EditorState, err error, path string) {
-	log.Printf("Error loading file at '%s': %v\n", path, err)
+	log.Printf("Error loading file at %q: %v\n", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not open '%s': %s", file.RelativePathCwd(path), errors.Cause(err)),
+		Text:  fmt.Sprintf("Could not open %q: %s", file.RelativePathCwd(path), errors.Cause(err)),
 	})
 }
 
@@ -323,15 +323,15 @@ func SaveDocument(state *EditorState) {
 }
 
 func reportSaveError(state *EditorState, err error, path string) {
-	log.Printf("Error saving file to '%s': %v", path, err)
+	log.Printf("Error saving file to %q: %v", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not save '%s': %s", file.RelativePathCwd(path), errors.Cause(err)),
+		Text:  fmt.Sprintf("Could not save %q: %s", file.RelativePathCwd(path), errors.Cause(err)),
 	})
 }
 
 func reportSaveSuccess(state *EditorState, path string) {
-	log.Printf("Successfully wrote file to '%s'", path)
+	log.Printf("Successfully wrote file to %q", path)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleSuccess,
 		Text:  fmt.Sprintf("Saved %s", path),

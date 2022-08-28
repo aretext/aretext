@@ -49,6 +49,18 @@ Aretext will warn you if a command would discard unsaved changes or overwrite ch
 -	To force-reload, select the "force reload" menu command. This will discard unsaved changes and reload the document from disk.
 -	To force-quit, select the "force quit" menu command. This will discard unsaved changes and exit the program.
 
+Change the working directory
+----------------------------
+
+You can change the current working directory from within the editor using two menu commands:
+
+-	The "child directory" menu command changes to a sub-directory of the current working directory.
+-	The "parent directory" menu command changes to a parent directory of the current working directory.
+
+Each of these commands opens a searchable menu of directory paths. Once you select a path, the editor will change the current working directory.
+
+Note that if you start aretext from a shell like bash or zsh, these commands will *not* change the working directory of the shell.
+
 Using grep to search files
 --------------------------
 

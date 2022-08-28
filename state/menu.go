@@ -2,8 +2,10 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -18,6 +20,8 @@ const (
 	MenuStyleCommand = MenuStyle(iota)
 	MenuStyleFilePath
 	MenuStyleFileLocation
+	MenuStyleChildDir
+	MenuStyleParentDir
 )
 
 // MenuState represents the menu for searching and selecting items.
@@ -61,13 +65,25 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 
 // ShowMenu displays the menu with the specified style and items.
 func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
-	emptyQueryShowAll := bool(style == MenuStyleFilePath || style == MenuStyleFileLocation)
+	emptyQueryShowAll := bool(
+		style == MenuStyleFilePath ||
+			style == MenuStyleFileLocation ||
+			style == MenuStyleChildDir ||
+			style == MenuStyleParentDir)
+
 	if style == MenuStyleCommand {
 		items = append(items, state.customMenuItems...)
 	}
-	sort.SliceStable(items, func(i, j int) bool {
-		return items[i].Name < items[j].Name
-	})
+
+	if style == MenuStyleParentDir {
+		// Sort lexicographic order descending.
+		// This ensures that longer paths appear first when listing parent directory paths.
+		sort.SliceStable(items, func(i, j int) bool { return items[i].Name > items[j].Name })
+	} else {
+		// Sort lexicographic order ascending.
+		sort.SliceStable(items, func(i, j int) bool { return items[i].Name < items[j].Name })
+	}
+
 	search := menu.NewSearch(items, emptyQueryShowAll)
 	state.menu = &MenuState{
 		visible:           true,
@@ -113,6 +129,72 @@ func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.I
 				LoadDocument(s, menuPath, true, func(LocatorParams) uint64 {
 					return 0
 				})
+			},
+		})
+	}
+	return items
+}
+
+// ShowChildDirsMenu displays a menu for changing the working directory to a child directory.
+func ShowChildDirsMenu(s *EditorState, dirPatternsToHide []string) {
+	log.Printf("Scheduling task to load child dir menu items...\n")
+	StartTask(s, func(ctx context.Context) func(*EditorState) {
+		log.Printf("Starting to load child dir menu items...\n")
+		items := loadChildDirMenuItems(ctx, dirPatternsToHide)
+		log.Printf("Successfully loaded %d child dir menu items\n", len(items))
+		return func(s *EditorState) {
+			ShowMenu(s, MenuStyleChildDir, items)
+		}
+	})
+}
+
+func loadChildDirMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		return nil
+	}
+
+	paths := file.ListDir(ctx, dir, file.ListDirOptions{
+		DirectoriesOnly:   true,
+		DirPatternsToHide: dirPatternsToHide,
+	})
+	log.Printf("Listed %d subdirectory paths for dir %q\n", len(paths), dir)
+
+	items := make([]menu.Item, 0, len(paths))
+	for _, p := range paths {
+		menuPath := p // reference path in this iteration of the loop
+		items = append(items, menu.Item{
+			Name: fmt.Sprintf("./%s", file.RelativePath(menuPath, dir)),
+			Action: func(s *EditorState) {
+				SetWorkingDirectory(s, menuPath)
+			},
+		})
+	}
+	return items
+}
+
+// ShowParentDirsMenu displays a menu for changing the working directory to a parent directory.
+func ShowParentDirsMenu(s *EditorState) {
+	ShowMenu(s, MenuStyleParentDir, parentDirMenuItems())
+}
+
+func parentDirMenuItems() []menu.Item {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		return nil
+	}
+
+	// Create an item for each parent directory.
+	var items []menu.Item
+	for len(dir) > 0 && dir != "/" && dir != "." {
+		dir = filepath.Dir(dir)
+		menuDir := dir // reference path in this iteration of the loop
+		items = append(items, menu.Item{
+			Name: dir,
+			Action: func(s *EditorState) {
+				SetWorkingDirectory(s, menuDir)
 			},
 		})
 	}

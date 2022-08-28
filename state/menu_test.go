@@ -211,6 +211,92 @@ func TestDeleteRuneFromMenuSearch(t *testing.T) {
 }
 
 func TestShowFileMenu(t *testing.T) {
+	paths := []string{
+		"a/foo.txt",
+		"a/b/bar.txt",
+		"c/baz.txt",
+	}
+	withTempDirPaths(t, paths, func(dir string) {
+		// Show the file menu.
+		state := NewEditorState(100, 100, nil, nil)
+		ShowFileMenu(state, nil)
+		completeTaskOrTimeout(t, state)
+
+		// Verify that the menu shows file paths.
+		items, selectedIdx := state.Menu().SearchResults()
+		require.Equal(t, 3, len(items))
+		assert.Equal(t, 0, selectedIdx)
+		assert.Equal(t, "a/b/bar.txt", items[0].Name)
+		assert.Equal(t, "a/foo.txt", items[1].Name)
+		assert.Equal(t, "c/baz.txt", items[2].Name)
+
+		// Execute the second item and verify that it opens the file.
+		MoveMenuSelection(state, 1)
+		ExecuteSelectedMenuItem(state)
+		assert.Equal(t, "Opened a/foo.txt", state.StatusMsg().Text)
+		assert.Equal(t, "a/foo.txt content", state.DocumentBuffer().TextTree().String())
+	})
+}
+
+func TestShowChildDirsMenu(t *testing.T) {
+	paths := []string{
+		"root.txt",
+		"a/foo.txt",
+		"a/b/bar.txt",
+		"c/baz.txt",
+	}
+	withTempDirPaths(t, paths, func(dir string) {
+		// Show the child dirs menu.
+		state := NewEditorState(100, 100, nil, nil)
+		ShowChildDirsMenu(state, nil)
+		completeTaskOrTimeout(t, state)
+
+		// Verify that the menu shows subdirectory paths.
+		items, selectedIdx := state.Menu().SearchResults()
+		require.Equal(t, 3, len(items))
+		assert.Equal(t, 0, selectedIdx)
+		assert.Equal(t, "./a", items[0].Name)
+		assert.Equal(t, "./a/b", items[1].Name)
+		assert.Equal(t, "./c", items[2].Name)
+
+		// Execute the second item and verify that the working directory changed.
+		MoveMenuSelection(state, 1)
+		ExecuteSelectedMenuItem(state)
+		assert.Contains(t, state.StatusMsg().Text, "Changed working directory")
+		workingDir, err := os.Getwd()
+		require.NoError(t, err)
+		assert.Equal(t, "b", filepath.Base(workingDir))
+	})
+}
+
+func TestShowParentDirsMenu(t *testing.T) {
+	withTempDirPaths(t, nil, func(dir string) {
+		// Show the parent dirs menu.
+		state := NewEditorState(100, 100, nil, nil)
+		ShowParentDirsMenu(state)
+
+		// Verify that the menu shows parent directory paths.
+		// This depends on the randomly chosen tempdir, so
+		// we check that the paths are in descending order by length.
+		items, selectedIdx := state.Menu().SearchResults()
+		assert.Greater(t, len(items), 0)
+		assert.Equal(t, 0, selectedIdx)
+		for i := 1; i < len(items); i++ {
+			assert.Less(t, len(items[i].Name), len(items[i-1].Name))
+		}
+
+		// Execute the first item and verify that the working directory changed.
+		// The new working directory should be a parent of the current directory.
+		ExecuteSelectedMenuItem(state)
+		assert.Contains(t, state.StatusMsg().Text, "Changed working directory")
+		workingDir, err := os.Getwd()
+		require.NoError(t, err)
+		assert.Less(t, len(workingDir), len(dir))
+		assert.Contains(t, dir, workingDir)
+	})
+}
+
+func withTempDirPaths(t *testing.T, paths []string, f func(string)) {
 	// Reset the original working directory after the test.
 	originalWd, err := os.Getwd()
 	require.NoError(t, err)
@@ -222,11 +308,6 @@ func TestShowFileMenu(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create paths in the tempdir.
-	paths := []string{
-		"a/foo.txt",
-		"a/b/bar.txt",
-		"c/baz.txt",
-	}
 	for _, p := range paths {
 		err = os.MkdirAll(filepath.Dir(p), 0755)
 		require.NoError(t, err)
@@ -234,28 +315,15 @@ func TestShowFileMenu(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Show the file menu.
-	state := NewEditorState(100, 100, nil, nil)
-	ShowFileMenu(state, nil)
+	// Run the test.
+	f(dir)
+}
 
-	// Wait for completion of the task to load file paths into the menu.
+func completeTaskOrTimeout(t *testing.T, state *EditorState) {
 	select {
 	case action := <-state.TaskResultChan():
 		action(state)
 	case <-time.After(10 * time.Second):
 		require.Fail(t, "Timed out")
 	}
-
-	// Verify that the menu shows file paths.
-	items, selectedIdx := state.Menu().SearchResults()
-	require.Equal(t, 3, len(items))
-	assert.Equal(t, 0, selectedIdx)
-	assert.Equal(t, "a/b/bar.txt", items[0].Name)
-	assert.Equal(t, "a/foo.txt", items[1].Name)
-	assert.Equal(t, "c/baz.txt", items[2].Name)
-
-	// Execute the first item and verify that it opens the file.
-	ExecuteSelectedMenuItem(state)
-	assert.Equal(t, "Opened a/b/bar.txt", state.StatusMsg().Text)
-	assert.Equal(t, "a/b/bar.txt content", state.DocumentBuffer().TextTree().String())
 }

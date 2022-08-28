@@ -77,6 +77,18 @@ func menuItems(ctx Context) []menu.Item {
 			},
 		},
 		{
+			Name:    "child directory",
+			Aliases: []string{"cd"},
+			Action: func(s *state.EditorState) {
+				state.ShowChildDirsMenu(s, ctx.DirPatternsToHide)
+			},
+		},
+		{
+			Name:    "parent directory",
+			Aliases: []string{"pd"},
+			Action:  state.ShowParentDirsMenu,
+		},
+		{
 			Name:    "toggle show tabs",
 			Aliases: []string{"ta"},
 			Action:  state.ToggleShowTabs,

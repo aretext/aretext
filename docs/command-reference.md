@@ -124,6 +124,8 @@ Menu Commands
 | find and open                | f        |
 | open previous document       | p        |
 | open next document           | n        |
+| child directory              | cd       |
+| parent directory             | pd       |
 | toggle show tabs             | ta       |
 | toggle tab expand            | te       |
 | toggle line numbers          | nu       |

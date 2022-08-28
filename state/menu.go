@@ -96,7 +96,7 @@ func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.I
 	}
 
 	paths := file.ListDir(ctx, dir, dirPatternsToHide)
-	log.Printf("Listed %d paths for dir '%s\n", len(paths), dir)
+	log.Printf("Listed %d paths for dir %q\n", len(paths), dir)
 
 	items := make([]menu.Item, 0, len(paths))
 	for _, p := range paths {

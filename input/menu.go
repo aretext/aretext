@@ -105,7 +105,7 @@ func menuItems(ctx Context) []menu.Item {
 
 	// User-defined macros are available only in normal mode, not visual mode.
 	// This avoids problematic states where a macro gets recorded in one mode
-	// and exected in another.
+	// and executed in another.
 	if ctx.InputMode == state.InputModeNormal {
 		items = append(items, []menu.Item{
 			{

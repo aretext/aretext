@@ -1,9 +1,13 @@
 package state
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
@@ -204,4 +208,54 @@ func TestDeleteRuneFromMenuSearch(t *testing.T) {
 			assert.Equal(t, tc.expectQuery, state.Menu().SearchQuery())
 		})
 	}
+}
+
+func TestShowFileMenu(t *testing.T) {
+	// Reset the original working directory after the test.
+	originalWd, err := os.Getwd()
+	require.NoError(t, err)
+	defer os.Chdir(originalWd)
+
+	// Change the current working directory to a tempdir.
+	dir := t.TempDir()
+	err = os.Chdir(dir)
+	require.NoError(t, err)
+
+	// Create paths in the tempdir.
+	paths := []string{
+		"a/foo.txt",
+		"a/b/bar.txt",
+		"c/baz.txt",
+	}
+	for _, p := range paths {
+		err = os.MkdirAll(filepath.Dir(p), 0755)
+		require.NoError(t, err)
+		err = os.WriteFile(p, []byte(p+" content"), 0644)
+		require.NoError(t, err)
+	}
+
+	// Show the file menu.
+	state := NewEditorState(100, 100, nil, nil)
+	ShowFileMenu(state, nil)
+
+	// Wait for completion of the task to load file paths into the menu.
+	select {
+	case action := <-state.TaskResultChan():
+		action(state)
+	case <-time.After(10 * time.Second):
+		require.Fail(t, "Timed out")
+	}
+
+	// Verify that the menu shows file paths.
+	items, selectedIdx := state.Menu().SearchResults()
+	require.Equal(t, 3, len(items))
+	assert.Equal(t, 0, selectedIdx)
+	assert.Equal(t, "a/b/bar.txt", items[0].Name)
+	assert.Equal(t, "a/foo.txt", items[1].Name)
+	assert.Equal(t, "c/baz.txt", items[2].Name)
+
+	// Execute the first item and verify that it opens the file.
+	ExecuteSelectedMenuItem(state)
+	assert.Equal(t, "Opened a/b/bar.txt", state.StatusMsg().Text)
+	assert.Equal(t, "a/b/bar.txt content", state.DocumentBuffer().TextTree().String())
 }

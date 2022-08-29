@@ -53,8 +53,23 @@ func (idx *Index) findTopMatchingRecords(query string) *recordIdSet {
 		recordIds = idx.keywordTrie.recordIdsForPrefix(queryKeyword, recordIds)
 	})
 	if recordIds == nil {
-		// The query didn't have any keywords, so it doesn't match any records.
-		recordIds = newRecordIdSet()
+		// The query didn't have any keywords. If the query was empty, there are no matches.
+		// Otherwise, fallback to exact prefix match.
+		if len(query) == 0 {
+			recordIds = newRecordIdSet()
+		} else {
+			recordIds = idx.recordsWithExactPrefixMatch(query)
+		}
+	}
+	return recordIds
+}
+
+func (idx *Index) recordsWithExactPrefixMatch(query string) *recordIdSet {
+	recordIds := newRecordIdSet()
+	for id, record := range idx.records {
+		if strings.HasPrefix(record, query) {
+			recordIds.add(id)
+		}
 	}
 	return recordIds
 }

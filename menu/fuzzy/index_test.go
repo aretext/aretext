@@ -99,6 +99,12 @@ func TestFuzzySearchIndex(t *testing.T) {
 				"main.go",
 			},
 		},
+		{
+			name:     "match root path (/)",
+			query:    "/",
+			records:  []string{"/foo/bar/baz", "/foo/bar", "/foo", "/", "abcd"},
+			expected: []string{"/", "/foo", "/foo/bar", "/foo/bar/baz"},
+		},
 	}
 
 	for _, tc := range testCases {

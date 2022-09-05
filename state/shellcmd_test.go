@@ -102,42 +102,55 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 	}
 }
 
-func TestRunShellCmdLineEnvVar(t *testing.T) {
+func TestRunShellCmdLineAndColumnEnvVars(t *testing.T) {
 	testCases := []struct {
-		name               string
-		text               string
-		cursorPos          uint64
-		expectedLineEnvVar string
+		name                 string
+		text                 string
+		cursorPos            uint64
+		expectedLineEnvVar   string
+		expectedColumnEnvVar string
 	}{
 		{
-			name:               "empty document",
-			text:               "",
-			cursorPos:          0,
-			expectedLineEnvVar: "1",
+			name:                 "empty document",
+			text:                 "",
+			cursorPos:            0,
+			expectedLineEnvVar:   "1",
+			expectedColumnEnvVar: "1",
 		},
 		{
-			name:               "single line",
-			text:               "abc",
-			cursorPos:          0,
-			expectedLineEnvVar: "1",
+			name:                 "single line",
+			text:                 "abc",
+			cursorPos:            0,
+			expectedLineEnvVar:   "1",
+			expectedColumnEnvVar: "1",
 		},
 		{
-			name:               "multiple lines, cursor on first line",
-			text:               "abc\ndef\nghi",
-			cursorPos:          2,
-			expectedLineEnvVar: "1",
+			name:                 "multiple lines, cursor on first line",
+			text:                 "abc\ndef\nghi",
+			cursorPos:            2,
+			expectedLineEnvVar:   "1",
+			expectedColumnEnvVar: "3",
 		},
 		{
-			name:               "multiple lines, cursor on second line",
-			text:               "abc\ndef\nghi",
-			cursorPos:          4,
-			expectedLineEnvVar: "2",
+			name:                 "multiple lines, cursor on second line",
+			text:                 "abc\ndef\nghi",
+			cursorPos:            4,
+			expectedLineEnvVar:   "2",
+			expectedColumnEnvVar: "1",
 		},
 		{
-			name:               "multiple lines, cursor on last line",
-			text:               "abc\ndef\nghi",
-			cursorPos:          10,
-			expectedLineEnvVar: "3",
+			name:                 "multiple lines, cursor on last line",
+			text:                 "abc\ndef\nghi",
+			cursorPos:            10,
+			expectedLineEnvVar:   "3",
+			expectedColumnEnvVar: "3",
+		},
+		{
+			name:                 "line with multi-byte unicode",
+			text:                 "\U0010AAAA abcd",
+			cursorPos:            1,
+			expectedLineEnvVar:   "1",
+			expectedColumnEnvVar: "5", // column counts bytes, not runes.
 		},
 	}
 
@@ -150,11 +163,12 @@ func TestRunShellCmdLineEnvVar(t *testing.T) {
 				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
 
 				p := path.Join(dir, "test-output.txt")
-				cmd := fmt.Sprintf(`printenv LINE > %s`, p)
+				cmd := fmt.Sprintf(`printenv LINE > %s; printenv COLUMN >> %s`, p, p)
 				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 				data, err := os.ReadFile(p)
 				require.NoError(t, err)
-				assert.Equal(t, tc.expectedLineEnvVar+"\n", string(data))
+				expected := fmt.Sprintf("%s\n%s\n", tc.expectedLineEnvVar, tc.expectedColumnEnvVar)
+				assert.Equal(t, expected, string(data))
 			})
 		})
 	}

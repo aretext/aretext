@@ -16,6 +16,7 @@ import (
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/shellcmd"
+	"github.com/aretext/aretext/text"
 )
 
 // SuspendScreenFunc suspends the screen, executes a function, then resumes the screen.
@@ -103,8 +104,11 @@ func envVars(state *EditorState) []string {
 	env = append(env, fmt.Sprintf("WORD=%s", currentWord))
 
 	// $LINE is the line number of the cursor, starting from one.
-	lineNum := lineNumEnvVar(state)
-	env = append(env, fmt.Sprintf("LINE=%d", lineNum))
+	// $COLUMN is the column position of the cursor in bytes, starting from one.
+	lineNum, columnNum := lineAndColumnEnvVars(state)
+	env = append(env,
+		fmt.Sprintf("LINE=%d", lineNum),
+		fmt.Sprintf("COLUMN=%d", columnNum))
 
 	// $SELECTION is the current visual mode selection, if any.
 	selection, _ := copySelectionText(state.documentBuffer)
@@ -124,12 +128,28 @@ func currentWordEnvVar(state *EditorState) string {
 	return strings.TrimSpace(word)
 }
 
-func lineNumEnvVar(state *EditorState) uint64 {
+func lineAndColumnEnvVars(state *EditorState) (uint64, uint64) {
 	buffer := state.documentBuffer
 	textTree := buffer.textTree
 	cursorPos := buffer.cursor.position
 	lineNum := textTree.LineNumForPosition(cursorPos)
-	return lineNum + 1 // start from 1 instead of from 0
+	startOfLinePos := textTree.LineStartPosition(lineNum)
+	columnNum := countBytesBetweenPositions(textTree, startOfLinePos, cursorPos)
+	// convert 0-indexed to 1-indexed
+	return lineNum + 1, columnNum + 1
+}
+
+func countBytesBetweenPositions(textTree *text.Tree, startPos, endPos uint64) uint64 {
+	var byteCount uint64
+	reader := textTree.ReaderAtPosition(startPos)
+	for i := startPos; i < endPos; i++ {
+		_, numBytes, err := reader.ReadRune()
+		if err != nil {
+			break
+		}
+		byteCount += uint64(numBytes)
+	}
+	return byteCount
 }
 
 func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {

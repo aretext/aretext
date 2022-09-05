@@ -271,6 +271,11 @@ func TestShowChildDirsMenu(t *testing.T) {
 
 func TestShowParentDirsMenu(t *testing.T) {
 	withTempDirPaths(t, nil, func(dir string) {
+		// macOS tempfiles might be in a symlinked directory, which can
+		// cause the path length comparisons below to fail.
+		originalWorkingDir, err := filepath.EvalSymlinks(dir)
+		require.NoError(t, err)
+
 		// Show the parent dirs menu.
 		state := NewEditorState(100, 100, nil, nil)
 		ShowParentDirsMenu(state)
@@ -291,8 +296,8 @@ func TestShowParentDirsMenu(t *testing.T) {
 		assert.Contains(t, state.StatusMsg().Text, "Changed working directory")
 		workingDir, err := os.Getwd()
 		require.NoError(t, err)
-		assert.Less(t, len(workingDir), len(dir))
-		assert.Contains(t, dir, workingDir)
+		assert.Less(t, len(workingDir), len(originalWorkingDir))
+		assert.Contains(t, originalWorkingDir, workingDir)
 	})
 }
 

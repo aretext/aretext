@@ -271,9 +271,8 @@ func TestShowChildDirsMenu(t *testing.T) {
 
 func TestShowParentDirsMenu(t *testing.T) {
 	withTempDirPaths(t, nil, func(dir string) {
-		// macOS tempfiles might be in a symlinked directory, which can
-		// cause the path length comparisons below to fail.
-		originalWorkingDir, err := filepath.EvalSymlinks(dir)
+		// This path may be different than the temp directory due to symlinks (macOS)
+		originalWorkingDir, err := os.Getwd()
 		require.NoError(t, err)
 
 		// Show the parent dirs menu.

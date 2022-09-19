@@ -75,11 +75,13 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 		items = append(items, state.customMenuItems...)
 	}
 
-	if style == MenuStyleParentDir {
+	switch style {
+	case MenuStyleParentDir:
 		// Sort lexicographic order descending.
 		// This ensures that longer paths appear first when listing parent directory paths.
 		sort.SliceStable(items, func(i, j int) bool { return items[i].Name > items[j].Name })
-	} else {
+
+	case MenuStyleCommand, MenuStyleFilePath, MenuStyleChildDir:
 		// Sort lexicographic order ascending.
 		sort.SliceStable(items, func(i, j int) bool { return items[i].Name < items[j].Name })
 	}

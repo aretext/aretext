@@ -238,6 +238,27 @@ func TestShowFileMenu(t *testing.T) {
 	})
 }
 
+func TestShowFileLocationsMenu(t *testing.T) {
+	// These are NOT in lexicographic order.
+	items := []menu.Item{
+		{Name: "foo.txt:3 foo"},
+		{Name: "bar.txt:2 bar"},
+		{Name: "baz.txt:123 baz"},
+	}
+
+	// Show the menu with style FileLocation
+	state := NewEditorState(100, 100, nil, nil)
+	ShowMenu(state, MenuStyleFileLocation, items)
+
+	// Verify that the menu shows items in their original order.
+	items, selectedIdx := state.Menu().SearchResults()
+	require.Equal(t, 3, len(items))
+	assert.Equal(t, 0, selectedIdx)
+	assert.Equal(t, "foo.txt:3 foo", items[0].Name)
+	assert.Equal(t, "bar.txt:2 bar", items[1].Name)
+	assert.Equal(t, "baz.txt:123 baz", items[2].Name)
+}
+
 func TestShowChildDirsMenu(t *testing.T) {
 	paths := []string{
 		"root.txt",

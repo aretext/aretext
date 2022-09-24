@@ -317,6 +317,17 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "cursor matching code block delimiter",
+			initialText: `func foo() { fmt.Printf("foo {} bar!") }`,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '3', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '%', tcell.ModNone),
+			},
+			expectedCursorPos: 39,
+			expectedText:      `func foo() { fmt.Printf("foo {} bar!") }`,
+		},
+		{
 			name:        "insert",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

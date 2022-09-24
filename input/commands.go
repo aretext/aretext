@@ -230,6 +230,15 @@ func cursorCommands() []Command {
 			},
 		},
 		{
+			Name: "cursor matching code block delimiter (%)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("%", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorMatchingCodeBlockDelimiter)
+			},
+		},
+		{
 			Name: "scroll up (ctrl-u)",
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyCtrlU)

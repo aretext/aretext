@@ -71,6 +71,12 @@ func New(f Func) *P {
 	return &P{parseFunc: f}
 }
 
+// TokenAtPosition returns the token containing a position.
+// If no such token exists, it returns the Token zero value.
+func (p *P) TokenAtPosition(pos uint64) Token {
+	return p.lastComputation.TokenAtPosition(pos)
+}
+
 // TokensIntersectingRange returns tokens that overlap the interval [startPos, endPos)
 func (p *P) TokensIntersectingRange(startPos, endPos uint64) []Token {
 	return p.lastComputation.TokensIntersectingRange(startPos, endPos)

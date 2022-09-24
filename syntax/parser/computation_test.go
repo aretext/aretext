@@ -378,6 +378,118 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 	}
 }
 
+func TestTokenAtPosition(t *testing.T) {
+	testCases := []struct {
+		name          string
+		builder       func() *computation
+		pos           uint64
+		expectFound   bool
+		expectedToken Token
+	}{
+		{
+			name: "single computation, no tokens",
+			builder: func() *computation {
+				return newComputation(1, 1, EmptyState{}, EmptyState{}, nil)
+			},
+			pos:           0,
+			expectedToken: Token{},
+		},
+		{
+			name: "single computation, single token containing position at start",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 3},
+				})
+			},
+			pos:           0,
+			expectedToken: Token{StartPos: 0, EndPos: 3},
+		},
+		{
+			name: "single computation, single token containing position in middle",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 3},
+				})
+			},
+			pos:           1,
+			expectedToken: Token{StartPos: 0, EndPos: 3},
+		},
+		{
+			name: "single computation, single token containing position at end",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 3},
+				})
+			},
+			pos:           2,
+			expectedToken: Token{StartPos: 0, EndPos: 3},
+		},
+		{
+			name: "single computation, single token position just past end",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 3},
+				})
+			},
+			pos:           3,
+			expectedToken: Token{},
+		},
+		{
+			name: "single computation, multiple tokens, one contains position",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 1},
+					{Offset: 1, Length: 1},
+					{Offset: 2, Length: 1},
+				})
+			},
+			pos:           1,
+			expectedToken: Token{StartPos: 1, EndPos: 2},
+		},
+		{
+			name: "single computation, multiple tokens, none contain position",
+			builder: func() *computation {
+				return newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 1},
+					{Offset: 2, Length: 1},
+				})
+			},
+			pos:           1,
+			expectedToken: Token{},
+		},
+		{
+			name: "multiple computations, token in left child",
+			builder: func() *computation {
+				c := newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 3},
+				})
+				return c.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{}))
+			},
+			pos:           1,
+			expectedToken: Token{StartPos: 0, EndPos: 3},
+		},
+		{
+			name: "multiple computations, token in right child",
+			builder: func() *computation {
+				c := newComputation(3, 3, EmptyState{}, EmptyState{}, []ComputedToken{})
+				return c.Append(newComputation(4, 4, EmptyState{}, EmptyState{}, []ComputedToken{
+					{Offset: 0, Length: 4},
+				}))
+			},
+			pos:           4,
+			expectedToken: Token{StartPos: 3, EndPos: 7},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := tc.builder()
+			token := c.TokenAtPosition(tc.pos)
+			assert.Equal(t, tc.expectedToken, token)
+		})
+	}
+}
+
 func TestConcatLeafComputations(t *testing.T) {
 	testCases := []struct {
 		name         string

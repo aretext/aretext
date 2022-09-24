@@ -395,6 +395,41 @@ func (c *computation) largestSubComputationInRange(
 	return c
 }
 
+// TokenAtPosition returns the token containing a position.
+// If no such token exists, it returns the Token zero value.
+func (c *computation) TokenAtPosition(pos uint64) Token {
+	var offset uint64
+	for c != nil && pos >= offset && pos < offset+c.consumedLength {
+		// If this is a leaf computation, it will have tokens.
+		// Check if any of them contain the target position.
+		for _, computedToken := range c.tokens {
+			token := Token{
+				StartPos: offset + computedToken.Offset,
+				EndPos:   offset + computedToken.Offset + computedToken.Length,
+				Role:     computedToken.Role,
+			}
+			if pos >= token.StartPos && pos < token.EndPos {
+				// Found a token at the target position.
+				return token
+			}
+		}
+
+		if c.leftChild != nil && pos < offset+c.leftChild.consumedLength {
+			// Left child contains the position, so recurse left.
+			c = c.leftChild
+		} else {
+			// Otherwise, recurse right.
+			if c.leftChild != nil {
+				offset += c.leftChild.consumedLength
+			}
+			c = c.rightChild
+		}
+	}
+
+	// No token found at the target position.
+	return Token{}
+}
+
 // TokensIntersectingRange returns tokens that overlap the interval [startPos, endPos)
 func (c *computation) TokensIntersectingRange(startPos, endPos uint64) []Token {
 	if c == nil {

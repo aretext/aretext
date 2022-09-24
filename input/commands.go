@@ -31,7 +31,7 @@ type Command struct {
 
 // Users should hardly ever need to repeat a command
 // more than a few dozen times. The limit 1024 is chosen
-// arbitrarily such that users should intentionally hit it,
+// arbitrarily such that users should never intentionally hit it,
 // and all commands should complete within ~1 second.
 const defaultMaxCount = uint64(1024)
 

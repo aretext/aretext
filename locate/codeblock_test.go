@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/syntax"
+	"github.com/aretext/aretext/syntax/parser"
 	"github.com/aretext/aretext/text"
 )
 
@@ -123,14 +124,7 @@ func TestMatchingCodeBlockDelimiter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-
-			syntaxParser := syntax.ParserForLanguage(tc.syntaxLanguage)
-			if syntaxParser != nil {
-				syntaxParser.ParseAll(textTree)
-			}
-
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
 			actualPos, ok := MatchingCodeBlockDelimiter(textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
@@ -197,14 +191,7 @@ abc
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-
-			syntaxParser := syntax.ParserForLanguage(tc.syntaxLanguage)
-			if syntaxParser != nil {
-				syntaxParser.ParseAll(textTree)
-			}
-
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
 			actualPos, ok := NextUnmatchedCloseBrace(textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
@@ -266,14 +253,7 @@ abc
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-
-			syntaxParser := syntax.ParserForLanguage(tc.syntaxLanguage)
-			if syntaxParser != nil {
-				syntaxParser.ParseAll(textTree)
-			}
-
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
 			actualPos, ok := PrevUnmatchedOpenBrace(textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
@@ -281,4 +261,16 @@ abc
 			}
 		})
 	}
+}
+
+func textTreeAndSyntaxParser(t *testing.T, s string, syntaxLanguage syntax.Language) (*text.Tree, *parser.P) {
+	textTree, err := text.NewTreeFromString(s)
+	require.NoError(t, err)
+
+	syntaxParser := syntax.ParserForLanguage(syntaxLanguage)
+	if syntaxParser != nil {
+		syntaxParser.ParseAll(textTree)
+	}
+
+	return textTree, syntaxParser
 }

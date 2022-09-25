@@ -5,7 +5,7 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
-// MatchingCodeBlockDelimiter locates the matching paren or brace at a position, if it exists.
+// MatchingCodeBlockDelimiter locates the matching paren, brace, or bracket at a position, if it exists.
 func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()

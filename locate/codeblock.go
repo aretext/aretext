@@ -41,6 +41,16 @@ func PrevUnmatchedOpenBrace(textTree *text.Tree, syntaxParser *parser.P, pos uin
 	return searchBackwardMatch(textTree, syntaxParser, pos, '{', '}')
 }
 
+// NextUnmatchedCloseParen locates the next unmatched close paren after a position.
+func NextUnmatchedCloseParen(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchForwardMatch(textTree, syntaxParser, pos, '(', ')')
+}
+
+// PrevUnmatchedOpenParen locates the previous unmatched open paren before a position.
+func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
+}
+
 func searchForwardMatch(textTree *text.Tree, syntaxParser *parser.P, pos uint64, openRune rune, closeRune rune) (uint64, bool) {
 	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
 	pos++

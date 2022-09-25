@@ -239,7 +239,7 @@ func cursorCommands() []Command {
 			},
 		},
 		{
-			Name: "cursor prev unmatched close brace ([{)",
+			Name: "cursor prev unmatched open brace ([{)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("[{", "", captureOpts{})
 			},
@@ -248,12 +248,30 @@ func cursorCommands() []Command {
 			},
 		},
 		{
-			Name: "cursor next unmatched open brace (]})",
+			Name: "cursor next unmatched close brace (]})",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("]}", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorNextUnmatchedCloseBrace)
+			},
+		},
+		{
+			Name: "cursor prev unmatched open paren ([()",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("[(", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorPrevUnmatchedOpenParen)
+			},
+		},
+		{
+			Name: "cursor next unmatched close paren (]))",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("])", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextUnmatchedCloseParen)
 			},
 		},
 		{

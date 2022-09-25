@@ -41,6 +41,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor matching code block delimiter (paren, brace, or bracket) | %           |                       |
 | cursor prev unmatched open brace                                | [{          |                       |
 | cursor next unmatched close brace                               | ]}          |                       |
+| cursor prev unmatched open paren                                | [(          |                       |
+| cursor next unmatched close paren                               | ])          |                       |
 | scroll up                                                       | ctrl-u      |                       |
 | scroll down                                                     | ctrl-d      |                       |
 | insert                                                          | i           |                       |

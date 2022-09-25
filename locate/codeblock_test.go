@@ -263,6 +263,130 @@ abc
 	}
 }
 
+func TestNextUnmatchedCloseParen(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		pos            uint64
+		syntaxLanguage syntax.Language
+		expectMatch    bool
+		expectPos      uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectMatch: false,
+		},
+		{
+			name:        "no match",
+			inputString: "abcd 1234",
+			pos:         2,
+			expectMatch: false,
+		},
+		{
+			name:        "on open paren",
+			inputString: "( a ( b ( c ( d ) ) ) )",
+			pos:         4,
+			expectMatch: true,
+			expectPos:   20,
+		},
+		{
+			name:        "after open paren",
+			inputString: "( a ( b ( c ( d ) ) ) )",
+			pos:         5,
+			expectMatch: true,
+			expectPos:   20,
+		},
+		{
+			name: "ignore paren in Go comment",
+			inputString: `(
+abc
+	(
+	// )
+	)
+)`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            2,
+			expectMatch:    true,
+			expectPos:      18,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
+			actualPos, ok := NextUnmatchedCloseParen(textTree, syntaxParser, tc.pos)
+			assert.Equal(t, tc.expectMatch, ok)
+			if ok {
+				assert.Equal(t, tc.expectPos, actualPos)
+			}
+		})
+	}
+}
+
+func TestPrevUnmatchedOpenParen(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		pos            uint64
+		syntaxLanguage syntax.Language
+		expectMatch    bool
+		expectPos      uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectMatch: false,
+		},
+		{
+			name:        "no match",
+			inputString: "abcd 1234",
+			pos:         6,
+			expectMatch: false,
+		},
+		{
+			name:        "on close paren",
+			inputString: "( a ( b ( c ( d ) ) ) )",
+			pos:         20,
+			expectMatch: true,
+			expectPos:   4,
+		},
+		{
+			name:        "after close paren",
+			inputString: "( a ( b ( c ( d ) ) ) )",
+			pos:         19,
+			expectMatch: true,
+			expectPos:   4,
+		},
+		{
+			name: "ignore paren in Go comment",
+			inputString: `(
+	(
+	// (
+	)
+abc
+)`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            15,
+			expectMatch:    true,
+			expectPos:      0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
+			actualPos, ok := PrevUnmatchedOpenParen(textTree, syntaxParser, tc.pos)
+			assert.Equal(t, tc.expectMatch, ok)
+			if ok {
+				assert.Equal(t, tc.expectPos, actualPos)
+			}
+		})
+	}
+}
+
 func textTreeAndSyntaxParser(t *testing.T, s string, syntaxLanguage syntax.Language) (*text.Tree, *parser.P) {
 	textTree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)

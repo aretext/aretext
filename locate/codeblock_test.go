@@ -144,3 +144,141 @@ func TestMatchingCodeBlockDelimiter(t *testing.T) {
 		})
 	}
 }
+
+func TestNextUnmatchedCloseBrace(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		pos            uint64
+		syntaxLanguage syntax.Language
+		expectMatch    bool
+		expectPos      uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectMatch: false,
+		},
+		{
+			name:        "no match",
+			inputString: "abcd 1234",
+			pos:         2,
+			expectMatch: false,
+		},
+		{
+			name:        "on open brace",
+			inputString: "{ a { b { c { d } } } }",
+			pos:         4,
+			expectMatch: true,
+			expectPos:   20,
+		},
+		{
+			name:        "after open brace",
+			inputString: "{ a { b { c { d } } } }",
+			pos:         5,
+			expectMatch: true,
+			expectPos:   20,
+		},
+		{
+			name: "ignore brace in Go comment",
+			inputString: `{
+abc
+	{
+	// }
+	}
+}`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            2,
+			expectMatch:    true,
+			expectPos:      18,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+
+			syntaxParser := syntax.ParserForLanguage(tc.syntaxLanguage)
+			if syntaxParser != nil {
+				syntaxParser.ParseAll(textTree)
+			}
+
+			actualPos, ok := NextUnmatchedCloseBrace(textTree, syntaxParser, tc.pos)
+			assert.Equal(t, tc.expectMatch, ok)
+			if ok {
+				assert.Equal(t, tc.expectPos, actualPos)
+			}
+		})
+	}
+}
+
+func TestPrevUnmatchedOpenBrace(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		pos            uint64
+		syntaxLanguage syntax.Language
+		expectMatch    bool
+		expectPos      uint64
+	}{
+		{
+			name:        "empty",
+			inputString: "",
+			pos:         0,
+			expectMatch: false,
+		},
+		{
+			name:        "no match",
+			inputString: "abcd 1234",
+			pos:         6,
+			expectMatch: false,
+		},
+		{
+			name:        "on close brace",
+			inputString: "{ a { b { c { d } } } }",
+			pos:         20,
+			expectMatch: true,
+			expectPos:   4,
+		},
+		{
+			name:        "after close brace",
+			inputString: "{ a { b { c { d } } } }",
+			pos:         19,
+			expectMatch: true,
+			expectPos:   4,
+		},
+		{
+			name: "ignore brace in Go comment",
+			inputString: `{
+	{
+	// {
+	}
+abc
+}`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            15,
+			expectMatch:    true,
+			expectPos:      0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+
+			syntaxParser := syntax.ParserForLanguage(tc.syntaxLanguage)
+			if syntaxParser != nil {
+				syntaxParser.ParseAll(textTree)
+			}
+
+			actualPos, ok := PrevUnmatchedOpenBrace(textTree, syntaxParser, tc.pos)
+			assert.Equal(t, tc.expectMatch, ok)
+			if ok {
+				assert.Equal(t, tc.expectPos, actualPos)
+			}
+		})
+	}
+}

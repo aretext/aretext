@@ -239,6 +239,24 @@ func cursorCommands() []Command {
 			},
 		},
 		{
+			Name: "cursor prev unmatched close brace ([{)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("[{", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorPrevUnmatchedOpenBrace)
+			},
+		},
+		{
+			Name: "cursor next unmatched open brace (]})",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("]}", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextUnmatchedCloseBrace)
+			},
+		},
+		{
 			Name: "scroll up (ctrl-u)",
 			BuildExpr: func() vm.Expr {
 				return keyExpr(tcell.KeyCtrlU)

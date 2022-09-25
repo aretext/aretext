@@ -195,6 +195,28 @@ func CursorMatchingCodeBlockDelimiter(s *state.EditorState) {
 	})
 }
 
+func CursorPrevUnmatchedOpenBrace(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		matchPos, hasMatch := locate.PrevUnmatchedOpenBrace(params.TextTree, params.SyntaxParser, params.CursorPos)
+		if hasMatch {
+			return matchPos
+		} else {
+			return params.CursorPos
+		}
+	})
+}
+
+func CursorNextUnmatchedCloseBrace(s *state.EditorState) {
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		matchPos, hasMatch := locate.NextUnmatchedCloseBrace(params.TextTree, params.SyntaxParser, params.CursorPos)
+		if hasMatch {
+			return matchPos
+		} else {
+			return params.CursorPos
+		}
+	})
+}
+
 func EnterInsertMode(s *state.EditorState) {
 	state.SetInputMode(s, state.InputModeInsert)
 }

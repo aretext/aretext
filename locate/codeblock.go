@@ -31,6 +31,16 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 	}
 }
 
+// NextUnmatchedCloseBrace locates the next unmatched close brace after a position.
+func NextUnmatchedCloseBrace(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchForwardMatch(textTree, syntaxParser, pos, '{', '}')
+}
+
+// PrevUnmatchedOpenBrace locates the previous unmatched open brace before a position.
+func PrevUnmatchedOpenBrace(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchBackwardMatch(textTree, syntaxParser, pos, '{', '}')
+}
+
 func searchForwardMatch(textTree *text.Tree, syntaxParser *parser.P, pos uint64, openRune rune, closeRune rune) (uint64, bool) {
 	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
 	pos++

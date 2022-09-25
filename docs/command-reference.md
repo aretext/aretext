@@ -39,6 +39,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor start of line number                                     | \{count\}gg |                       |
 | cursor start of last line                                       | G           |                       |
 | cursor matching code block delimiter (paren, brace, or bracket) | %           |                       |
+| cursor prev unmatched open brace                                | [{          |                       |
+| cursor next unmatched close brace                               | ]}          |                       |
 | scroll up                                                       | ctrl-u      |                       |
 | scroll down                                                     | ctrl-d      |                       |
 | insert                                                          | i           |                       |

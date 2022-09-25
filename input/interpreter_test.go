@@ -328,6 +328,30 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      `func foo() { fmt.Printf("foo {} bar!") }`,
 		},
 		{
+			name:        "cursor prev unmatched open brace",
+			initialText: `{ { a { b } c } }`,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '6', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '[', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '{', tcell.ModNone),
+			},
+			expectedCursorPos: 2,
+			expectedText:      `{ { a { b } c } }`,
+		},
+		{
+			name:        "cursor next unmatched close brace",
+			initialText: `{ { a { b } c } }`,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, ']', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '}', tcell.ModNone),
+			},
+			expectedCursorPos: 14,
+			expectedText:      `{ { a { b } c } }`,
+		},
+		{
 			name:        "insert",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

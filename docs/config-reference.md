@@ -35,6 +35,7 @@ Syntax Languages
 | todotxt      | [todo.txt](https://github.com/todotxt/todo.txt)                                          |
 | gitcommit    | Format for editing a git commit                                                          |
 | gitrebase    | Format for git interactive rebase                                                        |
+| gotemplate   | [Go template](https://pkg.go.dev/text/template)                                          |
 
 Menu Command Object
 -------------------

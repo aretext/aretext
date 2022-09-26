@@ -16,6 +16,7 @@ const (
 	LanguageJson         = Language("json")
 	LanguageYaml         = Language("yaml")
 	LanguageGo           = Language("go")
+	LanguageGoTemplate   = Language("gotemplate")
 	LanguagePython       = Language("python")
 	LanguageRust         = Language("rust")
 	LanguageC            = Language("c")
@@ -36,6 +37,7 @@ func init() {
 		LanguageJson:         languages.JsonParseFunc(),
 		LanguageYaml:         languages.YamlParseFunc(),
 		LanguageGo:           languages.GolangParseFunc(),
+		LanguageGoTemplate:   languages.GoTemplateParseFunc(),
 		LanguagePython:       languages.PythonParseFunc(),
 		LanguageRust:         languages.RustParseFunc(),
 		LanguageC:            languages.CParseFunc(),

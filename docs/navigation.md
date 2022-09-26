@@ -57,3 +57,12 @@ If the search contains at least one uppercase letter, then it is case-sensitive;
 |------------------|----------------|
 | "abc"            | "Abc"          |
 | "Abc\c"          | "abc\C"        |
+
+Matching braces and parentheses
+-------------------------------
+
+Many programming languages use curly braces `{...}` and parentheses `(...)` to mark the beginning and end of a code block.
+
+For matching braces, use "\[{" to jump to the previous unmatched open brace and "]}" for the next unmatched close brace. The commands "\[(" and "])" work similarly for parentheses.
+
+If the cursor is on a curly brace, parenthesis, or square bracket, use "%" to jump to its match.

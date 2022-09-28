@@ -76,7 +76,7 @@ func goTemplateActionContentsParseFunc() parser.Func {
 	keywords := []string{
 		"if", "else", "end", "range", "break", "continue", "template", "block", "with",
 		"and", "call", "html", "index", "slice", "js", "len", "not", "or",
-		"print", "printf", "println", "urlquery",
+		"print", "printf", "println", "urlquery", "define",
 		"eq", "ne", "lt", "le", "gt", "ge",
 	}
 	parseKeywordOrIdentifier := consumeSingleRuneLike(isLetter).

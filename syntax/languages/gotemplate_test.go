@@ -110,6 +110,19 @@ func TestGoTemplateParseFunc(t *testing.T) {
 				{Text: `}}`, Role: parser.TokenRoleOperator},
 			},
 		},
+		{
+			name: "nested template definition",
+			text: `{{define "foo"}}foo{{end}}`,
+			expected: []TokenWithText{
+				{Text: `{{`, Role: parser.TokenRoleOperator},
+				{Text: `define`, Role: parser.TokenRoleKeyword},
+				{Text: `"foo"`, Role: parser.TokenRoleString},
+				{Text: `}}`, Role: parser.TokenRoleOperator},
+				{Text: `{{`, Role: parser.TokenRoleOperator},
+				{Text: `end`, Role: parser.TokenRoleKeyword},
+				{Text: `}}`, Role: parser.TokenRoleOperator},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

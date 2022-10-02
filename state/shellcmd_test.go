@@ -263,6 +263,30 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 	}
 }
 
+func TestRunShellCmdInsertChoiceMenu(t *testing.T) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
+		// Run a command that outputs two lines.
+		cmd := "echo $'abc\nxyz'"
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsertChoice)
+
+		// Verify that the insert choice menu loads with the two lines.
+		assert.Equal(t, InputModeMenu, state.InputMode())
+		assert.True(t, state.Menu().Visible())
+		menuItems, _ := state.Menu().SearchResults()
+		require.Equal(t, 2, len(menuItems))
+		assert.Equal(t, "abc", menuItems[0].Name)
+		assert.Equal(t, "xyz", menuItems[1].Name)
+
+		// Execute the first menu item and verify the text is inserted.
+		ExecuteSelectedMenuItem(state)
+		s := state.documentBuffer.textTree.String()
+		cursorPos := state.documentBuffer.cursor.position
+		assert.Equal(t, "abc", s)
+		assert.Equal(t, uint64(2), cursorPos)
+		assert.Equal(t, InputModeNormal, state.InputMode())
+	})
+}
+
 func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		// Create a test file to load.

@@ -27,6 +27,7 @@ The "mode" parameter controls how aretext handles the command's input and output
 | terminal      | tty   | tty                  | `make`, `git commit`, `go test`, `man`, ...                                   |
 | silent        | none  | none                 | `go fmt`, tmux commands, copy to system clipboard, ...                        |
 | insert        | none  | insert into document | paste from system clipboard, insert snippet, comment/uncomment selection, ... |
+| insertChoice  | none  | insert choice menu   | choose a word to insert from a dictionary like `/usr/share/dict/words`, ...   |
 | fileLocations | none  | file location menu   | grep for word under cursor, ...                                               |
 
 In addition, the following environment variables are provided to the shell command:

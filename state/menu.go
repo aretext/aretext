@@ -22,7 +22,18 @@ const (
 	MenuStyleFileLocation
 	MenuStyleChildDir
 	MenuStyleParentDir
+	MenuStyleInsertChoice
 )
+
+// EmptyQueryShowAll returns whether an empty query should show all items.
+func (s MenuStyle) EmptyQueryShowAll() bool {
+	switch s {
+	case MenuStyleFilePath, MenuStyleFileLocation, MenuStyleChildDir, MenuStyleParentDir, MenuStyleInsertChoice:
+		return true
+	default:
+		return false
+	}
+}
 
 // MenuState represents the menu for searching and selecting items.
 type MenuState struct {
@@ -65,12 +76,6 @@ func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int)
 
 // ShowMenu displays the menu with the specified style and items.
 func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
-	emptyQueryShowAll := bool(
-		style == MenuStyleFilePath ||
-			style == MenuStyleFileLocation ||
-			style == MenuStyleChildDir ||
-			style == MenuStyleParentDir)
-
 	if style == MenuStyleCommand {
 		items = append(items, state.customMenuItems...)
 	}
@@ -86,7 +91,7 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 		sort.SliceStable(items, func(i, j int) bool { return items[i].Name < items[j].Name })
 	}
 
-	search := menu.NewSearch(items, emptyQueryShowAll)
+	search := menu.NewSearch(items, style.EmptyQueryShowAll())
 	state.menu = &MenuState{
 		visible:           true,
 		style:             style,

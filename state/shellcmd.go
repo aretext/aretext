@@ -60,6 +60,17 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 			}
 		})
 
+	case config.CmdModeInsertChoice:
+		StartTask(state, func(ctx context.Context) func(*EditorState) {
+			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
+			return func(state *EditorState) {
+				if err == nil {
+					err = showInsertChoiceMenuForShellCmdOutput(state, output)
+				}
+				setStatusForShellCmdResult(state, err)
+			}
+		})
+
 	case config.CmdModeFileLocations:
 		StartTask(state, func(ctx context.Context) func(*EditorState) {
 			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
@@ -174,6 +185,29 @@ func deleteCurrentSelection(state *EditorState) {
 	} else if selectionMode == selection.ModeLine {
 		DeleteLines(state, selectionEndLoc, false, true, clipboard.PageDefault)
 	}
+}
+
+func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {
+	var menuItems []menu.Item
+	for _, line := range strings.Split(shellCmdOutput, "\n") {
+		name := strings.TrimRight(line, "\r") // If output is CRLF, strip the CR as well.
+		if len(name) == 0 {
+			continue
+		}
+		menuItems = append(menuItems, menu.Item{
+			Name: name,
+			Action: func(s *EditorState) {
+				insertShellCmdOutput(state, name)
+			},
+		})
+	}
+
+	if len(menuItems) == 0 {
+		return errors.New("No lines in command output")
+	}
+
+	ShowMenu(state, MenuStyleInsertChoice, menuItems)
+	return nil
 }
 
 func showFileLocationsMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {

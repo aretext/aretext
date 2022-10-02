@@ -95,6 +95,8 @@ func menuIconForStyle(style state.MenuStyle) string {
 		return "↓ "
 	case state.MenuStyleParentDir:
 		return "↑ "
+	case state.MenuStyleInsertChoice:
+		return "+ "
 	default:
 		panic("Unrecognized menu style")
 	}
@@ -112,6 +114,8 @@ func menuPromptForStyle(style state.MenuStyle) string {
 		return "child directory"
 	case state.MenuStyleParentDir:
 		return "parent directory"
+	case state.MenuStyleInsertChoice:
+		return ""
 	default:
 		panic("Unrecognized menu style")
 	}

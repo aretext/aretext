@@ -60,6 +60,7 @@ const (
 	CmdModeSilent        = "silent"        // accepts no input and any output is discarded.
 	CmdModeTerminal      = "terminal"      // takes control of the terminal.
 	CmdModeInsert        = "insert"        // output is inserted into the document at the cursor position, replacing any selection.
+	CmdModeInsertChoice  = "insertChoice"  // user can select one line from the output to insert into the document.
 	CmdModeFileLocations = "fileLocations" // output is interpreted as a list of file locations that can be opened in the editor.
 )
 
@@ -160,13 +161,14 @@ func (c Config) Validate() error {
 	}
 
 	for _, cmd := range c.MenuCommands {
-		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeFileLocations {
+		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeInsertChoice && cmd.Mode != CmdModeFileLocations {
 			return fmt.Errorf(
-				"Menu command %q must have mode set to either %q, %q, %q, or %q",
+				"Menu command %q must have mode set to either %q, %q, %q, %q, or %q",
 				cmd.Name,
 				CmdModeSilent,
 				CmdModeTerminal,
 				CmdModeInsert,
+				CmdModeInsertChoice,
 				CmdModeFileLocations,
 			)
 		}

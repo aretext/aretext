@@ -266,7 +266,7 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 func TestRunShellCmdInsertChoiceMenu(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		// Run a command that outputs two lines.
-		cmd := "echo $'abc\nxyz'"
+		cmd := "printf 'abc\nxyz'"
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsertChoice)
 
 		// Verify that the insert choice menu loads with the two lines.

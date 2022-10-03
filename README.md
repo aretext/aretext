@@ -22,6 +22,7 @@ Getting Started
 -	[Install](https://aretext.org/docs/install/)
 -	[Quickstart](https://aretext.org/docs/quickstart/)
 -	[User Documentation](https://aretext.org/docs/)
+-	[Cheat Sheet](https://aretext.org/docs/cheat-sheet.html)
 
 Project Status
 --------------

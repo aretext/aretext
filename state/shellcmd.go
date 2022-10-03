@@ -82,6 +82,17 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 			}
 		})
 
+	case config.CmdModeWorkingDir:
+		StartTask(state, func(ctx context.Context) func(*EditorState) {
+			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
+			return func(state *EditorState) {
+				if err == nil {
+					err = showWorkingDirMenuForShellCmdOutput(state, output)
+				}
+				setStatusForShellCmdResult(state, err)
+			}
+		})
+
 	default:
 		// This should never happen because the config validates the mode.
 		panic("Unrecognized shell cmd mode")
@@ -207,6 +218,30 @@ func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput st
 	}
 
 	ShowMenu(state, MenuStyleInsertChoice, menuItems)
+	return nil
+}
+
+func showWorkingDirMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {
+	var menuItems []menu.Item
+	for _, line := range strings.Split(shellCmdOutput, "\n") {
+		dirPath := strings.TrimRight(line, "\r") // If output is CRLF, strip the CR as well.
+		if len(dirPath) == 0 {
+			continue
+		}
+
+		menuItems = append(menuItems, menu.Item{
+			Name: dirPath,
+			Action: func(s *EditorState) {
+				SetWorkingDirectory(s, dirPath)
+			},
+		})
+	}
+
+	if len(menuItems) == 0 {
+		return errors.New("No lines in command output")
+	}
+
+	ShowMenu(state, MenuStyleWorkingDir, menuItems)
 	return nil
 }
 

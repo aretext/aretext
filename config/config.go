@@ -62,6 +62,7 @@ const (
 	CmdModeInsert        = "insert"        // output is inserted into the document at the cursor position, replacing any selection.
 	CmdModeInsertChoice  = "insertChoice"  // user can select one line from the output to insert into the document.
 	CmdModeFileLocations = "fileLocations" // output is interpreted as a list of file locations that can be opened in the editor.
+	CmdModeWorkingDir    = "workingDir"    // output is interpreted as a list of directories to set as the current working directory.
 )
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -169,15 +170,16 @@ func (c Config) Validate() error {
 			return fmt.Errorf("Menu command %q shellCmd cannot be empty", cmd.Name)
 		}
 
-		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeInsertChoice && cmd.Mode != CmdModeFileLocations {
+		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeInsertChoice && cmd.Mode != CmdModeFileLocations && cmd.Mode != CmdModeWorkingDir {
 			return fmt.Errorf(
-				"Menu command %q must have mode set to either %q, %q, %q, %q, or %q",
+				"Menu command %q must have mode set to either %q, %q, %q, %q, %q, or %q",
 				cmd.Name,
 				CmdModeSilent,
 				CmdModeTerminal,
 				CmdModeInsert,
 				CmdModeInsertChoice,
 				CmdModeFileLocations,
+				CmdModeWorkingDir,
 			)
 		}
 	}

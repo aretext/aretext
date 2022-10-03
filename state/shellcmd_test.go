@@ -297,12 +297,12 @@ func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 		// Populate the location list with a single file location.
 		cmd := fmt.Sprintf("echo '%s:2:cd'", p)
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeFileLocations)
-		assert.Equal(t, InputModeMenu, state.InputMode())
-		assert.True(t, state.Menu().Visible())
 
 		// Verify that the location list menu opens.
+		assert.Equal(t, InputModeMenu, state.InputMode())
+		assert.True(t, state.Menu().Visible())
 		menuItems, _ := state.Menu().SearchResults()
-		assert.Equal(t, 1, len(menuItems))
+		require.Equal(t, 1, len(menuItems))
 		expectedName := fmt.Sprintf("%s:2  cd", p)
 		assert.Equal(t, expectedName, menuItems[0].Name)
 
@@ -312,6 +312,33 @@ func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 		assert.Equal(t, uint64(3), state.documentBuffer.cursor.position)
 		text := state.documentBuffer.textTree.String()
 		assert.Equal(t, "ab\ncd\nef\ngh", text)
+	})
+}
+
+func TestRunShellCmdWorkingDirMenu(t *testing.T) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
+		// Save the original working dir so we can restore it later.
+		originalWorkingDir, err := os.Getwd()
+		require.NoError(t, err)
+		defer os.Chdir(originalWorkingDir)
+
+		// Populate the menu with a path to a temp dir.
+		dirPath := t.TempDir()
+		cmd := fmt.Sprintf("echo '%s'", dirPath)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeWorkingDir)
+
+		// Verify that the menu shows the path.
+		assert.Equal(t, InputModeMenu, state.InputMode())
+		assert.True(t, state.Menu().Visible())
+		menuItems, _ := state.Menu().SearchResults()
+		require.Equal(t, 1, len(menuItems))
+		assert.Equal(t, dirPath, menuItems[0].Name)
+
+		// Execute the menu item and verify that the working directory changes.
+		ExecuteSelectedMenuItem(state)
+		workingDir, err := os.Getwd()
+		require.NoError(t, err)
+		assert.Equal(t, dirPath, workingDir)
 	})
 }
 

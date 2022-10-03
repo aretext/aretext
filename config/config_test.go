@@ -143,7 +143,7 @@ func TestValidateConfig(t *testing.T) {
 					Mode:     "invalid",
 				})
 			},
-			expectErrMsg: `Menu command "testcmd" must have mode set to either "silent", "terminal", "insert", "insertChoice", or "fileLocations"`,
+			expectErrMsg: `Menu command "testcmd" must have mode set to either "silent", "terminal", "insert", "insertChoice", "fileLocations", or "workingDir"`,
 		},
 	}
 

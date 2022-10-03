@@ -23,12 +23,13 @@ const (
 	MenuStyleChildDir
 	MenuStyleParentDir
 	MenuStyleInsertChoice
+	MenuStyleWorkingDir
 )
 
 // EmptyQueryShowAll returns whether an empty query should show all items.
 func (s MenuStyle) EmptyQueryShowAll() bool {
 	switch s {
-	case MenuStyleFilePath, MenuStyleFileLocation, MenuStyleChildDir, MenuStyleParentDir, MenuStyleInsertChoice:
+	case MenuStyleFilePath, MenuStyleFileLocation, MenuStyleChildDir, MenuStyleParentDir, MenuStyleInsertChoice, MenuStyleWorkingDir:
 		return true
 	default:
 		return false

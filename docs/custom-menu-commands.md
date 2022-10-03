@@ -22,13 +22,14 @@ After restarting the editor, the new command will be available in the command me
 
 The "mode" parameter controls how aretext handles the command's input and output. There are four modes:
 
-| Mode          | Input | Output               | Use Cases                                                                     |
-|---------------|-------|----------------------|-------------------------------------------------------------------------------|
-| terminal      | tty   | tty                  | `make`, `git commit`, `go test`, `man`, ...                                   |
-| silent        | none  | none                 | `go fmt`, tmux commands, copy to system clipboard, ...                        |
-| insert        | none  | insert into document | paste from system clipboard, insert snippet, comment/uncomment selection, ... |
-| insertChoice  | none  | insert choice menu   | choose a word to insert from a dictionary like `/usr/share/dict/words`, ...   |
-| fileLocations | none  | file location menu   | grep for word under cursor, ...                                               |
+| Mode          | Input | Output                 | Use Cases                                                                     |
+|---------------|-------|------------------------|-------------------------------------------------------------------------------|
+| terminal      | tty   | tty                    | `make`, `git commit`, `go test`, `man`, ...                                   |
+| silent        | none  | none                   | `go fmt`, tmux commands, copy to system clipboard, ...                        |
+| insert        | none  | insert into document   | paste from system clipboard, insert snippet, comment/uncomment selection, ... |
+| insertChoice  | none  | insert choice menu     | choose a word to insert from a dictionary like `/usr/share/dict/words`, ...   |
+| fileLocations | none  | file location menu     | grep for word under cursor, ...                                               |
+| workingDir    | none  | working directory menu | select the current working directory from a preset list                       |
 
 In addition, the following environment variables are provided to the shell command:
 

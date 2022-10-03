@@ -161,6 +161,14 @@ func (c Config) Validate() error {
 	}
 
 	for _, cmd := range c.MenuCommands {
+		if cmd.Name == "" {
+			return fmt.Errorf("Menu name cannot be empty")
+		}
+
+		if cmd.ShellCmd == "" {
+			return fmt.Errorf("Menu command %q shellCmd cannot be empty", cmd.Name)
+		}
+
 		if cmd.Mode != CmdModeSilent && cmd.Mode != CmdModeTerminal && cmd.Mode != CmdModeInsert && cmd.Mode != CmdModeInsertChoice && cmd.Mode != CmdModeFileLocations {
 			return fmt.Errorf(
 				"Menu command %q must have mode set to either %q, %q, %q, %q, or %q",

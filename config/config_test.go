@@ -113,11 +113,34 @@ func TestValidateConfig(t *testing.T) {
 			expectErrMsg: `LineWrap must be either "character" or "word"`,
 		},
 		{
+			name: "menu name is empty",
+			updateFunc: func(c *Config) {
+				c.MenuCommands = append(c.MenuCommands, MenuCommandConfig{
+					Name:     "",
+					ShellCmd: "echo 'hello'",
+					Mode:     "silent",
+				})
+			},
+			expectErrMsg: `Menu name cannot be empty`,
+		},
+		{
+			name: "menu shellCmd is empty",
+			updateFunc: func(c *Config) {
+				c.MenuCommands = append(c.MenuCommands, MenuCommandConfig{
+					Name:     "testcmd",
+					ShellCmd: "",
+					Mode:     "silent",
+				})
+			},
+			expectErrMsg: `Menu command "testcmd" shellCmd cannot be empty`,
+		},
+		{
 			name: "menu mode is invalid",
 			updateFunc: func(c *Config) {
 				c.MenuCommands = append(c.MenuCommands, MenuCommandConfig{
-					Name: "testcmd",
-					Mode: "invalid",
+					Name:     "testcmd",
+					ShellCmd: "echo 'hello'",
+					Mode:     "invalid",
 				})
 			},
 			expectErrMsg: `Menu command "testcmd" must have mode set to either "silent", "terminal", "insert", "insertChoice", or "fileLocations"`,

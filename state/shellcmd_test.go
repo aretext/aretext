@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -324,6 +325,8 @@ func TestRunShellCmdWorkingDirMenu(t *testing.T) {
 
 		// Populate the menu with a path to a temp dir.
 		dirPath := t.TempDir()
+		dirPath, err = filepath.EvalSymlinks(dirPath)
+		require.NoError(t, err)
 		cmd := fmt.Sprintf("echo '%s'", dirPath)
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeWorkingDir)
 

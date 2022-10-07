@@ -314,3 +314,106 @@ func TestFindNextMatch(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchWordUnderCursor(t *testing.T) {
+	testCases := []struct {
+		name          string
+		inputText     string
+		direction     SearchDirection
+		count         uint64
+		pos           uint64
+		expectedQuery string
+		expectedPos   uint64
+	}{
+		{
+			name:          "empty",
+			inputText:     "",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           0,
+			expectedQuery: "",
+			expectedPos:   0,
+		},
+		{
+			name:          "start of word under cursor, search forward",
+			inputText:     "foo bar baz bar",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           4,
+			expectedQuery: "bar\\C",
+			expectedPos:   12,
+		},
+		{
+			name:          "word under cursor, search forward",
+			inputText:     "foo bar baz bar",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           5,
+			expectedQuery: "bar\\C",
+			expectedPos:   12,
+		},
+		{
+			name:          "word under cursor, search backward",
+			inputText:     "foo bar baz bar",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           14,
+			expectedQuery: "bar\\C",
+			expectedPos:   4,
+		},
+		{
+			name:          "whitespace before word",
+			inputText:     "foo   bar baz bar",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           3,
+			expectedQuery: "bar\\C",
+			expectedPos:   6, // differs from vim, which would advance to the next occurrence.
+		},
+		{
+			name:          "whitespace before end of line",
+			inputText:     "foo bar   \nbaz",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           9,
+			expectedQuery: "baz\\C", // differs from vim, which aborts.
+			expectedPos:   11,
+		},
+		{
+			name:          "search forward with count",
+			inputText:     "foo bar baz\nxyz\nfoo bar bat",
+			direction:     SearchDirectionForward,
+			count:         2,
+			pos:           1,
+			expectedQuery: "foo bar\\C",
+			expectedPos:   16,
+		},
+		{
+			name:          "search case sensitive",
+			inputText:     "foo bar FOO BAR bar",
+			direction:     SearchDirectionForward,
+			count:         1,
+			pos:           5,
+			expectedQuery: "bar\\C",
+			expectedPos:   16,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputText)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			buffer := state.documentBuffer
+			buffer.textTree = textTree
+			buffer.cursor.position = tc.pos
+
+			// Search for the word under the cursor.
+			SearchWordUnderCursor(state, SearchDirectionForward, tc.count)
+			assert.Equal(t, InputModeNormal, state.inputMode)
+			assert.Equal(t, tc.expectedQuery, buffer.search.query)
+			assert.Nil(t, buffer.search.match)
+			assert.Equal(t, cursorState{position: tc.expectedPos}, buffer.cursor)
+		})
+	}
+}

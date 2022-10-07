@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -9,6 +10,7 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/transform"
 
+	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text"
 )
 
@@ -102,6 +104,31 @@ func DeleteRuneFromSearchQuery(state *EditorState) {
 
 	q = q[0 : len(q)-1]
 	runTextSearchQuery(state, q)
+}
+
+// SearchWordUnderCursor starts a search for the word under the cursor.
+func SearchWordUnderCursor(state *EditorState, direction SearchDirection, targetCount uint64) {
+	// Retrieve the current word under the cursor.
+	// If the cursor is on leading whitespace, this will retrieve the word after the whitespace.
+	buffer := state.documentBuffer
+	wordStartPos, wordEndPos := locate.WordObject(buffer.textTree, buffer.cursor.position, targetCount)
+	word := strings.TrimSpace(copyText(buffer.textTree, wordStartPos, wordEndPos-wordStartPos))
+	if word == "" {
+		return
+	}
+
+	query := fmt.Sprintf("%s\\C", word) // Force case-sensitive search.
+
+	// Search for the word.
+	StartSearch(state, direction)
+	runTextSearchQuery(state, query)
+	CompleteSearch(state, true)
+
+	// If the cursor didn't move past the word, advance to the next match.
+	// This indicates to the user that something matched.
+	if buffer.cursor.position == wordStartPos {
+		FindNextMatch(state, false)
+	}
 }
 
 func runTextSearchQuery(state *EditorState, q string) {

@@ -58,6 +58,8 @@ If the search contains at least one uppercase letter, then it is case-sensitive;
 | "abc"            | "Abc"          |
 | "Abc\c"          | "abc\C"        |
 
+To search for the word under the cursor, use "*" to search forward and "#" to search backwards. Word searches are always case-sensitive.
+
 Matching braces and parentheses
 -------------------------------
 

@@ -665,6 +665,12 @@ func FindPrevMatch(s *state.EditorState) {
 	state.FindNextMatch(s, reverse)
 }
 
+func SearchWordUnderCursor(direction state.SearchDirection, count uint64) Action {
+	return func(s *state.EditorState) {
+		state.SearchWordUnderCursor(s, direction, count)
+	}
+}
+
 func Undo(s *state.EditorState) {
 	state.Undo(s)
 }

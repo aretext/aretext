@@ -1489,7 +1489,6 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedCursorPos: 27,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
-
 		{
 			name:        "search backward",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
@@ -1537,6 +1536,28 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 33,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "search forward for word under cursor",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nlorem ipsum dolor",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '*', tcell.ModNone),
+			},
+			expectedCursorPos: 45,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nlorem ipsum dolor",
+		},
+		{
+			name:        "search backward for word under cursor",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nlorem ipsum dolor",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '#', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nlorem ipsum dolor",
 		},
 		{
 			name:        "undo",

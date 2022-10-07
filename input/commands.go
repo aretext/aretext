@@ -835,6 +835,28 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "search forward for word under cursor",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("*", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SearchWordUnderCursor(state.SearchDirectionForward, p.Count),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "search backward for word under cursor",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("#", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SearchWordUnderCursor(state.SearchDirectionBackward, p.Count),
+					addToMacro{user: true})
+			},
+		},
+		{
 			Name: "undo (u)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('u')

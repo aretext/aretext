@@ -91,6 +91,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | start backward search                                           | ?           |                       |
 | find next match                                                 | n           |                       |
 | find previous match                                             | N           |                       |
+| search forward for word under cursor                            | \*          | count                 |
+| search backward for word under cursor                           | \#          | count                 |
 | undo                                                            | u           |                       |
 | redo                                                            | ctrl-r      |                       |
 | visual mode charwise                                            | v           |                       |

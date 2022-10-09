@@ -44,25 +44,6 @@ const (
 	captureIdInsertChar
 )
 
-type captureOpts struct {
-	count         bool
-	clipboardPage bool
-	matchChar     bool
-	replaceChar   bool
-}
-
-func altExpr(children ...vm.Expr) vm.Expr {
-	return vm.AltExpr{Children: children}
-}
-
-func runeExpr(r rune) vm.Expr {
-	return vm.EventExpr{Event: runeToVmEvent(r)}
-}
-
-func keyExpr(key tcell.Key) vm.Expr {
-	return vm.EventExpr{Event: keyToVmEvent(key)}
-}
-
 // Pre-compute and share these expressions to reduce number of allocations.
 var verbCountExpr, objectCountExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr vm.Expr
 
@@ -157,6 +138,29 @@ func init() {
 			EndEvent:   runeToVmEvent(utf8.MaxRune),
 		},
 	}
+}
+
+type captureOpts struct {
+	count         bool
+	clipboardPage bool
+	matchChar     bool
+	replaceChar   bool
+}
+
+func altExpr(children ...vm.Expr) vm.Expr {
+	return vm.AltExpr{Children: children}
+}
+
+func verbCountThenExpr(expr vm.Expr) vm.Expr {
+	return vm.ConcatExpr{Children: []vm.Expr{verbCountExpr, expr}}
+}
+
+func runeExpr(r rune) vm.Expr {
+	return vm.EventExpr{Event: runeToVmEvent(r)}
+}
+
+func keyExpr(key tcell.Key) vm.Expr {
+	return vm.EventExpr{Event: keyToVmEvent(key)}
 }
 
 func cmdExpr(verb string, object string, opts captureOpts) vm.Expr {

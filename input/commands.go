@@ -54,46 +54,46 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor left (left arrow or h)",
 			BuildExpr: func() vm.Expr {
-				return altExpr(keyExpr(tcell.KeyLeft), runeExpr('h'))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyLeft), runeExpr('h')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorLeft)
+				return decorate(CursorLeft(p.Count))
 			},
 		},
 		{
 			Name: "cursor right (right arrow or l)",
 			BuildExpr: func() vm.Expr {
-				return altExpr(keyExpr(tcell.KeyRight), runeExpr('l'))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyRight), runeExpr('l')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorRight)
+				return decorate(CursorRight(p.Count))
 			},
 		},
 		{
 			Name: "cursor up (up arrow or k)",
 			BuildExpr: func() vm.Expr {
-				return altExpr(keyExpr(tcell.KeyUp), runeExpr('k'))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyUp), runeExpr('k')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorUp)
+				return decorate(CursorUp(p.Count))
 			},
 		},
 		{
 			Name: "cursor down (down arrow or j)",
 			BuildExpr: func() vm.Expr {
-				return altExpr(keyExpr(tcell.KeyDown), runeExpr('j'))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorDown)
+				return decorate(CursorDown(p.Count))
 			},
 		},
 		{
 			Name: "cursor back (backspace)",
 			BuildExpr: func() vm.Expr {
-				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2)))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorBack)
+				return decorate(CursorBack(p.Count))
 			},
 		},
 		{
@@ -1097,7 +1097,7 @@ func InsertModeCommands() []Command {
 				return keyExpr(tcell.KeyLeft)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorLeft)
+				return decorate(CursorLeft(1))
 			},
 		},
 		{
@@ -1115,7 +1115,7 @@ func InsertModeCommands() []Command {
 				return keyExpr(tcell.KeyUp)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorUp)
+				return decorate(CursorUp(1))
 			},
 		},
 		{
@@ -1124,7 +1124,7 @@ func InsertModeCommands() []Command {
 				return keyExpr(tcell.KeyDown)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorDown)
+				return decorate(CursorDown(1))
 			},
 		},
 		{

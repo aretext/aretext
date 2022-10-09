@@ -73,6 +73,48 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "cursor left with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModNone),
+			},
+			expectedCursorPos: 11,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor right with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+			},
+			expectedCursorPos: 5,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor down with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModNone),
+			},
+			expectedCursorPos: 39,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor up with count",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'G', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'k', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "cursor to next matching in line",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

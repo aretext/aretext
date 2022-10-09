@@ -13,22 +13,28 @@ type Action func(*state.EditorState)
 // EmptyAction is an action that does nothing.
 func EmptyAction(s *state.EditorState) {}
 
-func CursorLeft(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
-	})
+func CursorLeft(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevCharInLine(params.TextTree, count, false, params.CursorPos)
+		})
+	}
 }
 
-func CursorBack(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.PrevChar(params.TextTree, 1, params.CursorPos)
-	})
+func CursorBack(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.PrevChar(params.TextTree, count, params.CursorPos)
+		})
+	}
 }
 
-func CursorRight(s *state.EditorState) {
-	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		return locate.NextCharInLine(params.TextTree, 1, false, params.CursorPos)
-	})
+func CursorRight(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextCharInLine(params.TextTree, count, false, params.CursorPos)
+		})
+	}
 }
 
 func CursorRightIncludeEndOfLineOrFile(s *state.EditorState) {
@@ -37,12 +43,16 @@ func CursorRightIncludeEndOfLineOrFile(s *state.EditorState) {
 	})
 }
 
-func CursorUp(s *state.EditorState) {
-	state.MoveCursorToLineAbove(s, 1)
+func CursorUp(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursorToLineAbove(s, count)
+	}
 }
 
-func CursorDown(s *state.EditorState) {
-	state.MoveCursorToLineBelow(s, 1)
+func CursorDown(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursorToLineBelow(s, count)
+	}
 }
 
 func CursorNextWordStart(count uint64) Action {
@@ -266,7 +276,9 @@ func ReturnToNormalModeAfterInsert(s *state.EditorState) {
 	state.ClearAutoIndentWhitespaceLine(s, func(params state.LocatorParams) uint64 {
 		return locate.StartOfLineAtPos(params.TextTree, params.CursorPos)
 	})
-	CursorLeft(s)
+	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
+	})
 	state.SetInputMode(s, state.InputModeNormal)
 }
 

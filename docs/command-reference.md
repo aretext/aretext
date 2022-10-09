@@ -14,15 +14,15 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 
 | Name                                                            | Key Binding | Options               |
 |-----------------------------------------------------------------|-------------|-----------------------|
-| cursor left                                                     | left arrow  |                       |
-| cursor right                                                    | right arrow |                       |
-| cursor up                                                       | up arrow    |                       |
-| cursor down                                                     | down arrow  |                       |
-| cursor left                                                     | h           |                       |
-| cursor right                                                    | l           |                       |
-| cursor up                                                       | k           |                       |
-| cursor down                                                     | j           |                       |
-| cursor back                                                     | backspace   |                       |
+| cursor left                                                     | left arrow  | count                 |
+| cursor right                                                    | right arrow | count                 |
+| cursor up                                                       | up arrow    | count                 |
+| cursor down                                                     | down arrow  | count                 |
+| cursor left                                                     | h           | count                 |
+| cursor right                                                    | l           | count                 |
+| cursor up                                                       | k           | count                 |
+| cursor down                                                     | j           | count                 |
+| cursor back                                                     | backspace   | count                 |
 | cursor to next matching character in line                       | f\{char\}   | count                 |
 | cursor to prev matching character in line                       | F\{char\}   | count                 |
 | cursor till next matching character in line                     | t\{char\}   | count                 |

@@ -133,7 +133,6 @@ func (f Func) Or(nextFn Func) Func {
 		if result.IsSuccess() {
 			return result
 		}
-		iter.Skip(result.NumConsumed)
 		return nextFn(iter, state)
 	}
 }

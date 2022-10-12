@@ -177,17 +177,19 @@ func countBytesBetweenPositions(textTree *text.Tree, startPos, endPos uint64) ui
 func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 	page := clipboard.PageContent{Text: shellCmdOutput}
 	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
-	deleteCurrentSelection(state)
-	PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
+
+	if state.documentBuffer.selector.Mode() == selection.ModeNone {
+		PasteAfterCursor(state, clipboard.PageShellCmdOutput)
+	} else {
+		deleteCurrentSelection(state)
+		PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
+	}
+
 	SetInputMode(state, InputModeNormal)
 }
 
 func deleteCurrentSelection(state *EditorState) {
 	selectionMode := state.documentBuffer.selector.Mode()
-	if selectionMode == selection.ModeNone {
-		return
-	}
-
 	selectedRegion := state.documentBuffer.SelectedRegion()
 	MoveCursor(state, func(p LocatorParams) uint64 { return selectedRegion.StartPos })
 	selectionEndLoc := func(p LocatorParams) uint64 { return selectedRegion.EndPos }

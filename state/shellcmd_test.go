@@ -192,18 +192,59 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 }
 
 func TestRunShellCmdInsertIntoDocument(t *testing.T) {
-	setupShellCmdTest(t, func(state *EditorState, dir string) {
-		p := path.Join(dir, "test-output.txt")
-		err := os.WriteFile(p, []byte("hello world"), 0644)
-		require.NoError(t, err)
-		cmd := fmt.Sprintf("cat %s", p)
-		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsert)
-		s := state.documentBuffer.textTree.String()
-		cursorPos := state.documentBuffer.cursor.position
-		assert.Equal(t, "hello world", s)
-		assert.Equal(t, uint64(10), cursorPos)
-		assert.Equal(t, InputModeNormal, state.InputMode())
-	})
+	testCases := []struct {
+		name              string
+		documentText      string
+		insertedText      string
+		cursorPos         uint64
+		expectedCursorPos uint64
+		expectedText      string
+	}{
+		{
+			name:              "insert into empty document",
+			documentText:      "",
+			insertedText:      "hello world",
+			cursorPos:         0,
+			expectedCursorPos: 10,
+			expectedText:      "hello world",
+		},
+		{
+			name:              "insert into document with text",
+			documentText:      "foo bar",
+			insertedText:      "hello world",
+			cursorPos:         3,
+			expectedCursorPos: 14,
+			expectedText:      "foo hello worldbar",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			setupShellCmdTest(t, func(state *EditorState, dir string) {
+				// Setup initial state.
+				for _, r := range tc.documentText {
+					InsertRune(state, r)
+				}
+				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
+
+				// Create test file with content
+				p := path.Join(dir, "test-output.txt")
+				err := os.WriteFile(p, []byte(tc.insertedText), 0644)
+				require.NoError(t, err)
+
+				// Execute command to insert contents of text file.
+				cmd := fmt.Sprintf("cat %s", p)
+				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsert)
+
+				// Check the document state.
+				s := state.documentBuffer.textTree.String()
+				cursorPos := state.documentBuffer.cursor.position
+				assert.Equal(t, tc.expectedText, s)
+				assert.Equal(t, tc.expectedCursorPos, cursorPos)
+				assert.Equal(t, InputModeNormal, state.InputMode())
+			})
+		})
+	}
 }
 
 func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {

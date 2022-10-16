@@ -647,6 +647,7 @@ func markdownParagraphParseFunc() parser.Func {
 			var startDelimLen, endDelimLen int
 			var lastWasSpace bool
 			var lastWasDelim bool
+			var inCodeSpan bool
 			var n uint64
 			for !done {
 				r, err := iter.NextRune()
@@ -677,15 +678,11 @@ func markdownParagraphParseFunc() parser.Func {
 						emphState = emphStateContent
 					}
 				case emphStateContent:
-					if r == delimRune && !lastWasSpace && !lastWasDelim {
+					if r == delimRune && !lastWasSpace && !lastWasDelim && !inCodeSpan {
 						endDelimLen++
 						emphState = emphStateEndDelim
 					} else if r == '`' {
-						// Code span takes precedence.
-						return parser.Result{
-							NumConsumed: n - 1,
-							NextState:   state,
-						}
+						inCodeSpan = !inCodeSpan
 					}
 				case emphStateEndDelim:
 					if r == delimRune {

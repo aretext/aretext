@@ -47,6 +47,16 @@ func TestMarkdownParseFunc(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "fenced code block in emphasis",
+			text: "*foo `code` bar*",
+			expected: []TokenWithText{
+				{
+					Role: markdownEmphasisRole,
+					Text: "*foo `code` bar*",
+				},
+			},
+		},
 	}...)
 
 	for _, tc := range testCases {

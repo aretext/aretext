@@ -58,7 +58,15 @@ func CursorDown(count uint64) Action {
 func CursorNextWordStart(count uint64) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordStart(params.TextTree, params.CursorPos, count, false)
+			return locate.NextWordStart(params.TextTree, params.CursorPos, count, false, false)
+		})
+	}
+}
+
+func CursorNextBlankSeparatedWordStart(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.NextWordStart(params.TextTree, params.CursorPos, count, false, true)
 		})
 	}
 }
@@ -444,7 +452,7 @@ func DeleteToStartOfLineNonWhitespace(clipboardPage clipboard.PageId) Action {
 func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true)
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true, false)
 			if endPos == params.CursorPos {
 				// The cursor didn't move, so we're on an empty line.
 				// Attempt to delete the newline at the end of the line.
@@ -559,7 +567,7 @@ func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action 
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
 			startPos := params.CursorPos
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true)
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true, false)
 			return startPos, endPos
 		})
 	}

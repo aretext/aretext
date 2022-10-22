@@ -162,7 +162,7 @@ func TestNextWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.stopAtEndOfLastLine)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.stopAtEndOfLastLine, false)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

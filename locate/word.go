@@ -12,7 +12,7 @@ import (
 //  1. at the first non-whitespace after a whitespace
 //  2. at the start of an empty line
 //  3. between punctuation and non-punctuation
-func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEndOfLastLine bool) uint64 {
+func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEndOfLastLine bool, blankSeparated bool) uint64 {
 	if targetCount == 0 {
 		return pos
 	}
@@ -29,7 +29,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 	}
 	prevHasNewline := gc.HasNewline()
 	prevWasWhitespace := gc.IsWhitespace()
-	prevWasPunct := isPunct(gc)
+	prevWasWordBoundary := !blankSeparated && isPunct(gc)
 
 	if stopAtEndOfLastLine && targetCount == 1 && prevHasNewline {
 		return pos
@@ -47,11 +47,11 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 
 		isWhitespace := gc.IsWhitespace()
 		hasNewline := gc.HasNewline()
-		isPunct := isPunct(gc)
+		isWordBoundary := !blankSeparated && isPunct(gc)
 
 		if (prevWasWhitespace && !isWhitespace) ||
-			(prevWasPunct && !isPunct && !isWhitespace) ||
-			(!prevWasPunct && isPunct) ||
+			(prevWasWordBoundary && !isWordBoundary && !isWhitespace) ||
+			(!prevWasWordBoundary && isWordBoundary) ||
 			(prevHasNewline && hasNewline) {
 			count++
 		}
@@ -67,7 +67,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 		pos += gc.NumRunes()
 		prevHasNewline = hasNewline
 		prevWasWhitespace = isWhitespace
-		prevWasPunct = isPunct
+		prevWasWordBoundary = isWordBoundary
 	}
 
 	return pos

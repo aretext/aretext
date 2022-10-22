@@ -106,6 +106,15 @@ func cursorCommands() []Command {
 			},
 		},
 		{
+			Name: "cursor next blank-separated word start (W)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("W", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextBlankSeparatedWordStart(p.Count))
+			},
+		},
+		{
 			Name: "cursor prev word start (b)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("b", "", captureOpts{count: true})

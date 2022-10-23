@@ -1,8 +1,8 @@
 Developing
 ==========
 
-Building
---------
+Setup
+-----
 
 To build aretext, you will first need to [install go](https://golang.org/doc/install).
 
@@ -12,7 +12,34 @@ Next, install development tools:
 make install-devtools
 ```
 
-You can then build aretext and run tests using `make`. See the [Makefile](Makefile) for available commands.
+Building and Testing
+--------------------
+
+To build aretext, format code, and run tests:
+
+```
+make
+```
+
+To only run tests:
+
+```
+make test
+```
+
+To format Go and Markdown files:
+
+```
+make fmt
+```
+
+Some files in the project are created by [go generate](https://go.dev/blog/generate) and checked into the git repository. This includes the state machine compiled from commands in [input/commands.go](input/commands.go). If you add a new command there, you should regenerate the state machine by running:
+
+```
+make generate
+```
+
+Please see the [Makefile](Makefile) for all available targets.
 
 Logging
 -------
@@ -28,35 +55,6 @@ You can then tail the log file in a separate terminal session to see what aretex
 ```
 tail -f debug.log
 ```
-
-Testing
--------
-
-To run all unit tests:
-
-```
-make test
-```
-
-Formatting
-----------
-
-To format Go and Markdown files:
-
-```
-make fmt
-```
-
-Generating
-----------
-
-Some files in the project are generated. To regenerate these:
-
-```
-make generate
-```
-
-Generated files should be checked into the git repository.
 
 Debugging
 ---------

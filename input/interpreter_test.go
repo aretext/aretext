@@ -14,6 +14,11 @@ import (
 	"github.com/aretext/aretext/state"
 )
 
+func init() {
+	// Suppress noisy log output from these tests.
+	log.SetOutput(io.Discard)
+}
+
 func TestInterpreterStateIntegration(t *testing.T) {
 	testCases := []struct {
 		name              string

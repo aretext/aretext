@@ -20,7 +20,7 @@ You can add new menu commands by [editing the config file](configuration.md) to 
 
 After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell (configured by the `$SHELL` environment variable) and execute the shell command (in this case, echoing "hello world").
 
-The "mode" parameter controls how aretext handles the command's input and output. There are four modes:
+The "mode" parameter controls how aretext handles the command's input and output. The table below shows the available modes:
 
 | Mode          | Input | Output                 | Use Cases                                                                     |
 |---------------|-------|------------------------|-------------------------------------------------------------------------------|

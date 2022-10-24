@@ -91,13 +91,9 @@ func menuIconForStyle(style state.MenuStyle) string {
 		return "./"
 	case state.MenuStyleFileLocation:
 		return "@"
-	case state.MenuStyleChildDir:
-		return "↓ "
-	case state.MenuStyleParentDir:
-		return "↑ "
 	case state.MenuStyleInsertChoice:
 		return "+ "
-	case state.MenuStyleWorkingDir:
+	case state.MenuStyleChildDir, state.MenuStyleParentDir, state.MenuStyleWorkingDir:
 		return "§ "
 	default:
 		panic("Unrecognized menu style")
@@ -112,13 +108,9 @@ func menuPromptForStyle(style state.MenuStyle) string {
 		return "file path"
 	case state.MenuStyleFileLocation:
 		return ""
-	case state.MenuStyleChildDir:
-		return "child directory"
-	case state.MenuStyleParentDir:
-		return "parent directory"
 	case state.MenuStyleInsertChoice:
 		return ""
-	case state.MenuStyleWorkingDir:
+	case state.MenuStyleChildDir, state.MenuStyleParentDir, state.MenuStyleWorkingDir:
 		return "working directory"
 	default:
 		panic("Unrecognized menu style")

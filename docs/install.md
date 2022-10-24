@@ -65,7 +65,7 @@ cd aretext
 make install
 ```
 
-This will install aretext in `$(go env GOPATH)/bin`, which you can add to your `$PATH` environment variable. If you use bash, set `$PATH` in your `~/.bashrc` or `~/.bash_profile` like this:
+This will install aretext in `$(go env GOPATH)/bin`, which you can add to your `$PATH` environment variable. If you use bash, put this line in your `~/.bashrc` or `~/.bash_profile`:
 
 ```
 export PATH=$PATH:$(go env GOPATH)/bin

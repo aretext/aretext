@@ -24,6 +24,13 @@ Starting the editor
 
 To start the editor, run `aretext`. This will start a new, empty document called something like "untitled-1621605673.txt" (the number is a Unix timestamp).
 
+Many users set an alias so they can launch `aretext` quickly. If you are using bash, you can add this line to your `~/.bashrc` or `~/.bash_profile`:
+
+```
+# alias "at" to start aretext
+alias at="aretext"
+```
+
 Inserting text
 --------------
 

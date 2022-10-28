@@ -10,7 +10,8 @@ type Context struct {
 	// InputMode is the current input mode of the editor.
 	InputMode state.InputMode
 
-	// ScrollLines is the number of lines to scroll up or down with Ctrl-U / Ctrl-D.
+	// ScrollLines is the number of lines to scroll up or down with Ctrl-F / Ctrl-N.
+	// Ctrl-U / Ctrl-D scroll for half of that amount.
 	ScrollLines uint64
 
 	// Glob patterns for directories to hide from file search.
@@ -25,7 +26,7 @@ type Context struct {
 
 func ContextFromEditorState(editorState *state.EditorState) Context {
 	_, screenHeight := editorState.ScreenSize()
-	scrollLines := uint64(screenHeight) / 2
+	scrollLines := uint64(screenHeight)
 	return Context{
 		InputMode:           editorState.InputMode(),
 		ScrollLines:         scrollLines,

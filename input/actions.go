@@ -115,10 +115,12 @@ func CursorToPrevMatchingChar(char rune, count uint64, includeChar bool) Action 
 	}
 }
 
-func ScrollUp(ctx Context) Action {
+func ScrollUp(ctx Context, half bool) Action {
 	scrollLines := ctx.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
+	} else if half {
+		scrollLines /= 2
 	}
 
 	return func(s *state.EditorState) {
@@ -131,10 +133,12 @@ func ScrollUp(ctx Context) Action {
 	}
 }
 
-func ScrollDown(ctx Context) Action {
+func ScrollDown(ctx Context, half bool) Action {
 	scrollLines := ctx.ScrollLines
 	if scrollLines < 1 {
 		scrollLines = 1
+	} else if half {
+		scrollLines /= 2
 	}
 
 	return func(s *state.EditorState) {

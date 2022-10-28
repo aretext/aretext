@@ -280,7 +280,25 @@ func cursorCommands() []Command {
 				return keyExpr(tcell.KeyCtrlU)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(ScrollUp(ctx))
+				return decorate(ScrollUp(ctx, true))
+			},
+		},
+		{
+			Name: "scroll forward (ctrl-f)",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyCtrlF)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(ScrollDown(ctx, false))
+			},
+		},
+		{
+			Name: "scroll back (ctrl-b)",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyCtrlB)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(ScrollUp(ctx, false))
 			},
 		},
 		{
@@ -289,7 +307,7 @@ func cursorCommands() []Command {
 				return keyExpr(tcell.KeyCtrlD)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(ScrollDown(ctx))
+				return decorate(ScrollDown(ctx, true))
 			},
 		},
 	}

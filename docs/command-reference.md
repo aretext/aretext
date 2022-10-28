@@ -43,8 +43,10 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor next unmatched close brace                               | ]}          |                       |
 | cursor prev unmatched open paren                                | [(          |                       |
 | cursor next unmatched close paren                               | ])          |                       |
-| scroll up                                                       | ctrl-u      |                       |
-| scroll down                                                     | ctrl-d      |                       |
+| scroll up (full page)                                           | ctrl-f      |                       |
+| scroll down (full page)                                         | ctrl-b      |                       |
+| scroll up (half page)                                           | ctrl-u      |                       |
+| scroll down (half page)                                         | ctrl-d      |                       |
 | insert                                                          | i           |                       |
 | insert at start of line                                         | I           |                       |
 | append                                                          | a           |                       |

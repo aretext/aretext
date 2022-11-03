@@ -26,17 +26,19 @@ func NewLog() *Log {
 }
 
 // TrackOp tracks a change to the document.
-// This appends a new, uncommitted change and invalidates any future changes.
+// This reverts any changes in the redo log, then appends the new, uncommitted change.
 func (l *Log) TrackOp(op Op) {
-	if len(l.entries) > l.numUndoEntries {
-		// Invalidate future changes.
-		l.entries = l.entries[0:l.numUndoEntries]
+	// Revert all changes from the redo log.
+	// This differs from vim, which discards all changes in the redo log.
+	// Instead, we're following the approach from
+	// "Resolving the Great Undo-Redo Quandary"
+	// (https://github.com/zaboople/klonk/blob/master/TheGURQ.md)
+	// to allow restoration of changes in the redo log.
+	for i := len(l.entries) - 1; i >= l.numUndoEntries; i-- {
+		revertOp := l.entries[i].op.Inverse()
+		l.entries = append(l.entries, logEntry{op: revertOp})
 	}
-
-	if l.numEntriesAtLastSave > l.numUndoEntries {
-		// Invalidate a save point in the future.
-		l.numEntriesAtLastSave = -1
-	}
+	l.numUndoEntries = len(l.entries)
 
 	// Append a new undo entry.
 	l.entries = append(l.entries, logEntry{op: op})

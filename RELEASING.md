@@ -9,7 +9,7 @@ Configure [gpg](https://www.gnupg.org/) so you can sign release artifacts.
 Major and Minor Releases
 ------------------------
 
-1.	Update the version numbers in the [install docs](docs/install.md).
+1.	Update the version numbers in the [install docs](docs/install.md) and commit to the main branch.
 
 2.	Create a release branch:
 
@@ -38,7 +38,7 @@ Patch Releases
 
 Patch releases should be used to fix critical bugs (panics, data corruption, security vulnerabilities, etc.).
 
-1.	Update the version numbers in the [install docs](docs/install.md).
+1.	Update the version numbers in the [install docs](docs/install.md) and commit to the main branch.
 
 2.	Checkout the release branch:
 

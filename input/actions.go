@@ -55,26 +55,26 @@ func CursorDown(count uint64) Action {
 	}
 }
 
-func CursorNextWordStart(count uint64) Action {
+func CursorNextWordStart(count uint64, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordStart(params.TextTree, params.CursorPos, count, false)
+			return locate.NextWordStart(params.TextTree, params.CursorPos, count, withPunctuation, false)
 		})
 	}
 }
 
-func CursorPrevWordStart(count uint64) Action {
+func CursorPrevWordStart(count uint64, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.PrevWordStart(params.TextTree, params.CursorPos, count)
+			return locate.PrevWordStart(params.TextTree, params.CursorPos, count, withPunctuation)
 		})
 	}
 }
 
-func CursorNextWordEnd(count uint64) Action {
+func CursorNextWordEnd(count uint64, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-			return locate.NextWordEnd(params.TextTree, params.CursorPos, count)
+			return locate.NextWordEnd(params.TextTree, params.CursorPos, count, withPunctuation)
 		})
 	}
 }
@@ -446,9 +446,11 @@ func DeleteToStartOfLineNonWhitespace(clipboardPage clipboard.PageId) Action {
 }
 
 func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
+	withPunctuation := false
+
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true)
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, withPunctuation, true)
 			if endPos == params.CursorPos {
 				// The cursor didn't move, so we're on an empty line.
 				// Attempt to delete the newline at the end of the line.
@@ -560,10 +562,12 @@ func OutdentLine(count uint64) Action {
 }
 
 func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
+	withPunctuation := false
+
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
 			startPos := params.CursorPos
-			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, true)
+			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, withPunctuation, true)
 			return startPos, endPos
 		})
 	}

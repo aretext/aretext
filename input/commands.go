@@ -79,9 +79,9 @@ func cursorCommands() []Command {
 			},
 		},
 		{
-			Name: "cursor down (down arrow, j or Enter)",
+			Name: "cursor down (down arrow, j)",
 			BuildExpr: func() vm.Expr {
-				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j'), keyExpr(tcell.KeyEnter)))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorDown(p.Count))

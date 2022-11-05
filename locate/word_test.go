@@ -17,6 +17,7 @@ func TestNextWordStart(t *testing.T) {
 		inputString         string
 		pos                 uint64
 		count               uint64
+		withPunct           bool
 		stopAtEndOfLastLine bool
 		expectedPos         uint64
 	}{
@@ -63,11 +64,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 5,
 		},
 		{
+			name:        "line ending with punctuation",
+			inputString: "abc.\n123",
+			pos:         3,
+			count:       1,
+			expectedPos: 5,
+			withPunct:   true,
+		},
+		{
 			name:        "punctuation before whitespace",
 			inputString: "-   foo",
 			pos:         0,
 			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "punctuation before whitespace",
+			inputString: "-   foo",
+			pos:         0,
+			count:       1,
+			expectedPos: 4,
+			withPunct:   true,
 		},
 		{
 			name:        "empty line to next word",
@@ -91,11 +108,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 3,
 		},
 		{
+			name:        "non-punctuation to punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			count:       1,
+			expectedPos: 11,
+			withPunct:   true,
+		},
+		{
 			name:        "punctuation to non-punctuation",
 			inputString: "abc/def/ghi",
 			pos:         3,
 			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "punctuation to non-punctuation",
+			inputString: "abc/def/ghi",
+			pos:         3,
+			count:       1,
+			expectedPos: 11,
+			withPunct:   true,
 		},
 		{
 			name:        "repeated punctuation",
@@ -105,11 +138,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 7,
 		},
 		{
+			name:        "repeated punctuation",
+			inputString: "abc////cde",
+			pos:         3,
+			count:       1,
+			expectedPos: 10,
+			withPunct:   true,
+		},
+		{
 			name:        "underscores treated as non-punctuation",
 			inputString: "abc_def ghi",
 			pos:         0,
 			count:       1,
 			expectedPos: 8,
+		},
+		{
+			name:        "underscores treated as non-punctuation",
+			inputString: "abc_def ghi",
+			pos:         0,
+			count:       1,
+			expectedPos: 8,
+			withPunct:   true,
 		},
 		{
 			name:        "last word in document",
@@ -162,7 +211,7 @@ func TestNextWordStart(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.stopAtEndOfLastLine)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.withPunct, tc.stopAtEndOfLastLine)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -175,6 +224,7 @@ func TestNextWordEnd(t *testing.T) {
 		pos         uint64
 		count       uint64
 		expectedPos uint64
+		withPunct   bool
 	}{
 		{
 			name:        "empty",
@@ -233,6 +283,14 @@ func TestNextWordEnd(t *testing.T) {
 			expectedPos: 2,
 		},
 		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			count:       1,
+			expectedPos: 10,
+			withPunct:   true,
+		},
+		{
 			name:        "last word in document, third to last character",
 			inputString: "foo bar",
 			pos:         4,
@@ -273,7 +331,7 @@ func TestNextWordEnd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordEnd(textTree, tc.pos, tc.count)
+			actualPos := NextWordEnd(textTree, tc.pos, tc.count, tc.withPunct)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -286,6 +344,7 @@ func TestPrevWordStart(t *testing.T) {
 		pos         uint64
 		count       uint64
 		expectedPos uint64
+		withPunct   bool
 	}{
 		{
 			name:        "empty",
@@ -371,13 +430,21 @@ func TestPrevWordStart(t *testing.T) {
 			count:       3,
 			expectedPos: 12,
 		},
+		{
+			name:        "count three, with punctuation",
+			inputString: "lorem, ipsum, dolor, sit, amet",
+			withPunct:   true,
+			pos:         29,
+			count:       3,
+			expectedPos: 14,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := PrevWordStart(textTree, tc.pos, tc.count)
+			actualPos := PrevWordStart(textTree, tc.pos, tc.count, tc.withPunct)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

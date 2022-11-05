@@ -11,8 +11,8 @@ import (
 // Word boundaries occur:
 //  1. at the first non-whitespace after a whitespace
 //  2. at the start of an empty line
-//  3. between punctuation and non-punctuation
-func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEndOfLastLine bool) uint64 {
+//  3. between punctuation and non-punctuation (unless withPunctuation=true)
+func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunctuation, stopAtEndOfLastLine bool) uint64 {
 	if targetCount == 0 {
 		return pos
 	}
@@ -47,7 +47,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 
 		isWhitespace := gc.IsWhitespace()
 		hasNewline := gc.HasNewline()
-		isPunct := isPunct(gc)
+		isPunct := !withPunctuation && isPunct(gc)
 
 		if (prevWasWhitespace && !isWhitespace) ||
 			(prevWasPunct && !isPunct && !isWhitespace) ||
@@ -75,7 +75,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, stopAtEn
 
 // PrevWordStart locates the start of the word before the cursor.
 // It is the inverse of NextWordStart.
-func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
+func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunctuation bool) uint64 {
 	if targetCount == 0 {
 		return pos
 	}
@@ -105,7 +105,7 @@ func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 
 		isWhitespace := gc.IsWhitespace()
 		hasNewline := gc.HasNewline()
-		isPunct := isPunct(gc)
+		isPunct := !withPunctuation && isPunct(gc)
 
 		if (isWhitespace && !prevWasWhitespace) ||
 			(isPunct && !prevWasPunct && !prevWasWhitespace) ||
@@ -130,7 +130,7 @@ func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 // NextWordEnd locates the next word-end boundary after the cursor.
 // The word break rules are the same as for NextWordStart, except
 // that empty lines are NOT treated as word boundaries.
-func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
+func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64, withPunctuation bool) uint64 {
 	if targetCount == 0 {
 		return pos
 	}
@@ -169,7 +169,7 @@ func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64) uint64 {
 		}
 
 		isWhitespace := gc.IsWhitespace()
-		isPunct := isPunct(gc)
+		isPunct := !withPunctuation && isPunct(gc)
 
 		if (!prevWasWhitespace && isWhitespace) ||
 			(prevWasPunct != isPunct) {

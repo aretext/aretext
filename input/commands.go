@@ -79,9 +79,9 @@ func cursorCommands() []Command {
 			},
 		},
 		{
-			Name: "cursor down (down arrow or j)",
+			Name: "cursor down (down arrow, j or Enter)",
 			BuildExpr: func() vm.Expr {
-				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j')))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j'), keyExpr(tcell.KeyEnter)))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorDown(p.Count))
@@ -102,7 +102,7 @@ func cursorCommands() []Command {
 				return cmdExpr("w", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorNextWordStart(p.Count))
+				return decorate(CursorNextWordStart(p.Count, false))
 			},
 		},
 		{
@@ -111,7 +111,25 @@ func cursorCommands() []Command {
 				return cmdExpr("b", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorPrevWordStart(p.Count))
+				return decorate(CursorPrevWordStart(p.Count, false))
+			},
+		},
+		{
+			Name: "cursor next word start - words can contain puctuation (W)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("W", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextWordStart(p.Count, true))
+			},
+		},
+		{
+			Name: "cursor prev word start - words can contain puctuation (B)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("B", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorPrevWordStart(p.Count, true))
 			},
 		},
 		{
@@ -120,7 +138,16 @@ func cursorCommands() []Command {
 				return cmdExpr("e", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CursorNextWordEnd(p.Count))
+				return decorate(CursorNextWordEnd(p.Count, false))
+			},
+		},
+		{
+			Name: "cursor next word end - words can contain punctuation (E)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("E", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextWordEnd(p.Count, true))
 			},
 		},
 		{

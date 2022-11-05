@@ -17,6 +17,7 @@ func TestNextWordStart(t *testing.T) {
 		inputString         string
 		pos                 uint64
 		count               uint64
+		withPunct           bool
 		stopAtEndOfLastLine bool
 		expectedPos         uint64
 	}{
@@ -156,13 +157,21 @@ func TestNextWordStart(t *testing.T) {
 			stopAtEndOfLastLine: true,
 			expectedPos:         15,
 		},
+		{
+			name:        "next word with punctuation",
+			inputString: "foo bar, baz bat, lorem",
+			pos:         0,
+			count:       4,
+			withPunct:   true,
+			expectedPos: 18,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.stopAtEndOfLastLine)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.withPunct, tc.stopAtEndOfLastLine)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -175,6 +184,7 @@ func TestNextWordEnd(t *testing.T) {
 		pos         uint64
 		count       uint64
 		expectedPos uint64
+		withPunct   bool
 	}{
 		{
 			name:        "empty",
@@ -267,13 +277,21 @@ func TestNextWordEnd(t *testing.T) {
 			count:       3,
 			expectedPos: 16,
 		},
+		{
+			name:        "count three, with punctuation",
+			inputString: "lorem, ipsum, dolor, sit, amet",
+			withPunct:   true,
+			pos:         2,
+			count:       3,
+			expectedPos: 19,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordEnd(textTree, tc.pos, tc.count)
+			actualPos := NextWordEnd(textTree, tc.pos, tc.count, tc.withPunct)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}
@@ -286,6 +304,7 @@ func TestPrevWordStart(t *testing.T) {
 		pos         uint64
 		count       uint64
 		expectedPos uint64
+		withPunct   bool
 	}{
 		{
 			name:        "empty",
@@ -371,13 +390,21 @@ func TestPrevWordStart(t *testing.T) {
 			count:       3,
 			expectedPos: 12,
 		},
+		{
+			name:        "count three, with punctuation",
+			inputString: "lorem, ipsum, dolor, sit, amet",
+			withPunct:   true,
+			pos:         29,
+			count:       3,
+			expectedPos: 14,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := PrevWordStart(textTree, tc.pos, tc.count)
+			actualPos := PrevWordStart(textTree, tc.pos, tc.count, tc.withPunct)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

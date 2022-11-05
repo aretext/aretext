@@ -47,11 +47,11 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunc
 
 		isWhitespace := gc.IsWhitespace()
 		hasNewline := gc.HasNewline()
-		isPunct := !withPunctuation && isPunct(gc)
+		isPunct := isPunct(gc)
 
 		if (prevWasWhitespace && !isWhitespace) ||
-			(prevWasPunct && !isPunct && !isWhitespace) ||
-			(!prevWasPunct && isPunct) ||
+			(!withPunctuation && prevWasPunct && !isPunct && !isWhitespace) ||
+			(!withPunctuation && !prevWasPunct && isPunct) ||
 			(prevHasNewline && hasNewline) {
 			count++
 		}
@@ -105,11 +105,11 @@ func PrevWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunc
 
 		isWhitespace := gc.IsWhitespace()
 		hasNewline := gc.HasNewline()
-		isPunct := !withPunctuation && isPunct(gc)
+		isPunct := isPunct(gc)
 
 		if (isWhitespace && !prevWasWhitespace) ||
-			(isPunct && !prevWasPunct && !prevWasWhitespace) ||
-			(!isPunct && prevWasPunct) ||
+			(!withPunctuation && isPunct && !prevWasPunct && !prevWasWhitespace) ||
+			(!withPunctuation && !isPunct && prevWasPunct) ||
 			(hasNewline && prevHasNewline) {
 			count++
 		}
@@ -169,10 +169,10 @@ func NextWordEnd(textTree *text.Tree, pos uint64, targetCount uint64, withPunctu
 		}
 
 		isWhitespace := gc.IsWhitespace()
-		isPunct := !withPunctuation && isPunct(gc)
+		isPunct := isPunct(gc)
 
 		if (!prevWasWhitespace && isWhitespace) ||
-			(prevWasPunct != isPunct) {
+			(!withPunctuation && prevWasPunct != isPunct) {
 			count++
 		}
 

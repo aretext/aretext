@@ -64,11 +64,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 5,
 		},
 		{
+			name:        "line ending with punctuation",
+			inputString: "abc.\n123",
+			pos:         3,
+			count:       1,
+			expectedPos: 5,
+			withPunct:   true,
+		},
+		{
 			name:        "punctuation before whitespace",
 			inputString: "-   foo",
 			pos:         0,
 			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "punctuation before whitespace",
+			inputString: "-   foo",
+			pos:         0,
+			count:       1,
+			expectedPos: 4,
+			withPunct:   true,
 		},
 		{
 			name:        "empty line to next word",
@@ -92,11 +108,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 3,
 		},
 		{
+			name:        "non-punctuation to punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			count:       1,
+			expectedPos: 11,
+			withPunct:   true,
+		},
+		{
 			name:        "punctuation to non-punctuation",
 			inputString: "abc/def/ghi",
 			pos:         3,
 			count:       1,
 			expectedPos: 4,
+		},
+		{
+			name:        "punctuation to non-punctuation",
+			inputString: "abc/def/ghi",
+			pos:         3,
+			count:       1,
+			expectedPos: 11,
+			withPunct:   true,
 		},
 		{
 			name:        "repeated punctuation",
@@ -106,11 +138,27 @@ func TestNextWordStart(t *testing.T) {
 			expectedPos: 7,
 		},
 		{
+			name:        "repeated punctuation",
+			inputString: "abc////cde",
+			pos:         3,
+			count:       1,
+			expectedPos: 10,
+			withPunct:   true,
+		},
+		{
 			name:        "underscores treated as non-punctuation",
 			inputString: "abc_def ghi",
 			pos:         0,
 			count:       1,
 			expectedPos: 8,
+		},
+		{
+			name:        "underscores treated as non-punctuation",
+			inputString: "abc_def ghi",
+			pos:         0,
+			count:       1,
+			expectedPos: 8,
+			withPunct:   true,
 		},
 		{
 			name:        "last word in document",
@@ -156,14 +204,6 @@ func TestNextWordStart(t *testing.T) {
 			count:               4,
 			stopAtEndOfLastLine: true,
 			expectedPos:         15,
-		},
-		{
-			name:        "next word with punctuation",
-			inputString: "foo bar, baz bat, lorem",
-			pos:         0,
-			count:       4,
-			withPunct:   true,
-			expectedPos: 18,
 		},
 	}
 
@@ -243,6 +283,14 @@ func TestNextWordEnd(t *testing.T) {
 			expectedPos: 2,
 		},
 		{
+			name:        "punctuation",
+			inputString: "abc/def/ghi",
+			pos:         1,
+			count:       1,
+			expectedPos: 10,
+			withPunct:   true,
+		},
+		{
 			name:        "last word in document, third to last character",
 			inputString: "foo bar",
 			pos:         4,
@@ -276,14 +324,6 @@ func TestNextWordEnd(t *testing.T) {
 			pos:         2,
 			count:       3,
 			expectedPos: 16,
-		},
-		{
-			name:        "count three, with punctuation",
-			inputString: "lorem, ipsum, dolor, sit, amet",
-			withPunct:   true,
-			pos:         2,
-			count:       3,
-			expectedPos: 19,
 		},
 	}
 

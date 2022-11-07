@@ -206,6 +206,16 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "cursor next word start including punctuation",
+			initialText: "Lorem ipsum,dolor;sit amet consectetur",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone),
+			},
+			expectedCursorPos: 22,
+			expectedText:      "Lorem ipsum,dolor;sit amet consectetur",
+		},
+		{
 			name:        "cursor prev word start",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -222,6 +232,18 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 12,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor prev word start including punctuation",
+			initialText: "Lorem ipsum,dolor;sit amet consectetur",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "Lorem ipsum,dolor;sit amet consectetur",
 		},
 		{
 			name:        "cursor prev word start with count",
@@ -249,6 +271,16 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 10,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor next word end including punctuation",
+			initialText: "Lorem ipsum,dolor;sit amet consectetur",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'E', tcell.ModNone),
+			},
+			expectedCursorPos: 20,
+			expectedText:      "Lorem ipsum,dolor;sit amet consectetur",
 		},
 		{
 			name:        "cursor next word end with count",

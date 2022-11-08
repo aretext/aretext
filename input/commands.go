@@ -63,7 +63,7 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor right (right arrow or l)",
 			BuildExpr: func() vm.Expr {
-				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyRight), runeExpr('l')))
+				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyRight), runeExpr('l'), runeExpr(' ')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorRight(p.Count))
@@ -85,6 +85,15 @@ func cursorCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorDown(p.Count))
+			},
+		},
+		{
+			Name: "first non-whitespace of next line (enter)",
+			BuildExpr: func() vm.Expr {
+				return verbCountThenExpr(keyExpr(tcell.KeyEnter))
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(CursorNextLine(p.Count))
 			},
 		},
 		{

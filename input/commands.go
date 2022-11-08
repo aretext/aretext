@@ -605,7 +605,18 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteToStartOfNextWord(p.Count, p.ClipboardPage),
+					DeleteToStartOfNextWord(p.Count, p.ClipboardPage, false),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete to start of next word - words can contain punctuation (dW)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "W", captureOpts{count: true, clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteToStartOfNextWord(p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

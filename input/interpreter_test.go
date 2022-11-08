@@ -818,6 +818,16 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "\nadipiscing elit",
 		},
 		{
+			name:        "delete to start of next word including punctuation",
+			initialText: "Lorem.ipsum,dolor;sit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "delete a word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

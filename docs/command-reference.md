@@ -68,6 +68,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to start of line after indentation                       | d^          | clipboard page        |
 | delete to end of line                                           | D           | clipboard page        |
 | delete to start of next word                                    | dw          | count, clipboard page |
+| delete to start of next word, including punctuation             | dW          | count, clipboard page |
 | delete a word                                                   | daw         | count, clipboard page |
 | delete inner word                                               | diw         | count, clipboard page |
 | delete to next matching character in line                       | df\{char\}  | count, clipboard page |

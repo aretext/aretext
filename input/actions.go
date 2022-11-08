@@ -445,9 +445,7 @@ func DeleteToStartOfLineNonWhitespace(clipboardPage clipboard.PageId) Action {
 	}
 }
 
-func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
-	withPunctuation := false
-
+func DeleteToStartOfNextWord(count uint64, clipboardPage clipboard.PageId, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
 			endPos := locate.NextWordStart(params.TextTree, params.CursorPos, count, withPunctuation, true)

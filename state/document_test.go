@@ -227,6 +227,67 @@ func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	assert.False(t, state.Menu().Visible())
 }
 
+func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {
+	testCases := []struct {
+		name           string
+		direction      SearchDirection
+		completeSearch bool
+	}{
+		{
+			name:           "search forward, complete search",
+			direction:      SearchDirectionForward,
+			completeSearch: true,
+		},
+		{
+			name:           "search backward, complete search",
+			direction:      SearchDirectionBackward,
+			completeSearch: true,
+		},
+		{
+			name:           "search forward, incomplete search",
+			direction:      SearchDirectionForward,
+			completeSearch: false,
+		},
+		{
+			name:           "search backward, incomplete search",
+			direction:      SearchDirectionBackward,
+			completeSearch: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Load the initial document.
+			path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
+			defer cleanup()
+			state := NewEditorState(5, 3, nil, nil)
+			LoadDocument(state, path, true, startOfDocLocator)
+
+			// Text search.
+			StartSearch(state, tc.direction)
+			AppendRuneToSearchQuery(state, 'e')
+			AppendRuneToSearchQuery(state, 'f')
+			AppendRuneToSearchQuery(state, 'g')
+			if tc.completeSearch {
+				CompleteSearch(state, true)
+			}
+
+			// Update the file with shorter text and reload.
+			err := os.WriteFile(path, []byte("abcefghijk"), 0644)
+			require.NoError(t, err)
+			ReloadDocument(state)
+			defer state.fileWatcher.Stop()
+
+			// Expect we're in normal mode after reload.
+			assert.Equal(t, InputModeNormal, state.InputMode())
+
+			// Expect that the search query and direction are preserved.
+			expectedSearch := searchState{query: "efg", direction: tc.direction}
+			assert.Equal(t, expectedSearch, state.documentBuffer.search)
+		})
+	}
+}
+
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)

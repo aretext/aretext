@@ -57,6 +57,7 @@ func ReloadDocument(state *EditorState) {
 	oldText := oldTextTree.String()
 	oldTextOriginLineNum := oldTextTree.LineNumForPosition(state.documentBuffer.view.textOrigin)
 	oldCursorLineNum, oldCursorCol := locate.PosToLineNumAndCol(oldTextTree, state.documentBuffer.cursor.position)
+	oldSearch := state.documentBuffer.search
 	oldAutoIndent := state.documentBuffer.autoIndent
 	oldShowTabs := state.documentBuffer.showTabs
 	oldShowSpaces := state.documentBuffer.showSpaces
@@ -86,6 +87,12 @@ func ReloadDocument(state *EditorState) {
 		translateLineNum(lineMatches, oldTextOriginLineNum),
 	)
 	ScrollViewToCursor(state)
+
+	// Restore search query and direction.
+	state.documentBuffer.search = searchState{
+		query:     oldSearch.query,
+		direction: oldSearch.direction,
+	}
 
 	// Restore other configuration that might have been toggled with menu commands.
 	state.documentBuffer.autoIndent = oldAutoIndent

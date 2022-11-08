@@ -1480,6 +1480,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nLorem ipsum dolor\nsit \nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "yank to start of next word including punctuation",
+			initialText: "Lorem.ipsum;dolor sit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'y', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'W', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModNone),
+			},
+			expectedCursorPos: 56,
+			expectedText:      "Lorem.ipsum;dolor sit amet consectetur\nLorem.ipsum;dolor \nadipiscing elit",
+		},
+		{
 			name:        "yank a word",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

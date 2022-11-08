@@ -87,6 +87,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | indent line                                                     | &gt;&gt;    |                       |
 | outdent line                                                    | &lt;&lt;    |                       |
 | yank to start of next word                                      | yw          | count, clipboard page |
+| yank to start of next word, including punctuation               | yW          | count, clipboard page |
 | yank a word                                                     | yaw         | count, clipboard page |
 | yank inner word                                                 | yiw         | count, clipboard page |
 | yank line                                                       | yy          | clipboard page        |

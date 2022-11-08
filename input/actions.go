@@ -559,9 +559,7 @@ func OutdentLine(count uint64) Action {
 	}
 }
 
-func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId) Action {
-	withPunctuation := false
-
+func CopyToStartOfNextWord(count uint64, clipboardPage clipboard.PageId, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
 			startPos := params.CursorPos

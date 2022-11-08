@@ -776,7 +776,18 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					CopyToStartOfNextWord(p.Count, p.ClipboardPage),
+					CopyToStartOfNextWord(p.Count, p.ClipboardPage, false),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank to start of next word - words can contain punctuation (yW)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "W", captureOpts{count: true, clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyToStartOfNextWord(p.Count, p.ClipboardPage, true),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

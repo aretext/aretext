@@ -55,6 +55,16 @@ func CursorDown(count uint64) Action {
 	}
 }
 
+func CursorNextLine(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.MoveCursorToLineBelow(s, count)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			lineStartPos := locate.PrevLineBoundary(params.TextTree, params.CursorPos)
+			return locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
+		})
+	}
+}
+
 func CursorNextWordStart(count uint64, withPunctuation bool) Action {
 	return func(s *state.EditorState) {
 		state.MoveCursor(s, func(params state.LocatorParams) uint64 {

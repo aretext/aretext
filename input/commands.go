@@ -61,7 +61,7 @@ func cursorCommands() []Command {
 			},
 		},
 		{
-			Name: "cursor right (right arrow or l)",
+			Name: "cursor right (right arrow or l or space)",
 			BuildExpr: func() vm.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyRight), runeExpr('l'), runeExpr(' ')))
 			},

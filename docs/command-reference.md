@@ -22,7 +22,9 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | cursor right                                                    | l           | count                 |
 | cursor up                                                       | k           | count                 |
 | cursor down                                                     | j           | count                 |
+| cursor forward                                                  | space       | count                 |
 | cursor back                                                     | backspace   | count                 |
+| cursor start of next line after indentation                     | enter       |                       |
 | cursor to next matching character in line                       | f\{char\}   | count                 |
 | cursor to prev matching character in line                       | F\{char\}   | count                 |
 | cursor till next matching character in line                     | t\{char\}   | count                 |

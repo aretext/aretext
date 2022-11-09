@@ -78,6 +78,15 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "cursor forward",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, ' ', tcell.ModNone),
+			},
+			expectedCursorPos: 1,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
 			name:        "cursor left with count",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{
@@ -118,6 +127,15 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 0,
 			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "cursor start of next line",
+			initialText: "Lorem ipsum dolor\n  sit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 20,
+			expectedText:      "Lorem ipsum dolor\n  sit amet consectetur\nadipiscing elit",
 		},
 		{
 			name:        "cursor to next matching in line",

@@ -51,6 +51,40 @@ func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uin
 	return searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
 }
 
+// InnerParenBlock locates the start and end positions inside matching parens.
+func InnerParenBlock(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, uint64) {
+	reader := textTree.ReaderAtPosition(pos)
+	r, _, err := reader.ReadRune()
+	if err != nil {
+		return pos, pos
+	} else if r == '(' {
+		// On an open paren, search forward for matching close paren.
+		endPos, ok := searchForwardMatch(textTree, syntaxParser, pos, '(', ')')
+		if !ok {
+			return pos, pos
+		}
+		return innerCodeBlock(pos, endPos)
+	} else if r == ')' {
+		// On a close paren, search backward for matching open paren.
+		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
+		if !ok {
+			return pos, pos
+		}
+		return innerCodeBlock(startPos, pos)
+	} else {
+		// Search backwards/forwards for open/close parens.
+		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
+		if !ok {
+			return pos, pos
+		}
+		endPos, ok := searchForwardMatch(textTree, syntaxParser, pos, '(', ')')
+		if !ok {
+			return pos, pos
+		}
+		return innerCodeBlock(startPos, endPos)
+	}
+}
+
 func searchForwardMatch(textTree *text.Tree, syntaxParser *parser.P, pos uint64, openRune rune, closeRune rune) (uint64, bool) {
 	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
 	pos++
@@ -117,4 +151,12 @@ func stringOrCommentTokenAtPos(syntaxParser *parser.P, pos uint64) parser.Token 
 		return parser.Token{}
 	}
 	return token
+}
+
+func innerCodeBlock(startPos, endPos uint64) (uint64, uint64) {
+	startPos++
+	if startPos > endPos {
+		endPos = startPos
+	}
+	return startPos, endPos
 }

@@ -387,6 +387,118 @@ abc
 	}
 }
 
+func TestInnerParenBlock(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		pos            uint64
+		syntaxLanguage syntax.Language
+		expectStartPos uint64
+		expectEndPos   uint64
+	}{
+		{
+			name:           "empty",
+			inputString:    "",
+			pos:            0,
+			expectStartPos: 0,
+			expectEndPos:   0,
+		},
+		{
+			name:           "start of unmatched start paren",
+			inputString:    "(abc",
+			pos:            0,
+			expectStartPos: 0,
+			expectEndPos:   0,
+		},
+		{
+			name:           "after unmatched start paren",
+			inputString:    "(abc",
+			pos:            2,
+			expectStartPos: 2,
+			expectEndPos:   2,
+		},
+		{
+			name:           "end of unmatched end paren",
+			inputString:    "a)bc",
+			pos:            1,
+			expectStartPos: 1,
+			expectEndPos:   1,
+		},
+		{
+			name:           "before unmatched end paren",
+			inputString:    "a)bc",
+			pos:            0,
+			expectStartPos: 0,
+			expectEndPos:   0,
+		},
+		{
+			name:           "start of matched paren, no content",
+			inputString:    "()",
+			pos:            0,
+			expectStartPos: 1,
+			expectEndPos:   1,
+		},
+		{
+			name:           "end of matched paren, no content",
+			inputString:    "()",
+			pos:            1,
+			expectStartPos: 1,
+			expectEndPos:   1,
+		},
+		{
+			name:           "start of matched paren, content",
+			inputString:    "(abc)",
+			pos:            0,
+			expectStartPos: 1,
+			expectEndPos:   4,
+		},
+		{
+			name:           "after start paren, content",
+			inputString:    "(abc)",
+			pos:            1,
+			expectStartPos: 1,
+			expectEndPos:   4,
+		},
+		{
+			name:           "before end paren, content",
+			inputString:    "(abc)",
+			pos:            3,
+			expectStartPos: 1,
+			expectEndPos:   4,
+		},
+		{
+			name:           "end of matched paren, content",
+			inputString:    "(abc)",
+			pos:            4,
+			expectStartPos: 1,
+			expectEndPos:   4,
+		},
+		{
+			name:           "before nested paren",
+			inputString:    "(a(b)c)",
+			pos:            1,
+			expectStartPos: 1,
+			expectEndPos:   6,
+		},
+		{
+			name:           "on nested paren",
+			inputString:    "(a(b)c)",
+			pos:            2,
+			expectStartPos: 3,
+			expectEndPos:   4,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
+			actualStartPos, actualEndPos := InnerParenBlock(textTree, syntaxParser, tc.pos)
+			assert.Equal(t, tc.expectStartPos, actualStartPos)
+			assert.Equal(t, tc.expectEndPos, actualEndPos)
+		})
+	}
+}
+
 func textTreeAndSyntaxParser(t *testing.T, s string, syntaxLanguage syntax.Language) (*text.Tree, *parser.P) {
 	textTree, err := text.NewTreeFromString(s)
 	require.NoError(t, err)

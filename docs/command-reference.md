@@ -77,6 +77,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to prev matching character in line                       | dF\{char\}  | count, clipboard page |
 | delete till next matching character in line                     | dt\{char\}  | count, clipboard page |
 | delete till prev matching character in line                     | dT\{char\}  | count, clipboard page |
+| delete inner paren block                                        | dib         | clipboard page        |
 | change word                                                     | cw          | count, clipboard page |
 | change a word                                                   | caw         | count, clipboard page |
 | change inner word                                               | ciw         | count, clipboard page |
@@ -84,6 +85,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change to prev matching character in line                       | cF\{char\}  | count, clipboard page |
 | change till next matching character in line                     | ct\{char\}  | count, clipboard page |
 | change till prev matching character in line                     | cT\{char\}  | count, clipboard page |
+| change inner paren block                                        | cib         | clipboard page        |
 | replace character                                               | r           |                       |
 | toggle case                                                     | ~           |                       |
 | indent line                                                     | &gt;&gt;    |                       |

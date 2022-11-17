@@ -1360,6 +1360,33 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\nsit ametfoobarectetur\nadipiscing elit",
 		},
 		{
+			name:        "delete inner paren block (dib)",
+			initialText: "abc (def) ghi",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+			},
+			expectedCursorPos: 5,
+			expectedText:      "abc () ghi",
+		},
+		{
+			name:        "change inner paren block (cib)",
+			initialText: "abc (def) ghi",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+			},
+			expectedCursorPos: 6,
+			expectedText:      "abc (x) ghi",
+		},
+		{
 			name:        "replace character",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

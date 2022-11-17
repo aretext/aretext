@@ -652,6 +652,17 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete inner paren block (dib)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "ib", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteInnerParenBlock(p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "change word (cw)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "w", captureOpts{count: true, clipboardPage: true})
@@ -729,6 +740,17 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner paren block (cib)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "ib", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeInnerParenBlock(p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},

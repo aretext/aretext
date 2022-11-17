@@ -263,6 +263,23 @@ func CursorNextUnmatchedCloseParen(s *state.EditorState) {
 	})
 }
 
+func DeleteInnerParenBlock(clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
+		}, clipboardPage)
+	}
+}
+
+func ChangeInnerParenBlock(clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
+		}, clipboardPage)
+		EnterInsertMode(s)
+	}
+}
+
 func EnterInsertMode(s *state.EditorState) {
 	state.SetInputMode(s, state.InputModeInsert)
 }

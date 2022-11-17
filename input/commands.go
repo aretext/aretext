@@ -654,7 +654,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "delete inner paren block (dib)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("d", "ib", captureOpts{clipboardPage: true})
+				return altExpr(
+					cmdExpr("d", "ib", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "i(", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "i)", captureOpts{clipboardPage: true}),
+				)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
@@ -746,7 +750,11 @@ func NormalModeCommands() []Command {
 		{
 			Name: "change inner paren block (cib)",
 			BuildExpr: func() vm.Expr {
-				return cmdExpr("c", "ib", captureOpts{clipboardPage: true})
+				return altExpr(
+					cmdExpr("c", "ib", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "i(", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "i)", captureOpts{clipboardPage: true}),
+				)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(

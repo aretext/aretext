@@ -38,15 +38,6 @@ func TestUndoToLastCheckpoint(t *testing.T) {
 	expectedOps = []Op{
 		DeleteOp(4, "yz"),
 		InsertOp(3, "x"),
-		InsertOp(0, "a"),
-		InsertOp(1, "bc"),
-	}
-	assert.Equal(t, expectedOps, ops)
-
-	ops = log.UndoToLastCheckpoint()
-	expectedOps = []Op{
-		DeleteOp(1, "bc"),
-		DeleteOp(0, "a"),
 	}
 	assert.Equal(t, expectedOps, ops)
 

@@ -387,14 +387,14 @@ abc
 	}
 }
 
-func TestParenBlock(t *testing.T) {
+func TestDelimitedBlock(t *testing.T) {
 	testCases := []struct {
-		name           string
-		inputString    string
-		pos            uint64
-		includeParens  bool
-		expectStartPos uint64
-		expectEndPos   uint64
+		name              string
+		inputString       string
+		pos               uint64
+		includeDelimiters bool
+		expectStartPos    uint64
+		expectEndPos      uint64
 	}{
 		{
 			name:           "empty",
@@ -488,12 +488,12 @@ func TestParenBlock(t *testing.T) {
 			expectEndPos:   4,
 		},
 		{
-			name:           "include parens",
-			inputString:    "x (abc) y",
-			pos:            4,
-			includeParens:  true,
-			expectStartPos: 2,
-			expectEndPos:   7,
+			name:              "include parens",
+			inputString:       "x (abc) y",
+			pos:               4,
+			includeDelimiters: true,
+			expectStartPos:    2,
+			expectEndPos:      7,
 		},
 	}
 
@@ -501,7 +501,7 @@ func TestParenBlock(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualStartPos, actualEndPos := ParenBlock(textTree, tc.includeParens, tc.pos)
+			actualStartPos, actualEndPos := DelimitedBlock(textTree, '(', ')', tc.includeDelimiters, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

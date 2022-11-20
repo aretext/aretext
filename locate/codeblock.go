@@ -51,38 +51,50 @@ func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uin
 	return searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
 }
 
-// ParenBlock locates the start and end positions inside matching parens.
-func ParenBlock(textTree *text.Tree, includeParens bool, pos uint64) (uint64, uint64) {
+// DelimitedBlock locates the start and end positions for matched open/close delimiters.
+func DelimitedBlock(textTree *text.Tree, openRune rune, closeRune rune, includeDelimiters bool, pos uint64) (uint64, uint64) {
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
 	if err != nil {
 		return pos, pos
-	} else if r == '(' {
-		// On an open paren, search forward for matching close paren.
-		endPos, ok := searchForwardMatch(textTree, nil, pos, '(', ')')
+	} else if r == openRune {
+		// On an open delimiter, search forward for matching close delimiters.
+		endPos, ok := searchForwardMatch(textTree, nil, pos, openRune, closeRune)
 		if !ok {
 			return pos, pos
 		}
-		return codeBlockRange(includeParens, pos, endPos)
-	} else if r == ')' {
-		// On a close paren, search backward for matching open paren.
-		startPos, ok := searchBackwardMatch(textTree, nil, pos, '(', ')')
+		return delimitedBlockRange(includeDelimiters, pos, endPos)
+	} else if r == closeRune {
+		// On a close delimiter, search backward for matching open delimiters.
+		startPos, ok := searchBackwardMatch(textTree, nil, pos, openRune, closeRune)
 		if !ok {
 			return pos, pos
 		}
-		return codeBlockRange(includeParens, startPos, pos)
+		return delimitedBlockRange(includeDelimiters, startPos, pos)
 	} else {
-		// Search backwards/forwards for open/close parens.
-		startPos, ok := searchBackwardMatch(textTree, nil, pos, '(', ')')
+		// Search backwards/forwards for open/close delimiters.
+		startPos, ok := searchBackwardMatch(textTree, nil, pos, openRune, closeRune)
 		if !ok {
 			return pos, pos
 		}
-		endPos, ok := searchForwardMatch(textTree, nil, pos, '(', ')')
+		endPos, ok := searchForwardMatch(textTree, nil, pos, openRune, closeRune)
 		if !ok {
 			return pos, pos
 		}
-		return codeBlockRange(includeParens, startPos, endPos)
+		return delimitedBlockRange(includeDelimiters, startPos, endPos)
 	}
+}
+
+func delimitedBlockRange(includeDelimiters bool, startPos, endPos uint64) (uint64, uint64) {
+	if includeDelimiters {
+		endPos++
+	} else {
+		startPos++
+	}
+	if startPos > endPos {
+		endPos = startPos
+	}
+	return startPos, endPos
 }
 
 func searchForwardMatch(textTree *text.Tree, syntaxParser *parser.P, pos uint64, openRune rune, closeRune rune) (uint64, bool) {
@@ -151,16 +163,4 @@ func stringOrCommentTokenAtPos(syntaxParser *parser.P, pos uint64) parser.Token 
 		return parser.Token{}
 	}
 	return token
-}
-
-func codeBlockRange(includeDelimiters bool, startPos, endPos uint64) (uint64, uint64) {
-	if includeDelimiters {
-		endPos++
-	} else {
-		startPos++
-	}
-	if startPos > endPos {
-		endPos = startPos
-	}
-	return startPos, endPos
 }

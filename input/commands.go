@@ -1155,6 +1155,17 @@ func VisualModeCommands() []Command {
 					addToMacro{user: true})
 			},
 		},
+		{
+			Name: "select a word (aw)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("aw", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectAWord(p.Count),
+					addToMacro{user: true})
+			},
+		},
 	}...)
 }
 

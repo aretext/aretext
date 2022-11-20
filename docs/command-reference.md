@@ -127,6 +127,7 @@ Visual Mode Commands
 | outdent selection           | &lt;        |                |
 | yank selection              | y           | clipboard page |
 | select inner word           | iw          | count          |
+| select a word               | aw          | count          |
 
 Menu Commands
 -------------

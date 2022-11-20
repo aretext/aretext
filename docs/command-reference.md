@@ -79,6 +79,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete till prev matching character in line                     | dT\{char\}        | count, clipboard page |
 | delete inner paren block                                        | dib / di\( / di\) | clipboard page        |
 | delete a paren block                                            | dab / da\( / da\) | clipboard page        |
+| delete inner brace block                                        | diB / di\{ / di\} | clipboard page        |
+| delete a brace block                                            | daB / da\{ / da\} | clipboard page        |
 | change word                                                     | cw                | count, clipboard page |
 | change a word                                                   | caw               | count, clipboard page |
 | change inner word                                               | ciw               | count, clipboard page |
@@ -88,6 +90,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change till prev matching character in line                     | cT\{char\}        | count, clipboard page |
 | change inner paren block                                        | cib / ci\( / ci\) | clipboard page        |
 | change a paren block                                            | cab / ca\( / ca\) | clipboard page        |
+| change inner brace block                                        | ciB / ci\{ / ci\} | clipboard page        |
+| change a brace block                                            | caB / ca\{ / ca\} | clipboard page        |
 | replace character                                               | r                 |                       |
 | toggle case                                                     | ~                 |                       |
 | indent line                                                     | &gt;&gt;          |                       |
@@ -132,6 +136,8 @@ Visual Mode Commands
 | select a word               | aw             | count          |
 | select inner paren block    | ib / i\( / i\) |                |
 | select a paren block        | ab / a\( / a\) |                |
+| select inner brace block    | iB / i\{ / i\} |                |
+| select a brace block        | aB / a\{ / a\} |                |
 
 Menu Commands
 -------------

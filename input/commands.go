@@ -682,6 +682,36 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete inner brace block (diB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "iB", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "i{", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "i}", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteBraceBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete a brace block (daB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "aB", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "a{", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "a}", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteBraceBlock(true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "change word (cw)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "w", captureOpts{count: true, clipboardPage: true})
@@ -789,6 +819,36 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeParenBlock(true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner brace block (ciB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("c", "iB", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "i{", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "i}", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeBraceBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change a brace block (caB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("c", "aB", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "a{", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "a}", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeBraceBlock(true, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -1223,6 +1283,36 @@ func VisualModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					SelectParenBlock(true),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select inner brace block (iB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("iB", "", captureOpts{}),
+					cmdExpr("i{", "", captureOpts{}),
+					cmdExpr("i}", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectBraceBlock(false),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select a brace block (aB)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("aB", "", captureOpts{}),
+					cmdExpr("a{", "", captureOpts{}),
+					cmdExpr("a}", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectBraceBlock(true),
 					addToMacro{user: true})
 			},
 		},

@@ -271,15 +271,44 @@ func DeleteParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action
 	}
 }
 
+func DeleteBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(params.TextTree, '{', '}', includeBraces, params.CursorPos)
+		}, clipboardPage)
+	}
+}
+
 func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
-		 startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.DelimitedBlock(params.TextTree, '(', ')', includeParens, params.CursorPos)
 		}, clipboardPage)
 
 		if startPos == endPos {
 			// Not within a paren block.
 			return
+		}
+
+		EnterInsertMode(s)
+	}
+}
+
+func ChangeBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(params.TextTree, '{', '}', includeBraces, params.CursorPos)
+		}, clipboardPage)
+
+		if startPos == endPos {
+			// Not within a brace block.
+			return
+		}
+
+		if !includeBraces {
+			state.InsertNewline(s)
+			state.InsertNewline(s)
+			state.MoveCursorToLineAbove(s, 1)
 		}
 
 		EnterInsertMode(s)
@@ -814,6 +843,14 @@ func SelectParenBlock(includeParens bool) Action {
 	return func(s *state.EditorState) {
 		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.DelimitedBlock(params.TextTree, '(', ')', includeParens, params.CursorPos)
+		})
+	}
+}
+
+func SelectBraceBlock(includeBraces bool) Action {
+	return func(s *state.EditorState) {
+		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(params.TextTree, '{', '}', includeBraces, params.CursorPos)
 		})
 	}
 }

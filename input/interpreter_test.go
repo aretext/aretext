@@ -1454,6 +1454,18 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "abc (x) ghi",
 		},
 		{
+			name:        "change inner paren block, outside block",
+			initialText: "abc (def) ghi",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone), // interpret in normal mode, NOT insert mode.
+			},
+			expectedCursorPos: 0,
+			expectedText:      "bc (def) ghi",
+		},
+		{
 			name:        "replace character",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

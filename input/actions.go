@@ -273,9 +273,15 @@ func DeleteParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action
 
 func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
-		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+		 startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.DelimitedBlock(params.TextTree, '(', ')', includeParens, params.CursorPos)
 		}, clipboardPage)
+
+		if startPos == endPos {
+			// Not within a paren block.
+			return
+		}
+
 		EnterInsertMode(s)
 	}
 }

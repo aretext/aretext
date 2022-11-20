@@ -249,13 +249,14 @@ func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 
 // DeleteRange deletes all characters in a range (for example, a word or selection).
 // This moves the cursor to the start position of the range.
-func DeleteRange(state *EditorState, loc RangeLocator, clipboardPage clipboard.PageId) {
+func DeleteRange(state *EditorState, loc RangeLocator, clipboardPage clipboard.PageId) (uint64, uint64) {
 	buffer := state.documentBuffer
 	startPos, endPos := loc(locatorParamsForBuffer(buffer))
 	startLoc := func(LocatorParams) uint64 { return startPos }
 	endLoc := func(LocatorParams) uint64 { return endPos }
 	MoveCursor(state, startLoc)
 	DeleteToPos(state, endLoc, clipboardPage)
+	return startPos, endPos
 }
 
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.

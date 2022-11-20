@@ -52,32 +52,32 @@ func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uin
 }
 
 // ParenBlock locates the start and end positions inside matching parens.
-func ParenBlock(textTree *text.Tree, syntaxParser *parser.P, includeParens bool, pos uint64) (uint64, uint64) {
+func ParenBlock(textTree *text.Tree, includeParens bool, pos uint64) (uint64, uint64) {
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
 	if err != nil {
 		return pos, pos
 	} else if r == '(' {
 		// On an open paren, search forward for matching close paren.
-		endPos, ok := searchForwardMatch(textTree, syntaxParser, pos, '(', ')')
+		endPos, ok := searchForwardMatch(textTree, nil, pos, '(', ')')
 		if !ok {
 			return pos, pos
 		}
 		return codeBlockRange(includeParens, pos, endPos)
 	} else if r == ')' {
 		// On a close paren, search backward for matching open paren.
-		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
+		startPos, ok := searchBackwardMatch(textTree, nil, pos, '(', ')')
 		if !ok {
 			return pos, pos
 		}
 		return codeBlockRange(includeParens, startPos, pos)
 	} else {
 		// Search backwards/forwards for open/close parens.
-		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
+		startPos, ok := searchBackwardMatch(textTree, nil, pos, '(', ')')
 		if !ok {
 			return pos, pos
 		}
-		endPos, ok := searchForwardMatch(textTree, syntaxParser, pos, '(', ')')
+		endPos, ok := searchForwardMatch(textTree, nil, pos, '(', ')')
 		if !ok {
 			return pos, pos
 		}

@@ -392,7 +392,6 @@ func TestParenBlock(t *testing.T) {
 		name           string
 		inputString    string
 		pos            uint64
-		syntaxLanguage syntax.Language
 		includeParens  bool
 		expectStartPos uint64
 		expectEndPos   uint64
@@ -500,8 +499,9 @@ func TestParenBlock(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualStartPos, actualEndPos := ParenBlock(textTree, syntaxParser, tc.includeParens, tc.pos)
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			actualStartPos, actualEndPos := ParenBlock(textTree, tc.includeParens, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

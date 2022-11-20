@@ -1144,6 +1144,17 @@ func VisualModeCommands() []Command {
 					addToMacro{user: true})
 			},
 		},
+		{
+			Name: "select inner word (iw)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("iw", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectInnerWord(p.Count),
+					addToMacro{user: true})
+			},
+		},
 	}...)
 }
 

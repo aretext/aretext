@@ -2083,6 +2083,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum dolor\ntest\nsit amet consectetur\nadipiscing elit",
 		},
 		{
+			name:        "visual mode select inner word",
+			initialText: "abc def ghi",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '~', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "ABC def ghi",
+		},
+		{
 			name:        "record and replay user macro",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

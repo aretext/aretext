@@ -788,6 +788,14 @@ func CopySelectionAndReturnToNormalMode(clipboardPage clipboard.PageId) Action {
 	}
 }
 
+func SelectInnerWord(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
+		})
+	}
+}
+
 func ReplayLastActionMacro(count uint64) Action {
 	return func(s *state.EditorState) {
 		state.ReplayLastActionMacro(s, count)

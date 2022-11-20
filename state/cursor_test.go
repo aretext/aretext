@@ -353,3 +353,19 @@ func TestMoveCursorToStartOfSelection(t *testing.T) {
 		})
 	}
 }
+
+func TestSelectRange(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	state.documentBuffer.textTree = textTree
+	state.documentBuffer.selector.Start(selection.ModeLine, 0)
+	state.documentBuffer.cursor = cursorState{position: 3}
+
+	SelectRange(state, func(LocatorParams) (uint64, uint64) {
+		return 5, 7
+	})
+	assert.Equal(t, selection.ModeChar, state.documentBuffer.SelectionMode())
+	assert.Equal(t, selection.Region{StartPos: 5, EndPos: 7}, state.documentBuffer.SelectedRegion())
+	assert.Equal(t, cursorState{position: 6}, state.documentBuffer.cursor)
+}

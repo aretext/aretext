@@ -177,3 +177,19 @@ func MoveCursorToStartOfSelection(state *EditorState) {
 		return selectedRegion.StartPos
 	})
 }
+
+// SelectRange selects a given range in charwise mode.
+// This will clear any prior selection and move the cursor to the end of the new selection.
+func SelectRange(state *EditorState, loc RangeLocator) {
+	startPos, endPos := loc(locatorParamsForBuffer(state.documentBuffer))
+	selector := state.documentBuffer.selector
+	selector.Clear()
+	selector.Start(selection.ModeChar, startPos)
+	MoveCursor(state, func(p LocatorParams) uint64 {
+		if endPos > 0 {
+			return endPos - 1
+		} else {
+			return 0
+		}
+	})
+}

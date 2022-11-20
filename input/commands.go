@@ -662,7 +662,22 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					DeleteInnerParenBlock(p.ClipboardPage),
+					DeleteParenBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete a paren block (dab)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "ab", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "a(", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "a)", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteParenBlock(true, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -758,7 +773,22 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					ChangeInnerParenBlock(p.ClipboardPage),
+					ChangeParenBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change a paren block (cab)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("c", "ab", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "a(", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "a)", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeParenBlock(true, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -1177,7 +1207,22 @@ func VisualModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					SelectInnerParenBlock,
+					SelectParenBlock(false),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select a paren block (ab)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("ab", "", captureOpts{}),
+					cmdExpr("a(", "", captureOpts{}),
+					cmdExpr("a)", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectParenBlock(true),
 					addToMacro{user: true})
 			},
 		},

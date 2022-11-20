@@ -263,18 +263,18 @@ func CursorNextUnmatchedCloseParen(s *state.EditorState) {
 	})
 }
 
-func DeleteInnerParenBlock(clipboardPage clipboard.PageId) Action {
+func DeleteParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
+			return locate.ParenBlock(params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
 		}, clipboardPage)
 	}
 }
 
-func ChangeInnerParenBlock(clipboardPage clipboard.PageId) Action {
+func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
+			return locate.ParenBlock(params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
 		}, clipboardPage)
 		EnterInsertMode(s)
 	}
@@ -804,10 +804,12 @@ func SelectAWord(count uint64) Action {
 	}
 }
 
-func SelectInnerParenBlock(s *state.EditorState) {
-	state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
-		return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
-	})
+func SelectParenBlock(includeParens bool) Action {
+	return func(s *state.EditorState) {
+		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.ParenBlock(params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
+		})
+	}
 }
 
 func ReplayLastActionMacro(count uint64) Action {

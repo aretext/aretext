@@ -1399,6 +1399,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "abc () ghi",
 		},
 		{
+			name:        "delete a paren block (dib)",
+			initialText: "abc (def) ghi",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '5', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+			},
+			expectedCursorPos: 4,
+			expectedText:      "abc  ghi",
+		},
+		{
 			name:        "change inner paren block (cib)",
 			initialText: "abc (def) ghi",
 			events: []tcell.Event{
@@ -2121,6 +2134,20 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 1,
 			expectedText:      "()",
+		},
+		{
+			name:        "visual mode select a paren block",
+			initialText: "x (abc) yz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+			},
+			expectedCursorPos: 2,
+			expectedText:      "x  yz",
 		},
 		{
 			name:        "record and replay user macro",

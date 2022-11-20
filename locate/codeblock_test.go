@@ -387,12 +387,13 @@ abc
 	}
 }
 
-func TestInnerParenBlock(t *testing.T) {
+func TestParenBlock(t *testing.T) {
 	testCases := []struct {
 		name           string
 		inputString    string
 		pos            uint64
 		syntaxLanguage syntax.Language
+		includeParens  bool
 		expectStartPos uint64
 		expectEndPos   uint64
 	}{
@@ -487,12 +488,20 @@ func TestInnerParenBlock(t *testing.T) {
 			expectStartPos: 3,
 			expectEndPos:   4,
 		},
+		{
+			name:           "include parens",
+			inputString:    "x (abc) y",
+			pos:            4,
+			includeParens:  true,
+			expectStartPos: 2,
+			expectEndPos:   7,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualStartPos, actualEndPos := InnerParenBlock(textTree, syntaxParser, tc.pos)
+			actualStartPos, actualEndPos := ParenBlock(textTree, syntaxParser, tc.includeParens, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

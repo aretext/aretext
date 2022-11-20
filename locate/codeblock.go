@@ -51,8 +51,8 @@ func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uin
 	return searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
 }
 
-// InnerParenBlock locates the start and end positions inside matching parens.
-func InnerParenBlock(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, uint64) {
+// ParenBlock locates the start and end positions inside matching parens.
+func ParenBlock(textTree *text.Tree, syntaxParser *parser.P, includeParens bool, pos uint64) (uint64, uint64) {
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
 	if err != nil {
@@ -63,14 +63,14 @@ func InnerParenBlock(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (u
 		if !ok {
 			return pos, pos
 		}
-		return innerCodeBlock(pos, endPos)
+		return codeBlockRange(includeParens, pos, endPos)
 	} else if r == ')' {
 		// On a close paren, search backward for matching open paren.
 		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
 		if !ok {
 			return pos, pos
 		}
-		return innerCodeBlock(startPos, pos)
+		return codeBlockRange(includeParens, startPos, pos)
 	} else {
 		// Search backwards/forwards for open/close parens.
 		startPos, ok := searchBackwardMatch(textTree, syntaxParser, pos, '(', ')')
@@ -81,7 +81,7 @@ func InnerParenBlock(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (u
 		if !ok {
 			return pos, pos
 		}
-		return innerCodeBlock(startPos, endPos)
+		return codeBlockRange(includeParens, startPos, endPos)
 	}
 }
 
@@ -153,8 +153,12 @@ func stringOrCommentTokenAtPos(syntaxParser *parser.P, pos uint64) parser.Token 
 	return token
 }
 
-func innerCodeBlock(startPos, endPos uint64) (uint64, uint64) {
-	startPos++
+func codeBlockRange(includeDelimiters bool, startPos, endPos uint64) (uint64, uint64) {
+	if includeDelimiters {
+		endPos++
+	} else {
+		startPos++
+	}
 	if startPos > endPos {
 		endPos = startPos
 	}

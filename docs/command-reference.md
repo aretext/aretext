@@ -113,21 +113,22 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 Visual Mode Commands
 --------------------
 
-| Name                        | Key Binding | Options        |
-|-----------------------------|-------------|----------------|
-| toggle visual mode charwise | v           |                |
-| toggle visual mode linewise | V           |                |
-| return to normal mode       | escape      |                |
-| show command menu           | :           |                |
-| delete selection            | x           | clipboard page |
-| delete selection            | d           | clipboard page |
-| change selection            | c           | clipboard page |
-| toggle case for selection   | ~           |                |
-| indent selection            | &gt;        |                |
-| outdent selection           | &lt;        |                |
-| yank selection              | y           | clipboard page |
-| select inner word           | iw          | count          |
-| select a word               | aw          | count          |
+| Name                        | Key Binding    | Options        |
+|-----------------------------|----------------|----------------|
+| toggle visual mode charwise | v              |                |
+| toggle visual mode linewise | V              |                |
+| return to normal mode       | escape         |                |
+| show command menu           | :              |                |
+| delete selection            | x              | clipboard page |
+| delete selection            | d              | clipboard page |
+| change selection            | c              | clipboard page |
+| toggle case for selection   | ~              |                |
+| indent selection            | &gt;           |                |
+| outdent selection           | &lt;           |                |
+| yank selection              | y              | clipboard page |
+| select inner word           | iw             | count          |
+| select a word               | aw             | count          |
+| select inner paren block    | ib / i\( / i\) |                |
 
 Menu Commands
 -------------

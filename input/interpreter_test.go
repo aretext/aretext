@@ -2110,6 +2110,19 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "ghi",
 		},
 		{
+			name:        "visual mode select inner paren block",
+			initialText: "(abc)",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+			},
+			expectedCursorPos: 1,
+			expectedText:      "()",
+		},
+		{
 			name:        "record and replay user macro",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

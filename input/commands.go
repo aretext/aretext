@@ -1166,6 +1166,21 @@ func VisualModeCommands() []Command {
 					addToMacro{user: true})
 			},
 		},
+		{
+			Name: "select inner paren block (ib)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("ib", "", captureOpts{}),
+					cmdExpr("i(", "", captureOpts{}),
+					cmdExpr("i)", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectInnerParenBlock,
+					addToMacro{user: true})
+			},
+		},
 	}...)
 }
 

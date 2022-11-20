@@ -804,6 +804,12 @@ func SelectAWord(count uint64) Action {
 	}
 }
 
+func SelectInnerParenBlock(s *state.EditorState) {
+	state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+		return locate.InnerParenBlock(params.TextTree, params.SyntaxParser, params.CursorPos)
+	})
+}
+
 func ReplayLastActionMacro(count uint64) Action {
 	return func(s *state.EditorState) {
 		state.ReplayLastActionMacro(s, count)

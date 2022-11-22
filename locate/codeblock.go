@@ -27,7 +27,7 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
-	if err != nil || !(ParenPair.MatchRune(r) || BracketPair.MatchRune(r) || BracePair.MatchRune(r)) {
+	if err != nil || !(ParenPair.MatchRune(r) || BracketPair.MatchRune(r) || BracePair.MatchRune(r) || AnglePair.MatchRune(r)) {
 		return 0, false
 	}
 
@@ -44,6 +44,10 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 		return searchForwardMatch(BracketPair, textTree, syntaxParser, startToken, pos)
 	case BracketPair.CloseRune:
 		return searchBackwardMatch(BracketPair, textTree, syntaxParser, startToken, pos)
+	case AnglePair.OpenRune:
+		return searchForwardMatch(AnglePair, textTree, syntaxParser, startToken, pos)
+	case AnglePair.CloseRune:
+		return searchBackwardMatch(AnglePair, textTree, syntaxParser, startToken, pos)
 	default:
 		return 0, false
 	}

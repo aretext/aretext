@@ -60,6 +60,13 @@ func TestMatchingCodeBlockDelimiter(t *testing.T) {
 			expectPos:   10,
 		},
 		{
+			name:        "match angle brackets",
+			inputString: "foo < bar > baz",
+			pos:         4,
+			expectMatch: true,
+			expectPos:   10,
+		},
+		{
 			name:        "match with nesting",
 			inputString: "Lorem (ipsum (dolor (sit (amet) consectetur) adipiscing) elit) sed",
 			pos:         13,

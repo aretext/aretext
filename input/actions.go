@@ -279,6 +279,14 @@ func DeleteBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action
 	}
 }
 
+func DeleteAngleBlock(includeAngleBrackets bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(locate.AnglePair, params.TextTree, params.SyntaxParser, includeAngleBrackets, params.CursorPos)
+		}, clipboardPage)
+	}
+}
+
 func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
@@ -309,6 +317,21 @@ func ChangeBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action
 			state.InsertNewline(s)
 			state.InsertNewline(s)
 			state.MoveCursorToLineAbove(s, 1)
+		}
+
+		EnterInsertMode(s)
+	}
+}
+
+func ChangeAngleBlock(includeAngleBrackets bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(locate.AnglePair, params.TextTree, params.SyntaxParser, includeAngleBrackets, params.CursorPos)
+		}, clipboardPage)
+
+		if startPos == endPos {
+			// Not within a paren block.
+			return
 		}
 
 		EnterInsertMode(s)
@@ -851,6 +874,14 @@ func SelectBraceBlock(includeBraces bool) Action {
 	return func(s *state.EditorState) {
 		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.DelimitedBlock(locate.BracePair, params.TextTree, params.SyntaxParser, includeBraces, params.CursorPos)
+		})
+	}
+}
+
+func SelectAngleBlock(includeAngleBrackets bool) Action {
+	return func(s *state.EditorState) {
+		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.DelimitedBlock(locate.AnglePair, params.TextTree, params.SyntaxParser, includeAngleBrackets, params.CursorPos)
 		})
 	}
 }

@@ -19,6 +19,7 @@ var (
 	ParenPair   = DelimiterPair{OpenRune: '(', CloseRune: ')'}
 	BracketPair = DelimiterPair{OpenRune: '[', CloseRune: ']'}
 	BracePair   = DelimiterPair{OpenRune: '{', CloseRune: '}'}
+	AnglePair   = DelimiterPair{OpenRune: '<', CloseRune: '>'}
 )
 
 // MatchingCodeBlockDelimiter locates the matching paren, brace, or bracket at a position, if it exists.

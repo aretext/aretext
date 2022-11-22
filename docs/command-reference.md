@@ -81,6 +81,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete a paren block                                            | dab / da\( / da\) | clipboard page        |
 | delete inner brace block                                        | diB / di\{ / di\} | clipboard page        |
 | delete a brace block                                            | daB / da\{ / da\} | clipboard page        |
+| delete inner angle block                                        | di&lt; / di&gt;   | clipboard page        |
+| delete an angle block                                           | da&lt; / da&gt;   | clipboard page        |
 | change word                                                     | cw                | count, clipboard page |
 | change a word                                                   | caw               | count, clipboard page |
 | change inner word                                               | ciw               | count, clipboard page |
@@ -92,6 +94,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change a paren block                                            | cab / ca\( / ca\) | clipboard page        |
 | change inner brace block                                        | ciB / ci\{ / ci\} | clipboard page        |
 | change a brace block                                            | caB / ca\{ / ca\} | clipboard page        |
+| change inner angle block                                        | ci&lt; / ci&gt;   | clipboard page        |
+| change an angle block                                           | ca&lt; / ca&gt;   | clipboard page        |
 | replace character                                               | r                 |                       |
 | toggle case                                                     | ~                 |                       |
 | indent line                                                     | &gt;&gt;          |                       |
@@ -138,6 +142,8 @@ Visual Mode Commands
 | select a paren block        | ab / a\( / a\) |                |
 | select inner brace block    | iB / i\{ / i\} |                |
 | select a brace block        | aB / a\{ / a\} |                |
+| select inner angle block    | i&lt; / i&gt;  |                |
+| select an angle block       | a&lt; / a&gt;  |                |
 
 Menu Commands
 -------------

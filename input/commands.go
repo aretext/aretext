@@ -712,6 +712,34 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete inner angle block (di<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "i<", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "i>", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteAngleBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete an angle block block (da<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("d", "a<", captureOpts{clipboardPage: true}),
+					cmdExpr("d", "a>", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteAngleBlock(true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "change word (cw)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "w", captureOpts{count: true, clipboardPage: true})
@@ -849,6 +877,34 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeBraceBlock(true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner angle block (ci<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("c", "i<", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "i>", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeAngleBlock(false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change an angle block (ca<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("c", "a<", captureOpts{clipboardPage: true}),
+					cmdExpr("c", "a>", captureOpts{clipboardPage: true}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeAngleBlock(true, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -1313,6 +1369,34 @@ func VisualModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					SelectBraceBlock(true),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select inner angle block (i<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("i<", "", captureOpts{}),
+					cmdExpr("i>", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectAngleBlock(false),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select an angle block (a<)",
+			BuildExpr: func() vm.Expr {
+				return altExpr(
+					cmdExpr("a<", "", captureOpts{}),
+					cmdExpr("a>", "", captureOpts{}),
+				)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectAngleBlock(true),
 					addToMacro{user: true})
 			},
 		},

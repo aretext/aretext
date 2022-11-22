@@ -266,7 +266,7 @@ func CursorNextUnmatchedCloseParen(s *state.EditorState) {
 func DeleteParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, includeParens, params.CursorPos)
+			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
 		}, clipboardPage)
 	}
 }
@@ -274,7 +274,7 @@ func DeleteParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action
 func DeleteBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.BracePair, params.TextTree, includeBraces, params.CursorPos)
+			return locate.DelimitedBlock(locate.BracePair, params.TextTree, params.SyntaxParser, includeBraces, params.CursorPos)
 		}, clipboardPage)
 	}
 }
@@ -282,7 +282,7 @@ func DeleteBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action
 func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, includeParens, params.CursorPos)
+			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
 		}, clipboardPage)
 
 		if startPos == endPos {
@@ -297,7 +297,7 @@ func ChangeParenBlock(includeParens bool, clipboardPage clipboard.PageId) Action
 func ChangeBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		startPos, endPos := state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.BracePair, params.TextTree, includeBraces, params.CursorPos)
+			return locate.DelimitedBlock(locate.BracePair, params.TextTree, params.SyntaxParser, includeBraces, params.CursorPos)
 		}, clipboardPage)
 
 		if startPos == endPos {
@@ -842,7 +842,7 @@ func SelectAWord(count uint64) Action {
 func SelectParenBlock(includeParens bool) Action {
 	return func(s *state.EditorState) {
 		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, includeParens, params.CursorPos)
+			return locate.DelimitedBlock(locate.ParenPair, params.TextTree, params.SyntaxParser, includeParens, params.CursorPos)
 		})
 	}
 }
@@ -850,7 +850,7 @@ func SelectParenBlock(includeParens bool) Action {
 func SelectBraceBlock(includeBraces bool) Action {
 	return func(s *state.EditorState) {
 		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
-			return locate.DelimitedBlock(locate.BracePair, params.TextTree, includeBraces, params.CursorPos)
+			return locate.DelimitedBlock(locate.BracePair, params.TextTree, params.SyntaxParser, includeBraces, params.CursorPos)
 		})
 	}
 }

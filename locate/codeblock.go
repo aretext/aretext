@@ -58,7 +58,7 @@ func NextUnmatchedCloseDelimiter(delimiterPair DelimiterPair, textTree *text.Tre
 }
 
 // DelimitedBlock locates the start and end positions for matched open/close delimiters.
-func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, includeDelimiters bool, pos uint64) (uint64, uint64) {
+func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, includeDelimiters bool, pos uint64) (uint64, uint64) {
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
 	if err != nil {

@@ -354,6 +354,7 @@ func TestDelimitedBlock(t *testing.T) {
 		name              string
 		inputString       string
 		pos               uint64
+		syntaxLanguage    syntax.Language
 		includeDelimiters bool
 		expectStartPos    uint64
 		expectEndPos      uint64
@@ -461,9 +462,8 @@ func TestDelimitedBlock(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			textTree, err := text.NewTreeFromString(tc.inputString)
-			require.NoError(t, err)
-			actualStartPos, actualEndPos := DelimitedBlock(ParenPair, textTree, tc.includeDelimiters, tc.pos)
+			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
+			actualStartPos, actualEndPos := DelimitedBlock(ParenPair, textTree, syntaxParser, tc.includeDelimiters, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

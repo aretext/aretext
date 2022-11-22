@@ -192,7 +192,7 @@ abc
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualPos, ok := NextUnmatchedCloseBrace(textTree, syntaxParser, tc.pos)
+			actualPos, ok := NextUnmatchedCloseDelimiter(BracePair, textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
 				assert.Equal(t, tc.expectPos, actualPos)
@@ -254,7 +254,7 @@ abc
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualPos, ok := PrevUnmatchedOpenBrace(textTree, syntaxParser, tc.pos)
+			actualPos, ok := PrevUnmatchedOpenDelimiter(BracePair, textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
 				assert.Equal(t, tc.expectPos, actualPos)
@@ -316,7 +316,7 @@ abc
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualPos, ok := NextUnmatchedCloseParen(textTree, syntaxParser, tc.pos)
+			actualPos, ok := NextUnmatchedCloseDelimiter(ParenPair, textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
 				assert.Equal(t, tc.expectPos, actualPos)
@@ -378,7 +378,7 @@ abc
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualPos, ok := PrevUnmatchedOpenParen(textTree, syntaxParser, tc.pos)
+			actualPos, ok := PrevUnmatchedOpenDelimiter(ParenPair, textTree, syntaxParser, tc.pos)
 			assert.Equal(t, tc.expectMatch, ok)
 			if ok {
 				assert.Equal(t, tc.expectPos, actualPos)

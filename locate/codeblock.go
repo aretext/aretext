@@ -47,24 +47,14 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 	}
 }
 
-// NextUnmatchedCloseBrace locates the next unmatched close brace after a position.
-func NextUnmatchedCloseBrace(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchForwardMatch(BracePair, textTree, syntaxParser, pos)
+// PrevUnmatchedOpenDelimiter locates the previous unmatched open delimiter before a position.
+func PrevUnmatchedOpenDelimiter(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchBackwardMatch(delimiterPair, textTree, syntaxParser, pos)
 }
 
-// PrevUnmatchedOpenBrace locates the previous unmatched open brace before a position.
-func PrevUnmatchedOpenBrace(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchBackwardMatch(BracePair, textTree, syntaxParser, pos)
-}
-
-// NextUnmatchedCloseParen locates the next unmatched close paren after a position.
-func NextUnmatchedCloseParen(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchForwardMatch(ParenPair, textTree, syntaxParser, pos)
-}
-
-// PrevUnmatchedOpenParen locates the previous unmatched open paren before a position.
-func PrevUnmatchedOpenParen(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchBackwardMatch(ParenPair, textTree, syntaxParser, pos)
+// NextUnmatchedCloseDelimiter locates the next unmatched close delimiter after a position.
+func NextUnmatchedCloseDelimiter(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	return searchForwardMatch(delimiterPair, textTree, syntaxParser, pos)
 }
 
 // DelimitedBlock locates the start and end positions for matched open/close delimiters.

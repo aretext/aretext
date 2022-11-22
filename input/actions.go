@@ -221,7 +221,7 @@ func CursorMatchingCodeBlockDelimiter(s *state.EditorState) {
 
 func CursorPrevUnmatchedOpenBrace(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		matchPos, hasMatch := locate.PrevUnmatchedOpenBrace(params.TextTree, params.SyntaxParser, params.CursorPos)
+		matchPos, hasMatch := locate.PrevUnmatchedOpenDelimiter(locate.BracePair, params.TextTree, params.SyntaxParser, params.CursorPos)
 		if hasMatch {
 			return matchPos
 		} else {
@@ -232,7 +232,7 @@ func CursorPrevUnmatchedOpenBrace(s *state.EditorState) {
 
 func CursorNextUnmatchedCloseBrace(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		matchPos, hasMatch := locate.NextUnmatchedCloseBrace(params.TextTree, params.SyntaxParser, params.CursorPos)
+		matchPos, hasMatch := locate.NextUnmatchedCloseDelimiter(locate.BracePair, params.TextTree, params.SyntaxParser, params.CursorPos)
 		if hasMatch {
 			return matchPos
 		} else {
@@ -243,7 +243,7 @@ func CursorNextUnmatchedCloseBrace(s *state.EditorState) {
 
 func CursorPrevUnmatchedOpenParen(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		matchPos, hasMatch := locate.PrevUnmatchedOpenParen(params.TextTree, params.SyntaxParser, params.CursorPos)
+		matchPos, hasMatch := locate.PrevUnmatchedOpenDelimiter(locate.ParenPair, params.TextTree, params.SyntaxParser, params.CursorPos)
 		if hasMatch {
 			return matchPos
 		} else {
@@ -254,7 +254,7 @@ func CursorPrevUnmatchedOpenParen(s *state.EditorState) {
 
 func CursorNextUnmatchedCloseParen(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
-		matchPos, hasMatch := locate.NextUnmatchedCloseParen(params.TextTree, params.SyntaxParser, params.CursorPos)
+		matchPos, hasMatch := locate.NextUnmatchedCloseDelimiter(locate.ParenPair, params.TextTree, params.SyntaxParser, params.CursorPos)
 		if hasMatch {
 			return matchPos
 		} else {

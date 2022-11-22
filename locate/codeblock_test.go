@@ -501,7 +501,7 @@ func TestDelimitedBlock(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualStartPos, actualEndPos := DelimitedBlock(textTree, '(', ')', tc.includeDelimiters, tc.pos)
+			actualStartPos, actualEndPos := DelimitedBlock(ParenPair, textTree, tc.includeDelimiters, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

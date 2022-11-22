@@ -59,48 +59,28 @@ func NextUnmatchedCloseDelimiter(delimiterPair DelimiterPair, textTree *text.Tre
 
 // DelimitedBlock locates the start and end positions for matched open/close delimiters.
 func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, includeDelimiters bool, pos uint64) (uint64, uint64) {
-	reader := textTree.ReaderAtPosition(pos)
-	r, _, err := reader.ReadRune()
-	if err != nil {
-		return pos, pos
-	} else if r == delimiterPair.OpenRune {
-		// On an open delimiter, search forward for matching close delimiters.
-		endPos, ok := searchForwardMatch(delimiterPair, textTree, nil, pos)
-		if !ok {
+	startPos := pos + 1
+	reader := textTree.ReverseReaderAtPosition(startPos)
+	for {
+		r, _, err := reader.ReadRune()
+		if err != nil {
 			return pos, pos
 		}
-		return delimitedBlockRange(includeDelimiters, pos, endPos)
-	} else if r == delimiterPair.CloseRune {
-		// On a close delimiter, search backward for matching open delimiters.
-		startPos, ok := searchBackwardMatch(delimiterPair, textTree, nil, pos)
-		if !ok {
-			return pos, pos
-		}
-		return delimitedBlockRange(includeDelimiters, startPos, pos)
-	} else {
-		// Search backwards/forwards for open/close delimiters.
-		startPos, ok := searchBackwardMatch(delimiterPair, textTree, nil, pos)
-		if !ok {
-			return pos, pos
-		}
-		endPos, ok := searchForwardMatch(delimiterPair, textTree, nil, pos)
-		if !ok {
-			return pos, pos
-		}
-		return delimitedBlockRange(includeDelimiters, startPos, endPos)
-	}
-}
 
-func delimitedBlockRange(includeDelimiters bool, startPos, endPos uint64) (uint64, uint64) {
-	if includeDelimiters {
-		endPos++
-	} else {
-		startPos++
+		startPos--
+
+		if r == delimiterPair.OpenRune {
+			endPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, startPos)
+			if ok {
+				if includeDelimiters {
+					endPos++
+				} else {
+					startPos++
+				}
+				return startPos, endPos
+			}
+		}
 	}
-	if startPos > endPos {
-		endPos = startPos
-	}
-	return startPos, endPos
 }
 
 func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {

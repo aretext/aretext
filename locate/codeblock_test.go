@@ -458,6 +458,22 @@ func TestDelimitedBlock(t *testing.T) {
 			expectStartPos:    2,
 			expectEndPos:      7,
 		},
+		{
+			name:           "parens within Go string",
+			inputString:    `(x == "(y + z)")`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            10,
+			expectStartPos: 8,
+			expectEndPos:   13,
+		},
+		{
+			name:           "unmatched parens within Go string",
+			inputString:    `(x == "(y + z")`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            10,
+			expectStartPos: 1,
+			expectEndPos:   14,
+		},
 	}
 
 	for _, tc := range testCases {

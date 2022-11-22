@@ -23,6 +23,7 @@ var (
 
 // MatchingCodeBlockDelimiter locates the matching paren, brace, or bracket at a position, if it exists.
 func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
+	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
 	reader := textTree.ReaderAtPosition(pos)
 	r, _, err := reader.ReadRune()
 	if err != nil || !(ParenPair.MatchRune(r) || BracketPair.MatchRune(r) || BracePair.MatchRune(r)) {
@@ -31,17 +32,17 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 
 	switch r {
 	case ParenPair.OpenRune:
-		return searchForwardMatch(ParenPair, textTree, syntaxParser, pos)
+		return searchForwardMatch(ParenPair, textTree, syntaxParser, startToken, pos)
 	case ParenPair.CloseRune:
-		return searchBackwardMatch(ParenPair, textTree, syntaxParser, pos)
+		return searchBackwardMatch(ParenPair, textTree, syntaxParser, startToken, pos)
 	case BracePair.OpenRune:
-		return searchForwardMatch(BracePair, textTree, syntaxParser, pos)
+		return searchForwardMatch(BracePair, textTree, syntaxParser, startToken, pos)
 	case BracePair.CloseRune:
-		return searchBackwardMatch(BracePair, textTree, syntaxParser, pos)
+		return searchBackwardMatch(BracePair, textTree, syntaxParser, startToken, pos)
 	case BracketPair.OpenRune:
-		return searchForwardMatch(BracketPair, textTree, syntaxParser, pos)
+		return searchForwardMatch(BracketPair, textTree, syntaxParser, startToken, pos)
 	case BracketPair.CloseRune:
-		return searchBackwardMatch(BracketPair, textTree, syntaxParser, pos)
+		return searchBackwardMatch(BracketPair, textTree, syntaxParser, startToken, pos)
 	default:
 		return 0, false
 	}
@@ -49,12 +50,24 @@ func MatchingCodeBlockDelimiter(textTree *text.Tree, syntaxParser *parser.P, pos
 
 // PrevUnmatchedOpenDelimiter locates the previous unmatched open delimiter before a position.
 func PrevUnmatchedOpenDelimiter(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchBackwardMatch(delimiterPair, textTree, syntaxParser, pos)
+	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
+	matchPos, ok := searchBackwardMatch(delimiterPair, textTree, syntaxParser, startToken, pos)
+	if !ok && startToken.Role != parser.TokenRoleNone {
+		// If we can't find the delimiter in a comment/string, retry looking outside the comment/string.
+		matchPos, ok = searchBackwardMatch(delimiterPair, textTree, syntaxParser, parser.Token{}, pos)
+	}
+	return matchPos, ok
 }
 
 // NextUnmatchedCloseDelimiter locates the next unmatched close delimiter after a position.
 func NextUnmatchedCloseDelimiter(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	return searchForwardMatch(delimiterPair, textTree, syntaxParser, pos)
+	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
+	matchPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, startToken, pos)
+	if !ok && startToken.Role != parser.TokenRoleNone {
+		// If we can't find the delimiter in a comment/string, retry looking outside the comment/string.
+		matchPos, ok = searchForwardMatch(delimiterPair, textTree, syntaxParser, parser.Token{}, pos)
+	}
+	return matchPos, ok
 }
 
 // DelimitedBlock locates the start and end positions for matched open/close delimiters.
@@ -70,7 +83,8 @@ func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, syntaxPars
 		startPos--
 
 		if r == delimiterPair.OpenRune {
-			endPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, startPos)
+			startToken := stringOrCommentTokenAtPos(syntaxParser, startPos)
+			endPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, startToken, startPos)
 			if ok {
 				if includeDelimiters {
 					endPos++
@@ -83,8 +97,7 @@ func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, syntaxPars
 	}
 }
 
-func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
+func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, matchSyntaxToken parser.Token, pos uint64) (uint64, bool) {
 	pos++
 	depth := 1
 	reader := textTree.ReaderAtPosition(pos)
@@ -95,7 +108,7 @@ func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntax
 		}
 
 		if delimiterPair.MatchRune(r) {
-			if startToken == stringOrCommentTokenAtPos(syntaxParser, pos) {
+			if stringOrCommentTokenAtPos(syntaxParser, pos) == matchSyntaxToken {
 				if r == delimiterPair.OpenRune {
 					depth++
 				} else {
@@ -112,8 +125,7 @@ func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntax
 	}
 }
 
-func searchBackwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, pos uint64) (uint64, bool) {
-	startToken := stringOrCommentTokenAtPos(syntaxParser, pos)
+func searchBackwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, matchSyntaxToken parser.Token, pos uint64) (uint64, bool) {
 	depth := 1
 	reader := textTree.ReverseReaderAtPosition(pos)
 	for {
@@ -125,7 +137,7 @@ func searchBackwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, synta
 		pos--
 
 		if delimiterPair.MatchRune(r) {
-			if startToken == stringOrCommentTokenAtPos(syntaxParser, pos) {
+			if stringOrCommentTokenAtPos(syntaxParser, pos) == matchSyntaxToken {
 				if r == delimiterPair.OpenRune {
 					depth--
 				} else if r == delimiterPair.CloseRune {

@@ -10,7 +10,7 @@ Minimalist text editor with vim-compatible key bindings.
 Key Features
 ------------
 
--	Edit efficiently with nearly 100 supported vim commands.
+-	Edit efficiently with over a hundred supported vim commands.
 -	Find files and commands instantly with built-in fuzzy search.
 -	Easily customize settings for different programming languages and projects.
 
@@ -28,7 +28,7 @@ Project Status
 --------------
 
 -	The user interface is stable, and I am using it as my primary editor.
--	Syntax highlighting is available for [several languages](https://aretext.org/docs/config-reference/#syntax-languages), including Go, Python, Rust, and C.
+-	Syntax highlighting is available for [many languages](https://aretext.org/docs/config-reference/#syntax-languages), including Go, Python, Rust, and C.
 -	Many important vim commands are supported, but there are still many more to add!
 
 See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.

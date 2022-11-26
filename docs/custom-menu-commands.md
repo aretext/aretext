@@ -180,9 +180,9 @@ If you use [tmux](https://wiki.archlinux.org/title/Tmux), you can add a custom m
   config:
     menuCommands:
     - name: split window horizontal
-      shellCmd: tmux split-window -h "aretext $FILEPATH"
+      shellCmd: tmux split-window -h "aretext -line $LINE $FILEPATH"
       mode: silent
     - name: split window vertical
-      shellCmd: tmux split-window -v "aretext $FILEPATH
+      shellCmd: tmux split-window -v "aretext -line $LINE $FILEPATH
       mode: silent
 ```

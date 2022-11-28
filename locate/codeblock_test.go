@@ -398,6 +398,7 @@ func TestDelimitedBlock(t *testing.T) {
 		inputString       string
 		pos               uint64
 		syntaxLanguage    syntax.Language
+		delimiterPair     DelimiterPair
 		includeDelimiters bool
 		expectStartPos    uint64
 		expectEndPos      uint64
@@ -406,6 +407,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "empty",
 			inputString:    "",
 			pos:            0,
+			delimiterPair:  ParenPair,
 			expectStartPos: 0,
 			expectEndPos:   0,
 		},
@@ -413,6 +415,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "start of unmatched start paren",
 			inputString:    "(abc",
 			pos:            0,
+			delimiterPair:  ParenPair,
 			expectStartPos: 0,
 			expectEndPos:   0,
 		},
@@ -420,6 +423,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "after unmatched start paren",
 			inputString:    "(abc",
 			pos:            2,
+			delimiterPair:  ParenPair,
 			expectStartPos: 2,
 			expectEndPos:   2,
 		},
@@ -427,6 +431,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "end of unmatched end paren",
 			inputString:    "a)bc",
 			pos:            1,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   1,
 		},
@@ -434,6 +439,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "before unmatched end paren",
 			inputString:    "a)bc",
 			pos:            0,
+			delimiterPair:  ParenPair,
 			expectStartPos: 0,
 			expectEndPos:   0,
 		},
@@ -441,6 +447,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "start of matched paren, no content",
 			inputString:    "()",
 			pos:            0,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   1,
 		},
@@ -448,6 +455,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "end of matched paren, no content",
 			inputString:    "()",
 			pos:            1,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   1,
 		},
@@ -455,6 +463,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "start of matched paren, content",
 			inputString:    "(abc)",
 			pos:            0,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   4,
 		},
@@ -462,6 +471,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "after start paren, content",
 			inputString:    "(abc)",
 			pos:            1,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   4,
 		},
@@ -469,6 +479,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "before end paren, content",
 			inputString:    "(abc)",
 			pos:            3,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   4,
 		},
@@ -476,6 +487,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "end of matched paren, content",
 			inputString:    "(abc)",
 			pos:            4,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   4,
 		},
@@ -483,6 +495,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "before nested paren",
 			inputString:    "(a(b)c)",
 			pos:            1,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   6,
 		},
@@ -490,6 +503,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:           "on nested paren",
 			inputString:    "(a(b)c)",
 			pos:            2,
+			delimiterPair:  ParenPair,
 			expectStartPos: 3,
 			expectEndPos:   4,
 		},
@@ -497,6 +511,7 @@ func TestDelimitedBlock(t *testing.T) {
 			name:              "include parens",
 			inputString:       "x (abc) y",
 			pos:               4,
+			delimiterPair:     ParenPair,
 			includeDelimiters: true,
 			expectStartPos:    2,
 			expectEndPos:      7,
@@ -506,6 +521,7 @@ func TestDelimitedBlock(t *testing.T) {
 			inputString:    `(x == "(y + z)")`,
 			syntaxLanguage: syntax.LanguageGo,
 			pos:            10,
+			delimiterPair:  ParenPair,
 			expectStartPos: 8,
 			expectEndPos:   13,
 		},
@@ -514,15 +530,50 @@ func TestDelimitedBlock(t *testing.T) {
 			inputString:    `(x == "(y + z")`,
 			syntaxLanguage: syntax.LanguageGo,
 			pos:            10,
+			delimiterPair:  ParenPair,
 			expectStartPos: 1,
 			expectEndPos:   14,
+		},
+		{
+			name: "end of nested braces",
+			inputString: `
+{
+	foo: 123,
+	bar: {
+		baz: {
+			bat: 456,
+		},
+	},
+}`,
+			pos:            53,
+			delimiterPair:  BracePair,
+			expectStartPos: 2,
+			expectEndPos:   53,
+		},
+		{
+			name:           "end of nested braces, within Go string",
+			inputString:    `{{foo: "{a{b}c}", bar: "}"}}`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            13,
+			delimiterPair:  BracePair,
+			expectStartPos: 9,
+			expectEndPos:   14,
+		},
+		{
+			name:           "end of nested braces, outside Go string",
+			inputString:    `{{foo: "{a{b}c}", bar: "{"}}`,
+			syntaxLanguage: syntax.LanguageGo,
+			pos:            26,
+			delimiterPair:  BracePair,
+			expectStartPos: 2,
+			expectEndPos:   26,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, syntaxParser := textTreeAndSyntaxParser(t, tc.inputString, tc.syntaxLanguage)
-			actualStartPos, actualEndPos := DelimitedBlock(ParenPair, textTree, syntaxParser, tc.includeDelimiters, tc.pos)
+			actualStartPos, actualEndPos := DelimitedBlock(tc.delimiterPair, textTree, syntaxParser, tc.includeDelimiters, tc.pos)
 			assert.Equal(t, tc.expectStartPos, actualStartPos)
 			assert.Equal(t, tc.expectEndPos, actualEndPos)
 		})

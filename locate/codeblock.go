@@ -77,29 +77,46 @@ func NextUnmatchedCloseDelimiter(delimiterPair DelimiterPair, textTree *text.Tre
 
 // DelimitedBlock locates the start and end positions for matched open/close delimiters.
 func DelimitedBlock(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, includeDelimiters bool, pos uint64) (uint64, uint64) {
-	startPos := pos + 1
-	reader := textTree.ReverseReaderAtPosition(startPos)
-	for {
-		r, _, err := reader.ReadRune()
-		if err != nil {
+	matchToken := stringOrCommentTokenAtPos(syntaxParser, pos)
+	startPos, endPos := delimitedBlockMatchSyntaxToken(delimiterPair, textTree, syntaxParser, includeDelimiters, pos, matchToken)
+	if startPos == endPos && matchToken.Role != parser.TokenRoleNone {
+		// If we can't find the delimiter in a comment/string, retry looking outside the comment/string.
+		matchToken = parser.Token{}
+		startPos, endPos = delimitedBlockMatchSyntaxToken(delimiterPair, textTree, syntaxParser, includeDelimiters, pos, matchToken)
+	}
+	return startPos, endPos
+}
+
+func delimitedBlockMatchSyntaxToken(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, includeDelimiters bool, pos uint64, matchSyntaxToken parser.Token) (uint64, uint64) {
+	reader := textTree.ReaderAtPosition(pos)
+	r, _, err := reader.ReadRune()
+	if err != nil {
+		return pos, pos
+	}
+
+	var ok bool
+	startPos := pos // If we start on an open delimiter, use it.
+	if r != delimiterPair.OpenRune {
+		// Otherwise, search backwards to find the start delimiter.
+		startPos, ok = searchBackwardMatch(delimiterPair, textTree, syntaxParser, matchSyntaxToken, pos)
+		if !ok {
 			return pos, pos
 		}
-
-		startPos--
-
-		if r == delimiterPair.OpenRune {
-			startToken := stringOrCommentTokenAtPos(syntaxParser, startPos)
-			endPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, startToken, startPos)
-			if ok {
-				if includeDelimiters {
-					endPos++
-				} else {
-					startPos++
-				}
-				return startPos, endPos
-			}
-		}
 	}
+
+	// Search forward from the start delimiter to find the matching end delimiter.
+	endPos, ok := searchForwardMatch(delimiterPair, textTree, syntaxParser, matchSyntaxToken, startPos)
+	if !ok {
+		return pos, pos
+	}
+
+	if includeDelimiters {
+		endPos++
+	} else {
+		startPos++
+	}
+
+	return startPos, endPos
 }
 
 func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntaxParser *parser.P, matchSyntaxToken parser.Token, pos uint64) (uint64, bool) {

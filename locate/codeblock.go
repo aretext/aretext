@@ -144,6 +144,11 @@ func searchForwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, syntax
 		}
 
 		pos++
+
+		if matchSyntaxToken.Role != parser.TokenRoleNone && pos > matchSyntaxToken.EndPos {
+			// If we're searching for a specific token, and we're past the end of that token, exit early.
+			return 0, false
+		}
 	}
 }
 
@@ -170,6 +175,11 @@ func searchBackwardMatch(delimiterPair DelimiterPair, textTree *text.Tree, synta
 
 		if depth == 0 {
 			return pos, true
+		}
+
+		if matchSyntaxToken.Role != parser.TokenRoleNone && pos < matchSyntaxToken.StartPos {
+			// If we're searching for a specific token, and we're before the beginning of that token, exit early.
+			return 0, false
 		}
 	}
 }

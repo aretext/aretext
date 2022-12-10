@@ -93,7 +93,7 @@ func AppendRuneToSearchQuery(state *EditorState, r rune) {
 	runTextSearchQuery(state, q)
 }
 
-// DeleteRuneFromSearchQuery
+// DeleteRuneFromSearchQuery deletes the last rune from the text search query.
 // A deletion in an empty query aborts the search and returns the editor to normal mode.
 func DeleteRuneFromSearchQuery(state *EditorState) {
 	q := state.documentBuffer.search.query

@@ -55,9 +55,9 @@ func (sm *SearchMatch) ContainsPosition(pos uint64) bool {
 
 // StartSearch initiates a new text search.
 func StartSearch(state *EditorState, direction SearchDirection) {
-	buffer := state.documentBuffer
-	prevQuery, prevDirection := buffer.search.query, buffer.search.direction
-	buffer.search = searchState{
+	search := &state.documentBuffer.search
+	prevQuery, prevDirection := search.query, search.direction
+	*search = searchState{
 		direction:     direction,
 		prevQuery:     prevQuery,
 		prevDirection: prevDirection,
@@ -69,19 +69,19 @@ func StartSearch(state *EditorState, direction SearchDirection) {
 // If commit is true, jump to the matching search result.
 // Otherwise, return to the original cursor position.
 func CompleteSearch(state *EditorState, commit bool) {
-	buffer := state.documentBuffer
+	search := &state.documentBuffer.search
 	if commit {
-		if buffer.search.match != nil {
-			buffer.cursor = cursorState{position: buffer.search.match.StartPos}
+		if search.match != nil {
+			state.documentBuffer.cursor = cursorState{position: search.match.StartPos}
 		}
 	} else {
-		prevQuery, prevDirection := buffer.search.prevQuery, buffer.search.prevDirection
-		buffer.search = searchState{
+		prevQuery, prevDirection := search.prevQuery, search.prevDirection
+		*search = searchState{
 			query:     prevQuery,
 			direction: prevDirection,
 		}
 	}
-	buffer.search.match = nil
+	search.match = nil
 	SetInputMode(state, InputModeNormal)
 	ScrollViewToCursor(state)
 }

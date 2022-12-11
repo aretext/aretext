@@ -283,6 +283,9 @@ func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {
 
 			// Expect that the search query and direction are preserved.
 			expectedSearch := searchState{query: "efg", direction: tc.direction}
+			if tc.completeSearch {
+				expectedSearch.history = []string{"efg"}
+			}
 			assert.Equal(t, expectedSearch, state.documentBuffer.search)
 		})
 	}

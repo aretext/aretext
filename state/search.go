@@ -40,6 +40,8 @@ type searchState struct {
 	direction     SearchDirection
 	prevQuery     string
 	prevDirection SearchDirection
+	history       []string
+	historyIdx    int
 	match         *SearchMatch
 }
 
@@ -61,6 +63,8 @@ func StartSearch(state *EditorState, direction SearchDirection) {
 		direction:     direction,
 		prevQuery:     prevQuery,
 		prevDirection: prevDirection,
+		history:       search.history,
+		historyIdx:    len(search.history),
 	}
 	SetInputMode(state, InputModeSearch)
 }
@@ -70,6 +74,13 @@ func StartSearch(state *EditorState, direction SearchDirection) {
 // Otherwise, return to the original cursor position.
 func CompleteSearch(state *EditorState, commit bool) {
 	search := &state.documentBuffer.search
+
+	if search.query != "" {
+		if len(search.history) == 0 || search.history[len(search.history)-1] != search.query {
+			search.history = append(search.history, search.query)
+		}
+	}
+
 	if commit {
 		if search.match != nil {
 			state.documentBuffer.cursor = cursorState{position: search.match.StartPos}
@@ -79,30 +90,58 @@ func CompleteSearch(state *EditorState, commit bool) {
 		*search = searchState{
 			query:     prevQuery,
 			direction: prevDirection,
+			history:   search.history,
 		}
 	}
+
 	search.match = nil
+
 	SetInputMode(state, InputModeNormal)
 	ScrollViewToCursor(state)
 }
 
 // AppendRuneToSearchQuery appends a rune to the text search query.
 func AppendRuneToSearchQuery(state *EditorState, r rune) {
-	q := state.documentBuffer.search.query
-	q = q + string(r)
+	search := &state.documentBuffer.search
+	q := search.query + string(r)
 	runTextSearchQuery(state, q)
+	search.historyIdx = len(search.history)
 }
 
 // DeleteRuneFromSearchQuery deletes the last rune from the text search query.
 // A deletion in an empty query aborts the search and returns the editor to normal mode.
 func DeleteRuneFromSearchQuery(state *EditorState) {
-	q := state.documentBuffer.search.query
-	if len(q) == 0 {
+	search := &state.documentBuffer.search
+	if len(search.query) == 0 {
 		CompleteSearch(state, false)
 		return
 	}
 
-	q = q[0 : len(q)-1]
+	q := search.query[0 : len(search.query)-1]
+	runTextSearchQuery(state, q)
+	search.historyIdx = len(search.history)
+}
+
+// SetSearchQueryToPrevInHistory sets the search query to a previous search query in the history.
+func SetSearchQueryToPrevInHistory(state *EditorState) {
+	search := &state.documentBuffer.search
+	if search.historyIdx == 0 {
+		return
+	}
+	search.historyIdx--
+	q := search.history[search.historyIdx]
+	runTextSearchQuery(state, q)
+}
+
+// SetSearchQueryToNextInHistory sets the search query to the next search query in the history.
+func SetSearchQueryToNextInHistory(state *EditorState) {
+	search := &state.documentBuffer.search
+	if search.historyIdx >= len(search.history)-1 {
+		return
+	}
+
+	search.historyIdx++
+	q := search.history[search.historyIdx]
 	runTextSearchQuery(state, q)
 }
 

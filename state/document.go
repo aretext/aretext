@@ -88,10 +88,11 @@ func ReloadDocument(state *EditorState) {
 	)
 	ScrollViewToCursor(state)
 
-	// Restore search query and direction.
+	// Restore search query, direction, and history.
 	state.documentBuffer.search = searchState{
 		query:     oldSearch.query,
 		direction: oldSearch.direction,
+		history:   oldSearch.history,
 	}
 
 	// Restore other configuration that might have been toggled with menu commands.

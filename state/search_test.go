@@ -417,3 +417,229 @@ func TestSearchWordUnderCursor(t *testing.T) {
 		})
 	}
 }
+
+func TestSetSearchQueryToPrevInHistory(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query, aborted.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Second search query, committed.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "def" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+
+	// Start a search, go back in history.
+	StartSearch(state, SearchDirectionForward)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+
+	// Go back in the history again.
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+
+	// Go back in the history, no previous entry so no change.
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+}
+
+func TestSetSearchQueryToNextInHistory(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query, aborted.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Second search query, committed.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "def" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+
+	// Go back to beginning of history.
+	SetSearchQueryToPrevInHistory(state)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+
+	// Go to next in history.
+	SetSearchQueryToNextInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+
+	// Forward again. No future entry, so no change.
+	SetSearchQueryToNextInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+}
+
+func TestSearchQueryToPrevInHistoryThenAppendRunes(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query, aborted.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Second search query, committed.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "def" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+
+	// Start a search, go back to beginning of history.
+	StartSearch(state, SearchDirectionForward)
+	SetSearchQueryToPrevInHistory(state)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+
+	// Edit the query by appending runes.
+	AppendRuneToSearchQuery(state, 'x')
+	AppendRuneToSearchQuery(state, 'y')
+	AppendRuneToSearchQuery(state, 'z')
+	assert.Equal(t, "abcxyz", buffer.search.query)
+	assert.Nil(t, buffer.search.match)
+
+	// Go back in history, confirm that the edit reset to the last entry.
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+}
+
+func TestSearchQueryToPrevInHistoryThenDeleteRunes(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query, aborted.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Second search query, committed.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "def" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+
+	// Start a search, go back to beginning of history.
+	StartSearch(state, SearchDirectionForward)
+	SetSearchQueryToPrevInHistory(state)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+
+	// Edit the query by deleting runes.
+	DeleteRuneFromSearchQuery(state)
+	DeleteRuneFromSearchQuery(state)
+	assert.Equal(t, "a", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+
+	// Go back in history, confirm that the edit reset to the last entry.
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+}
+
+func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Several empty search queries, should not be added to history.
+	for i := 0; i < 3; i++ {
+		StartSearch(state, SearchDirectionForward)
+		CompleteSearch(state, false)
+	}
+
+	// Start a search, back to previous entry.
+	StartSearch(state, SearchDirectionForward)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+}
+
+func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc def ghi")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// First search query.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Second search query.
+	StartSearch(state, SearchDirectionForward)
+	for _, r := range "def" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, false)
+
+	// Repeat the query several times.
+	for i := 0; i < 3; i++ {
+		StartSearch(state, SearchDirectionForward)
+		for _, r := range "def" {
+			AppendRuneToSearchQuery(state, r)
+		}
+		CompleteSearch(state, false)
+	}
+
+	// Start a search, back to previous entry.
+	StartSearch(state, SearchDirectionForward)
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "def", buffer.search.query)
+	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+
+	// Back again, expect that we're at the first entry (duplicate entries were excluded from history).
+	SetSearchQueryToPrevInHistory(state)
+	assert.Equal(t, "abc", buffer.search.query)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+}

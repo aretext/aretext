@@ -1606,6 +1606,24 @@ func SearchModeCommands() []Command {
 				return decorate(DeleteRuneFromSearchQuery)
 			},
 		},
+		{
+			Name: "previous search query in history",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyUp)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(state.SetSearchQueryToPrevInHistory)
+			},
+		},
+		{
+			Name: "next search query in history",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyDown)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(state.SetSearchQueryToNextInHistory)
+			},
+		},
 	}
 }
 

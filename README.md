@@ -10,7 +10,7 @@ Minimalist text editor with vim-compatible key bindings.
 -	Simple and consistent terminal-based UI for distraction-free coding.
 -	Efficient editing with over 100 vim commands.
 -	Intuitive and flexible configuration, per language and project.
--	Seamless integration with terminal-based workflows (bash, tmux, CLI tools, and anything else you use).
+-	Seamless integration with CLI tools (bash, tmux, git, code formatters, compilers, and anything else you use).
 
 *Aretext key bindings are compatible with vim's normal, insert, and visual modes. See [Command Reference](https://aretext.org/docs/command-reference/) for details.*
 

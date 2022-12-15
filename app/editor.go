@@ -95,10 +95,14 @@ func (e *Editor) pollTermEvents() {
 }
 
 func (e *Editor) runMainEventLoop() {
+	var inBracketedPaste bool
 	for {
 		select {
 		case event := <-e.termEventChan:
 			e.handleTermEvent(event)
+			if pasteEvent, ok := event.(*tcell.EventPaste); ok {
+				inBracketedPaste = pasteEvent.Start()
+			}
 
 		case actionFunc := <-e.editorState.TaskResultChan():
 			log.Printf("Task completed, executing resulting action...\n")
@@ -115,10 +119,11 @@ func (e *Editor) runMainEventLoop() {
 			return
 		}
 
-		// Redraw unless there are pending terminal events to process first.
+		// Redraw unless there are pending terminal events to process first
+		// or we're in the middle of a bracketed paste.
 		// This helps avoid the overhead of redrawing after every keypress
 		// if the user pastes a lot of text into the terminal emulator.
-		if len(e.termEventChan) == 0 {
+		if len(e.termEventChan) == 0 && !inBracketedPaste {
 			e.redraw(false)
 		}
 	}

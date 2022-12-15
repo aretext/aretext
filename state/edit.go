@@ -18,15 +18,20 @@ import (
 	"github.com/aretext/aretext/undo"
 )
 
-// InsertRune inserts a rune at the current cursor location.
+// InsertRune inserts a single rune at the current cursor location.
 func InsertRune(state *EditorState, r rune) {
+	InsertText(state, string(r))
+}
+
+// InsertText inserts multiple runes at the current cursor location.
+func InsertText(state *EditorState, text string) {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
-	if err := insertTextAtPosition(state, string(r), startPos, true); err != nil {
-		log.Printf("Error inserting rune: %v\n", err)
+	if err := insertTextAtPosition(state, text, startPos, true); err != nil {
+		log.Printf("Error inserting text: %v\n", err)
 		return
 	}
-	buffer.cursor.position = startPos + 1
+	buffer.cursor.position = startPos + uint64(utf8.RuneCountInString(text))
 }
 
 // insertTextAtPosition inserts text into the document.

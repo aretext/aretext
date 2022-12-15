@@ -138,6 +138,8 @@ func runEditor(path string, lineNum uint64) error {
 	}
 	defer screen.Fini()
 
+	screen.EnablePaste()
+
 	editor := app.NewEditor(screen, path, uint64(lineNum), configRuleSet)
 	editor.RunEventLoop()
 	return nil

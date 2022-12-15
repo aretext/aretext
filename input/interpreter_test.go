@@ -2436,6 +2436,40 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedCursorPos: 7,
 			expectedText:      "foo ar az bat",
 		},
+		{
+			name:        "bracketed paste in insert mode",
+			initialText: "abc",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone),
+				tcell.NewEventPaste(true),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'y', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'z', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyTab, '\t', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '1', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '2', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '3', tcell.ModNone),
+				tcell.NewEventPaste(false),
+			},
+			expectedCursorPos: 11,
+			expectedText:      "abcxyz\n\t123",
+		},
+		{
+			name:        "bracketed paste in search mode",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone),
+				tcell.NewEventPaste(true),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'n', tcell.ModNone),
+				tcell.NewEventPaste(false),
+				tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone),
+			},
+			expectedCursorPos: 27,
+			expectedText:      "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -2514,6 +2548,201 @@ func TestEnterAndExitVisualModeThenReplayLastAction(t *testing.T) {
 			assert.Equal(t, state.InputModeNormal, editorState.InputMode())
 		})
 	}
+}
+
+func inputEventsForBracketedPaste(s string) []tcell.Event {
+	inputEvents := make([]tcell.Event, 0, len(s)+2)
+	inputEvents = append(inputEvents, tcell.NewEventPaste(true))
+	for _, r := range s {
+		if r == '\n' {
+			inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone))
+		} else if r == '\t' {
+			inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyTab, '\t', tcell.ModNone))
+		} else {
+			inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
+		}
+	}
+	inputEvents = append(inputEvents, tcell.NewEventPaste(false))
+	return inputEvents
+}
+
+func TestBracketedPasteInSearchMode(t *testing.T) {
+	testCases := []struct {
+		name          string
+		pasteString   string
+		expectedQuery string
+	}{
+		{
+			name:          "short input",
+			pasteString:   "abc",
+			expectedQuery: "abc",
+		},
+		{
+			name:          "long input, truncated",
+			pasteString:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			expectedQuery: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+		{
+			name:          "input with newline",
+			pasteString:   "abc\nxyz\n123",
+			expectedQuery: "abc",
+		},
+		{
+			name:          "input with tab",
+			pasteString:   "abc\txyz",
+			expectedQuery: "abc\txyz",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			inputEvents := []tcell.Event{tcell.NewEventKey(tcell.KeyRune, '/', tcell.ModNone)}
+			inputEvents = append(inputEvents, inputEventsForBracketedPaste(tc.pasteString)...)
+			editorState := state.NewEditorState(100, 100, nil, nil)
+			interpreter := NewInterpreter()
+			for _, event := range inputEvents {
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
+				action(editorState)
+			}
+
+			assert.Equal(t, state.InputModeSearch, editorState.InputMode())
+			searchQuery, _ := editorState.DocumentBuffer().SearchQueryAndDirection()
+			assert.Equal(t, tc.expectedQuery, searchQuery)
+		})
+	}
+}
+
+func TestBracketedPasteInMenuMode(t *testing.T) {
+	testCases := []struct {
+		name          string
+		pasteString   string
+		expectedQuery string
+	}{
+		{
+			name:          "short input",
+			pasteString:   "abc",
+			expectedQuery: "abc",
+		},
+		{
+			name:          "long input, truncated",
+			pasteString:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			expectedQuery: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+		{
+			name:          "input with newline",
+			pasteString:   "abc\nxyz\n123",
+			expectedQuery: "abc",
+		},
+		{
+			name:          "input with tab",
+			pasteString:   "abc\txyz",
+			expectedQuery: "abc\txyz",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			inputEvents := []tcell.Event{tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone)}
+			inputEvents = append(inputEvents, inputEventsForBracketedPaste(tc.pasteString)...)
+			editorState := state.NewEditorState(100, 100, nil, nil)
+			interpreter := NewInterpreter()
+			for _, event := range inputEvents {
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
+				action(editorState)
+			}
+
+			assert.Equal(t, state.InputModeMenu, editorState.InputMode())
+			assert.Equal(t, tc.expectedQuery, editorState.Menu().SearchQuery())
+		})
+	}
+}
+
+func TestBracketedPasteInNormalAndVisualMode(t *testing.T) {
+	testCases := []struct {
+		name string
+		mode state.InputMode
+	}{
+		{name: "normal mode", mode: state.InputModeNormal},
+		{name: "visual mode", mode: state.InputModeVisual},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var inputEvents []tcell.Event
+			if tc.mode == state.InputModeVisual {
+				inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone))
+			}
+			inputEvents = append(inputEvents, inputEventsForBracketedPaste("abc")...)
+
+			editorState := state.NewEditorState(100, 100, nil, nil)
+			interpreter := NewInterpreter()
+			for _, event := range inputEvents {
+				inputCtx := ContextFromEditorState(editorState)
+				action := interpreter.ProcessEvent(event, inputCtx)
+				action(editorState)
+			}
+
+			assert.Equal(t, tc.mode, editorState.InputMode())
+			assert.Equal(t, state.StatusMsgStyleError, editorState.StatusMsg().Style)
+			assert.Equal(t, "Cannot paste in this mode. Press 'i' to enter insert mode", editorState.StatusMsg().Text)
+		})
+	}
+}
+
+func TestBracketedPasteInUserMacro(t *testing.T) {
+	var inputEvents []tcell.Event
+
+	// Begin recording a user macro.
+	inputEvents = append(inputEvents,
+		tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone))
+
+	// Bracketed paste in insert mode.
+	inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone))
+	inputEvents = append(inputEvents, inputEventsForBracketedPaste("abc\n")...)
+	inputEvents = append(inputEvents, tcell.NewEventKey(tcell.KeyEscape, '\x00', tcell.ModNone))
+
+	// End macro.
+	inputEvents = append(inputEvents,
+		tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone))
+
+	// Replay macro.
+	inputEvents = append(inputEvents,
+		tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyEnter, '\r', tcell.ModNone))
+
+	editorState := state.NewEditorState(100, 100, nil, nil)
+	interpreter := NewInterpreter()
+	for _, event := range inputEvents {
+		inputCtx := ContextFromEditorState(editorState)
+		action := interpreter.ProcessEvent(event, inputCtx)
+		action(editorState)
+	}
+
+	// Expect that the pasted text is inserted twice (once from original paste, once from macro replay).
+	buffer := editorState.DocumentBuffer()
+	reader := buffer.TextTree().ReaderAtPosition(0)
+	data, err := io.ReadAll(&reader)
+	require.NoError(t, err)
+	text := string(data)
+	assert.Equal(t, state.InputModeNormal, editorState.InputMode())
+	assert.Equal(t, uint64(8), buffer.CursorPosition())
+	assert.Equal(t, "abc\nabc\n", text)
 }
 
 func TestVerifyGeneratedPrograms(t *testing.T) {

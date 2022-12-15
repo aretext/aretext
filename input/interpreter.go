@@ -14,7 +14,9 @@ import (
 
 // Interpreter translates key events to commands.
 type Interpreter struct {
-	modes map[state.InputMode]*mode
+	modes            map[state.InputMode]*mode
+	inBracketedPaste bool
+	pasteBuffer      strings.Builder
 }
 
 // NewInterpreter creates a new interpreter.
@@ -72,7 +74,16 @@ func NewInterpreter() *Interpreter {
 func (inp *Interpreter) ProcessEvent(event tcell.Event, ctx Context) Action {
 	switch event := event.(type) {
 	case *tcell.EventKey:
+		if inp.inBracketedPaste {
+			return inp.processPasteKey(event)
+		}
 		return inp.processKeyEvent(event, ctx)
+	case *tcell.EventPaste:
+		if event.Start() {
+			return inp.processPasteStart()
+		} else {
+			return inp.processPasteEnd(ctx)
+		}
 	case *tcell.EventResize:
 		return inp.processResizeEvent(event)
 	default:
@@ -84,6 +95,42 @@ func (inp *Interpreter) processKeyEvent(event *tcell.EventKey, ctx Context) Acti
 	log.Printf("Processing key %s in mode %s\n", event.Name(), ctx.InputMode)
 	mode := inp.modes[ctx.InputMode]
 	return mode.ProcessKeyEvent(event, ctx)
+}
+
+func (inp *Interpreter) processPasteStart() Action {
+	inp.inBracketedPaste = true
+	return EmptyAction
+}
+
+func (inp *Interpreter) processPasteKey(event *tcell.EventKey) Action {
+	switch event.Key() {
+	case tcell.KeyEnter:
+		inp.pasteBuffer.WriteRune('\n')
+	case tcell.KeyTab:
+		inp.pasteBuffer.WriteRune('\t')
+	case tcell.KeyRune:
+		inp.pasteBuffer.WriteRune(event.Rune())
+	}
+	return EmptyAction
+}
+
+func (inp *Interpreter) processPasteEnd(ctx Context) Action {
+	text := inp.pasteBuffer.String()
+	inp.inBracketedPaste = false
+	inp.pasteBuffer.Reset()
+
+	switch ctx.InputMode {
+	case state.InputModeInsert:
+		return InsertFromBracketedPaste(text)
+	case state.InputModeNormal, state.InputModeVisual:
+		return ShowStatusMsgBracketedPasteWrongMode
+	case state.InputModeMenu:
+		return BracketedPasteIntoMenuSearch(text)
+	case state.InputModeSearch:
+		return BracketedPasteIntoSearchQuery(text)
+	default:
+		return EmptyAction
+	}
 }
 
 func (inp *Interpreter) processResizeEvent(event *tcell.EventResize) Action {

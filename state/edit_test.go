@@ -61,6 +61,55 @@ func TestInsertRune(t *testing.T) {
 	}
 }
 
+func TestInsertText(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputString    string
+		initialCursor  cursorState
+		insertText     string
+		expectedCursor cursorState
+		expectedText   string
+	}{
+		{
+			name:           "empty",
+			initialCursor:  cursorState{position: 0},
+			inputString:    "",
+			insertText:     "",
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
+		},
+		{
+			name:           "ascii",
+			initialCursor:  cursorState{position: 1},
+			inputString:    "abc",
+			insertText:     "xyz",
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "axyzbc",
+		},
+		{
+			name:           "non-ascii unicode with multi-byte runes",
+			initialCursor:  cursorState{position: 1},
+			inputString:    "abc",
+			insertText:     "丂丄丅丆丏 ¢ह€한",
+			expectedCursor: cursorState{position: 11},
+			expectedText:   "a丂丄丅丆丏 ¢ह€한bc",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputString)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			state.documentBuffer.textTree = textTree
+			state.documentBuffer.cursor = tc.initialCursor
+			InsertText(state, tc.insertText)
+			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
 func TestDeleteToPos(t *testing.T) {
 	testCases := []struct {
 		name                 string

@@ -688,6 +688,48 @@ func PasteBeforeCursor(clipboardPage clipboard.PageId) Action {
 	}
 }
 
+func InsertFromBracketedPaste(text string) Action {
+	return func(s *state.EditorState) {
+		wrappedAction := func(s *state.EditorState) {
+			state.InsertText(s, text)
+			state.ScrollViewToCursor(s)
+		}
+		wrappedAction(s)
+		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+	}
+}
+
+func ShowStatusMsgBracketedPasteWrongMode(s *state.EditorState) {
+	state.SetStatusMsg(s, state.StatusMsg{
+		Style: state.StatusMsgStyleError,
+		Text:  "Cannot paste in this mode. Press 'i' to enter insert mode",
+	})
+}
+
+const maxBracketedPasteQueryLen = 128
+
+func BracketedPasteIntoMenuSearch(text string) Action {
+	return func(s *state.EditorState) {
+		for i, r := range text {
+			if r == '\n' || i >= maxBracketedPasteQueryLen {
+				break
+			}
+			state.AppendRuneToMenuSearch(s, r)
+		}
+	}
+}
+
+func BracketedPasteIntoSearchQuery(text string) Action {
+	return func(s *state.EditorState) {
+		for i, r := range text {
+			if r == '\n' || i >= maxBracketedPasteQueryLen {
+				break
+			}
+			state.AppendRuneToSearchQuery(s, r)
+		}
+	}
+}
+
 func ShowCommandMenu(ctx Context) Action {
 	return func(s *state.EditorState) {
 		// This sets the input mode to menu.

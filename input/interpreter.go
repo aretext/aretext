@@ -104,7 +104,9 @@ func (inp *Interpreter) processPasteStart() Action {
 
 func (inp *Interpreter) processPasteKey(event *tcell.EventKey) Action {
 	switch event.Key() {
-	case tcell.KeyEnter:
+	// Most terminals send KeyEnter (ASCII code 13 = carriage return)
+	// but alacritty sends KeyLF (ASCII code 10 = line feed).
+	case tcell.KeyEnter, tcell.KeyLF:
 		inp.pasteBuffer.WriteRune('\n')
 	case tcell.KeyTab:
 		inp.pasteBuffer.WriteRune('\t')

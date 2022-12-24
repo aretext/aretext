@@ -11,7 +11,7 @@ const (
 	minRecordsPerPartition      = 64  // each goroutine will be assigned at least this many records.
 	maxNumPartitions            = 128 // maximum number of goroutines used to score records.
 	deleteQueryCharCost         = 1.5
-	insertQueryCharCost         = 1.0
+	insertQueryCharCost         = 0.5
 	replaceQueryCharCost        = 1.0
 	matchCharScore              = 1.0
 	matchCharDifferentCaseScore = 0.2

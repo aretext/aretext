@@ -29,8 +29,8 @@ func TestRankRecords(t *testing.T) {
 			},
 			expected: []string{
 				"foobar",
-				".foobar",
 				"foo.bar",
+				".foobar",
 				"xoobar",
 				"foo",
 				"barfoo",
@@ -52,8 +52,8 @@ func TestRankRecords(t *testing.T) {
 			},
 			expected: []string{
 				"foobar",
-				".foobar",
 				"foo.bar",
+				".foobar",
 			},
 		},
 		{
@@ -143,6 +143,21 @@ func TestRankRecords(t *testing.T) {
 			expected: []string{
 				"find and open",
 				"fmt file",
+			},
+		},
+		{
+			name:  "rank higher even with skipping extra components in path",
+			query: "dns/tracer.go",
+			limit: 100,
+			records: []string{
+				"pkg/standardgadgets/trace/bind/tracer.go",
+				"pkg/gadgets/trace/dns/tracer/bpf/dns.c",
+				"pkg/gadgets/trace/dns/tracer/tracer.go",
+			},
+			expected: []string{
+				"pkg/gadgets/trace/dns/tracer/tracer.go",
+				"pkg/standardgadgets/trace/bind/tracer.go",
+				"pkg/gadgets/trace/dns/tracer/bpf/dns.c",
 			},
 		},
 	}

@@ -29,8 +29,8 @@ func TestRankRecords(t *testing.T) {
 			},
 			expected: []string{
 				"foobar",
-				"foo.bar",
 				".foobar",
+				"foo.bar",
 				"xoobar",
 				"foo",
 				"barfoo",
@@ -52,8 +52,8 @@ func TestRankRecords(t *testing.T) {
 			},
 			expected: []string{
 				"foobar",
-				"foo.bar",
 				".foobar",
+				"foo.bar",
 			},
 		},
 		{

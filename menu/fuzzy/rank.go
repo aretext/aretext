@@ -15,8 +15,8 @@ const (
 	replaceQueryCharCost        = 1.0
 	matchCharScore              = 1.0
 	matchCharDifferentCaseScore = 0.2
-	alignAtStartBonus           = 0.7
-	alignAfterSeparatorBonus    = 0.5
+	alignAtStartBonus           = 0.4
+	alignAfterSeparatorBonus    = 0.2
 )
 
 // candidateRecord is a record that can be scored by the ranking algorithm.

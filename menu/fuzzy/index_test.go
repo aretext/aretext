@@ -52,8 +52,8 @@ func TestFuzzySearchIndex(t *testing.T) {
 			},
 			expected: []string{
 				"foobar",
-				"foo.bar",
 				".foobar",
+				"foo.bar",
 				"foo",
 			},
 		},

@@ -29,7 +29,7 @@ func menuItems(ctx Context) []menu.Item {
 		},
 		{
 			Name:    "save document and quit",
-			Aliases: []string{"sq", "wq"},
+			Aliases: []string{"sq", "wq", "x"},
 			Action: func(s *state.EditorState) {
 				state.AbortIfFileExistsWithChangedContent(s, func(s *state.EditorState) {
 					state.SaveDocument(s)

@@ -148,23 +148,23 @@ Visual Mode Commands
 Menu Commands
 -------------
 
-| Name                         | Aliases  |
-|------------------------------|----------|
-| quit                         | q        |
-| force quit                   | q!       |
-| save document                | s, w     |
-| save document and quit       | sq, wq   |
-| force save document          | s!, w!   |
-| force save document and quit | sq!, wq! |
-| force reload                 | r!       |
-| find and open                | f        |
-| open previous document       | p        |
-| open next document           | n        |
-| child directory              | cd       |
-| parent directory             | pd       |
-| toggle show tabs             | ta       |
-| toggle tab expand            | te       |
-| toggle line numbers          | nu       |
-| toggle auto-indent           | ai       |
-| start/stop recording macro   | m        |
-| replay macro                 | r        |
+| Name                         | Aliases   |
+|------------------------------|-----------|
+| quit                         | q         |
+| force quit                   | q!        |
+| save document                | s, w      |
+| save document and quit       | sq, wq, x |
+| force save document          | s!, w!    |
+| force save document and quit | sq!, wq!  |
+| force reload                 | r!        |
+| find and open                | f         |
+| open previous document       | p         |
+| open next document           | n         |
+| child directory              | cd        |
+| parent directory             | pd        |
+| toggle show tabs             | ta        |
+| toggle tab expand            | te        |
+| toggle line numbers          | nu        |
+| toggle auto-indent           | ai        |
+| start/stop recording macro   | m         |
+| replay macro                 | r         |

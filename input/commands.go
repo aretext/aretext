@@ -44,7 +44,6 @@ func cursorCommands() []Command {
 				state.ScrollViewToCursor(s)
 				state.SetStatusMsg(s, state.StatusMsg{})
 			}
-			state.CheckpointUndoLog(s)
 			wrappedAction(s)
 			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
 		}
@@ -362,8 +361,16 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 			state.SetStatusMsg(s, state.StatusMsg{})
 		}
 
-		state.CheckpointUndoLog(s)
+		// Begin an undo entry, which will include all operations tracked while executing `wrappedAction`.
+		state.BeginUndoEntry(s)
+
 		wrappedAction(s)
+
+		// Commit the undo entry UNLESS in insert mode, in which case wait until
+		// the transition back to normal mode to commit.
+		if s.InputMode() != state.InputModeInsert {
+			state.CommitUndoEntry(s)
+		}
 
 		if addToMacro.lastAction {
 			state.ClearLastActionMacro(s)
@@ -373,6 +380,21 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 		if addToMacro.user {
 			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
 		}
+	}
+}
+
+func decorateUndoOrRedo(action Action) Action {
+	// Undo and redo actions are special because:
+	// 1) They do NOT begin/commit an undo entry.
+	// 2) They do NOT clear/update the last action macro.
+	return func(s *state.EditorState) {
+		wrappedAction := func(s *state.EditorState) {
+			action(s)
+			state.ScrollViewToCursor(s)
+			state.SetStatusMsg(s, state.StatusMsg{})
+		}
+		wrappedAction(s)
+		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
 	}
 }
 
@@ -1114,9 +1136,7 @@ func NormalModeCommands() []Command {
 				return runeExpr('u')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorateNormalOrVisual(
-					Undo,
-					addToMacro{user: true})
+				return decorateUndoOrRedo(Undo)
 			},
 		},
 		{
@@ -1125,9 +1145,7 @@ func NormalModeCommands() []Command {
 				return keyExpr(tcell.KeyCtrlR)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorateNormalOrVisual(
-					Redo,
-					addToMacro{user: true})
+				return decorateUndoOrRedo(Redo)
 			},
 		},
 		{

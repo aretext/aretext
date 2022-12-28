@@ -2,57 +2,64 @@ package state
 
 import (
 	"log"
-	"math"
 
-	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/undo"
 )
 
-// CheckpointUndoLog sets a checkpoint at the current position in the undo log.
-func CheckpointUndoLog(state *EditorState) {
-	state.documentBuffer.undoLog.Checkpoint()
+// BeginUndoEntry begins a new undo entry.
+// This should be called before tracking any undo operations.
+func BeginUndoEntry(state *EditorState) {
+	log.Printf("Begin undo entry\n")
+	buffer := state.documentBuffer
+	buffer.undoLog.BeginEntry(buffer.cursor.position)
 }
 
-// Undo returns the document to its state at the last undo checkpoint.
+// CommitUndoEntry commits the current undo entry.
+// This should be called after completing an action that can be undone.
+func CommitUndoEntry(state *EditorState) {
+	log.Printf("Commit undo entry\n")
+	buffer := state.documentBuffer
+	buffer.undoLog.CommitEntry(buffer.cursor.position)
+}
+
+// Undo returns the document to its state at the last undo entry.
 func Undo(state *EditorState) {
-	ops := state.documentBuffer.undoLog.UndoToLastCheckpoint()
-	if len(ops) == 0 {
+	hasEntry, undoOps, cursor := state.documentBuffer.undoLog.UndoToLastCommitted()
+	if !hasEntry {
 		return
 	}
 
-	minPos := uint64(math.MaxUint64)
-	for _, op := range ops {
+	for _, op := range undoOps {
 		log.Printf("Undo operation: %#v\n", op)
 		if err := applyOpFromUndoLog(state, op); err != nil {
 			log.Printf("Could not apply undo op %v: %v\n", op, err)
 			continue
 		}
-		if pos := op.Position(); pos < minPos {
-			minPos = pos
-		}
 	}
-	MoveCursor(state, locateCursorAfterUndoOrRedo(minPos))
+
+	MoveCursor(state, func(LocatorParams) uint64 {
+		return cursor
+	})
 }
 
 // Redo reverses the last undo operation.
 func Redo(state *EditorState) {
-	ops := state.documentBuffer.undoLog.RedoToNextCheckpoint()
-	if len(ops) == 0 {
+	hasEntry, redoOps, cursor := state.documentBuffer.undoLog.RedoToNextCommitted()
+	if !hasEntry {
 		return
 	}
 
-	minPos := uint64(math.MaxUint64)
-	for _, op := range ops {
+	for _, op := range redoOps {
 		log.Printf("Redo operation: %#v\n", op)
 		if err := applyOpFromUndoLog(state, op); err != nil {
 			log.Printf("Could not apply redo op %v: %v\n", op, err)
 			continue
 		}
-		if pos := op.Position(); pos < minPos {
-			minPos = pos
-		}
 	}
-	MoveCursor(state, locateCursorAfterUndoOrRedo(minPos))
+
+	MoveCursor(state, func(LocatorParams) uint64 {
+		return cursor
+	})
 }
 
 func applyOpFromUndoLog(state *EditorState, op undo.Op) error {
@@ -63,15 +70,4 @@ func applyOpFromUndoLog(state *EditorState, op undo.Op) error {
 		deleteRunes(state, pos, uint64(n), false)
 	}
 	return nil
-}
-
-func locateCursorAfterUndoOrRedo(minPos uint64) Locator {
-	return func(params LocatorParams) uint64 {
-		lineStartPos := locate.PrevLineBoundary(params.TextTree, minPos)
-		indentedLineStartPos := locate.NextNonWhitespaceOrNewline(params.TextTree, lineStartPos)
-		if indentedLineStartPos > minPos {
-			return indentedLineStartPos
-		}
-		return locate.ClosestCharOnLine(params.TextTree, minPos)
-	}
 }

@@ -1975,7 +1975,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 				tcell.NewEventKey(tcell.KeyRune, 'u', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyCtrlR, '\x12', tcell.ModCtrl),
 			},
-			expectedCursorPos: 16,
+			expectedCursorPos: 0,
 			expectedText:      "Lorem ipsum dolor",
 		},
 		{

@@ -112,14 +112,13 @@ func TestInsertText(t *testing.T) {
 
 func TestDeleteToPos(t *testing.T) {
 	testCases := []struct {
-		name                 string
-		inputString          string
-		initialCursor        cursorState
-		locator              func(LocatorParams) uint64
-		expectedCursor       cursorState
-		expectedText         string
-		expectedClipboard    clipboard.PageContent
-		expectUnsavedChanges bool
+		name              string
+		inputString       string
+		initialCursor     cursorState
+		locator           func(LocatorParams) uint64
+		expectedCursor    cursorState
+		expectedText      string
+		expectedClipboard clipboard.PageContent
 	}{
 		{
 			name:          "delete from empty string",
@@ -138,10 +137,9 @@ func TestDeleteToPos(t *testing.T) {
 			locator: func(params LocatorParams) uint64 {
 				return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
 			},
-			expectedCursor:       cursorState{position: 0},
-			expectedText:         "bcd",
-			expectedClipboard:    clipboard.PageContent{Text: "a"},
-			expectUnsavedChanges: true,
+			expectedCursor:    cursorState{position: 0},
+			expectedText:      "bcd",
+			expectedClipboard: clipboard.PageContent{Text: "a"},
 		},
 		{
 			name:          "delete from end of text",
@@ -150,10 +148,9 @@ func TestDeleteToPos(t *testing.T) {
 			locator: func(params LocatorParams) uint64 {
 				return locate.NextCharInLine(params.TextTree, 1, true, params.CursorPos)
 			},
-			expectedCursor:       cursorState{position: 3},
-			expectedText:         "abc",
-			expectedClipboard:    clipboard.PageContent{Text: "d"},
-			expectUnsavedChanges: true,
+			expectedCursor:    cursorState{position: 3},
+			expectedText:      "abc",
+			expectedClipboard: clipboard.PageContent{Text: "d"},
 		},
 		{
 			name:          "delete multiple characters",
@@ -162,10 +159,9 @@ func TestDeleteToPos(t *testing.T) {
 			locator: func(params LocatorParams) uint64 {
 				return locate.NextCharInLine(params.TextTree, 10, true, params.CursorPos)
 			},
-			expectedCursor:       cursorState{position: 1},
-			expectedText:         "a",
-			expectedClipboard:    clipboard.PageContent{Text: "bcd"},
-			expectUnsavedChanges: true,
+			expectedCursor:    cursorState{position: 1},
+			expectedText:      "a",
+			expectedClipboard: clipboard.PageContent{Text: "bcd"},
 		},
 	}
 
@@ -180,7 +176,6 @@ func TestDeleteToPos(t *testing.T) {
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
-			assert.Equal(t, tc.expectUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
 }
@@ -446,7 +441,6 @@ func TestDeleteLines(t *testing.T) {
 		expectedCursor             cursorState
 		expectedText               string
 		expectedClipboard          clipboard.PageContent
-		expectedUnsavedChanges     bool
 	}{
 		{
 			name:          "empty",
@@ -455,9 +449,8 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
 			},
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "",
-			expectedUnsavedChanges: false,
+			expectedCursor: cursorState{position: 0},
+			expectedText:   "",
 		},
 		{
 			name:          "delete single line",
@@ -472,7 +465,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "abcd",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete single line, abort if same line",
@@ -484,7 +476,6 @@ func TestDeleteLines(t *testing.T) {
 			abortIfTargetIsCurrentLine: true,
 			expectedCursor:             cursorState{position: 2},
 			expectedText:               "abcd",
-			expectedUnsavedChanges:     false,
 		},
 		{
 			name:          "delete single line, first line",
@@ -499,7 +490,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "abcd",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete single line, interior line",
@@ -514,7 +504,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "efgh",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete single line, last line",
@@ -529,7 +518,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "ijk",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete empty line",
@@ -544,7 +532,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete multiple lines down",
@@ -559,7 +546,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "abcd\nefgh\nijk",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "delete multiple lines up",
@@ -574,7 +560,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "efgh\nijk\nlmnop",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "replace with empty line, empty document",
@@ -583,10 +568,9 @@ func TestDeleteLines(t *testing.T) {
 			targetLineLocator: func(params LocatorParams) uint64 {
 				return locate.StartOfLineBelow(params.TextTree, 1, params.CursorPos)
 			},
-			replaceWithEmptyLine:   true,
-			expectedCursor:         cursorState{position: 0},
-			expectedText:           "",
-			expectedUnsavedChanges: false,
+			replaceWithEmptyLine: true,
+			expectedCursor:       cursorState{position: 0},
+			expectedText:         "",
 		},
 		{
 			name:          "replace with empty line, on first line",
@@ -602,7 +586,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "abc",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "replace with empty line, on middle line",
@@ -618,7 +601,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "efg",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "replace with empty line, on empty line",
@@ -634,7 +616,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:          "replace with empty line, on last line",
@@ -650,7 +631,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "hij",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 		{
 			name:                 "replace with empty line, multiple lines selected",
@@ -664,7 +644,6 @@ func TestDeleteLines(t *testing.T) {
 				Text:     "efg\nhij",
 				Linewise: true,
 			},
-			expectedUnsavedChanges: true,
 		},
 	}
 
@@ -679,7 +658,6 @@ func TestDeleteLines(t *testing.T) {
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
 			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
-			assert.Equal(t, tc.expectedUnsavedChanges, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
 }

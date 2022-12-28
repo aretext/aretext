@@ -184,8 +184,6 @@ func TestReplayCheckpointUndo(t *testing.T) {
 		InsertRune(s, 'a')
 	})
 	AddToRecordingUserMacro(state, func(s *EditorState) {
-		// If this weren't a macro recording, switching the input mode
-		// would checkpoint the undo log here.
 		SetInputMode(s, InputModeNormal)
 	})
 	AddToRecordingUserMacro(state, func(s *EditorState) {
@@ -198,7 +196,9 @@ func TestReplayCheckpointUndo(t *testing.T) {
 	ToggleUserMacroRecording(state)
 
 	// Replay the macro.
+	BeginUndoEntry(state)
 	ReplayRecordedUserMacro(state)
+	CommitUndoEntry(state)
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 
 	// Undo to the last checkpoint, which should be at the start of the macro.

@@ -17,6 +17,7 @@ import (
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/syntax"
 	"github.com/aretext/aretext/text"
+	"github.com/aretext/aretext/undo"
 )
 
 // LoadDocument loads a file into the editor.
@@ -213,7 +214,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.autoIndent = cfg.AutoIndent
 	state.documentBuffer.showLineNum = cfg.ShowLineNumbers
 	state.documentBuffer.lineWrapAllowCharBreaks = bool(cfg.LineWrap == config.LineWrapCharacter)
-	state.documentBuffer.undoLog.TrackLoad()
+	state.documentBuffer.undoLog = undo.NewLog()
 	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(cfg)
 	state.dirPatternsToHide = cfg.HideDirectories

@@ -1,17 +1,16 @@
 package undo
 
-// logEntry represents an entry in the undo log.
-// Some entries are "checkpoints" that partition entries into groups that can be undone/redone together.
-type logEntry struct {
-	checkpoint bool
-	op         Op
+// LogEntry represents an entry in the undo log.
+type LogEntry struct {
+	Ops         []Op
+	CursorBegin uint64
+	CursorEnd   uint64
 }
 
 // Log tracks changes to a document and generates undo/redo operations.
 type Log struct {
-	// entries[0:numUndoEntries] are changes made before the current document state.  These changes can be undone.
-	// entries[numUndoEntries:len(entries)-1] are changes made after the current document state.  These changes can be redone.
-	entries              []logEntry
+	stagedEntry          LogEntry
+	committedEntries     []LogEntry
 	numUndoEntries       int
 	numEntriesAtLastSave int
 }
@@ -19,18 +18,30 @@ type Log struct {
 // NewLog constructs a new, empty undo log.
 func NewLog() *Log {
 	return &Log{
-		entries:              make([]logEntry, 0, 256),
+		stagedEntry:          LogEntry{},
+		committedEntries:     nil,
 		numUndoEntries:       0,
 		numEntriesAtLastSave: 0,
 	}
 }
 
-// TrackOp tracks a change to the document.
-// This appends a new, uncommitted change and invalidates any future changes.
-func (l *Log) TrackOp(op Op) {
-	if len(l.entries) > l.numUndoEntries {
+// BeginEntry starts a new undo entry.
+// This should be called before tracking any operations.
+func (l *Log) BeginEntry(cursorPos uint64) {
+	l.stagedEntry = LogEntry{CursorBegin: cursorPos}
+}
+
+// CommitEntry completes an undo entry.
+// This should be called after BeginEntry.
+// If no operations were tracked, this does nothing.
+func (l *Log) CommitEntry(cursorPos uint64) {
+	if len(l.stagedEntry.Ops) == 0 {
+		return
+	}
+
+	if len(l.committedEntries) > l.numUndoEntries {
 		// Invalidate future changes.
-		l.entries = l.entries[0:l.numUndoEntries]
+		l.committedEntries = l.committedEntries[0:l.numUndoEntries]
 	}
 
 	if l.numEntriesAtLastSave > l.numUndoEntries {
@@ -38,16 +49,17 @@ func (l *Log) TrackOp(op Op) {
 		l.numEntriesAtLastSave = -1
 	}
 
-	// Append a new undo entry.
-	l.entries = append(l.entries, logEntry{op: op})
+	l.stagedEntry.CursorEnd = cursorPos
+	l.committedEntries = append(l.committedEntries, l.stagedEntry)
+	l.stagedEntry = LogEntry{}
 	l.numUndoEntries++
 }
 
-// TrackLoad removes all changes and resets the savepoint.
-func (l *Log) TrackLoad() {
-	l.entries = l.entries[:0]
-	l.numUndoEntries = 0
-	l.numEntriesAtLastSave = 0
+// TrackOp tracks a change to the document.
+// This appends a new, uncommitted change and invalidates any future changes.
+func (l *Log) TrackOp(op Op) {
+	// Stage a new undo entry.
+	l.stagedEntry.Ops = append(l.stagedEntry.Ops, op)
 }
 
 // TrackSave moves the savepoint to the current entry.
@@ -55,40 +67,38 @@ func (l *Log) TrackSave() {
 	l.numEntriesAtLastSave = l.numUndoEntries
 }
 
-// Checkpoint marks the current entry as a checkpoint.
-func (l *Log) Checkpoint() {
-	if l.numUndoEntries == 0 {
-		return
-	}
-	l.entries[l.numUndoEntries-1].checkpoint = true
-}
-
-// UndoToLastCheckpoint returns operations to transform the document back to its state at the previous checkpoint.
+// UndoToLastCommitted returns operations to transform the document back to its state before the last entry.
 // It also moves the current position backwards in the log.
-func (l *Log) UndoToLastCheckpoint() []Op {
-	var ops []Op
-	for i := l.numUndoEntries - 1; i >= 0; i-- {
-		if i < l.numUndoEntries-1 && l.entries[i].checkpoint {
-			break
-		}
-		ops = append(ops, l.entries[i].op.Inverse())
+func (l *Log) UndoToLastCommitted() (hasEntry bool, ops []Op, cursor uint64) {
+	if l.numUndoEntries == 0 {
+		return false, nil, 0
 	}
-	l.numUndoEntries -= len(ops)
-	return ops
+
+	entry := l.committedEntries[l.numUndoEntries-1]
+	ops = make([]Op, 0, len(entry.Ops))
+	for i := len(entry.Ops) - 1; i >= 0; i-- {
+		ops = append(ops, entry.Ops[i].Inverse())
+	}
+
+	l.numUndoEntries--
+
+	return true, ops, entry.CursorBegin
 }
 
-// RedoToNextCheckpoint returns operations to to transform the document to its state at the next checkpoint.
+// RedoToNextCommitted returns operations to to transform the document to its state after the next entry.
 // It also moves the current position forward in the log.
-func (l *Log) RedoToNextCheckpoint() []Op {
-	var ops []Op
-	for i := l.numUndoEntries; i < len(l.entries); i++ {
-		ops = append(ops, l.entries[i].op)
-		if i > l.numUndoEntries && l.entries[i].checkpoint {
-			break
-		}
+func (l *Log) RedoToNextCommitted() (hasEntry bool, ops []Op, cursor uint64) {
+	if l.numUndoEntries == len(l.committedEntries) {
+		return false, nil, 0
 	}
-	l.numUndoEntries += len(ops)
-	return ops
+
+	entry := l.committedEntries[l.numUndoEntries]
+	ops = make([]Op, 0, len(entry.Ops))
+	ops = append(ops, entry.Ops...)
+
+	l.numUndoEntries++
+
+	return true, ops, entry.CursorEnd
 }
 
 // HasUnsavedChanges returns whether the log has unsaved changes.

@@ -42,7 +42,9 @@ func TestQuit(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 
 			if tc.hasUnsavedChanges {
+				state.documentBuffer.undoLog.BeginEntry(0)
 				state.documentBuffer.undoLog.TrackOp(undo.InsertOp(0, "a"))
+				state.documentBuffer.undoLog.CommitEntry(1)
 			}
 
 			if tc.force {

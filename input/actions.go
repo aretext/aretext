@@ -369,6 +369,14 @@ func ReturnToNormalModeAfterInsert(s *state.EditorState) {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
 	})
 	state.SetInputMode(s, state.InputModeNormal)
+
+	// Undo entry began in normal mode before we entered insert mode.
+	// Commit the entry before returning to normal mode so that the next undo
+	// reverts every operation tracked while in insert mode.
+	//
+	// Example: "i" to enter insert mode, type "abc", press escape to return to normal mode.
+	// There should be one undo entry with operations "insert a", "insert b", and "insert c".
+	state.CommitUndoEntry(s)
 }
 
 func InsertRune(r rune) Action {

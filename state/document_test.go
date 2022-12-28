@@ -342,7 +342,9 @@ func TestSaveDocumentIfUnsavedChanges(t *testing.T) {
 	assert.Equal(t, "abcdefg", string(contents))
 
 	// Modify and save the document, then check that the file was changed.
+	BeginUndoEntry(state)
 	InsertRune(state, 'x')
+	CommitUndoEntry(state)
 	SaveDocumentIfUnsavedChanges(state)
 	contents, err = os.ReadFile(path)
 	require.NoError(t, err)

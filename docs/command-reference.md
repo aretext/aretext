@@ -73,6 +73,12 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete to start of next word, including punctuation             | dW                | count, clipboard page |
 | delete a word                                                   | daw               | count, clipboard page |
 | delete inner word                                               | diw               | count, clipboard page |
+| delete a double-quoted string                                   | da"               | clipboard page        |
+| delete inner double-quoted string                               | di"               | clipboard page        |
+| delete a single-quoted string                                   | da'               | clipboard page        |
+| delete inner single-quoted string                               | di'               | clipboard page        |
+| delete a backtick-quoted string                                 | da\`              | clipboard page        |
+| delete inner backtick-quoted string                             | di\`              | clipboard page        |
 | delete to next matching character in line                       | df\{char\}        | count, clipboard page |
 | delete to prev matching character in line                       | dF\{char\}        | count, clipboard page |
 | delete till next matching character in line                     | dt\{char\}        | count, clipboard page |
@@ -86,6 +92,12 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change word                                                     | cw                | count, clipboard page |
 | change a word                                                   | caw               | count, clipboard page |
 | change inner word                                               | ciw               | count, clipboard page |
+| change a double-quoted string                                   | ca"               | clipboard page        |
+| change inner double-quoted string                               | ci"               | clipboard page        |
+| change a single-quoted string                                   | ca'               | clipboard page        |
+| change inner single-quoted string                               | ci'               | clipboard page        |
+| change a backtick-quoted string                                 | ca\`              | clipboard page        |
+| change inner backtick-quoted string                             | ci\`              | clipboard page        |
 | change to next matching character in line                       | cf\{char\}        | count, clipboard page |
 | change to prev matching character in line                       | cF\{char\}        | count, clipboard page |
 | change till next matching character in line                     | ct\{char\}        | count, clipboard page |
@@ -104,6 +116,12 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | yank to start of next word, including punctuation               | yW                | count, clipboard page |
 | yank a word                                                     | yaw               | count, clipboard page |
 | yank inner word                                                 | yiw               | count, clipboard page |
+| yank a double-quoted string                                     | ya"               | clipboard page        |
+| yank inner double-quoted string                                 | yi"               | clipboard page        |
+| yank a single-quoted string                                     | ya'               | clipboard page        |
+| yank inner single-quoted string                                 | yi'               | clipboard page        |
+| yank a backtick-quoted string                                   | ya\`              | clipboard page        |
+| yank inner backtick-quoted string                               | yi\`              | clipboard page        |
 | yank line                                                       | yy                | clipboard page        |
 | put after cursor                                                | p                 | clipboard page        |
 | put before cursor                                               | P                 | clipboard page        |
@@ -123,27 +141,33 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 Visual Mode Commands
 --------------------
 
-| Name                        | Key Binding    | Options        |
-|-----------------------------|----------------|----------------|
-| toggle visual mode charwise | v              |                |
-| toggle visual mode linewise | V              |                |
-| return to normal mode       | escape         |                |
-| show command menu           | :              |                |
-| delete selection            | x              | clipboard page |
-| delete selection            | d              | clipboard page |
-| change selection            | c              | clipboard page |
-| toggle case for selection   | ~              |                |
-| indent selection            | &gt;           |                |
-| outdent selection           | &lt;           |                |
-| yank selection              | y              | clipboard page |
-| select inner word           | iw             | count          |
-| select a word               | aw             | count          |
-| select inner paren block    | ib / i\( / i\) |                |
-| select a paren block        | ab / a\( / a\) |                |
-| select inner brace block    | iB / i\{ / i\} |                |
-| select a brace block        | aB / a\{ / a\} |                |
-| select inner angle block    | i&lt; / i&gt;  |                |
-| select an angle block       | a&lt; / a&gt;  |                |
+| Name                                | Key Binding    | Options        |
+|-------------------------------------|----------------|----------------|
+| toggle visual mode charwise         | v              |                |
+| toggle visual mode linewise         | V              |                |
+| return to normal mode               | escape         |                |
+| show command menu                   | :              |                |
+| delete selection                    | x              | clipboard page |
+| delete selection                    | d              | clipboard page |
+| change selection                    | c              | clipboard page |
+| toggle case for selection           | ~              |                |
+| indent selection                    | &gt;           |                |
+| outdent selection                   | &lt;           |                |
+| yank selection                      | y              | clipboard page |
+| select inner word                   | iw             | count          |
+| select a word                       | aw             | count          |
+| select a double-quoted string       | a"             |                |
+| select inner double-quoted string   | i"             |                |
+| select a single-quoted string       | a'             |                |
+| select inner single-quoted string   | i'             |                |
+| select a backtick-quoted string     | a\`            |                |
+| select inner backtick-quoted string | i\`            |                |
+| select inner paren block            | ib / i\( / i\) |                |
+| select a paren block                | ab / a\( / a\) |                |
+| select inner brace block            | iB / i\{ / i\} |                |
+| select a brace block                | aB / a\{ / a\} |                |
+| select inner angle block            | i&lt; / i&gt;  |                |
+| select an angle block               | a&lt; / a&gt;  |                |
 
 Menu Commands
 -------------

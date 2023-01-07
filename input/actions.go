@@ -578,6 +578,17 @@ func DeleteInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 	}
 }
 
+func DeleteStringObject(quoteRune rune, includeQuotes bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.StringObject(quoteRune, params.TextTree, params.SyntaxParser, includeQuotes, params.CursorPos)
+		}, clipboardPage)
+		state.MoveCursor(s, func(params state.LocatorParams) uint64 {
+			return locate.ClosestCharOnLine(params.TextTree, params.CursorPos)
+		})
+	}
+}
+
 func ChangeWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteToPos(s, func(params state.LocatorParams) uint64 {
@@ -603,6 +614,15 @@ func ChangeInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
+		}, clipboardPage)
+		EnterInsertMode(s)
+	}
+}
+
+func ChangeStringObject(quoteRune rune, includeQuotes bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.DeleteRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.StringObject(quoteRune, params.TextTree, params.SyntaxParser, includeQuotes, params.CursorPos)
 		}, clipboardPage)
 		EnterInsertMode(s)
 	}
@@ -674,6 +694,14 @@ func CopyInnerWord(count uint64, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.InnerWordObject(params.TextTree, params.CursorPos, count)
+		})
+	}
+}
+
+func CopyStringObject(quoteRune rune, includeQuotes bool, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.StringObject(quoteRune, params.TextTree, params.SyntaxParser, includeQuotes, params.CursorPos)
 		})
 	}
 }
@@ -908,6 +936,14 @@ func SelectAWord(count uint64) Action {
 	return func(s *state.EditorState) {
 		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
 			return locate.WordObject(params.TextTree, params.CursorPos, count)
+		})
+	}
+}
+
+func SelectStringObject(quoteRune rune, includeQuotes bool) Action {
+	return func(s *state.EditorState) {
+		state.SelectRange(s, func(params state.LocatorParams) (uint64, uint64) {
+			return locate.StringObject(quoteRune, params.TextTree, params.SyntaxParser, includeQuotes, params.CursorPos)
 		})
 	}
 }

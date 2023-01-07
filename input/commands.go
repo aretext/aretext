@@ -674,6 +674,72 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete a string object with double quotes (da\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "a\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('"', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete inner string object with double quotes (di\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "i\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('"', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete a string object with single quotes (da')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "a'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('\'', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete inner string object with single quotes (di')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "i'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('\'', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete a string object with backtick (da`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "a`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('`', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "delete inner string object with backtick (di`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d", "i`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteStringObject('`', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "delete inner paren block (dib)",
 			BuildExpr: func() vm.Expr {
 				return altExpr(
@@ -791,6 +857,72 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ChangeInnerWord(p.Count, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change a string object with double quotes (ca\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "a\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('"', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner string object with double quotes (ci\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "i\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('"', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change a string object with single quotes (ca')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "a'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('\'', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner string object with single quotes (ci')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "i'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('\'', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change a string object with backtick (ca`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "a`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('`', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "change inner string object with backtick (ci`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c", "i`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					ChangeStringObject('`', false, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -1017,6 +1149,72 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					CopyInnerWord(p.Count, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank a string object with double quotes (ya\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "a\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('"', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank inner string object with double quotes (yi\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "i\"", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('"', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank a string object with single quotes (ya')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "a'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('\'', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank inner string object with single quotes (yi')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "i'", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('\'', false, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank a string object with backtick (ya`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "a`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('`', true, p.ClipboardPage),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank inner string object with backtick (yi`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "i`", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyStringObject('`', false, p.ClipboardPage),
 					addToMacro{lastAction: true, user: true})
 			},
 		},
@@ -1327,6 +1525,72 @@ func VisualModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					SelectAWord(p.Count),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select a string object with double quotes (a\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("a\"", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('"', true),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select inner string object with double quotes (i\")",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("i\"", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('"', false),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select a string object with single quotes (a')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("a'", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('\'', true),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select inner string object with single quotes (i')",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("i'", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('\'', false),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select a string object with backtick (a`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("a`", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('`', true),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "select inner string object with backtick (i`)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("i`", "", captureOpts{})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					SelectStringObject('`', false),
 					addToMacro{user: true})
 			},
 		},

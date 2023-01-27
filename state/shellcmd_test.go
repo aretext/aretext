@@ -247,6 +247,35 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 	}
 }
 
+func TestRunShellCmdInsertIntoDocumentThenUndo(t *testing.T) {
+	setupShellCmdTest(t, func(state *EditorState, dir string) {
+		// Setup initial state.
+		for _, r := range "abcd" {
+			InsertRune(state, r)
+		}
+		MoveCursor(state, func(p LocatorParams) uint64 { return 2 })
+
+		// Create test file with content
+		p := path.Join(dir, "test-output.txt")
+		err := os.WriteFile(p, []byte("xyz"), 0644)
+		require.NoError(t, err)
+
+		// Execute command to insert contents of text file.
+		cmd := fmt.Sprintf("cat %s", p)
+		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeInsert)
+
+		// Undo the last action.
+		Undo(state)
+
+		// Check the document state.
+		s := state.documentBuffer.textTree.String()
+		cursorPos := state.documentBuffer.cursor.position
+		assert.Equal(t, "abcd", s)
+		assert.Equal(t, uint64(2), cursorPos)
+		assert.Equal(t, InputModeNormal, state.InputMode())
+	})
+}
+
 func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 	testCases := []struct {
 		name              string

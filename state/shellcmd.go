@@ -178,12 +178,14 @@ func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 	page := clipboard.PageContent{Text: shellCmdOutput}
 	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
 
+	BeginUndoEntry(state)
 	if state.documentBuffer.selector.Mode() == selection.ModeNone {
 		PasteAfterCursor(state, clipboard.PageShellCmdOutput)
 	} else {
 		deleteCurrentSelection(state)
 		PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
 	}
+	CommitUndoEntry(state)
 
 	SetInputMode(state, InputModeNormal)
 }

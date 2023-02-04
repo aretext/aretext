@@ -9,6 +9,11 @@ import (
 // BeginUndoEntry begins a new undo entry.
 // This should be called before tracking any undo operations.
 func BeginUndoEntry(state *EditorState) {
+	if state.macroState.isReplayingUserMacro {
+		log.Printf("Skip begin undo entry because we're replaying a user macro\n")
+		return
+	}
+
 	log.Printf("Begin undo entry\n")
 	buffer := state.documentBuffer
 	buffer.undoLog.BeginEntry(buffer.cursor.position)
@@ -17,6 +22,11 @@ func BeginUndoEntry(state *EditorState) {
 // CommitUndoEntry commits the current undo entry.
 // This should be called after completing an action that can be undone.
 func CommitUndoEntry(state *EditorState) {
+	if state.macroState.isReplayingUserMacro {
+		log.Printf("Skip commit undo entry because we're replaying a user macro\n")
+		return
+	}
+
 	log.Printf("Commit undo entry\n")
 	buffer := state.documentBuffer
 	buffer.undoLog.CommitEntry(buffer.cursor.position)

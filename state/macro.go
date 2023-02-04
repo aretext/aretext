@@ -114,13 +114,17 @@ func ReplayRecordedUserMacro(s *EditorState) {
 	// when switching input modes -- this ensures that the next undo operation reverts
 	// the entire macro.
 	replay := func(s *EditorState) {
-		log.Printf("Replaying actions from user macro...\n")
+		BeginUndoEntry(s)
 		s.macroState.isReplayingUserMacro = true
+
+		log.Printf("Replaying actions from user macro...\n")
 		for _, action := range m.userMacroActions {
 			action(s)
 		}
 		log.Printf("Finished replaying actions from user macro\n")
+
 		s.macroState.isReplayingUserMacro = false
+		CommitUndoEntry(s)
 	}
 
 	// Replay the macro, then set the replay action as the new "last" action macro.

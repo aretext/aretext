@@ -161,6 +161,15 @@
   pattern: "**/*.h"
   config: *cconfig
 
+- name: shell
+  pattern: "**/*.sh"
+  config:
+    autoIndent: true
+    syntaxLanguage: bash
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
 - name: markdown
   pattern: "**/*.md"
   config:

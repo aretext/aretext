@@ -29,6 +29,7 @@ Syntax Languages
 | python       | [Python](https://docs.python.org/3/reference/)                                           |
 | rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                      |
 | c            | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                          |
+| bash         | [bash](https://www.gnu.org/software/bash/manual/bash.html)                               |
 | markdown     | [Markdown](https://commonmark.org/)                                                      |
 | criticmarkup | [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)                     |
 | protobuf     | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3) |

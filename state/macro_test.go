@@ -154,7 +154,7 @@ func TestReplayWithNoUserMacroRecorded(t *testing.T) {
 	}, state.StatusMsg())
 }
 
-func TestReplayWhileRecordingUserMacro(t *testing.T) {
+func TestReplayUserMacroWhileRecordingUserMacro(t *testing.T) {
 	var logger actionLogger
 	state := NewEditorState(100, 100, nil, nil)
 
@@ -171,6 +171,22 @@ func TestReplayWhileRecordingUserMacro(t *testing.T) {
 	assert.Equal(t, StatusMsg{
 		Style: StatusMsgStyleError,
 		Text:  "Cannot replay a macro while recording a macro",
+	}, state.StatusMsg())
+}
+
+func TestReplayLastActionWhileRecordingUserMacro(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+
+	// Start recording a user macro.
+	ToggleUserMacroRecording(state)
+
+	// Attempt to replay the last action.
+	ReplayLastActionMacro(state, 1)
+
+	// Expect an error status.
+	assert.Equal(t, StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  "Cannot repeat the last action while recording a macro",
 	}, state.StatusMsg())
 }
 

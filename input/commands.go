@@ -40,9 +40,9 @@ func cursorCommands() []Command {
 	decorate := func(action Action) Action {
 		return func(s *state.EditorState) {
 			wrappedAction := func(s *state.EditorState) {
+				state.SetStatusMsg(s, state.StatusMsg{})
 				action(s)
 				state.ScrollViewToCursor(s)
-				state.SetStatusMsg(s, state.StatusMsg{})
 			}
 			wrappedAction(s)
 			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
@@ -356,9 +356,9 @@ type addToMacro struct {
 func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 	return func(s *state.EditorState) {
 		wrappedAction := func(s *state.EditorState) {
+			state.SetStatusMsg(s, state.StatusMsg{})
 			action(s)
 			state.ScrollViewToCursor(s)
-			state.SetStatusMsg(s, state.StatusMsg{})
 		}
 
 		// Begin an undo entry, which will include all operations tracked while executing `wrappedAction`.
@@ -389,9 +389,9 @@ func decorateUndoOrRedo(action Action) Action {
 	// 2) They do NOT clear/update the last action macro.
 	return func(s *state.EditorState) {
 		wrappedAction := func(s *state.EditorState) {
+			state.SetStatusMsg(s, state.StatusMsg{})
 			action(s)
 			state.ScrollViewToCursor(s)
-			state.SetStatusMsg(s, state.StatusMsg{})
 		}
 		wrappedAction(s)
 		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
@@ -1377,7 +1377,7 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					ReplayLastActionMacro(p.Count),
-					addToMacro{user: true})
+					addToMacro{})
 			},
 		},
 	}...)

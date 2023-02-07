@@ -28,6 +28,27 @@ func ClearLastActionMacro(s *EditorState) {
 
 // ReplayLastActionMacro executes the actions recorded in the "last action" macro.
 func ReplayLastActionMacro(s *EditorState, count uint64) {
+	if s.macroState.isRecordingUserMacro {
+		// Replaying a last action macro while recording a user macro can cause an infinite loop:
+		// 1) Run a command, recorded as a last action macro.
+		// 2) Start recording a user macro.
+		// 3) Replay the last action macro.
+		// 4) Stop recording the user macro.
+		// 5) Replay the user macro.
+		// 6) Replay the last action macro.
+		//
+		// In step (5), the last action macro becomes the replay of the user macro.
+		// When executed, the user macro invokes the last action macro, which invokes
+		// the user macro, ad infinitum.
+		//
+		// Avoid this problem by disallowing replay while recording entirely.
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  "Cannot repeat the last action while recording a macro",
+		})
+		return
+	}
+
 	for i := uint64(0); i < count; i++ {
 		for _, action := range s.macroState.lastActions {
 			action(s)

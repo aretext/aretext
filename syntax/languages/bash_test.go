@@ -379,6 +379,54 @@ heredoc text
 				{Role: parser.TokenRoleString, Text: `"foo bar"`},
 			},
 		},
+		{
+			name: "variable assignment with home expansion",
+			text: `path=~/foo/bar`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `=`},
+			},
+		},
+		{
+			name: "conditional with regex start of line",
+			text: `[[ $line =~ ^"initial string" ]]`,
+			expected: []TokenWithText{
+				{Role: bashTokenRoleVariable, Text: `$line`},
+				{Role: parser.TokenRoleOperator, Text: `=~`},
+				{Role: parser.TokenRoleOperator, Text: `^`},
+				{Role: parser.TokenRoleString, Text: `"initial string"`},
+			},
+		},
+		{
+			name: "conditional with exact string match",
+			text: `[[ $line == "test" ]]`,
+			expected: []TokenWithText{
+				{Role: bashTokenRoleVariable, Text: `$line`},
+				{Role: parser.TokenRoleOperator, Text: `==`},
+				{Role: parser.TokenRoleString, Text: `"test"`},
+			},
+		},
+		{
+			name: "conditional with lexicographic order comparison",
+			text: `[[ $line > "test" ]]`,
+			expected: []TokenWithText{
+				{Role: bashTokenRoleVariable, Text: `$line`},
+				{Role: parser.TokenRoleOperator, Text: `>`},
+				{Role: parser.TokenRoleString, Text: `"test"`},
+			},
+		},
+		{
+			name: "if statement with conditional",
+			text: `if [[ $line == "test"]]; then x=~/foo/bar; fi`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleKeyword, Text: `if`},
+				{Role: bashTokenRoleVariable, Text: `$line`},
+				{Role: parser.TokenRoleOperator, Text: `==`},
+				{Role: parser.TokenRoleString, Text: `"test"`},
+				{Role: parser.TokenRoleKeyword, Text: `then`},
+				{Role: parser.TokenRoleOperator, Text: `=`},
+				{Role: parser.TokenRoleKeyword, Text: `fi`},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

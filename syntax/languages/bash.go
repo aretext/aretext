@@ -13,13 +13,24 @@ const (
 	bashTokenRoleBackquoteExpansion = parser.TokenRoleCustom2
 )
 
+type bashParseState uint8
+
+const (
+	bashParseStateNormal = bashParseState(iota)
+	bashParseStateInConditional
+)
+
+func (s bashParseState) Equals(other parser.State) bool {
+	otherState, ok := other.(bashParseState)
+	return ok && s == otherState
+}
+
 // BashParseFunc returns a parse func for bash.
 // See https://www.gnu.org/software/bash/manual/bash.html
 //
 // Some known limitations with this implementation:
 // * reserved keywords "in" and "do" recognized outside the context of a case/select/for.
 // * no special parsing for numbers or arithmetic expressions $((...))
-// * no special parsing for bash conditionals [[...]]
 // * no special handling for file redirects after heredoc word.
 func BashParseFunc() parser.Func {
 	parseComment := consumeString("#").
@@ -64,21 +75,42 @@ func BashParseFunc() parser.Func {
 	parseHeredoc := bashHeredocParseFunc()
 
 	parseOperator := consumeLongestMatchingOption([]string{
-		"$", "!",
-		"<<", ">>", "<=", ">=", "<", ">",
-		"==", "!=", "|", "&&", "||",
-		"=", "=~", "&>", ">&", "&>>",
+		"$", "!", "<", ">", "<<", ">>",
+		"|", "&&", "||", "=", "&>", ">&", "&>>",
 	}).Map(recognizeToken(parser.TokenRoleOperator))
 
-	return parseComment.
-		Or(parseEscape).
-		Or(parseString).
-		Or(parseBackquoteExpansion).
-		Or(parseKeyword).
-		Or(parseVariableBrace).
-		Or(parseVariable).
-		Or(parseHeredoc).
-		Or(parseOperator)
+	parseStartConditional := matchState(
+		bashParseStateNormal,
+		consumeString("[[").
+			Map(setState(bashParseStateInConditional)))
+
+	parseEndConditional := matchState(
+		bashParseStateInConditional,
+		consumeString("]]").
+			Map(setState(bashParseStateNormal)))
+
+	parseConditionalOperator := matchState(
+		bashParseStateInConditional,
+		consumeLongestMatchingOption([]string{
+			"=~", "^", "==", "!=",
+		}).Map(recognizeToken(parser.TokenRoleOperator)))
+
+	parseConditional := parseStartConditional.
+		Or(parseEndConditional).
+		Or(parseConditionalOperator)
+
+	return initialState(
+		bashParseStateNormal,
+		parseComment.
+			Or(parseEscape).
+			Or(parseString).
+			Or(parseBackquoteExpansion).
+			Or(parseConditional).
+			Or(parseKeyword).
+			Or(parseVariableBrace).
+			Or(parseVariable).
+			Or(parseHeredoc).
+			Or(parseOperator))
 }
 
 // bashExpansionParseFunc handles expressions that can contain expansions.

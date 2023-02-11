@@ -170,6 +170,19 @@
     tabSize: 4
     showLineNumbers: true
 
+- name: xml
+  pattern: "**/*.xml"
+  config: &xmlconfig
+    autoIndent: true
+    syntaxLanguage: xml
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: html
+  pattern: "**/*.html"
+  config: *xmlconfig
+
 - name: markdown
   pattern: "**/*.md"
   config:

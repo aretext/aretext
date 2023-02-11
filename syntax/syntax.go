@@ -21,6 +21,7 @@ const (
 	LanguageRust         = Language("rust")
 	LanguageC            = Language("c")
 	LanguageBash         = Language("bash")
+	LanguageXml          = Language("xml")
 	LanguageGitCommit    = Language("gitcommit")
 	LanguageGitRebase    = Language("gitrebase")
 	LanguageProtobuf     = Language("protobuf")
@@ -43,6 +44,7 @@ func init() {
 		LanguageRust:         languages.RustParseFunc(),
 		LanguageC:            languages.CParseFunc(),
 		LanguageBash:         languages.BashParseFunc(),
+		LanguageXml:          languages.XmlParseFunc(),
 		LanguageGitCommit:    languages.GitCommitParseFunc(),
 		LanguageGitRebase:    languages.GitRebaseParseFunc(),
 		LanguageProtobuf:     languages.ProtobufParseFunc(),

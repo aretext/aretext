@@ -71,15 +71,22 @@ func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Rea
 
 const defaultShell = "sh"
 
-func shellProgAndArgs() ([]string, error) {
-	s := os.Getenv("SHELL")
-	if s == "" {
-		s = defaultShell
+func shellProg() string {
+	if s := os.Getenv("ARETEXT_SHELL"); s != "" {
+		return s
 	}
 
+	if s := os.Getenv("SHELL"); s != "" {
+		return s
+	}
+
+	return defaultShell
+}
+
+func shellProgAndArgs() ([]string, error) {
 	// The $SHELL env var might include command line args for the shell command.
 	// These args need to be passed separately to exec.Command, so split them here.
-	parts, err := shlex.Split(s)
+	parts, err := shlex.Split(shellProg())
 	if err != nil {
 		return nil, errors.Wrap(err, "shlex.Split")
 	}

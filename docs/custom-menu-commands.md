@@ -18,7 +18,9 @@ You can add new menu commands by [editing the config file](configuration.md) to 
       mode: terminal  # or "silent" or "insert" or "fileLocations"
 ```
 
-After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell (configured by the `$SHELL` environment variable) and execute the shell command (in this case, echoing "hello world").
+After restarting the editor, the new command will be available in the command menu. Selecting the new command will launch a shell to execute the given command (in this case, echoing "hello world").
+
+The shell program can be configured by environment variables: `$ARETEXT_SHELL` has highest priority, then `$SHELL`. If neither environment variable is set, aretext uses `sh`.
 
 The "mode" parameter controls how aretext handles the command's input and output. The table below shows the available modes:
 

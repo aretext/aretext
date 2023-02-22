@@ -373,6 +373,19 @@ heredoc text
 			},
 		},
 		{
+			name: "heredoc backslash quoted word",
+			text: `
+cat << \EOF
+heredoc text
+EOF`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `<<`},
+				{Role: parser.TokenRoleString, Text: `\EOF
+heredoc text
+EOF`},
+			},
+		},
+		{
 			name: "function name with dash",
 			text: `foo-for-bar() { echo "foo bar" }`,
 			expected: []TokenWithText{

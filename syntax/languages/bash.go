@@ -274,8 +274,12 @@ func bashHeredocParseFunc() parser.Func {
 			} else if r == '\n' || unicode.IsSpace(r) {
 				word := sb.String()
 				// If the word is quoted, search for the unquoted word.
-				if len(word) > 0 && ((word[0] == '\'' && word[len(word)-1] == '\'') || (word[0] == '"' && word[len(word)-1] == '"')) {
-					word = word[1 : len(word)-1]
+				if len(word) > 0 {
+					if (word[0] == '\'' && word[len(word)-1] == '\'') || (word[0] == '"' && word[len(word)-1] == '"') {
+						word = word[1 : len(word)-1]
+					} else if word[0] == '\\' {
+						word = word[1:]
+					}
 				}
 				return word, nil
 			} else {

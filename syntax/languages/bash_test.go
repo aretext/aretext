@@ -373,6 +373,24 @@ heredoc text
 			},
 		},
 		{
+			name: "heredoc one single quote",
+			text: `
+cat << '
+foo`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `<<`},
+			},
+		},
+		{
+			name: "heredoc one double quote",
+			text: `
+cat << "
+foo`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `<<`},
+			},
+		},
+		{
 			name: "heredoc backslash quoted word",
 			text: `
 cat << \EOF
@@ -383,6 +401,19 @@ EOF`,
 				{Role: parser.TokenRoleString, Text: `\EOF
 heredoc text
 EOF`},
+			},
+		},
+		{
+			name: "heredoc backslash empty word",
+			text: `
+cat << \
+heredoc text
+EOF`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `<<`},
+				{Role: parser.TokenRoleString, Text: `\
+heredoc text
+`},
 			},
 		},
 		{

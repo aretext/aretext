@@ -69,6 +69,14 @@ func TestGoTemplateParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "keyword in variable name",
+			text: `{{ .Values.range.end }}`,
+			expected: []TokenWithText{
+				{Text: `{{`, Role: parser.TokenRoleOperator},
+				{Text: `}}`, Role: parser.TokenRoleOperator},
+			},
+		},
+		{
 			name: "pipe",
 			text: `{{"abcd" | printf "%q"}}`,
 			expected: []TokenWithText{

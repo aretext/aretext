@@ -71,16 +71,16 @@ func goTemplateActionContentsParseFunc() parser.Func {
 	parseOperator := consumeLongestMatchingOption([]string{"|", "$", ":="}).
 		Map(recognizeToken(parser.TokenRoleOperator))
 
-	isLetter := func(r rune) bool { return unicode.IsLetter(r) || r == '_' }
-	isLetterOrDigit := func(r rune) bool { return isLetter(r) || unicode.IsDigit(r) }
+	isLetterOrPunct := func(r rune) bool { return unicode.IsLetter(r) || r == '_' || r == '.' }
+	isLetterPunctOrDigit := func(r rune) bool { return isLetterOrPunct(r) || unicode.IsDigit(r) }
 	keywords := []string{
 		"if", "else", "end", "range", "break", "continue", "template", "block", "with",
 		"and", "call", "html", "index", "slice", "js", "len", "not", "or",
 		"print", "printf", "println", "urlquery", "define",
 		"eq", "ne", "lt", "le", "gt", "ge",
 	}
-	parseKeywordOrIdentifier := consumeSingleRuneLike(isLetter).
-		ThenMaybe(consumeRunesLike(isLetterOrDigit)).
+	parseKeywordOrIdentifier := consumeSingleRuneLike(isLetterOrPunct).
+		ThenMaybe(consumeRunesLike(isLetterPunctOrDigit)).
 		MapWithInput(recognizeKeywordOrConsume(keywords))
 
 	return parseString.

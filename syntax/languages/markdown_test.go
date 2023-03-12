@@ -3,7 +3,6 @@ package languages
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"testing"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/syntax/parser"
-	"github.com/aretext/aretext/text"
 )
 
 type markdownTest struct {
@@ -77,21 +75,12 @@ func FuzzMarkdownParseFunc(f *testing.F) {
 		f.Fatalf("Could not load markdown test seeds: %s", err)
 	}
 
+	seeds := make([]string, 0, len(testCases))
 	for _, tc := range testCases {
-		f.Add(tc.text)
+		seeds = append(seeds, tc.text)
 	}
 
-	parseFunc := MarkdownParseFunc()
-	f.Fuzz(func(t *testing.T, data string) {
-		p := parser.New(parseFunc)
-		tree, err := text.NewTreeFromString(data)
-		if errors.Is(err, text.InvalidUtf8Error) {
-			t.Skip()
-		}
-		require.NoError(t, err)
-		p.ParseAll(tree)
-		p.TokensIntersectingRange(0, math.MaxUint64)
-	})
+	FuzzParser(f, MarkdownParseFunc(), seeds)
 }
 
 func loadCommonmarkTests() ([]markdownTest, error) {

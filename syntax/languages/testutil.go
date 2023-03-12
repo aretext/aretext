@@ -1,6 +1,7 @@
 package languages
 
 import (
+	"errors"
 	"math"
 	"os"
 	"strings"
@@ -65,4 +66,21 @@ func BenchmarkParser(b *testing.B, f parser.Func, path string) {
 	for i := 0; i < b.N; i++ {
 		p.ParseAll(tree)
 	}
+}
+
+// FuzzParser runs a fuzz test on a parser.
+func FuzzParser(f *testing.F, parseFunc parser.Func, seeds []string) {
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, data string) {
+		tree, err := text.NewTreeFromString(data)
+		if errors.Is(err, text.InvalidUtf8Error) {
+			t.Skip()
+		}
+		require.NoError(t, err)
+		p := parser.New(parseFunc)
+		p.ParseAll(tree)
+	})
 }

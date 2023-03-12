@@ -168,5 +168,5 @@ y = 5e-2;
 }
 
 func BenchmarkCParser(b *testing.B) {
-	ParserBenchmark(CParseFunc(), "testdata/c/hello.c")(b)
+	BenchmarkParser(b, CParseFunc(), "testdata/c/hello.c")
 }

@@ -488,5 +488,5 @@ fn main() {
 }
 
 func BenchmarkRustParser(b *testing.B) {
-	ParserBenchmark(RustParseFunc(), "testdata/rust/hello.rs")(b)
+	BenchmarkParser(b, RustParseFunc(), "testdata/rust/hello.rs")
 }

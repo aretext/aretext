@@ -548,5 +548,5 @@ interface {
 }
 
 func BenchmarkGolangParser(b *testing.B) {
-	ParserBenchmark(GolangParseFunc(), "testdata/golang/fib.go")(b)
+	BenchmarkParser(b, GolangParseFunc(), "testdata/golang/fib.go")
 }

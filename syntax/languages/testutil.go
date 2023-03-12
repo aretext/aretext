@@ -54,17 +54,15 @@ func ParseTokensWithText(f parser.Func, s string) []TokenWithText {
 	return tokensWithText
 }
 
-// ParserBenchmark benchmarks a parser with the input file located at `path`.
-func ParserBenchmark(f parser.Func, path string) func(*testing.B) {
-	return func(b *testing.B) {
-		data, err := os.ReadFile(path)
-		require.NoError(b, err)
-		tree, err := text.NewTreeFromString(string(data))
-		require.NoError(b, err)
+// BenchmarkParser benchmarks a parser with the input file located at `path`.
+func BenchmarkParser(b *testing.B, f parser.Func, path string) {
+	data, err := os.ReadFile(path)
+	require.NoError(b, err)
+	tree, err := text.NewTreeFromString(string(data))
+	require.NoError(b, err)
 
-		p := parser.New(f)
-		for i := 0; i < b.N; i++ {
-			p.ParseAll(tree)
-		}
+	p := parser.New(f)
+	for i := 0; i < b.N; i++ {
+		p.ParseAll(tree)
 	}
 }

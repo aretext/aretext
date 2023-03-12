@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -83,4 +84,26 @@ func FuzzParser(f *testing.F, parseFunc parser.Func, seeds []string) {
 		p := parser.New(parseFunc)
 		p.ParseAll(tree)
 	})
+}
+
+// LoadFuzzTestSeeds loads seed data from files matching a glob pattern.
+func LoadFuzzTestSeeds(f *testing.F, globPattern string) []string {
+	var seeds []string
+
+	matches, err := filepath.Glob(globPattern)
+	if err != nil {
+		f.Fatalf("filepath.Glob: %s\n", err)
+	}
+
+	for _, path := range matches {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			f.Fatalf("os.ReadFile: %s\n", err)
+		}
+
+		f.Logf("Loaded seed file %s\n", path)
+		seeds = append(seeds, string(data))
+	}
+
+	return seeds
 }

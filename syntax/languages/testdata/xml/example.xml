@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <head>
+    <title>example</title>
+    <style>
+    :root {
+      --fg-color: #1a1a1a;
+      --bg-color: #fdfdfd;
+    }
+    </style>
+  </head>
+  <body>
+    <header>
+    <h1>example</h1>
+    <p>this is an example <a href=".">link</a></p>
+    </header>
+
+    <section>
+      <article>
+        <h2>subhead</h2>
+        <p>subparagraph</p>
+        <div class="someclass">test div</div>
+      </article>
+    </section>
+  </body>
+</html>

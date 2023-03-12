@@ -175,3 +175,8 @@ comment
 		})
 	}
 }
+
+func FuzzXmlParseFunc(f *testing.F) {
+	seeds := LoadFuzzTestSeeds(f, "./testdata/xml/*")
+	FuzzParser(f, XmlParseFunc(), seeds)
+}

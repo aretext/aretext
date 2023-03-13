@@ -61,10 +61,6 @@ func XmlParseFunc() parser.Func {
 			Then(consumeString(";")).
 			Map(recognizeToken(xmlTokenRoleCharacterEntity)))
 
-	parseAttrKey := consumeRunesLike(func(r rune) bool { return r != '>' && r != '=' && !unicode.IsSpace(r) }).
-		Then(consumeString("=")).
-		Map(recognizeToken(xmlTokenRoleAttrKey))
-
 	consumeAttrValSingleQuote := consumeString("'").
 		Then(consumeToEofOrRuneLike(func(r rune) bool { return r == '\'' || r == '\n' || r == '>' }))
 
@@ -77,7 +73,7 @@ func XmlParseFunc() parser.Func {
 
 	parseTagContent := matchState(
 		xmlParseStateInTag,
-		parseAttrVal.Or(parseAttrKey))
+		parseAttrVal.Or(xmlAttrKeyParseFunc()))
 
 	parseTagEnd := matchState(
 		xmlParseStateInTag,
@@ -96,4 +92,47 @@ func XmlParseFunc() parser.Func {
 			Or(parseCData).
 			Or(parseCharacterEntity).
 			Or(parseTag))
+}
+
+func xmlAttrKeyParseFunc() parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var n uint64
+		var hasEqualSign bool
+		for {
+			r, err := iter.NextRune()
+			if err != nil || r == '>' || unicode.IsSpace(r) {
+				break
+			}
+
+			if r == '/' {
+				lookaheadIter := iter
+				nextRune, err := lookaheadIter.NextRune()
+				if err == nil && nextRune == '>' {
+					break
+				}
+			}
+
+			n++
+
+			if r == '=' {
+				hasEqualSign = true
+				break
+			}
+		}
+
+		var tokens []parser.ComputedToken
+		if hasEqualSign {
+			tokens = append(tokens, parser.ComputedToken{
+				Offset: 0,
+				Length: n,
+				Role:   xmlTokenRoleAttrKey,
+			})
+		}
+
+		return parser.Result{
+			NumConsumed:    n,
+			ComputedTokens: tokens,
+			NextState:      state,
+		}
+	}
 }

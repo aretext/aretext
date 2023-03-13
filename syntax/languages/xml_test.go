@@ -176,6 +176,17 @@ comment
 	}
 }
 
+func BenchmarkXmlParser(b *testing.B) {
+	BenchmarkParser(b, XmlParseFunc(), "testdata/xml/example.xml")
+}
+
+func BenchmarkXmlParserLongAttrRegression(b *testing.B) {
+	// Verify performance issue found by fuzz testing.
+	// Attributes that didn't match the pattern x="y" were falling back
+	// to error recovery, which was slow for long attribute names.
+	BenchmarkParser(b, XmlParseFunc(), "testdata/xml/long-attr-regression.xml")
+}
+
 func FuzzXmlParseFunc(f *testing.F) {
 	seeds := LoadFuzzTestSeeds(f, "./testdata/xml/*")
 	FuzzParser(f, XmlParseFunc(), seeds)

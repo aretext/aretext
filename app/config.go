@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/adrg/xdg"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/aretext/aretext/config"
@@ -39,11 +38,11 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if os.IsNotExist(err) {
 		log.Printf("Writing default config to %q\n", path)
 		if err := saveDefaultConfig(path); err != nil {
-			return nil, errors.Wrapf(err, "Error writing default config to %q", path)
+			return nil, fmt.Errorf("Error writing default config to %q: %w", path, err)
 		}
 		return unmarshalRuleSet(DefaultConfigYaml)
 	} else if err != nil {
-		return nil, errors.Wrapf(err, "Error loading config from %q", path)
+		return nil, fmt.Errorf("Error loading config from %q: %w", path, err)
 	}
 
 	ruleSet, err := unmarshalRuleSet(data)
@@ -54,8 +53,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 	if err := ruleSet.Validate(); err != nil {
 		errMsg := err.Error()
 		helpMsg := fmt.Sprintf("To edit the config, try\n\taretext -noconfig %s", path)
-		newErrMsg := fmt.Sprintf("Invalid configuration: %s\n%s", errMsg, helpMsg)
-		return nil, errors.New(newErrMsg)
+		return nil, fmt.Errorf("Invalid configuration: %s\n%s", errMsg, helpMsg)
 	}
 
 	return ruleSet, nil
@@ -64,7 +62,7 @@ func LoadOrCreateConfig(forceDefaultConfig bool) (config.RuleSet, error) {
 func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 	var rules []config.Rule
 	if err := yaml.Unmarshal(data, &rules); err != nil {
-		return nil, errors.Wrap(err, "yaml")
+		return nil, fmt.Errorf("yaml.Unmarshal: %w", err)
 	}
 	return config.RuleSet(rules), nil
 }
@@ -72,10 +70,10 @@ func unmarshalRuleSet(data []byte) (config.RuleSet, error) {
 func saveDefaultConfig(path string) error {
 	dirPath := filepath.Dir(path)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		return errors.Wrap(err, "os.MkdirAll")
+		return fmt.Errorf("os.MkdirAll: %w", err)
 	}
 	if err := os.WriteFile(path, DefaultConfigYaml, 0644); err != nil {
-		return errors.Wrap(err, "os.WriteFile")
+		return fmt.Errorf("os.WriteFile: %w", err)
 	}
 	return nil
 }

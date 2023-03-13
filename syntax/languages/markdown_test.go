@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -100,12 +99,12 @@ func loadCommonmarkTests() ([]markdownTest, error) {
 
 	data, err := os.ReadFile("testdata/markdown/commonmark_0.3_tests.json")
 	if err != nil {
-		return nil, errors.Wrapf(err, "os.ReadFile")
+		return nil, fmt.Errorf("os.ReadFile: %w", err)
 	}
 
 	var cmTests []commonmarkTest
 	if err := json.Unmarshal(data, &cmTests); err != nil {
-		return nil, errors.Wrapf(err, "json.Unmarshal")
+		return nil, fmt.Errorf("json.Unmarshal: %w", err)
 	}
 
 	mdTests := make([]markdownTest, 0, len(cmTests))

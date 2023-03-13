@@ -1,11 +1,10 @@
 package file
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 // RelativePathCwd converts an absolute path to a path relative to the current working directory.
@@ -13,7 +12,7 @@ import (
 func RelativePathCwd(p string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error getting current working directory: %v\n", errors.Wrap(err, "os.Getwd"))
+		log.Printf("Error getting current working directory: %v\n", fmt.Errorf("os.Getwd: %w", err))
 		return p
 	}
 	return RelativePath(p, cwd)
@@ -24,7 +23,7 @@ func RelativePathCwd(p string) string {
 func RelativePath(p string, baseDir string) string {
 	relPath, err := filepath.Rel(baseDir, p)
 	if err != nil {
-		log.Printf("Error converting %q to relative path from base %q: %v\n", p, baseDir, errors.Wrap(err, "filepath.Rel"))
+		log.Printf("Error converting %q to relative path from base %q: %v\n", p, baseDir, fmt.Errorf("filepath.Rel: %w", err))
 		return p
 	}
 	return relPath

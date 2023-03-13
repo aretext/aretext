@@ -6,8 +6,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // FileLocation represents a location within a file.
@@ -42,7 +40,7 @@ func FileLocationsFromLines(r io.Reader) ([]FileLocation, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, errors.Wrap(err, "scanner.Scan")
+		return nil, fmt.Errorf("scanner.Scan: %w", err)
 	}
 
 	return fileLocations, nil
@@ -57,8 +55,7 @@ func parseFileLocation(s string) (FileLocation, error) {
 	case 3: // <file>:<line>:<snippet>
 		filePart, lineNumPart, snippetPart = parts[0], parts[1], parts[2]
 	default:
-		msg := fmt.Sprintf("Unsupported format for file location: %q", s)
-		return FileLocation{}, errors.New(msg)
+		return FileLocation{}, fmt.Errorf("Unsupported format for file location: %q", s)
 	}
 
 	lineNum, err := parseLineNum(lineNumPart)
@@ -77,8 +74,7 @@ func parseFileLocation(s string) (FileLocation, error) {
 func parseLineNum(s string) (uint64, error) {
 	lineNum, err := strconv.Atoi(s)
 	if err != nil {
-		msg := fmt.Sprintf("Invalid line number in file location %q", s)
-		return 0, errors.New(msg)
+		return 0, fmt.Errorf("Invalid line number in file location %q", s)
 	}
 
 	return uint64(lineNum), nil

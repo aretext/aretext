@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/display"
@@ -72,7 +71,7 @@ func effectivePath(path string) string {
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Printf("Error converting %q to absolute path: %v", path, errors.Wrap(err, "filepath.Abs"))
+		log.Printf("Error converting %q to absolute path: %v", path, fmt.Errorf("filepath.Abs: %w", err))
 		return path
 	}
 
@@ -176,7 +175,7 @@ func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
 	return func(f func() error) error {
 		// Suspend input processing and reset the terminal to its original state.
 		if err := screen.Suspend(); err != nil {
-			return errors.Wrap(err, "screen.Suspend()")
+			return fmt.Errorf("screen.Suspend: %w", err)
 		}
 
 		// Ensure screen is resumed after executing the function.

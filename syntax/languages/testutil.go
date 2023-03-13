@@ -77,7 +77,7 @@ func FuzzParser(f *testing.F, parseFunc parser.Func, seeds []string) {
 
 	f.Fuzz(func(t *testing.T, data string) {
 		tree, err := text.NewTreeFromString(data)
-		if errors.Is(err, text.InvalidUtf8Error) {
+		if errors.Is(err, text.ErrInvalidUtf8) {
 			t.Skip()
 		}
 		require.NoError(t, err)

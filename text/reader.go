@@ -65,7 +65,7 @@ func (r *Reader) readNextByte() (byte, error) {
 }
 
 // ReadRune implements io.RuneReader#ReadRune
-// If the next bytes in the reader are not valid UTF8, it returns InvalidUtf8Error.
+// If the next bytes in the reader are not valid UTF8, it returns ErrInvalidUtf8.
 // If there are no more bytes to read, it returns io.EOF.
 func (r *Reader) ReadRune() (rune, int, error) {
 	var buf [4]byte
@@ -78,7 +78,7 @@ func (r *Reader) ReadRune() (rune, int, error) {
 
 	n := textUtf8.CharWidth[firstByte]
 	if n == 0 {
-		return '\x00', 0, InvalidUtf8Error
+		return '\x00', 0, ErrInvalidUtf8
 	} else if n == 1 {
 		// Fast path for ASCII.
 		return rune(firstByte), 1, nil
@@ -87,13 +87,13 @@ func (r *Reader) ReadRune() (rune, int, error) {
 	// Read remaining bytes in the rune.
 	buf[0] = firstByte
 	if _, err := r.Read(buf[1:n]); err != nil {
-		return '\x00', 0, InvalidUtf8Error
+		return '\x00', 0, ErrInvalidUtf8
 	}
 
 	// Decode the multi-byte rune.
 	rn, sz := utf8.DecodeRune(buf[:n])
 	if sz != int(n) {
-		return '\x00', 0, InvalidUtf8Error
+		return '\x00', 0, ErrInvalidUtf8
 	}
 	return rn, sz, nil
 }
@@ -166,7 +166,7 @@ func (r *ReverseReader) ReadRune() (rune, int, error) {
 
 	rn, sz := utf8.DecodeRune(buf[:n])
 	if sz != n {
-		return '\x00', 0, InvalidUtf8Error
+		return '\x00', 0, ErrInvalidUtf8
 	}
 	return rn, sz, nil
 }
@@ -187,5 +187,5 @@ func (r *ReverseReader) lookaheadToRuneStartByte() (int, error) {
 	}
 
 	// Could not find the start byte, so this is not a valid UTF-8 encoding.
-	return 0, InvalidUtf8Error
+	return 0, ErrInvalidUtf8
 }

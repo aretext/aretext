@@ -1,12 +1,11 @@
 package file
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/text"
 )
@@ -16,23 +15,23 @@ import (
 func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "filepath.Abs")
+		return nil, nil, fmt.Errorf("filepath.Abs: %w", err)
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "os.Open")
+		return nil, nil, fmt.Errorf("os.Open: %w", err)
 	}
 	defer f.Close()
 
 	lastModifiedTime, size, err := lastModifiedTimeAndSize(f)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "lastModifiedTime")
+		return nil, nil, fmt.Errorf("lastModifiedTime: %w", err)
 	}
 
 	tree, checksum, err := readContentsAndChecksum(f)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "readContentsAndChecksum")
+		return nil, nil, fmt.Errorf("readContentsAndChecksum: %w", err)
 	}
 
 	// POSIX files end with a single line feed to indicate the end of the file.
@@ -49,7 +48,7 @@ func readContentsAndChecksum(f *os.File) (*text.Tree, string, error) {
 	r := io.TeeReader(f, checksummer)
 	tree, err := text.NewTreeFromReader(r)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "text.NewTreeFromReader")
+		return nil, "", fmt.Errorf("text.NewTreeFromReader: %w", err)
 	}
 	return tree, checksummer.Checksum(), nil
 }
@@ -57,7 +56,7 @@ func readContentsAndChecksum(f *os.File) (*text.Tree, string, error) {
 func lastModifiedTimeAndSize(f *os.File) (time.Time, int64, error) {
 	fileInfo, err := f.Stat()
 	if err != nil {
-		return time.Time{}, 0, errors.Wrap(err, "f.Stat")
+		return time.Time{}, 0, fmt.Errorf("f.Stat: %w", err)
 	}
 
 	return fileInfo.ModTime(), fileInfo.Size(), nil

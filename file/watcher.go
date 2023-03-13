@@ -1,13 +1,13 @@
 package file
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
 	"os"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const DefaultPollInterval = time.Second
@@ -131,13 +131,13 @@ func (w *Watcher) checkFileChanged() bool {
 func (w *Watcher) calculateChecksum() (string, error) {
 	f, err := os.Open(w.path)
 	if err != nil {
-		return "", errors.Wrap(err, "os.Open")
+		return "", fmt.Errorf("os.Open: %w", err)
 	}
 	defer f.Close()
 
 	checksummer := NewChecksummer()
 	if _, err := io.Copy(checksummer, f); err != nil {
-		return "", errors.Wrap(err, "io.Copy")
+		return "", fmt.Errorf("io.Copy: %w", err)
 	}
 
 	return checksummer.Checksum(), nil

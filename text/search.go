@@ -1,9 +1,8 @@
 package text
 
 import (
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/text/utf8"
 )
@@ -83,7 +82,7 @@ func (s *Searcher) searchInReader(r io.Reader, mode searchMode) (bool, uint64, e
 				goto done
 			}
 		} else if err != nil {
-			return false, 0, errors.Wrap(err, "Read")
+			return false, 0, fmt.Errorf("Read: %w", err)
 		}
 
 		var j int

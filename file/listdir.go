@@ -2,14 +2,13 @@ package file
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 type ListDirOptions struct {
@@ -90,12 +89,12 @@ func listDirRec(ctx context.Context, root string, options ListDirOptions, semaph
 func listDir(path string) ([]fs.DirEntry, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "os.Open")
+		return nil, fmt.Errorf("os.Open: %w", err)
 	}
 	dirs, err := f.ReadDir(-1)
 	f.Close()
 	if err != nil {
-		return nil, errors.Wrap(err, "f.ReadDir")
+		return nil, fmt.Errorf("f.ReadDir: %w", err)
 	}
 	return dirs, nil
 }

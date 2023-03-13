@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
@@ -8,8 +9,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
@@ -187,7 +186,7 @@ func currentTimelineState(state *EditorState) file.TimelineState {
 func loadDocumentAndResetState(state *EditorState, path string, requireExists bool) (fileExists bool, err error) {
 	cfg := state.configRuleSet.ConfigForPath(path)
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
-	if err := errors.Cause(err); errors.Is(err, fs.ErrNotExist) && !requireExists {
+	if errors.Is(err, fs.ErrNotExist) && !requireExists {
 		tree = text.NewTree()
 		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
 	} else if err != nil {
@@ -312,7 +311,7 @@ func reportLoadError(state *EditorState, err error, path string) {
 	log.Printf("Error loading file at %q: %v\n", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not open %q: %s", file.RelativePathCwd(path), errors.Cause(err)),
+		Text:  fmt.Sprintf("Could not open %q: %s", file.RelativePathCwd(path), err),
 	})
 }
 
@@ -347,7 +346,7 @@ func reportSaveError(state *EditorState, err error, path string) {
 	log.Printf("Error saving file to %q: %v", path, err)
 	SetStatusMsg(state, StatusMsg{
 		Style: StatusMsgStyleError,
-		Text:  fmt.Sprintf("Could not save %q: %s", file.RelativePathCwd(path), errors.Cause(err)),
+		Text:  fmt.Sprintf("Could not save %q: %s", file.RelativePathCwd(path), err),
 	})
 }
 
@@ -388,7 +387,7 @@ func AbortIfFileExistsWithChangedContent(state *EditorState, f func(*EditorState
 		log.Printf("Aborting operation because error occurred checking the file contents: %s\n", err)
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Could not checksum file: %s", errors.Cause(err)),
+			Text:  fmt.Sprintf("Could not checksum file: %s", err),
 		})
 	} else {
 		f(state)

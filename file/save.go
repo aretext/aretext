@@ -1,13 +1,13 @@
 package file
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/google/renameio/v2"
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/text"
 )
@@ -22,7 +22,7 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// this GitHub issue comment: https://github.com/golang/go/issues/22397#issuecomment-380831736
 	pf, err := renameio.NewPendingFile(path, renameio.WithPermissions(0644), renameio.WithExistingPermissions())
 	if err != nil {
-		return nil, errors.Wrapf(err, "renamio.TempFile")
+		return nil, fmt.Errorf("renamio.TempFile: %w", err)
 	}
 	defer pf.Cleanup()
 
@@ -35,19 +35,19 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// Write to the file and calculate the checksum.
 	_, err = io.Copy(pf, r)
 	if err != nil {
-		return nil, errors.Wrap(err, "io.Copy")
+		return nil, fmt.Errorf("io.Copy: %w", err)
 	}
 
 	// Sync the file to disk so the watcher calculates the checksum correctly later.
 	err = pf.CloseAtomicallyReplace()
 	if err != nil {
-		return nil, errors.Wrap(err, "renamio.CloseAtomicallyReplace")
+		return nil, fmt.Errorf("renamio.CloseAtomicallyReplace: %w", err)
 	}
 
 	// Start a new watcher for subsequent changes to the file.
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "os.Stat")
+		return nil, fmt.Errorf("os.Stat: %w", err)
 	}
 	checksum := checksummer.Checksum()
 	watcher := NewWatcher(watcherPollInterval, path, fileInfo.ModTime(), fileInfo.Size(), checksum)

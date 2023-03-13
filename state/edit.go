@@ -1,12 +1,11 @@
 package state
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/pkg/errors"
 
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/clipboard"
@@ -43,7 +42,7 @@ func insertTextAtPosition(state *EditorState, s string, pos uint64, updateUndoLo
 	var n uint64
 	for _, r := range s {
 		if err := buffer.textTree.InsertAtPosition(pos+n, r); err != nil {
-			return errors.Wrap(err, "text.Tree.InsertAtPosition")
+			return fmt.Errorf("text.Tree.InsertAtPosition: %w", err)
 		}
 		n++
 	}

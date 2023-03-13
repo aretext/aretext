@@ -2,11 +2,10 @@ package text
 
 import (
 	"crypto/md5"
+	"fmt"
 	"io"
 	"math"
 	"sort"
-
-	"github.com/pkg/errors"
 )
 
 // LineMatch represents a line matched between two documents.
@@ -88,12 +87,12 @@ func lineHashFromBytes(b []byte) lineHash {
 func hashLeftAndRightLines(leftReader, rightReader io.Reader) ([]lineHash, []lineHash, error) {
 	leftLineHashes, err := hashLines(leftReader)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "hashLines(leftReader)")
+		return nil, nil, fmt.Errorf("hashLines(leftReader): %w", err)
 	}
 
 	rightLineHashes, err := hashLines(rightReader)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "hashLines(rightReader)")
+		return nil, nil, fmt.Errorf("hashLines(rightReader): %w", err)
 	}
 
 	return leftLineHashes, rightLineHashes, nil
@@ -108,7 +107,7 @@ func hashLines(r io.Reader) ([]lineHash, error) {
 	for {
 		n, err := r.Read(buf[:])
 		if err != nil && err != io.EOF {
-			return nil, errors.Wrapf(err, "Read")
+			return nil, fmt.Errorf("Read: %w", err)
 		}
 
 		var i int

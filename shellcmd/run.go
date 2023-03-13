@@ -3,6 +3,7 @@ package shellcmd
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/shlex"
-	"github.com/pkg/errors"
 )
 
 // RunSilent runs the command and discards any output.
@@ -35,7 +35,7 @@ func RunAndCaptureOutput(ctx context.Context, cmd string, env []string) (string,
 	}
 
 	if !utf8.Valid(buf.Bytes()) {
-		return "", errors.New("Shell command output is not valid UTF-8")
+		return "", fmt.Errorf("Shell command output is not valid UTF-8")
 	}
 
 	return buf.String(), nil
@@ -64,7 +64,7 @@ func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Rea
 	cmd.Stderr = stderr
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "Cmd.Run")
+		return fmt.Errorf("Cmd.Run: %w", err)
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func shellProgAndArgs() ([]string, error) {
 	// These args need to be passed separately to exec.Command, so split them here.
 	parts, err := shlex.Split(shellProg())
 	if err != nil {
-		return nil, errors.Wrap(err, "shlex.Split")
+		return nil, fmt.Errorf("shlex.Split: %w", err)
 	}
 	return parts, nil
 }

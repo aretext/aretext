@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/pkg/errors"
-
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
 )
@@ -119,7 +117,7 @@ func ShowFileMenu(s *EditorState, dirPatternsToHide []string) {
 func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		log.Printf("Error loading menu items: %v\n", fmt.Errorf("os.GetCwd: %w", err))
 		return nil
 	}
 
@@ -159,7 +157,7 @@ func ShowChildDirsMenu(s *EditorState, dirPatternsToHide []string) {
 func loadChildDirMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		log.Printf("Error loading menu items: %v\n", fmt.Errorf("os.GetCwd: %w", err))
 		return nil
 	}
 
@@ -190,7 +188,7 @@ func ShowParentDirsMenu(s *EditorState) {
 func parentDirMenuItems() []menu.Item {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error loading menu items: %v\n", errors.Wrap(err, "os.GetCwd"))
+		log.Printf("Error loading menu items: %v\n", fmt.Errorf("os.GetCwd: %w", err))
 		return nil
 	}
 

@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/locate"
@@ -103,7 +101,7 @@ func setStatusForShellCmdResult(state *EditorState, err error) {
 	if err != nil {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Shell command failed: %s", errors.Cause(err)),
+			Text:  fmt.Sprintf("Shell command failed: %s", err),
 		})
 		return
 	}
@@ -218,7 +216,7 @@ func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput st
 	}
 
 	if len(menuItems) == 0 {
-		return errors.New("No lines in command output")
+		return fmt.Errorf("No lines in command output")
 	}
 
 	ShowMenu(state, MenuStyleInsertChoice, menuItems)
@@ -242,7 +240,7 @@ func showWorkingDirMenuForShellCmdOutput(state *EditorState, shellCmdOutput stri
 	}
 
 	if len(menuItems) == 0 {
-		return errors.New("No lines in command output")
+		return fmt.Errorf("No lines in command output")
 	}
 
 	ShowMenu(state, MenuStyleWorkingDir, menuItems)
@@ -256,7 +254,7 @@ func showFileLocationsMenuForShellCmdOutput(state *EditorState, shellCmdOutput s
 	}
 
 	if len(locations) == 0 {
-		return errors.New("No file locations in cmd output")
+		return fmt.Errorf("No file locations in cmd output")
 	}
 
 	menuItems, err := menuItemsFromFileLocations(locations)
@@ -271,7 +269,7 @@ func showFileLocationsMenuForShellCmdOutput(state *EditorState, shellCmdOutput s
 func menuItemsFromFileLocations(locations []shellcmd.FileLocation) ([]menu.Item, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, errors.Wrap(err, "os.Getwd")
+		return nil, fmt.Errorf("os.Getwd: %w", err)
 	}
 
 	menuItems := make([]menu.Item, 0, len(locations))

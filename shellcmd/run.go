@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"unicode/utf8"
-
-	"github.com/google/shlex"
 )
 
 // RunSilent runs the command and discards any output.
@@ -51,13 +49,7 @@ func clearTerminal(ctx context.Context) {
 }
 
 func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
-	s, err := shellProgAndArgs()
-	if err != nil {
-		return err
-	}
-
-	s = append(s, "-c", shellCmd)
-	cmd := exec.CommandContext(ctx, s[0], s[1:]...)
+	cmd := exec.CommandContext(ctx, shellProg(), "-c", shellCmd)
 	cmd.Env = env
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
@@ -81,14 +73,4 @@ func shellProg() string {
 	}
 
 	return defaultShell
-}
-
-func shellProgAndArgs() ([]string, error) {
-	// The $SHELL env var might include command line args for the shell command.
-	// These args need to be passed separately to exec.Command, so split them here.
-	parts, err := shlex.Split(shellProg())
-	if err != nil {
-		return nil, fmt.Errorf("shlex.Split: %w", err)
-	}
-	return parts, nil
 }

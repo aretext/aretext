@@ -147,7 +147,7 @@ y = 5e-2;
 			name: "preprocessor directive with whitepace before '#'",
 			text: "  #define FOOBAR 256",
 			expected: []TokenWithText{
-				{Text: "  #define FOOBAR 256", Role: cTokenRolePreprocessorDirective},
+				{Text: "#define FOOBAR 256", Role: cTokenRolePreprocessorDirective},
 			},
 		},
 		{

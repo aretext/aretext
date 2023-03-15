@@ -20,7 +20,8 @@ func CParseFunc() parser.Func {
 		Or(cIdentifierOrKeywordParseFunc()).
 		Or(cOperatorParseFunc()).
 		Or(cStringParseFunc()).
-		Or(cNumberParseFunc())
+		Or(cNumberParseFunc()).
+		Or(consumeRunesLike(unicode.IsSpace))
 }
 
 func cCommentParseFunc() parser.Func {
@@ -36,7 +37,7 @@ func cCommentParseFunc() parser.Func {
 }
 
 func cPreprocessorDirective() parser.Func {
-	// Consume leading '#' with optional whitespace before/after.
+	// Consume leading '#' with optional whitespace after.
 	consumeStartOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var numConsumed uint64
 		var sawHashmark bool
@@ -51,7 +52,7 @@ func cPreprocessorDirective() parser.Func {
 			if r == '#' && !sawHashmark {
 				sawHashmark = true
 				numConsumed++
-			} else if r == ' ' || r == '\t' {
+			} else if sawHashmark && (r == ' ' || r == '\t') {
 				numConsumed++
 			} else {
 				break

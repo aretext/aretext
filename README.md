@@ -22,14 +22,10 @@ Getting Started
 -	[User Documentation](https://aretext.org/docs/)
 -	[Cheat Sheet](https://aretext.org/docs/cheat-sheet.html)
 
-Project Status
---------------
+Project Status: Stable and Actively Maintained
+----------------------------------------------
 
--	The user interface is stable, and I am using it as my primary editor.
--	Syntax highlighting is available for [many languages](https://aretext.org/docs/config-reference/#syntax-languages), including Go, Python, Rust, and C.
--	Many important vim commands are supported, but there are still many more to add!
-
-See [open milestones](https://github.com/aretext/aretext/milestones?direction=asc&sort=title&state=open) for the current roadmap.
+As of the 1.0 release, I've implemented every feature I wanted in a text editor! I will continue actively maintaining the project, prioritizing stability and performance improvements over new functionality.
 
 Contributing
 ------------

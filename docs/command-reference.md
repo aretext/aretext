@@ -126,7 +126,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | put after cursor                                                | p                         | clipboard page        |
 | put before cursor                                               | P                         | clipboard page        |
 | show command menu                                               | :                         |                       |
-| start forward search                                            | <br/>                     |                       |
+| start forward search                                            | /                         |                       |
 | start backward search                                           | ?                         |                       |
 | find next match                                                 | n                         |                       |
 | find previous match                                             | N                         |                       |

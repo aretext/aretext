@@ -41,12 +41,13 @@ Blog Posts and Talks
 --------------------
 
 -	[FOSDEM lightning talk (2022)](https://archive.fosdem.org/2022/schedule/event/lt_aretext/), also available [on youtube](https://www.youtube.com/watch?v=NJsWEnM5LcM).
--	[what's new in aretext 0.5](https://dev-nonsense.com/posts/aretext-0.5-release/)
--	[aretext 0.6 released!](https://dev-nonsense.com/posts/aretext-0.6-release/)
--	[aretext 0.7 release, thinking about 1.0](https://dev-nonsense.com/posts/aretext-0.7-release/)
 -	[fuzzy find algorithm](https://dev-nonsense.com/posts/fuzzy-find-algorithm/)
 -	[fuzzing the aretext markdown parser](https://dev-nonsense.com/posts/aretext-markdown-fuzz-test/)
 -	[incremental parsing in go](https://dev-nonsense.com/posts/incremental-parsing-in-go/)
+-	[what's new in aretext 0.5](https://dev-nonsense.com/posts/aretext-0.5-release/)
+-	[aretext 0.6 released!](https://dev-nonsense.com/posts/aretext-0.6-release/)
+-	[aretext 0.7 release, thinking about 1.0](https://dev-nonsense.com/posts/aretext-0.7-release/)
+-	[aretext 1.0 release](https://dev-nonsense.com/posts/aretext-1.0-release/)
 
 Copyright and License
 ---------------------

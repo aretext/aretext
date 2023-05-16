@@ -712,6 +712,38 @@ func CopyLines(clipboardPage clipboard.PageId) Action {
 	}
 }
 
+func CopyToNextMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
+	return func(s *state.EditorState) {
+		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
+			found, pos := locate.NextMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
+				// No character matched in this line, so don't copy anything.
+				return 0, 0
+			}
+			// Copy up to and including `pos`
+			startPos := params.CursorPos
+			endPos := locate.NextCharInLine(params.TextTree, 1, true, pos)
+			return startPos, endPos
+		})
+	}
+}
+
+func CopyToPrevMatchingChar(char rune, count uint64, clipboardPage clipboard.PageId, includeChar bool) Action {
+	return func(s *state.EditorState) {
+		state.CopyRange(s, clipboardPage, func(params state.LocatorParams) (uint64, uint64) {
+			found, pos := locate.PrevMatchingCharInLine(params.TextTree, char, count, includeChar, params.CursorPos)
+			if !found {
+				// No character matched in this line, so don't copy anything.
+				return 0, 0
+			}
+			// Copy from the found character up to, but not including, the cursor position.
+			startPos := pos
+			endPos := params.CursorPos
+			return startPos, endPos
+		})
+	}
+}
+
 func PasteAfterCursor(clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		state.PasteAfterCursor(s, clipboardPage)

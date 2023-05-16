@@ -1230,6 +1230,54 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "yank to next matching char (yf{char})",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
+			},
+			MaxCount: defaultMaxCount,
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank to prev matching char (yF{char})",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
+			},
+			MaxCount: defaultMaxCount,
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, true),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank till next matching char (yt{char})",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
+			},
+			MaxCount: defaultMaxCount,
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyToNextMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
+			Name: "yank till prev matching char (yT{char})",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
+			},
+			MaxCount: defaultMaxCount,
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					CopyToPrevMatchingChar(p.MatchChar, p.Count, p.ClipboardPage, false),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "put after cursor (p)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("p", "", captureOpts{clipboardPage: true})

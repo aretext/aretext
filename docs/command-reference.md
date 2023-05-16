@@ -123,6 +123,10 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | yank a backtick-quoted string                                   | ya\`                      | clipboard page        |
 | yank inner backtick-quoted string                               | yi\`                      | clipboard page        |
 | yank line                                                       | yy                        | clipboard page        |
+| yank to next matching character in line                         | yf\{char\}                | count, clipboard page |
+| yank to prev matching character in line                         | yF\{char\}                | count, clipboard page |
+| yank till next matching character in line                       | yt\{char\}                | count, clipboard page |
+| yank till prev matching character in line                       | yT\{char\}                | count, clipboard page |
 | put after cursor                                                | p                         | clipboard page        |
 | put before cursor                                               | P                         | clipboard page        |
 | show command menu                                               | :                         |                       |

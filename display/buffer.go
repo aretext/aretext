@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
@@ -25,6 +26,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	showTabs := buffer.ShowTabs()
 	showSpaces := buffer.ShowSpaces()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
+	lineNumberMode := buffer.LineNumberMode()
+	cursorLine := textTree.LineNumForPosition(cursorPos)
 	wrapConfig := buffer.LineWrapConfig()
 	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
@@ -39,8 +42,16 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
+
 		lineNum := textTree.LineNumForPosition(pos)
 		lineStartPos := textTree.LineStartPosition(lineNum)
+		if lineNumberMode == config.LineNumberModeRelative {
+			if lineNum < cursorLine {
+				lineNum = cursorLine - lineNum - 1
+			} else {
+				lineNum = lineNum - cursorLine - 1
+			}
+		}
 		wrappedLineRunes := wrappedLine.Runes()
 		syntaxTokens := buffer.SyntaxTokensIntersectingRange(pos, pos+uint64(len(wrappedLineRunes)))
 		drawLineAndSetCursor(

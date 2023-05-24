@@ -14,6 +14,7 @@ const DefaultShowSpaces = false
 const DefaultAutoIndent = false
 const DefaultShowLineNumbers = false
 const DefaultLineWrap = LineWrapCharacter
+const DefaultLineNumberMode = LineNumberModeAbsolute
 
 // Config is a configuration for the editor.
 type Config struct {
@@ -37,6 +38,9 @@ type Config struct {
 
 	// If enabled, show line numbers in the left margin.
 	ShowLineNumbers bool
+
+	// Display mode for line numbers (relative or absolute)
+	LineNumberMode string
 
 	// LineWrap controls how lines are soft-wrapped.
 	LineWrap string
@@ -63,6 +67,13 @@ const (
 	CmdModeInsertChoice  = "insertChoice"  // user can select one line from the output to insert into the document.
 	CmdModeFileLocations = "fileLocations" // output is interpreted as a list of file locations that can be opened in the editor.
 	CmdModeWorkingDir    = "workingDir"    // output is interpreted as a list of directories to set as the current working directory.
+)
+
+type LineNumberMode string
+
+const (
+	LineNumberModeAbsolute LineNumberMode = "absolute" // shows the line number from the beginning of the file
+	LineNumberModeRelative LineNumberMode = "relative" // shows the line number relative to the cursor
 )
 
 // MenuCommandConfig is a configuration for a user-defined menu item.
@@ -143,6 +154,7 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		ShowSpaces:      boolOrDefault(m, "showSpaces", DefaultShowSpaces),
 		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
 		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
+		LineNumberMode:  stringOrDefault(m, "lineNumberMode", string(DefaultLineNumberMode)),
 		LineWrap:        stringOrDefault(m, "lineWrap", DefaultLineWrap),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
@@ -158,6 +170,11 @@ func (c Config) Validate() error {
 
 	if c.LineWrap != LineWrapCharacter && c.LineWrap != LineWrapWord {
 		return fmt.Errorf("LineWrap must be either %q or %q", LineWrapCharacter, LineWrapWord)
+	}
+
+	lnm := LineNumberMode(c.LineNumberMode)
+	if lnm != LineNumberModeAbsolute && lnm != LineNumberModeRelative {
+		return fmt.Errorf("LineNumberMode must be either %q or %q", LineNumberModeAbsolute, LineNumberModeRelative)
 	}
 
 	for _, cmd := range c.MenuCommands {

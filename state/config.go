@@ -1,5 +1,7 @@
 package state
 
+import "github.com/aretext/aretext/config"
+
 // ToggleShowTabs shows or hides tab characters in the document.
 func ToggleShowTabs(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.showTabs, "Showing tabs", "Hiding tabs")
@@ -18,6 +20,47 @@ func ToggleTabExpand(s *EditorState) {
 // ToggleShowLineNumbers shows or hides line numbers in the left margin.
 func ToggleShowLineNumbers(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.showLineNum, "Showing line numbers", "Hiding line numbers")
+}
+
+// SetLineNumberMode sets the line number mode.
+func SetLineNumberMode(s *EditorState, mode config.LineNumberMode) {
+	switch mode {
+	case config.LineNumberModeAbsolute:
+		s.documentBuffer.lineNumberMode = config.LineNumberModeAbsolute
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Showing absolute line numbers",
+		})
+	case config.LineNumberModeRelative:
+		s.documentBuffer.lineNumberMode = config.LineNumberModeRelative
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Showing relative line numbers",
+		})
+	default:
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  "Line number mode not supported: " + string(mode),
+		})
+	}
+}
+
+// ToggleLineNumberMode toggles the line number mode between absolute and relative.
+func ToggleLineNumberMode(s *EditorState) {
+	switch s.documentBuffer.lineNumberMode {
+	case config.LineNumberModeAbsolute:
+		s.documentBuffer.lineNumberMode = config.LineNumberModeRelative
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Showing relative line numbers",
+		})
+	case config.LineNumberModeRelative:
+		s.documentBuffer.lineNumberMode = config.LineNumberModeAbsolute
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  "Hiding line numbers",
+		})
+	}
 }
 
 // ToggleAutoIndent enables or disables auto-indent.

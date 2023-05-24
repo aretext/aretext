@@ -21,6 +21,7 @@ func TestConfigFromUntypedMap(t *testing.T) {
 				LineWrap:       "character",
 				MenuCommands:   []MenuCommandConfig{},
 				Styles:         map[string]StyleConfig{},
+				LineNumberMode: "absolute",
 			},
 		},
 		{
@@ -54,6 +55,7 @@ func TestConfigFromUntypedMap(t *testing.T) {
 				TabSize:        4,
 				LineWrap:       "character",
 				MenuCommands:   []MenuCommandConfig{},
+				LineNumberMode: "absolute",
 				Styles: map[string]StyleConfig{
 					"lineNum": {
 						Color: "olive",
@@ -111,6 +113,13 @@ func TestValidateConfig(t *testing.T) {
 				c.LineWrap = "invalid"
 			},
 			expectErrMsg: `LineWrap must be either "character" or "word"`,
+		},
+		{
+			name: "lineNumberMode is invalid",
+			updateFunc: func(c *Config) {
+				c.LineNumberMode = "invalid"
+			},
+			expectErrMsg: `LineNumberMode must be either "absolute" or "relative"`,
 		},
 		{
 			name: "menu name is empty",

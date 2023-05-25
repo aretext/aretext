@@ -264,7 +264,7 @@ func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {
 			LoadDocument(state, path, true, startOfDocLocator)
 
 			// Text search.
-			StartSearch(state, tc.direction)
+			StartSearch(state, tc.direction, SearchCompleteMoveCursorToMatch)
 			AppendRuneToSearchQuery(state, 'e')
 			AppendRuneToSearchQuery(state, 'f')
 			AppendRuneToSearchQuery(state, 'g')

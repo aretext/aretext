@@ -515,7 +515,7 @@ func TestSearchMatch(t *testing.T) {
 				state.InsertRune(editorState, r)
 			}
 			state.MoveCursor(editorState, func(state.LocatorParams) uint64 { return 0 })
-			state.StartSearch(editorState, state.SearchDirectionForward)
+			state.StartSearch(editorState, state.SearchDirectionForward, state.SearchCompleteMoveCursorToMatch)
 			for _, r := range query {
 				state.AppendRuneToSearchQuery(editorState, r)
 			}

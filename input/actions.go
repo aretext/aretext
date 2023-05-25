@@ -842,7 +842,7 @@ func DeleteRuneFromMenuSearch(s *state.EditorState) {
 func StartSearch(direction state.SearchDirection) Action {
 	return func(s *state.EditorState) {
 		// This sets the input mode to search.
-		state.StartSearch(s, direction)
+		state.StartSearch(s, direction, state.SearchCompleteMoveCursorToMatch)
 	}
 }
 
@@ -875,7 +875,7 @@ func FindPrevMatch(s *state.EditorState) {
 
 func SearchWordUnderCursor(direction state.SearchDirection, count uint64) Action {
 	return func(s *state.EditorState) {
-		state.SearchWordUnderCursor(s, direction, count)
+		state.SearchWordUnderCursor(s, direction, state.SearchCompleteMoveCursorToMatch, count)
 	}
 }
 

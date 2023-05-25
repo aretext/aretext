@@ -17,7 +17,7 @@ func TestSearchAndCommit(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Start a search.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 
@@ -63,7 +63,7 @@ func TestSearchAndAbort(t *testing.T) {
 	buffer.search.query = "xyz"
 
 	// Start a search.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 	assert.Equal(t, buffer.search.prevQuery, "xyz")
@@ -91,7 +91,7 @@ func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Start a search.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	assert.Equal(t, state.inputMode, InputModeSearch)
 	assert.Equal(t, buffer.search.query, "")
 
@@ -111,7 +111,7 @@ func TestSearchForwardCursorOnMatch(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Enter a search query matching at the cursor's current position.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	AppendRuneToSearchQuery(state, 'f')
 	AppendRuneToSearchQuery(state, 'o')
 	AppendRuneToSearchQuery(state, 'o')
@@ -131,7 +131,7 @@ func TestSearchForwardWithWraparoundCursorAtBeginning(t *testing.T) {
 	buffer.textTree = textTree
 
 	// Enter a search query matching at the cursor's current position.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	AppendRuneToSearchQuery(state, 'a')
 	AppendRuneToSearchQuery(state, 'b')
 	assert.Equal(t, "ab", buffer.search.query)
@@ -183,7 +183,7 @@ func TestSearchCaseSensitivity(t *testing.T) {
 			buffer := state.documentBuffer
 			buffer.textTree = textTree
 
-			StartSearch(state, SearchDirectionForward)
+			StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 			for _, r := range tc.query {
 				AppendRuneToSearchQuery(state, r)
 			}
@@ -453,7 +453,7 @@ func TestSearchWordUnderCursor(t *testing.T) {
 			buffer.cursor.position = tc.pos
 
 			// Search for the word under the cursor.
-			SearchWordUnderCursor(state, SearchDirectionForward, tc.count)
+			SearchWordUnderCursor(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch, tc.count)
 			assert.Equal(t, InputModeNormal, state.inputMode)
 			assert.Equal(t, tc.expectedQuery, buffer.search.query)
 			assert.Nil(t, buffer.search.match)
@@ -470,21 +470,21 @@ func TestSetSearchQueryToPrevInHistory(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query, aborted.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, false)
 
 	// Second search query, committed.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "def" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, true)
 
 	// Start a search, go back in history.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
 	require.NotNil(t, buffer.search.match)
@@ -511,14 +511,14 @@ func TestSetSearchQueryToNextInHistory(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query, aborted.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, false)
 
 	// Second search query, committed.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "def" {
 		AppendRuneToSearchQuery(state, r)
 	}
@@ -552,21 +552,21 @@ func TestSearchQueryToPrevInHistoryThenAppendRunes(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query, aborted.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, false)
 
 	// Second search query, committed.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "def" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, true)
 
 	// Start a search, go back to beginning of history.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	SetSearchQueryToPrevInHistory(state)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
@@ -595,21 +595,21 @@ func TestSearchQueryToPrevInHistoryThenDeleteRunes(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query, aborted.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, false)
 
 	// Second search query, committed.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "def" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, true)
 
 	// Start a search, go back to beginning of history.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	SetSearchQueryToPrevInHistory(state)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
@@ -638,7 +638,7 @@ func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
@@ -646,12 +646,12 @@ func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
 
 	// Several empty search queries, should not be added to history.
 	for i := 0; i < 3; i++ {
-		StartSearch(state, SearchDirectionForward)
+		StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 		CompleteSearch(state, false)
 	}
 
 	// Start a search, back to previous entry.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
 	require.NotNil(t, buffer.search.match)
@@ -666,14 +666,14 @@ func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
 	buffer.textTree = textTree
 
 	// First search query.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "abc" {
 		AppendRuneToSearchQuery(state, r)
 	}
 	CompleteSearch(state, false)
 
 	// Second search query.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	for _, r := range "def" {
 		AppendRuneToSearchQuery(state, r)
 	}
@@ -681,7 +681,7 @@ func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
 
 	// Repeat the query several times.
 	for i := 0; i < 3; i++ {
-		StartSearch(state, SearchDirectionForward)
+		StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 		for _, r := range "def" {
 			AppendRuneToSearchQuery(state, r)
 		}
@@ -689,7 +689,7 @@ func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
 	}
 
 	// Start a search, back to previous entry.
-	StartSearch(state, SearchDirectionForward)
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
 	require.NotNil(t, buffer.search.match)

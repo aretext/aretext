@@ -34,15 +34,19 @@ func (d SearchDirection) Reverse() SearchDirection {
 	}
 }
 
+// SearchCompleteAction is the action to perform when a user completes a search.
+type SearchCompleteAction func(*EditorState, SearchMatch)
+
 // searchState represents the state of a text search.
 type searchState struct {
-	query         string
-	direction     SearchDirection
-	prevQuery     string
-	prevDirection SearchDirection
-	history       []string
-	historyIdx    int
-	match         *SearchMatch
+	query          string
+	direction      SearchDirection
+	completeAction SearchCompleteAction
+	prevQuery      string
+	prevDirection  SearchDirection
+	history        []string
+	historyIdx     int
+	match          *SearchMatch
 }
 
 // SearchMatch represents the successful result of a text search.
@@ -56,21 +60,22 @@ func (sm *SearchMatch) ContainsPosition(pos uint64) bool {
 }
 
 // StartSearch initiates a new text search.
-func StartSearch(state *EditorState, direction SearchDirection) {
+func StartSearch(state *EditorState, direction SearchDirection, completeAction SearchCompleteAction) {
 	search := &state.documentBuffer.search
 	prevQuery, prevDirection := search.query, search.direction
 	*search = searchState{
-		direction:     direction,
-		prevQuery:     prevQuery,
-		prevDirection: prevDirection,
-		history:       search.history,
-		historyIdx:    len(search.history),
+		direction:      direction,
+		completeAction: completeAction,
+		prevQuery:      prevQuery,
+		prevDirection:  prevDirection,
+		history:        search.history,
+		historyIdx:     len(search.history),
 	}
 	SetInputMode(state, InputModeSearch)
 }
 
 // CompleteSearch terminates a text search and returns to normal mode.
-// If commit is true, jump to the matching search result.
+// If commit is true, execute the complete search action.
 // Otherwise, return to the original cursor position.
 func CompleteSearch(state *EditorState, commit bool) {
 	search := &state.documentBuffer.search
@@ -83,7 +88,7 @@ func CompleteSearch(state *EditorState, commit bool) {
 
 	if commit {
 		if search.match != nil {
-			state.documentBuffer.cursor = cursorState{position: search.match.StartPos}
+			search.completeAction(state, *search.match)
 		}
 	} else {
 		prevQuery, prevDirection := search.prevQuery, search.prevDirection
@@ -146,7 +151,7 @@ func SetSearchQueryToNextInHistory(state *EditorState) {
 }
 
 // SearchWordUnderCursor starts a search for the word under the cursor.
-func SearchWordUnderCursor(state *EditorState, direction SearchDirection, targetCount uint64) {
+func SearchWordUnderCursor(state *EditorState, direction SearchDirection, completeAction SearchCompleteAction, targetCount uint64) {
 	// Retrieve the current word under the cursor.
 	// If the cursor is on leading whitespace, this will retrieve the word after the whitespace.
 	buffer := state.documentBuffer
@@ -159,7 +164,7 @@ func SearchWordUnderCursor(state *EditorState, direction SearchDirection, target
 	query := fmt.Sprintf("%s\\C", word) // Force case-sensitive search.
 
 	// Search for the word.
-	StartSearch(state, direction)
+	StartSearch(state, direction, completeAction)
 	runTextSearchQuery(state, query)
 	CompleteSearch(state, true)
 }
@@ -346,4 +351,9 @@ func searchTextBackward(startPos uint64, tree *text.Tree, parsedQuery parsedQuer
 		panic(err)
 	}
 	return foundMatch, readerStartPos + matchOffset
+}
+
+// SearchCompleteMoveCursorToMatch is a SearchCompleteAction that moves the cursor to the start of the search match.
+func SearchCompleteMoveCursorToMatch(state *EditorState, match SearchMatch) {
+	state.documentBuffer.cursor = cursorState{position: match.StartPos}
 }

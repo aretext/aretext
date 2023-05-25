@@ -846,12 +846,23 @@ func StartSearch(direction state.SearchDirection) Action {
 	}
 }
 
+func StartSearchForDelete(direction state.SearchDirection, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		completeAction := state.SearchCompleteDeleteToMatch(clipboardPage)
+		state.StartSearch(s, direction, completeAction)
+	}
+}
+
 func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
 	state.CompleteSearch(s, false)
 }
 
 func CompleteSearchAndReturnToNormalMode(s *state.EditorState) {
 	state.CompleteSearch(s, true)
+
+	// Commit an undo entry in case the search completion action modified the document
+	// (for example, "d/" deletes text)
+	state.CommitUndoEntry(s)
 }
 
 func AppendRuneToSearchQuery(r rune) Action {

@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/transform"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/text"
 )
@@ -35,7 +36,7 @@ func (d SearchDirection) Reverse() SearchDirection {
 }
 
 // SearchCompleteAction is the action to perform when a user completes a search.
-type SearchCompleteAction func(*EditorState, SearchMatch)
+type SearchCompleteAction func(*EditorState, string, SearchDirection, SearchMatch)
 
 // searchState represents the state of a text search.
 type searchState struct {
@@ -88,7 +89,7 @@ func CompleteSearch(state *EditorState, commit bool) {
 
 	if commit {
 		if search.match != nil {
-			search.completeAction(state, *search.match)
+			search.completeAction(state, search.query, search.direction, *search.match)
 		}
 	} else {
 		prevQuery, prevDirection := search.prevQuery, search.prevDirection
@@ -354,6 +355,45 @@ func searchTextBackward(startPos uint64, tree *text.Tree, parsedQuery parsedQuer
 }
 
 // SearchCompleteMoveCursorToMatch is a SearchCompleteAction that moves the cursor to the start of the search match.
-func SearchCompleteMoveCursorToMatch(state *EditorState, match SearchMatch) {
+func SearchCompleteMoveCursorToMatch(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
 	state.documentBuffer.cursor = cursorState{position: match.StartPos}
+}
+
+// SearchCompleteDeleteToMatch is a SearchCompleteAction that deletes from the cursor position to the search match.
+func SearchCompleteDeleteToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+			deleteToSearchMatch(state, direction, match, clipboardPage)
+		}
+		completeAction(state, query, direction, match)
+		replaySearchInLastActionMacro(state, query, direction, completeAction)
+	}
+}
+
+func deleteToSearchMatch(state *EditorState, direction SearchDirection, match SearchMatch, clipboardPage clipboard.PageId) {
+	DeleteToPos(state, func(params LocatorParams) uint64 {
+		if direction == SearchDirectionForward {
+			return match.StartPos
+		} else {
+			if params.CursorPos > match.EndPos {
+				return match.EndPos
+			} else {
+				// Match vim's behavior for backward search with wraparound.
+				return match.StartPos
+			}
+		}
+	}, clipboardPage)
+}
+
+func replaySearchInLastActionMacro(state *EditorState, query string, direction SearchDirection, completeAction SearchCompleteAction) {
+	// The "last action" must use the original search query (even if the user subsequently searched for something else).
+	// Construct a macro action that performs the original search again, then performs the specified complete action.
+	ClearLastActionMacro(state)
+	AddToLastActionMacro(state, func(state *EditorState) {
+		StartSearch(state, direction, completeAction)
+		for _, r := range query {
+			AppendRuneToSearchQuery(state, r)
+		}
+		CompleteSearch(state, true)
+	})
 }

@@ -89,6 +89,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | delete a brace block                                            | daB <br/> da\{ <br/> da\} | clipboard page        |
 | delete inner angle block                                        | di&lt; <br/> di&gt;       | clipboard page        |
 | delete an angle block                                           | da&lt; <br/> da&gt;       | clipboard page        |
+| search forward and delete                                       | d/                        | clipboard page        |
+| search backward and delete                                      | d?                        | clipboard page        |
 | change word                                                     | cw                        | count, clipboard page |
 | change a word                                                   | caw                       | count, clipboard page |
 | change inner word                                               | ciw                       | count, clipboard page |

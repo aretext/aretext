@@ -366,9 +366,9 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 
 		wrappedAction(s)
 
-		// Commit the undo entry UNLESS in insert mode, in which case wait until
+		// Commit the undo entry UNLESS in insert or search mode, in which case wait until
 		// the transition back to normal mode to commit.
-		if s.InputMode() != state.InputModeInsert {
+		if s.InputMode() != state.InputModeInsert && s.InputMode() != state.InputModeSearch {
 			state.CommitUndoEntry(s)
 		}
 
@@ -1329,6 +1329,28 @@ func NormalModeCommands() []Command {
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
 					StartSearch(state.SearchDirectionBackward),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "search forward and delete (d/)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d/", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForDelete(state.SearchDirectionForward, p.ClipboardPage),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "search backward and delete (d?)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("d?", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForDelete(state.SearchDirectionBackward, p.ClipboardPage),
 					addToMacro{user: true})
 			},
 		},

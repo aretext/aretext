@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/text"
 )
 
@@ -460,6 +461,153 @@ func TestSearchWordUnderCursor(t *testing.T) {
 			assert.Equal(t, cursorState{position: tc.expectedPos}, buffer.cursor)
 		})
 	}
+}
+
+func TestSearchForDelete(t *testing.T) {
+	testCases := []struct {
+		name         string
+		inputText    string
+		direction    SearchDirection
+		pos          uint64
+		query        string
+		expectedText string
+		expectedPos  uint64
+	}{
+		{
+			name:         "empty document",
+			inputText:    "",
+			direction:    SearchDirectionForward,
+			pos:          0,
+			query:        "abc",
+			expectedText: "",
+			expectedPos:  0,
+		},
+		{
+			name:         "no match, forward search",
+			inputText:    "abc def",
+			direction:    SearchDirectionForward,
+			pos:          0,
+			query:        "xyz",
+			expectedText: "abc def",
+			expectedPos:  0,
+		},
+		{
+			name:         "no match, backward search",
+			inputText:    "abc def",
+			direction:    SearchDirectionForward,
+			pos:          6,
+			query:        "xyz",
+			expectedText: "abc def",
+			expectedPos:  6,
+		},
+		{
+			name:         "match, forward search",
+			inputText:    "abc def xyz 123 xyz",
+			direction:    SearchDirectionForward,
+			pos:          2,
+			query:        "xyz",
+			expectedText: "abxyz 123 xyz",
+			expectedPos:  2,
+		},
+		{
+			name:         "match, backward search",
+			inputText:    "abc def xyz 123 xyz abc",
+			direction:    SearchDirectionBackward,
+			pos:          22,
+			query:        "xyz",
+			expectedText: "abc def xyz 123 xyzc",
+			expectedPos:  19,
+		},
+		{
+			name:         "match, forward search, skip match on cursor",
+			inputText:    "abc 123 abc 456 abc 789",
+			direction:    SearchDirectionForward,
+			pos:          0,
+			query:        "abc",
+			expectedText: "abc 456 abc 789",
+			expectedPos:  0,
+		},
+		{
+			name:         "match, forward search, wraparound",
+			inputText:    "abc 123 xyz 456",
+			direction:    SearchDirectionForward,
+			pos:          13,
+			query:        "bc",
+			expectedText: "a56",
+			expectedPos:  1,
+		},
+		{
+			name:         "match, backward search, wraparound",
+			inputText:    "abc 123 xyz 456",
+			direction:    SearchDirectionBackward,
+			pos:          2,
+			query:        "yz",
+			expectedText: "abyz 456",
+			expectedPos:  2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputText)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			buffer := state.documentBuffer
+			buffer.textTree = textTree
+			buffer.cursor.position = tc.pos
+
+			// Search for the query, with a complete action to delete to the match.
+			StartSearch(state, tc.direction, SearchCompleteDeleteToMatch(clipboard.PageNull))
+			for _, r := range tc.query {
+				AppendRuneToSearchQuery(state, r)
+			}
+			CompleteSearch(state, true)
+
+			assert.Equal(t, InputModeNormal, state.inputMode)
+			assert.Equal(t, tc.expectedPos, buffer.cursor.position)
+			assert.Equal(t, tc.expectedText, textTree.String())
+		})
+	}
+}
+
+func TestSearchForDeleteAndRepeatLastAction(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc xyz 123\nabc xyz 123\nabc xyz 123")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+	buffer.cursor.position = 0
+
+	// Search for the query, with a complete action to delete to the match.
+	StartSearch(state, SearchDirectionForward, SearchCompleteDeleteToMatch(clipboard.PageNull))
+	for _, r := range "xyz" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+	assert.Equal(t, InputModeNormal, state.inputMode)
+	assert.Equal(t, uint64(0), buffer.cursor.position)
+	assert.Equal(t, "xyz 123\nabc xyz 123\nabc xyz 123", textTree.String())
+
+	// Change the search query. This shouldn't affect the last action macro.
+	StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
+	for _, r := range "abc" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+	assert.Equal(t, InputModeNormal, state.inputMode)
+	assert.Equal(t, uint64(8), buffer.cursor.position)
+
+	// Repeat the last action.
+	ReplayLastActionMacro(state, 1)
+	assert.Equal(t, InputModeNormal, state.inputMode)
+	assert.Equal(t, uint64(8), buffer.cursor.position)
+	assert.Equal(t, "xyz 123\nxyz 123\nabc xyz 123", textTree.String())
+
+	// And again!
+	ReplayLastActionMacro(state, 1)
+	assert.Equal(t, InputModeNormal, state.inputMode)
+	assert.Equal(t, uint64(8), buffer.cursor.position)
+	assert.Equal(t, "xyz 123\nxyz 123", textTree.String())
 }
 
 func TestSetSearchQueryToPrevInHistory(t *testing.T) {

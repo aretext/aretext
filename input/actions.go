@@ -850,7 +850,7 @@ func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
 	state.CompleteSearch(s, false)
 }
 
-func CommitSearchAndReturnToNormalMode(s *state.EditorState) {
+func CompleteSearchAndReturnToNormalMode(s *state.EditorState) {
 	state.CompleteSearch(s, true)
 }
 

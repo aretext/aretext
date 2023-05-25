@@ -1914,7 +1914,7 @@ func SearchModeCommands() []Command {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CommitSearchAndReturnToNormalMode)
+				return decorate(CompleteSearchAndReturnToNormalMode)
 			},
 		},
 		{

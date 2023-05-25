@@ -134,7 +134,6 @@ type StyleConfig struct {
 }
 
 // ConfigFromUntypedMap constructs a configuration from an untyped map.
-// The map is usually loaded from a JSON document.
 func ConfigFromUntypedMap(m map[string]any) Config {
 	return Config{
 		SyntaxLanguage:  stringOrDefault(m, "syntaxLanguage", DefaultSyntaxLanguage),

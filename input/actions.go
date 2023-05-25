@@ -839,14 +839,11 @@ func DeleteRuneFromMenuSearch(s *state.EditorState) {
 	state.DeleteRuneFromMenuSearch(s)
 }
 
-func StartSearchForward(s *state.EditorState) {
-	// This sets the input mode to search.
-	state.StartSearch(s, state.SearchDirectionForward)
-}
-
-func StartSearchBackward(s *state.EditorState) {
-	// This sets the input mode to search.
-	state.StartSearch(s, state.SearchDirectionBackward)
+func StartSearch(direction state.SearchDirection) Action {
+	return func(s *state.EditorState) {
+		// This sets the input mode to search.
+		state.StartSearch(s, state.SearchDirectionForward)
+	}
 }
 
 func AbortSearchAndReturnToNormalMode(s *state.EditorState) {

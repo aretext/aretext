@@ -1317,7 +1317,7 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					StartSearchForward,
+					StartSearch(state.SearchDirectionForward),
 					addToMacro{user: true})
 			},
 		},
@@ -1328,7 +1328,7 @@ func NormalModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorateNormalOrVisual(
-					StartSearchBackward,
+					StartSearch(state.SearchDirectionBackward),
 					addToMacro{user: true})
 			},
 		},

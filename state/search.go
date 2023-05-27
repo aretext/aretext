@@ -162,12 +162,6 @@ func SearchWordUnderCursor(state *EditorState, direction SearchDirection, target
 	StartSearch(state, direction)
 	runTextSearchQuery(state, query)
 	CompleteSearch(state, true)
-
-	// If the cursor didn't move past the word, advance to the next match.
-	// This indicates to the user that something matched.
-	if buffer.cursor.position == wordStartPos {
-		FindNextMatch(state, false)
-	}
 }
 
 func runTextSearchQuery(state *EditorState, q string) {
@@ -213,7 +207,7 @@ func FindNextMatch(state *EditorState, reverse bool) {
 	foundMatch, newCursorPos := false, uint64(0)
 	if direction == SearchDirectionForward {
 		foundMatch, newCursorPos = searchTextForward(
-			buffer.cursor.position+1,
+			buffer.cursor.position,
 			buffer.textTree,
 			parsedQuery)
 	} else {
@@ -278,8 +272,11 @@ func transformerForSearch(caseSensitive bool) transform.Transformer {
 	}
 }
 
-// searchTextForward finds the position of the next occurrence of a query string on or after the start position.
+// searchTextForward finds the position of the next occurrence of a query string after the start position.
 func searchTextForward(startPos uint64, tree *text.Tree, parsedQuery parsedQuery) (bool, uint64) {
+	// Start the search one after the provided start position so we skip a match on the current position.
+	startPos++
+
 	transformer := transformerForSearch(parsedQuery.caseSensitive)
 	transformedQuery, _, err := transform.String(transformer, parsedQuery.queryText)
 	if err != nil {
@@ -302,7 +299,11 @@ func searchTextForward(startPos uint64, tree *text.Tree, parsedQuery parsedQuery
 	// Wraparound search from the beginning of the text to the start position.
 	treeReader = tree.ReaderAtPosition(0)
 	transformedReader = transform.NewReader(&treeReader, transformer)
-	foundMatch, matchOffset, err = searcher.Limit(startPos).NextInReader(transformedReader)
+	limit := startPos + uint64(utf8.RuneCountInString(transformedQuery))
+	if limit > 0 {
+		limit--
+	}
+	foundMatch, matchOffset, err = searcher.Limit(limit).NextInReader(transformedReader)
 	if err != nil {
 		panic(err)
 	}

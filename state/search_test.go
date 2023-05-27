@@ -24,21 +24,25 @@ func TestSearchAndCommit(t *testing.T) {
 	// Enter a search query.
 	AppendRuneToSearchQuery(state, 'b')
 	assert.Equal(t, "b", buffer.search.query)
+	require.NotNil(t, buffer.search.match)
 	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
 	assert.Equal(t, uint64(5), buffer.search.match.EndPos)
 
 	AppendRuneToSearchQuery(state, 'a')
 	assert.Equal(t, "ba", buffer.search.query)
+	require.NotNil(t, buffer.search.match)
 	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
 	assert.Equal(t, uint64(6), buffer.search.match.EndPos)
 
 	AppendRuneToSearchQuery(state, 'r')
 	assert.Equal(t, "bar", buffer.search.query)
+	require.NotNil(t, buffer.search.match)
 	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
 	assert.Equal(t, uint64(7), buffer.search.match.EndPos)
 
 	DeleteRuneFromSearchQuery(state)
 	assert.Equal(t, "ba", buffer.search.query)
+	require.NotNil(t, buffer.search.match)
 	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
 	assert.Equal(t, uint64(6), buffer.search.match.EndPos)
 
@@ -67,6 +71,7 @@ func TestSearchAndAbort(t *testing.T) {
 	// Enter a search query.
 	AppendRuneToSearchQuery(state, 'b')
 	assert.Equal(t, "b", buffer.search.query)
+	require.NotNil(t, buffer.search.match)
 	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
 	assert.Equal(t, uint64(5), buffer.search.match.EndPos)
 
@@ -96,6 +101,45 @@ func TestSearchAndBackspaceEmptyQuery(t *testing.T) {
 	assert.Equal(t, "", buffer.search.query)
 	assert.Nil(t, buffer.search.match)
 	assert.Equal(t, cursorState{position: 0}, buffer.cursor)
+}
+
+func TestSearchForwardCursorOnMatch(t *testing.T) {
+	textTree, err := text.NewTreeFromString("foo bar foo")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// Enter a search query matching at the cursor's current position.
+	StartSearch(state, SearchDirectionForward)
+	AppendRuneToSearchQuery(state, 'f')
+	AppendRuneToSearchQuery(state, 'o')
+	AppendRuneToSearchQuery(state, 'o')
+	assert.Equal(t, "foo", buffer.search.query)
+
+	// Expect that to find the match *after* the cursor's position.
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(8), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(11), buffer.search.match.EndPos)
+}
+
+func TestSearchForwardWithWraparoundCursorAtBeginning(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+
+	// Enter a search query matching at the cursor's current position.
+	StartSearch(state, SearchDirectionForward)
+	AppendRuneToSearchQuery(state, 'a')
+	AppendRuneToSearchQuery(state, 'b')
+	assert.Equal(t, "ab", buffer.search.query)
+
+	// Expect that to match the first position (wraparound back to start)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	assert.Equal(t, uint64(2), buffer.search.match.EndPos)
 }
 
 func TestSearchCaseSensitivity(t *testing.T) {
@@ -419,7 +463,7 @@ func TestSearchWordUnderCursor(t *testing.T) {
 }
 
 func TestSetSearchQueryToPrevInHistory(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -443,21 +487,24 @@ func TestSetSearchQueryToPrevInHistory(t *testing.T) {
 	StartSearch(state, SearchDirectionForward)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 
 	// Go back in the history again.
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 
 	// Go back in the history, no previous entry so no change.
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 }
 
 func TestSetSearchQueryToNextInHistory(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -481,21 +528,24 @@ func TestSetSearchQueryToNextInHistory(t *testing.T) {
 	SetSearchQueryToPrevInHistory(state)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 
 	// Go to next in history.
 	SetSearchQueryToNextInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 
 	// Forward again. No future entry, so no change.
 	SetSearchQueryToNextInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 }
 
 func TestSearchQueryToPrevInHistoryThenAppendRunes(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -520,7 +570,8 @@ func TestSearchQueryToPrevInHistoryThenAppendRunes(t *testing.T) {
 	SetSearchQueryToPrevInHistory(state)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 
 	// Edit the query by appending runes.
 	AppendRuneToSearchQuery(state, 'x')
@@ -532,11 +583,12 @@ func TestSearchQueryToPrevInHistoryThenAppendRunes(t *testing.T) {
 	// Go back in history, confirm that the edit reset to the last entry.
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 }
 
 func TestSearchQueryToPrevInHistoryThenDeleteRunes(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -561,22 +613,25 @@ func TestSearchQueryToPrevInHistoryThenDeleteRunes(t *testing.T) {
 	SetSearchQueryToPrevInHistory(state)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 
 	// Edit the query by deleting runes.
 	DeleteRuneFromSearchQuery(state)
 	DeleteRuneFromSearchQuery(state)
 	assert.Equal(t, "a", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 
 	// Go back in history, confirm that the edit reset to the last entry.
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 }
 
 func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -599,11 +654,12 @@ func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
 	StartSearch(state, SearchDirectionForward)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 }
 
 func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
-	textTree, err := text.NewTreeFromString("abc def ghi")
+	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)
 	state := NewEditorState(100, 100, nil, nil)
 	buffer := state.documentBuffer
@@ -636,10 +692,12 @@ func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
 	StartSearch(state, SearchDirectionForward)
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "def", buffer.search.query)
-	assert.Equal(t, uint64(4), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(6), buffer.search.match.StartPos)
 
 	// Back again, expect that we're at the first entry (duplicate entries were excluded from history).
 	SetSearchQueryToPrevInHistory(state)
 	assert.Equal(t, "abc", buffer.search.query)
-	assert.Equal(t, uint64(0), buffer.search.match.StartPos)
+	require.NotNil(t, buffer.search.match)
+	assert.Equal(t, uint64(2), buffer.search.match.StartPos)
 }

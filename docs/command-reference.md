@@ -129,6 +129,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | yank to prev matching character in line                         | yF\{char\}                | count, clipboard page |
 | yank till next matching character in line                       | yt\{char\}                | count, clipboard page |
 | yank till prev matching character in line                       | yT\{char\}                | count, clipboard page |
+| search forward and yank                                         | y/                        | clipboard page        |
+| search backward and yank                                        | y?                        | clipboard page        |
 | put after cursor                                                | p                         | clipboard page        |
 | put before cursor                                               | P                         | clipboard page        |
 | show command menu                                               | :                         |                       |

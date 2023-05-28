@@ -853,6 +853,13 @@ func StartSearchForDelete(direction state.SearchDirection, clipboardPage clipboa
 	}
 }
 
+func StartSearchForCopy(direction state.SearchDirection, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		completeAction := state.SearchCompleteCopyToMatch(clipboardPage)
+		state.StartSearch(s, direction, completeAction)
+	}
+}
+
 func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
 	state.CompleteSearch(s, false)
 }

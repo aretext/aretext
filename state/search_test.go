@@ -610,6 +610,110 @@ func TestSearchForDeleteAndRepeatLastAction(t *testing.T) {
 	assert.Equal(t, "xyz 123\nxyz 123", textTree.String())
 }
 
+func TestSearchForCopy(t *testing.T) {
+	testCases := []struct {
+		name                  string
+		inputText             string
+		direction             SearchDirection
+		pos                   uint64
+		query                 string
+		expectedClipboardText string
+	}{
+		{
+			name:                  "empty document",
+			inputText:             "",
+			direction:             SearchDirectionForward,
+			pos:                   0,
+			query:                 "abc",
+			expectedClipboardText: "",
+		},
+		{
+			name:                  "no match, forward search",
+			inputText:             "abc def",
+			direction:             SearchDirectionForward,
+			pos:                   0,
+			query:                 "xyz",
+			expectedClipboardText: "",
+		},
+		{
+			name:                  "no match, backward search",
+			inputText:             "abc def",
+			direction:             SearchDirectionForward,
+			pos:                   6,
+			query:                 "xyz",
+			expectedClipboardText: "",
+		},
+		{
+			name:                  "match, forward search",
+			inputText:             "abc def xyz 123 xyz",
+			direction:             SearchDirectionForward,
+			pos:                   2,
+			query:                 "xyz",
+			expectedClipboardText: "c def ",
+		},
+		{
+			name:                  "match, backward search",
+			inputText:             "abc def xyz 123 xyz abc",
+			direction:             SearchDirectionBackward,
+			pos:                   22,
+			query:                 "xyz",
+			expectedClipboardText: " ab",
+		},
+		{
+			name:                  "match, forward search, skip match on cursor",
+			inputText:             "abc 123 abc 456 abc 789",
+			direction:             SearchDirectionForward,
+			pos:                   0,
+			query:                 "abc",
+			expectedClipboardText: "abc 123 ",
+		},
+		{
+			name:                  "match, forward search, wraparound",
+			inputText:             "abc 123 xyz 456",
+			direction:             SearchDirectionForward,
+			pos:                   13,
+			query:                 "bc",
+			expectedClipboardText: "",
+		},
+		{
+			name:                  "match, backward search, wraparound",
+			inputText:             "abc 123 xyz 456",
+			direction:             SearchDirectionBackward,
+			pos:                   2,
+			query:                 "yz",
+			expectedClipboardText: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			textTree, err := text.NewTreeFromString(tc.inputText)
+			require.NoError(t, err)
+			state := NewEditorState(100, 100, nil, nil)
+			buffer := state.documentBuffer
+			buffer.textTree = textTree
+			buffer.cursor.position = tc.pos
+
+			// Search for the query, with a complete action to copy to the match.
+			StartSearch(state, tc.direction, SearchCompleteCopyToMatch(clipboard.PageDefault))
+			for _, r := range tc.query {
+				AppendRuneToSearchQuery(state, r)
+			}
+			CompleteSearch(state, true)
+
+			// Back to normal mode, no change in cursor or document.
+			assert.Equal(t, InputModeNormal, state.inputMode)
+			assert.Equal(t, tc.pos, buffer.cursor.position)
+			assert.Equal(t, tc.inputText, textTree.String())
+
+			// Check clipboard state.
+			page := state.clipboard.Get(clipboard.PageDefault)
+			assert.False(t, page.Linewise)
+			assert.Equal(t, tc.expectedClipboardText, page.Text)
+		})
+	}
+}
+
 func TestSetSearchQueryToPrevInHistory(t *testing.T) {
 	textTree, err := text.NewTreeFromString("x abc def ghi")
 	require.NoError(t, err)

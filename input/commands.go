@@ -1355,6 +1355,28 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "search forward and yank (y/)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y/", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForCopy(state.SearchDirectionForward, p.ClipboardPage),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "search backward and yank (y?)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("y?", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForCopy(state.SearchDirectionBackward, p.ClipboardPage),
+					addToMacro{user: true})
+			},
+		},
+		{
 			Name: "find next match (n)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('n')

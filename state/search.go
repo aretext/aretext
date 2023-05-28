@@ -370,6 +370,21 @@ func SearchCompleteDeleteToMatch(clipboardPage clipboard.PageId) SearchCompleteA
 	}
 }
 
+// SearchCompleteCopyToMatch is a SearchCompleteAction that copies text from the cursor position to the search match.
+func SearchCompleteCopyToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+		// If the search wraps around, then the range start will be >= range end,
+		// so nothing will be copied.
+		CopyRange(state, clipboardPage, func(params LocatorParams) (uint64, uint64) {
+			if direction == SearchDirectionForward {
+				return params.CursorPos, match.StartPos
+			} else {
+				return match.EndPos, params.CursorPos
+			}
+		})
+	}
+}
+
 func deleteToSearchMatch(state *EditorState, direction SearchDirection, match SearchMatch, clipboardPage clipboard.PageId) {
 	DeleteToPos(state, func(params LocatorParams) uint64 {
 		if direction == SearchDirectionForward {

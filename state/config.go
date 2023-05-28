@@ -49,13 +49,13 @@ func SetLineNumberMode(s *EditorState, mode config.LineNumberMode) {
 func ToggleLineNumberMode(s *EditorState) {
 	switch s.documentBuffer.lineNumberMode {
 	case config.LineNumberModeAbsolute:
-		s.documentBuffer.lineNumberMode = config.LineNumberModeRelative
+		SetLineNumberMode(s, config.LineNumberModeRelative)
 		SetStatusMsg(s, StatusMsg{
 			Style: StatusMsgStyleSuccess,
 			Text:  "Showing relative line numbers",
 		})
 	case config.LineNumberModeRelative:
-		s.documentBuffer.lineNumberMode = config.LineNumberModeAbsolute
+		SetLineNumberMode(s, config.LineNumberModeAbsolute)
 		SetStatusMsg(s, StatusMsg{
 			Style: StatusMsgStyleSuccess,
 			Text:  "Hiding line numbers",

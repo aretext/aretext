@@ -62,6 +62,7 @@ func ReloadDocument(state *EditorState) {
 	oldShowTabs := state.documentBuffer.showTabs
 	oldShowSpaces := state.documentBuffer.showSpaces
 	oldShowLineNum := state.documentBuffer.showLineNum
+	oldLineNumberMode := state.documentBuffer.lineNumberMode
 
 	// Reload the document.
 	_, err := loadDocumentAndResetState(state, path, true)
@@ -100,6 +101,7 @@ func ReloadDocument(state *EditorState) {
 	state.documentBuffer.showTabs = oldShowTabs
 	state.documentBuffer.showSpaces = oldShowSpaces
 	state.documentBuffer.showLineNum = oldShowLineNum
+	state.documentBuffer.lineNumberMode = oldLineNumberMode
 
 	reportReloadSuccess(state, path)
 }

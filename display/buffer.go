@@ -45,13 +45,6 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 
 		lineNum := textTree.LineNumForPosition(pos)
 		lineStartPos := textTree.LineStartPosition(lineNum)
-		if lineNumberMode == config.LineNumberModeRelative {
-			if lineNum < cursorLine {
-				lineNum = cursorLine - lineNum - 1
-			} else {
-				lineNum = lineNum - cursorLine - 1
-			}
-		}
 		wrappedLineRunes := wrappedLine.Runes()
 		syntaxTokens := buffer.SyntaxTokensIntersectingRange(pos, pos+uint64(len(wrappedLineRunes)))
 		drawLineAndSetCursor(
@@ -64,6 +57,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			lineNum,
 			lineNumMargin,
 			lineStartPos,
+			lineNumberMode,
+			cursorLine,
 			wrappedLineRunes,
 			syntaxTokens,
 			cursorPos,
@@ -79,7 +74,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
 		showCursorInBuffer(sr, int(lineNumMargin), 0, palette, inputMode)
-		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin, lineNumberMode, cursorLine)
 	}
 }
 
@@ -99,6 +94,8 @@ func drawLineAndSetCursor(
 	lineNum uint64,
 	lineNumMargin uint64,
 	lineStartPos uint64,
+	lineNumberMode config.LineNumberMode,
+	cursorLine uint64,
 	wrappedLineRunes []rune,
 	syntaxTokens []parser.Token,
 	cursorPos uint64,
@@ -116,7 +113,7 @@ func drawLineAndSetCursor(
 	var lastGcWasNewline bool
 
 	if startPos == lineStartPos {
-		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin, lineNumberMode, cursorLine)
 	}
 	col += int(lineNumMargin)
 
@@ -175,7 +172,7 @@ func drawLineAndSetCursor(
 
 	if lastGcWasNewline {
 		// Draw line number for an empty final line.
-		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin, lineNumberMode, cursorLine)
 	}
 
 	if pos == cursorPos {
@@ -189,13 +186,32 @@ func drawLineAndSetCursor(
 	}
 }
 
-func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum uint64, lineNumMargin uint64) {
+func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum uint64, lineNumMargin uint64, lineNumberMode config.LineNumberMode, cursorLine uint64) {
 	if lineNumMargin == 0 {
 		return
 	}
 
+	displayLineNum := lineNum
+	switch lineNumberMode {
+	case config.LineNumberModeRelative:
+		if cursorLine+lineNum < 1 {
+			displayLineNum = 0
+		}
+		if displayLineNum < cursorLine {
+			displayLineNum = cursorLine - displayLineNum
+		} else {
+			displayLineNum = displayLineNum - cursorLine
+		}
+		if displayLineNum == 0 {
+			// show the absolute line number next to the cursor
+			displayLineNum = lineNum + 1
+		}
+	case config.LineNumberModeAbsolute:
+		displayLineNum = lineNum + 1
+	}
+
 	style := palette.StyleForLineNum()
-	lineNumStr := strconv.FormatUint(lineNum+1, 10)
+	lineNumStr := strconv.FormatUint(displayLineNum, 10)
 
 	// Right-aligned in the margin, with one space of padding on the right.
 	col := int(lineNumMargin) - 1 - len(lineNumStr)

@@ -1300,7 +1300,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "show command menu",
+			Name: "show command menu (:)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr(':')
 			},
@@ -1311,7 +1311,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "start forward search",
+			Name: "start forward search (/)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('/')
 			},
@@ -1322,7 +1322,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "start backward search",
+			Name: "start backward search (?)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('?')
 			},
@@ -1333,7 +1333,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "find next match",
+			Name: "find next match (n)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('n')
 			},
@@ -1344,7 +1344,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "find previous match",
+			Name: "find previous match (N)",
 			BuildExpr: func() vm.Expr {
 				return runeExpr('N')
 			},
@@ -1355,7 +1355,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "search forward for word under cursor",
+			Name: "search forward for word under cursor (*)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("*", "", captureOpts{count: true})
 			},
@@ -1366,7 +1366,7 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
-			Name: "search backward for word under cursor",
+			Name: "search backward for word under cursor (#)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("#", "", captureOpts{count: true})
 			},

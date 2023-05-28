@@ -17,7 +17,8 @@ func drawBuffer(t *testing.T, screen tcell.Screen, setupState func(*state.Editor
 	setupState(editorState)
 	palette := NewPalette()
 	buffer := editorState.DocumentBuffer()
-	DrawBuffer(screen, palette, buffer)
+	inputMode := editorState.InputMode()
+	DrawBuffer(screen, palette, buffer, inputMode)
 	screen.Sync()
 }
 
@@ -521,7 +522,7 @@ func TestSearchMatch(t *testing.T) {
 		})
 		assertCellStyles(t, s, [][]tcell.Style{
 			{
-				tcell.StyleDefault,
+				tcell.StyleDefault.Reverse(true).Dim(true),
 				tcell.StyleDefault,
 				tcell.StyleDefault,
 				tcell.StyleDefault.Reverse(true),

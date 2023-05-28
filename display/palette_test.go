@@ -36,6 +36,7 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 	expected := &Palette{
 		lineNumStyle:              s.Foreground(tcell.ColorOlive),
 		selectionStyle:            s.Reverse(true).Dim(true),
+		searchCursorStyle:         s.Reverse(true).Dim(true),
 		searchMatchStyle:          s.Reverse(true),
 		statusMsgSuccessStyle:     s.Foreground(tcell.ColorGreen).Bold(true),
 		statusMsgErrorStyle:       s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),

@@ -66,6 +66,17 @@ func (r *ScreenRegion) GetContent(x, y int) (mainc rune, combc []rune, style tce
 	return mainc, combc, style
 }
 
+// SetStyle sets the style of a cell without changing its content.
+// Attempts to set content outside the region or screen are ignored.
+func (r *ScreenRegion) SetStyleInCell(x, y int, style tcell.Style) {
+	if x < 0 || y < 0 || x >= r.width || y >= r.height {
+		return
+	}
+
+	mainc, combc, _ := r.GetContent(x, y)
+	r.SetContent(x, y, mainc, combc, style)
+}
+
 // HideCursor prevents the cursor from being displayed.
 func (r *ScreenRegion) HideCursor() {
 	r.screen.ShowCursor(-1, -1)

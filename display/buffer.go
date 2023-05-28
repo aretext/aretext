@@ -14,7 +14,7 @@ import (
 )
 
 // DrawBuffer draws text buffer in the screen.
-func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState) {
+func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState, inputMode state.InputMode) {
 	x, y, width, height := viewDimensions(buffer)
 	sr := NewScreenRegion(screen, x, y, width, height)
 	textTree := buffer.TextTree()
@@ -46,6 +46,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 		drawLineAndSetCursor(
 			sr,
 			palette,
+			inputMode,
 			pos,
 			row,
 			int(wrapConfig.MaxLineWidth),
@@ -66,7 +67,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
-		sr.ShowCursor(int(lineNumMargin), 0)
+		showCursorInBuffer(sr, int(lineNumMargin), 0, palette, inputMode)
 		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin)
 	}
 }
@@ -80,6 +81,7 @@ func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
 func drawLineAndSetCursor(
 	sr *ScreenRegion,
 	palette *Palette,
+	inputMode state.InputMode,
 	pos uint64,
 	row int,
 	maxLineWidth int,
@@ -151,7 +153,7 @@ func drawLineAndSetCursor(
 		}
 
 		if pos == cursorPos {
-			sr.ShowCursor(col, row)
+			showCursorInBuffer(sr, col, row, palette, inputMode)
 		}
 
 		i += len(gcRunes)
@@ -168,10 +170,10 @@ func drawLineAndSetCursor(
 	if pos == cursorPos {
 		if lastGcWasNewline || (pos-startPos) == uint64(maxLineWidth) {
 			// If the line ended on a newline or soft-wrapped line, show the cursor at the start of the next line.
-			sr.ShowCursor(int(lineNumMargin), row+1)
+			showCursorInBuffer(sr, int(lineNumMargin), row+1, palette, inputMode)
 		} else if pos == cursorPos {
 			// Otherwise, show the cursor at the end of the current line.
-			sr.ShowCursor(col, row)
+			showCursorInBuffer(sr, col, row, palette, inputMode)
 		}
 	}
 }
@@ -189,5 +191,15 @@ func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum
 	for _, r := range lineNumStr {
 		sr.SetContent(col, row, r, nil, style)
 		col++
+	}
+}
+
+func showCursorInBuffer(sr *ScreenRegion, col int, row int, palette *Palette, inputMode state.InputMode) {
+	if inputMode == state.InputModeSearch {
+		// In search mode, the terminal cursor will appear in the search query at the bottom of the screen.
+		// Highlight the cursor position in the document with another style so the user knows where it is.
+		sr.SetStyleInCell(col, row, palette.StyleForSearchCursor())
+	} else {
+		sr.ShowCursor(col, row)
 	}
 }

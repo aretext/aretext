@@ -9,7 +9,7 @@ import (
 // DrawEditor draws the editor in the screen.
 func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.EditorState, inputBufferString string) {
 	screen.Fill(' ', tcell.StyleDefault)
-	DrawBuffer(screen, palette, editorState.DocumentBuffer())
+	DrawBuffer(screen, palette, editorState.DocumentBuffer(), editorState.InputMode())
 	DrawMenu(screen, palette, editorState.Menu())
 	DrawStatusBar(
 		screen,

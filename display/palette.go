@@ -15,6 +15,7 @@ type Palette struct {
 	lineNumStyle              tcell.Style
 	selectionStyle            tcell.Style
 	searchMatchStyle          tcell.Style
+	searchCursorStyle         tcell.Style
 	statusMsgSuccessStyle     tcell.Style
 	statusMsgErrorStyle       tcell.Style
 	statusInputModeStyle      tcell.Style
@@ -39,6 +40,7 @@ func NewPalette() *Palette {
 		lineNumStyle:              s.Foreground(tcell.ColorOlive),
 		selectionStyle:            s.Reverse(true).Dim(true),
 		searchMatchStyle:          s.Reverse(true),
+		searchCursorStyle:         s.Reverse(true).Dim(true),
 		statusMsgSuccessStyle:     s.Foreground(tcell.ColorGreen).Bold(true),
 		statusMsgErrorStyle:       s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),
 		statusInputModeStyle:      s.Bold(true),
@@ -146,6 +148,10 @@ func (p *Palette) StyleForSelection() tcell.Style {
 
 func (p *Palette) StyleForSearchMatch() tcell.Style {
 	return p.searchMatchStyle
+}
+
+func (p *Palette) StyleForSearchCursor() tcell.Style {
+	return p.searchCursorStyle
 }
 
 func (p *Palette) StyleForStatusInputMode() tcell.Style {

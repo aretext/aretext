@@ -102,7 +102,12 @@ func CompleteSearch(state *EditorState, commit bool) {
 
 	search.match = nil
 
-	SetInputMode(state, InputModeNormal)
+	// If the complete action didn't change the input mode (e.g. "c/" or "c?" commands go to insert mode),
+	// assume we're going back to normal mode.
+	if state.inputMode == InputModeSearch {
+		SetInputMode(state, InputModeNormal)
+	}
+
 	ScrollViewToCursor(state)
 }
 
@@ -364,6 +369,20 @@ func SearchCompleteDeleteToMatch(clipboardPage clipboard.PageId) SearchCompleteA
 	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
 		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
 			deleteToSearchMatch(state, direction, match, clipboardPage)
+		}
+		completeAction(state, query, direction, match)
+		replaySearchInLastActionMacro(state, query, direction, completeAction)
+	}
+}
+
+// SearchCompleteChangeToMatch is a SearchCompleteAction that deletes to the search match, then enters insert mode.
+func SearchCompleteChangeToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+			// Delete to the match (exactly the same as the "search and delete" commands).
+			// Then go to insert mode (override default transition back to normal mode).
+			deleteToSearchMatch(state, direction, match, clipboardPage)
+			SetInputMode(state, InputModeInsert)
 		}
 		completeAction(state, query, direction, match)
 		replaySearchInLastActionMacro(state, query, direction, completeAction)

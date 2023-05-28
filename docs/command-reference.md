@@ -110,6 +110,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | change a brace block                                            | caB <br/> ca\{ <br/> ca\} | clipboard page        |
 | change inner angle block                                        | ci&lt; <br/> ci&gt;       | clipboard page        |
 | change an angle block                                           | ca&lt; <br/> ca&gt;       | clipboard page        |
+| search forward and change                                       | c/                        | clipboard page        |
+| search backward and change                                      | c?                        | clipboard page        |
 | replace character                                               | r                         |                       |
 | toggle case                                                     | ~                         |                       |
 | indent line                                                     | &gt;&gt;                  |                       |

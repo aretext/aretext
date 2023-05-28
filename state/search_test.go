@@ -610,6 +610,25 @@ func TestSearchForDeleteAndRepeatLastAction(t *testing.T) {
 	assert.Equal(t, "xyz 123\nxyz 123", textTree.String())
 }
 
+func TestSearchForChange(t *testing.T) {
+	textTree, err := text.NewTreeFromString("abc xyz 123\nabc xyz 123\nabc xyz 123")
+	require.NoError(t, err)
+	state := NewEditorState(100, 100, nil, nil)
+	buffer := state.documentBuffer
+	buffer.textTree = textTree
+	buffer.cursor.position = 0
+
+	// Search for the query, with a complete action to change to the match.
+	StartSearch(state, SearchDirectionForward, SearchCompleteChangeToMatch(clipboard.PageNull))
+	for _, r := range "xyz" {
+		AppendRuneToSearchQuery(state, r)
+	}
+	CompleteSearch(state, true)
+	assert.Equal(t, InputModeInsert, state.inputMode) // Since it's a change, go to insert mode.
+	assert.Equal(t, uint64(0), buffer.cursor.position)
+	assert.Equal(t, "xyz 123\nabc xyz 123\nabc xyz 123", textTree.String())
+}
+
 func TestSearchForCopy(t *testing.T) {
 	testCases := []struct {
 		name                  string

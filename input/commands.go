@@ -1355,6 +1355,28 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "search forward and change (c/)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c/", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForChange(state.SearchDirectionForward, p.ClipboardPage),
+					addToMacro{user: true})
+			},
+		},
+		{
+			Name: "search backward and change (c?)",
+			BuildExpr: func() vm.Expr {
+				return cmdExpr("c?", "", captureOpts{clipboardPage: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					StartSearchForChange(state.SearchDirectionBackward, p.ClipboardPage),
+					addToMacro{user: true})
+			},
+		},
+		{
 			Name: "search forward and yank (y/)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("y/", "", captureOpts{clipboardPage: true})
@@ -1958,7 +1980,7 @@ func SearchModeCommands() []Command {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(CompleteSearchAndReturnToNormalMode)
+				return decorate(CompleteSearch)
 			},
 		},
 		{

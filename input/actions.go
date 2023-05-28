@@ -853,6 +853,13 @@ func StartSearchForDelete(direction state.SearchDirection, clipboardPage clipboa
 	}
 }
 
+func StartSearchForChange(direction state.SearchDirection, clipboardPage clipboard.PageId) Action {
+	return func(s *state.EditorState) {
+		completeAction := state.SearchCompleteChangeToMatch(clipboardPage)
+		state.StartSearch(s, direction, completeAction)
+	}
+}
+
 func StartSearchForCopy(direction state.SearchDirection, clipboardPage clipboard.PageId) Action {
 	return func(s *state.EditorState) {
 		completeAction := state.SearchCompleteCopyToMatch(clipboardPage)
@@ -861,15 +868,22 @@ func StartSearchForCopy(direction state.SearchDirection, clipboardPage clipboard
 }
 
 func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
+	// This always transitions back to normal mode.
 	state.CompleteSearch(s, false)
 }
 
-func CompleteSearchAndReturnToNormalMode(s *state.EditorState) {
+func CompleteSearch(s *state.EditorState) {
+	// This transitions to normal mode in all cases EXCEPT the change commands ("c/" and "c?")
+	// which instead transition to insert mode.
 	state.CompleteSearch(s, true)
 
 	// Commit an undo entry in case the search completion action modified the document
 	// (for example, "d/" deletes text)
-	state.CommitUndoEntry(s)
+	// We commit the undo entry only in normal mode, because the change commands ("c/" and "c?")
+	// go to insert mode, and those edits should be included in the same undo entry.
+	if s.InputMode() == state.InputModeNormal {
+		state.CommitUndoEntry(s)
+	}
 }
 
 func AppendRuneToSearchQuery(r rune) Action {

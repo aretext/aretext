@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax"
@@ -768,6 +769,197 @@ func TestShowLineNumbers(t *testing.T) {
 					}
 					state.ToggleShowLineNumbers(editorState)
 				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}
+
+func TestLineNumberMode(t *testing.T) {
+	testCases := []struct {
+		name             string
+		width, height    int
+		inputString      string
+		cursorPosition   uint64
+		lineNumMode      config.LineNumberMode
+		showLineNum      bool
+		expectedContents [][]rune
+	}{
+		{
+			name:  "absolute with cursor on first line",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde",
+			cursorPosition: 0,
+			lineNumMode:    config.LineNumberModeAbsolute,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '2', ' ', 'c', ' '},
+				{' ', '3', ' ', 'd', 'e'},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "absolute with cursor on third line",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde",
+			cursorPosition: 5, // cursor is on the 'd'
+			lineNumMode:    config.LineNumberModeAbsolute,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '2', ' ', 'c', ' '},
+				{' ', '3', ' ', 'd', 'e'},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "with line numbers disabled",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde\nfg\nhi",
+			cursorPosition: 5, // cursor is on 'd'
+			lineNumMode:    config.LineNumberModeAbsolute,
+			showLineNum:    false,
+			expectedContents: [][]rune{
+				{'a', 'b', ' ', ' ', ' '},
+				{'c', ' ', ' ', ' ', ' '},
+				{'d', 'e', ' ', ' ', ' '},
+				{'f', 'g', ' ', ' ', ' '},
+				{'h', 'i', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "relative in empty document",
+			width: 5, height: 5,
+			inputString:    "",
+			cursorPosition: 0,
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '0', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "relative with cursor on first line",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde",
+			cursorPosition: 0,
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '0', ' ', 'a', 'b'},
+				{' ', '1', ' ', 'c', ' '},
+				{' ', '2', ' ', 'd', 'e'},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "relative with cursor on second line",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde\nfg\nhi",
+			cursorPosition: 3, // cursor is on 'c'
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '1', ' ', 'a', 'b'},
+				{' ', '0', ' ', 'c', ' '},
+				{' ', '1', ' ', 'd', 'e'},
+				{' ', '2', ' ', 'f', 'g'},
+				{' ', '3', ' ', 'h', 'i'},
+			},
+		},
+		{
+			name:  "relative with cursor on third line",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde\nfg\nhi",
+			cursorPosition: 5, // cursor is on 'd'
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '2', ' ', 'a', 'b'},
+				{' ', '1', ' ', 'c', ' '},
+				{' ', '0', ' ', 'd', 'e'},
+				{' ', '1', ' ', 'f', 'g'},
+				{' ', '2', ' ', 'h', 'i'},
+			},
+		},
+		{
+			name:  "relative with cursor on third line without line numbers",
+			width: 5, height: 5,
+			inputString:    "ab\nc\nde\nfg\nhi",
+			cursorPosition: 5, // cursor is on 'd'
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    false,
+			expectedContents: [][]rune{
+				{'a', 'b', ' ', ' ', ' '},
+				{'c', ' ', ' ', ' ', ' '},
+				{'d', 'e', ' ', ' ', ' '},
+				{'f', 'g', ' ', ' ', ' '},
+				{'h', 'i', ' ', ' ', ' '},
+			},
+		},
+		{
+			name:  "relative with cursor on 12th line",
+			width: 5, height: 25,
+			cursorPosition: 25,
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			inputString:    "ab\nc\nde\nfg\nhi\n\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n",
+			expectedContents: [][]rune{
+				{'1', '1', ' ', 'a', 'b'},
+				{'1', '0', ' ', 'c', ' '},
+				{' ', '9', ' ', 'd', 'e'},
+				{' ', '8', ' ', 'f', 'g'},
+				{' ', '7', ' ', 'h', 'i'},
+				{' ', '6', ' ', ' ', ' '},
+				{' ', '5', ' ', 'j', ' '},
+				{' ', '4', ' ', 'k', ' '},
+				{' ', '3', ' ', 'l', ' '},
+				{' ', '2', ' ', 'm', ' '},
+				{' ', '1', ' ', 'n', ' '},
+				{' ', '0', ' ', 'o', ' '},
+				{' ', '1', ' ', 'p', ' '},
+				{' ', '2', ' ', 'q', ' '},
+				{' ', '3', ' ', 'r', ' '},
+				{' ', '4', ' ', 's', ' '},
+				{' ', '5', ' ', 't', ' '},
+				{' ', '6', ' ', 'u', ' '},
+				{' ', '7', ' ', 'v', ' '},
+				{' ', '8', ' ', 'w', ' '},
+				{' ', '9', ' ', 'x', ' '},
+				{'1', '0', ' ', 'y', ' '},
+				{'1', '1', ' ', 'z', ' '},
+				{'1', '2', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					state.MoveCursor(editorState, func(state.LocatorParams) uint64 {
+						return tc.cursorPosition
+					})
+					if tc.showLineNum {
+						state.ToggleShowLineNumbers(editorState)
+					}
+
+					state.SetLineNumberMode(editorState, tc.lineNumMode)
+				})
+
 				assertCellContents(t, s, tc.expectedContents)
 			})
 		})

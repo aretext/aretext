@@ -58,6 +58,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		undoLog:        undo.NewLog(),
 		syntaxLanguage: syntax.LanguagePlaintext,
 		syntaxParser:   nil,
+		lineNumberMode: config.DefaultLineNumberMode,
 		tabSize:        uint64(config.DefaultTabSize),
 		tabExpand:      config.DefaultTabExpand,
 		showSpaces:     config.DefaultShowSpaces,
@@ -148,6 +149,7 @@ type BufferState struct {
 	undoLog                 *undo.Log
 	syntaxLanguage          syntax.Language
 	syntaxParser            *parser.P
+	lineNumberMode          config.LineNumberMode
 	tabSize                 uint64
 	tabExpand               bool
 	showTabs                bool
@@ -219,6 +221,10 @@ func (s *BufferState) ShowTabs() bool {
 
 func (s *BufferState) ShowSpaces() bool {
 	return s.showSpaces
+}
+
+func (s *BufferState) LineNumberMode() config.LineNumberMode {
+	return s.lineNumberMode
 }
 
 func (s *BufferState) LineNumMarginWidth() uint64 {

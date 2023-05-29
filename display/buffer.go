@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
@@ -25,6 +26,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	showTabs := buffer.ShowTabs()
 	showSpaces := buffer.ShowSpaces()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
+	lineNumberMode := buffer.LineNumberMode()
+	cursorLine := textTree.LineNumForPosition(cursorPos)
 	wrapConfig := buffer.LineWrapConfig()
 	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
@@ -39,6 +42,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 		} else if err != nil {
 			log.Fatalf("%s", err)
 		}
+
 		lineNum := textTree.LineNumForPosition(pos)
 		lineStartPos := textTree.LineStartPosition(lineNum)
 		wrappedLineRunes := wrappedLine.Runes()
@@ -53,6 +57,8 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			lineNum,
 			lineNumMargin,
 			lineStartPos,
+			lineNumberMode,
+			cursorLine,
 			wrappedLineRunes,
 			syntaxTokens,
 			cursorPos,
@@ -68,7 +74,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	// Text view is empty, with cursor positioned in the first cell.
 	if pos-viewTextOrigin == 0 && pos == cursorPos {
 		showCursorInBuffer(sr, int(lineNumMargin), 0, palette, inputMode)
-		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, 0, 0, lineNumMargin, lineNumberMode, cursorLine)
 	}
 }
 
@@ -88,6 +94,8 @@ func drawLineAndSetCursor(
 	lineNum uint64,
 	lineNumMargin uint64,
 	lineStartPos uint64,
+	lineNumberMode config.LineNumberMode,
+	cursorLine uint64,
 	wrappedLineRunes []rune,
 	syntaxTokens []parser.Token,
 	cursorPos uint64,
@@ -105,7 +113,7 @@ func drawLineAndSetCursor(
 	var lastGcWasNewline bool
 
 	if startPos == lineStartPos {
-		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin, lineNumberMode, cursorLine)
 	}
 	col += int(lineNumMargin)
 
@@ -164,7 +172,7 @@ func drawLineAndSetCursor(
 
 	if lastGcWasNewline {
 		// Draw line number for an empty final line.
-		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin)
+		drawLineNumIfNecessary(sr, palette, row+1, lineNum+1, lineNumMargin, lineNumberMode, cursorLine)
 	}
 
 	if pos == cursorPos {
@@ -178,13 +186,13 @@ func drawLineAndSetCursor(
 	}
 }
 
-func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum uint64, lineNumMargin uint64) {
+func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum uint64, lineNumMargin uint64, lineNumberMode config.LineNumberMode, cursorLine uint64) {
 	if lineNumMargin == 0 {
 		return
 	}
 
 	style := palette.StyleForLineNum()
-	lineNumStr := strconv.FormatUint(lineNum+1, 10)
+	lineNumStr := strconv.FormatUint(displayLineNum(lineNumberMode, lineNum, cursorLine), 10)
 
 	// Right-aligned in the margin, with one space of padding on the right.
 	col := int(lineNumMargin) - 1 - len(lineNumStr)
@@ -201,5 +209,20 @@ func showCursorInBuffer(sr *ScreenRegion, col int, row int, palette *Palette, in
 		sr.SetStyleInCell(col, row, palette.StyleForSearchCursor())
 	} else {
 		sr.ShowCursor(col, row)
+	}
+}
+
+func displayLineNum(lineNumberMode config.LineNumberMode, lineNum uint64, cursorLine uint64) uint64 {
+	switch lineNumberMode {
+	case config.LineNumberModeAbsolute:
+		return lineNum + 1
+	case config.LineNumberModeRelative:
+		if lineNum < cursorLine {
+			return cursorLine - lineNum
+		} else {
+			return lineNum - cursorLine
+		}
+	default:
+		panic("Unrecognized line number mode")
 	}
 }

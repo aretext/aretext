@@ -17,6 +17,7 @@
     showTabs: false
     showSpaces: false
     showLineNumbers: false
+    lineNumberMode: "absolute"
     lineWrap: "character"
     styles:
       lineNum: {color: "olive"}

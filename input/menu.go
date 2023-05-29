@@ -109,6 +109,11 @@ func menuItems(ctx Context) []menu.Item {
 			Action:  state.ToggleShowLineNumbers,
 		},
 		{
+			Name:    "toggle line number mode (relative/absolute)",
+			Aliases: []string{"nur"},
+			Action:  state.ToggleLineNumberMode,
+		},
+		{
 			Name:    "toggle auto-indent",
 			Aliases: []string{"ai"},
 			Action:  state.ToggleAutoIndent,

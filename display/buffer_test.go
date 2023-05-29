@@ -831,6 +831,21 @@ func TestLineNumberMode(t *testing.T) {
 			},
 		},
 		{
+			name:  "relative in empty document",
+			width: 5, height: 5,
+			inputString:    "",
+			cursorPosition: 0,
+			lineNumMode:    config.LineNumberModeRelative,
+			showLineNum:    true,
+			expectedContents: [][]rune{
+				{' ', '0', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' '},
+			},
+		},
+		{
 			name:  "relative with cursor on first line",
 			width: 5, height: 5,
 			inputString:    "ab\nc\nde",
@@ -838,7 +853,7 @@ func TestLineNumberMode(t *testing.T) {
 			lineNumMode:    config.LineNumberModeRelative,
 			showLineNum:    true,
 			expectedContents: [][]rune{
-				{' ', '1', ' ', 'a', 'b'},
+				{' ', '0', ' ', 'a', 'b'},
 				{' ', '1', ' ', 'c', ' '},
 				{' ', '2', ' ', 'd', 'e'},
 				{' ', ' ', ' ', ' ', ' '},
@@ -854,7 +869,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]rune{
 				{' ', '1', ' ', 'a', 'b'},
-				{' ', '2', ' ', 'c', ' '},
+				{' ', '0', ' ', 'c', ' '},
 				{' ', '1', ' ', 'd', 'e'},
 				{' ', '2', ' ', 'f', 'g'},
 				{' ', '3', ' ', 'h', 'i'},
@@ -870,7 +885,7 @@ func TestLineNumberMode(t *testing.T) {
 			expectedContents: [][]rune{
 				{' ', '2', ' ', 'a', 'b'},
 				{' ', '1', ' ', 'c', ' '},
-				{' ', '3', ' ', 'd', 'e'},
+				{' ', '0', ' ', 'd', 'e'},
 				{' ', '1', ' ', 'f', 'g'},
 				{' ', '2', ' ', 'h', 'i'},
 			},
@@ -909,7 +924,7 @@ func TestLineNumberMode(t *testing.T) {
 				{' ', '3', ' ', 'l', ' '},
 				{' ', '2', ' ', 'm', ' '},
 				{' ', '1', ' ', 'n', ' '},
-				{'1', '2', ' ', 'o', ' '},
+				{' ', '0', ' ', 'o', ' '},
 				{' ', '1', ' ', 'p', ' '},
 				{' ', '2', ' ', 'q', ' '},
 				{' ', '3', ' ', 'r', ' '},

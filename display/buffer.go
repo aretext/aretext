@@ -191,27 +191,8 @@ func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum
 		return
 	}
 
-	displayLineNum := lineNum
-	switch lineNumberMode {
-	case config.LineNumberModeRelative:
-		if cursorLine+lineNum < 1 {
-			displayLineNum = 0
-		}
-		if displayLineNum < cursorLine {
-			displayLineNum = cursorLine - displayLineNum
-		} else {
-			displayLineNum = displayLineNum - cursorLine
-		}
-		if displayLineNum == 0 {
-			// show the absolute line number next to the cursor
-			displayLineNum = lineNum + 1
-		}
-	case config.LineNumberModeAbsolute:
-		displayLineNum = lineNum + 1
-	}
-
 	style := palette.StyleForLineNum()
-	lineNumStr := strconv.FormatUint(displayLineNum, 10)
+	lineNumStr := strconv.FormatUint(displayLineNum(lineNumberMode, lineNum, cursorLine), 10)
 
 	// Right-aligned in the margin, with one space of padding on the right.
 	col := int(lineNumMargin) - 1 - len(lineNumStr)
@@ -228,5 +209,20 @@ func showCursorInBuffer(sr *ScreenRegion, col int, row int, palette *Palette, in
 		sr.SetStyleInCell(col, row, palette.StyleForSearchCursor())
 	} else {
 		sr.ShowCursor(col, row)
+	}
+}
+
+func displayLineNum(lineNumberMode config.LineNumberMode, lineNum uint64, cursorLine uint64) uint64 {
+	switch lineNumberMode {
+	case config.LineNumberModeAbsolute:
+		return lineNum + 1
+	case config.LineNumberModeRelative:
+		if lineNum < cursorLine {
+			return cursorLine - lineNum
+		} else {
+			return lineNum - cursorLine
+		}
+	default:
+		panic("Unrecognized line number mode")
 	}
 }

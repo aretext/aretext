@@ -184,7 +184,7 @@ func scoreRecordsPartition(partition []scoredRecord, query string) {
 }
 
 func isSeparator(r rune) bool {
-	return r == '/' || r == ' ' || r == '\t'
+	return r == '/' || r == '\\' || r == ' ' || r == '\t'
 }
 
 func topRecordsDescByScore(scoredRecords []scoredRecord, limit int) []int {

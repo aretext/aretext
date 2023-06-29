@@ -72,6 +72,21 @@ func TestRankRecords(t *testing.T) {
 			},
 		},
 		{
+			name:  "rank match at start of path component with backslash",
+			query: "bar",
+			limit: 1000,
+			records: []string{
+				`foo\foobar.go`,
+				`foo\bar.go`,
+				`foobar.go`,
+			},
+			expected: []string{
+				`foo\bar.go`,
+				`foobar.go`,
+				`foo\foobar.go`,
+			},
+		},
+		{
 			name:  "rank case insensitive partial match",
 			query: "foobar",
 			limit: 1000,

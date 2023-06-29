@@ -18,7 +18,8 @@ var DefaultConfigYaml []byte
 
 // ConfigPath returns the path to the configuration file.
 func ConfigPath() (string, error) {
-	return xdg.ConfigFile("aretext/config.yaml")
+	path := filepath.Join("aretext", "config.yaml")
+	return xdg.ConfigFile(path)
 }
 
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.

@@ -419,6 +419,10 @@ func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
 	defer os.Setenv("SHELL", oldShellEnv)
 	os.Setenv("SHELL", "")
 
+	oldAretextShellEnv := os.Getenv("ARETEXT_SHELL")
+	defer os.Setenv("ARETEXT_SHELL", oldAretextShellEnv)
+	os.Setenv("ARETEXT_SHELL", "")
+
 	suspendScreenFunc := func(f func() error) error { return f() }
 	state := NewEditorState(100, 100, nil, suspendScreenFunc)
 

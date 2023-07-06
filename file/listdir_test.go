@@ -24,43 +24,43 @@ func TestListDirFiles(t *testing.T) {
 		// List all file paths in tmpdir.
 		ctx := context.Background()
 		options := ListDirOptions{
-			DirPatternsToHide: []string{"**/.hidden"},
+			DirPatternsToHide: []string{filepath.FromSlash("**/.hidden")},
 		}
 		foundPaths := ListDir(ctx, tmpDir, options)
 		relPaths := makeRelPaths(foundPaths)
 
 		// Check that we found all the paths we created (except hidden ones), ignoring order.
 		assertPathsIgnoreOrder(t, relPaths, []string{
-			"a/1.txt",
-			"a/2.txt",
-			"b/2.txt",
-			"a/b/4.txt",
+			filepath.FromSlash("a/1.txt"),
+			filepath.FromSlash("a/2.txt"),
+			filepath.FromSlash("b/2.txt"),
+			filepath.FromSlash("a/b/4.txt"),
 		})
 	})
 }
 
 func TestListDirDirectoriesOnly(t *testing.T) {
 	paths := []string{
-		"a/foo.txt",
-		"a/b/bar.txt",
-		"a/.hidden/hidden.txt",
-		"c/bat.txt",
+		filepath.FromSlash("a/foo.txt"),
+		filepath.FromSlash("a/b/bar.txt"),
+		filepath.FromSlash("a/.hidden/hidden.txt"),
+		filepath.FromSlash("c/bat.txt"),
 	}
 	withTmpDirPaths(t, paths, func(tmpDir string) {
 		// List all subdir paths in tmpdir.
 		ctx := context.Background()
 		options := ListDirOptions{
 			DirectoriesOnly:   true,
-			DirPatternsToHide: []string{"**/.hidden"},
+			DirPatternsToHide: []string{filepath.FromSlash("**/.hidden")},
 		}
 		foundPaths := ListDir(ctx, tmpDir, options)
 		relPaths := makeRelPaths(foundPaths)
 
 		// Check that we found all the subdir paths we created (except hidden ones), ignoring order.
 		assertPathsIgnoreOrder(t, relPaths, []string{
-			"a",
-			"a/b",
-			"c",
+			filepath.FromSlash("a"),
+			filepath.FromSlash("a/b"),
+			filepath.FromSlash("c"),
 		})
 	})
 }

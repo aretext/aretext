@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,14 +34,14 @@ func TestConfigForPath(t *testing.T) {
 			ruleSet: []Rule{
 				{
 					Name:    "json",
-					Pattern: "**/*.json",
+					Pattern: filepath.FromSlash("**/*.json"),
 					Config: map[string]any{
 						"syntaxLanguage": "json",
 					},
 				},
 				{
 					Name:    "mismatched rule",
-					Pattern: "**/*.txt",
+					Pattern: filepath.FromSlash("**/*.txt"),
 					Config: map[string]any{
 						"syntaxLanguage": "undefined",
 					},

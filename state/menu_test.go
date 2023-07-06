@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -212,9 +213,9 @@ func TestDeleteRuneFromMenuSearch(t *testing.T) {
 
 func TestShowFileMenu(t *testing.T) {
 	paths := []string{
-		"a/foo.txt",
-		"a/b/bar.txt",
-		"c/baz.txt",
+		filepath.FromSlash("a/foo.txt"),
+		filepath.FromSlash("a/b/bar.txt"),
+		filepath.FromSlash("c/baz.txt"),
 	}
 	withTempDirPaths(t, paths, func(dir string) {
 		// Show the file menu.
@@ -226,15 +227,17 @@ func TestShowFileMenu(t *testing.T) {
 		items, selectedIdx := state.Menu().SearchResults()
 		require.Equal(t, 3, len(items))
 		assert.Equal(t, 0, selectedIdx)
-		assert.Equal(t, "a/b/bar.txt", items[0].Name)
-		assert.Equal(t, "a/foo.txt", items[1].Name)
-		assert.Equal(t, "c/baz.txt", items[2].Name)
+		assert.Equal(t, filepath.FromSlash("a/b/bar.txt"), items[0].Name)
+		assert.Equal(t, filepath.FromSlash("a/foo.txt"), items[1].Name)
+		assert.Equal(t, filepath.FromSlash("c/baz.txt"), items[2].Name)
 
 		// Execute the second item and verify that it opens the file.
 		MoveMenuSelection(state, 1)
 		ExecuteSelectedMenuItem(state)
-		assert.Equal(t, "Opened a/foo.txt", state.StatusMsg().Text)
-		assert.Equal(t, "a/foo.txt content", state.DocumentBuffer().TextTree().String())
+		expectedStatus := fmt.Sprintf("Opened %s", filepath.FromSlash("a/foo.txt"))
+		assert.Equal(t, expectedStatus, state.StatusMsg().Text)
+		expectedMsg := fmt.Sprintf("%s content", filepath.FromSlash("a/foo.txt"))
+		assert.Equal(t, expectedMsg, state.DocumentBuffer().TextTree().String())
 	})
 }
 
@@ -261,10 +264,10 @@ func TestShowFileLocationsMenu(t *testing.T) {
 
 func TestShowChildDirsMenu(t *testing.T) {
 	paths := []string{
-		"root.txt",
-		"a/foo.txt",
-		"a/b/bar.txt",
-		"c/baz.txt",
+		filepath.FromSlash("root.txt"),
+		filepath.FromSlash("a/foo.txt"),
+		filepath.FromSlash("a/b/bar.txt"),
+		filepath.FromSlash("c/baz.txt"),
 	}
 	withTempDirPaths(t, paths, func(dir string) {
 		// Show the child dirs menu.
@@ -276,9 +279,9 @@ func TestShowChildDirsMenu(t *testing.T) {
 		items, selectedIdx := state.Menu().SearchResults()
 		require.Equal(t, 3, len(items))
 		assert.Equal(t, 0, selectedIdx)
-		assert.Equal(t, "./a", items[0].Name)
-		assert.Equal(t, "./a/b", items[1].Name)
-		assert.Equal(t, "./c", items[2].Name)
+		assert.Equal(t, filepath.FromSlash("./a"), items[0].Name)
+		assert.Equal(t, filepath.FromSlash("./a/b"), items[1].Name)
+		assert.Equal(t, filepath.FromSlash("./c"), items[2].Name)
 
 		// Execute the second item and verify that the working directory changed.
 		MoveMenuSelection(state, 1)

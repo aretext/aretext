@@ -171,7 +171,7 @@ func loadChildDirMenuItems(ctx context.Context, dirPatternsToHide []string) []me
 	for _, p := range paths {
 		menuPath := p // reference path in this iteration of the loop
 		items = append(items, menu.Item{
-			Name: fmt.Sprintf("./%s", file.RelativePath(menuPath, dir)),
+			Name: fmt.Sprintf(".%c%s", os.PathSeparator, file.RelativePath(menuPath, dir)),
 			Action: func(s *EditorState) {
 				SetWorkingDirectory(s, menuPath)
 			},

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"unicode/utf8"
 )
 
@@ -49,7 +50,9 @@ func clearTerminal(ctx context.Context) {
 }
 
 func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
-	cmd := exec.CommandContext(ctx, shellProg(), "-c", shellCmd)
+	prog := shellProg()
+	commandArg := commandArgForShellProg(prog)
+	cmd := exec.CommandContext(ctx, prog, commandArg, shellCmd)
 	cmd.Env = env
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
@@ -61,16 +64,28 @@ func runInShell(ctx context.Context, shellCmd string, env []string, stdin io.Rea
 	return nil
 }
 
-const defaultShell = "sh"
-
 func shellProg() string {
 	if s := os.Getenv("ARETEXT_SHELL"); s != "" {
 		return s
-	}
-
-	if s := os.Getenv("SHELL"); s != "" {
+	} else if s := os.Getenv("SHELL"); s != "" {
 		return s
+	} else if runtime.GOOS == "windows" {
+		// Default to powershell on Windows.
+		return "powershell.exe"
+	} else {
+		// Default to sh on Linux and macOS.
+		return "sh"
 	}
+}
 
-	return defaultShell
+func commandArgForShellProg(s string) string {
+	if s == "powershell.exe" {
+		return "-Command"
+	} else if s == "cmd.exe" {
+		return "/c"
+	} else {
+		// This works for most (all?) shells on Linux/macOS,
+		// including sh, bash, zsh, and fish.
+		return "-c"
+	}
 }

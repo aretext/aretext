@@ -1,7 +1,6 @@
 package app
 
 import (
-	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -12,9 +11,6 @@ import (
 
 	"github.com/aretext/aretext/config"
 )
-
-//go:embed default-config.yaml
-var DefaultConfigYaml []byte
 
 // ConfigPath returns the path to the configuration file.
 func ConfigPath() (string, error) {

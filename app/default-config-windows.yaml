@@ -1,0 +1,159 @@
+# aretext configuration
+
+# Each rule below defines a pattern to match the file path.
+# All matching rules are merged in-order, with configuration from
+# later rules replacing or extending configurations from prior rules.
+#
+# Configuration Reference: https://aretext.org/docs/config-reference/
+
+- name: default
+  pattern: "**"
+  config:
+    autoIndent: false
+    hideDirectories: ['**\.git']
+    syntaxLanguage: plaintext
+    tabExpand: false
+    tabSize: 4
+    showTabs: false
+    showSpaces: false
+    showLineNumbers: false
+    lineNumberMode: "absolute"
+    lineWrap: "character"
+    styles:
+      lineNum: {color: "olive"}
+      tokenOperator: {color: "purple"}
+      tokenKeyword: {color: "olive"}
+      tokenNumber: {color: "green"}
+      tokenString: {color: "maroon"}
+      tokenComment: {color: "navy"}
+      tokenCustom1: {color: "teal"}
+      tokenCustom2: {color: "fuchsia"}
+      tokenCustom3: {color: "red"}
+      tokenCustom4: {color: "lime"}
+      tokenCustom5: {color: "aqua"}
+      tokenCustom6: {color: "darkgreen"}
+      tokenCustom7: {color: "darkcyan"}
+      tokenCustom8: {color: "darkblue"}
+
+- name: git commit
+  pattern: '**\.git\COMMIT_EDITMSG'
+  config:
+    syntaxLanguage: gitcommit
+
+- name: git rebase
+  pattern: '**\.git\**\git-rebase-todo'
+  config:
+    syntaxLanguage: gitrebase
+
+- name: json
+  pattern: '**\*.json'
+  config:
+    autoIndent: true
+    syntaxLanguage: json
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: yaml
+  pattern: '**\*.yaml'
+  config: &yamlConfig
+    autoIndent: true
+    syntaxLanguage: yaml
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: yml
+  pattern: '**\*.yml'
+  config: *yamlConfig
+
+- name: go
+  pattern: '**\*.go'
+  config:
+    autoIndent: true
+    syntaxLanguage: go
+    tabExpand: false
+    tabSize: 4
+    showLineNumbers: true
+
+- name: python
+  pattern: '**\*.py'
+  config:
+    autoIndent: true
+    syntaxLanguage: python
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
+- name: rust
+  pattern: '**\*.rs'
+  config:
+    autoIndent: true
+    syntaxLanguage: rust
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
+- name: c
+  pattern: '**\*.c'
+  config: &cconfig
+    autoIndent: true
+    syntaxLanguage: c
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
+- name: c-header
+  pattern: '**\*.h'
+  config: *cconfig
+
+- name: shell
+  pattern: '**\*.sh'
+  config:
+    autoIndent: true
+    syntaxLanguage: bash
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true
+
+- name: xml
+  pattern: '**\*.xml'
+  config: &xmlconfig
+    autoIndent: true
+    syntaxLanguage: xml
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: html
+  pattern: '**\*.html'
+  config: *xmlconfig
+
+- name: markdown
+  pattern: '**\*.md'
+  config:
+    syntaxLanguage: markdown
+    lineWrap: "word"
+    styles:
+      tokenCustom1: {color: "teal", bold: true}        # Heading
+      tokenCustom2: {color: "default", italic: true}   # Emphasis
+      tokenCustom3: {color: "default", bold: true}     # Strong emphasis
+      tokenCustom4: {color: "purple", underline: true} # Link
+
+- name: protobuf
+  pattern: '**\*.proto'
+  config:
+    autoIndent: true
+    syntaxLanguage: protobuf
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: todo
+  pattern: '**\*.todo"'# or '**\todo.txt'
+  config:
+    autoIndent: true
+    syntaxLanguage: todotxt
+    tabExpand: true
+    tabSize: 4
+    showLineNumbers: true

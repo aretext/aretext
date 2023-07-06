@@ -21,6 +21,6 @@ func SetWorkingDirectory(s *EditorState, dirPath string) {
 	log.Printf("Changed working directory to %q", dirPath)
 	SetStatusMsg(s, StatusMsg{
 		Style: StatusMsgStyleSuccess,
-		Text:  fmt.Sprintf("Changed working directory to %q", dirPath),
+		Text:  fmt.Sprintf("Changed working directory to \"%s\"", dirPath),
 	})
 }

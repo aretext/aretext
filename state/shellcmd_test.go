@@ -3,7 +3,6 @@ package state
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 	"time"
@@ -33,7 +32,7 @@ func runShellCmdAndApplyAction(t *testing.T, state *EditorState, cmd string, mod
 
 func TestRunShellCmd(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
-		p := path.Join(dir, "test-output.txt")
+		p := filepath.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printf "hello" > %s`, p)
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
@@ -44,11 +43,11 @@ func TestRunShellCmd(t *testing.T) {
 
 func TestRunShellCmdFilePathEnvVar(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
-		filePath := path.Join(dir, "test-input.txt")
+		filePath := filepath.Join(dir, "test-input.txt")
 		os.WriteFile(filePath, []byte("xyz"), 0644)
 		LoadDocument(state, filePath, true, func(LocatorParams) uint64 { return 0 })
 
-		p := path.Join(dir, "test-output.txt")
+		p := filepath.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv FILEPATH > %s`, p)
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
@@ -92,7 +91,7 @@ func TestRunShellCmdWordEnvVar(t *testing.T) {
 				}
 				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
 
-				p := path.Join(dir, "test-output.txt")
+				p := filepath.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printenv WORD > %s`, p)
 				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 				data, err := os.ReadFile(p)
@@ -163,7 +162,7 @@ func TestRunShellCmdLineAndColumnEnvVars(t *testing.T) {
 				}
 				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
 
-				p := path.Join(dir, "test-output.txt")
+				p := filepath.Join(dir, "test-output.txt")
 				cmd := fmt.Sprintf(`printenv LINE > %s; printenv COLUMN >> %s`, p, p)
 				runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 				data, err := os.ReadFile(p)
@@ -182,7 +181,7 @@ func TestRunShellCmdWithSelection(t *testing.T) {
 		}
 		ToggleVisualMode(state, selection.ModeLine)
 
-		p := path.Join(dir, "test-output.txt")
+		p := filepath.Join(dir, "test-output.txt")
 		cmd := fmt.Sprintf(`printenv SELECTION > %s`, p)
 		runShellCmdAndApplyAction(t, state, cmd, config.CmdModeSilent)
 		data, err := os.ReadFile(p)
@@ -228,7 +227,7 @@ func TestRunShellCmdInsertIntoDocument(t *testing.T) {
 				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorPos })
 
 				// Create test file with content
-				p := path.Join(dir, "test-output.txt")
+				p := filepath.Join(dir, "test-output.txt")
 				err := os.WriteFile(p, []byte(tc.insertedText), 0644)
 				require.NoError(t, err)
 
@@ -256,7 +255,7 @@ func TestRunShellCmdInsertIntoDocumentThenUndo(t *testing.T) {
 		MoveCursor(state, func(p LocatorParams) uint64 { return 2 })
 
 		// Create test file with content
-		p := path.Join(dir, "test-output.txt")
+		p := filepath.Join(dir, "test-output.txt")
 		err := os.WriteFile(p, []byte("xyz"), 0644)
 		require.NoError(t, err)
 
@@ -319,7 +318,7 @@ func TestRunShellCmdInsertIntoDocumentWithSelection(t *testing.T) {
 				ToggleVisualMode(state, tc.selectionMode)
 				MoveCursor(state, func(p LocatorParams) uint64 { return tc.cursorEndPos })
 
-				p := path.Join(dir, "test-output.txt")
+				p := filepath.Join(dir, "test-output.txt")
 				err := os.WriteFile(p, []byte(tc.insertedText), 0644)
 				require.NoError(t, err)
 				cmd := fmt.Sprintf("cat %s", p)
@@ -361,7 +360,7 @@ func TestRunShellCmdInsertChoiceMenu(t *testing.T) {
 func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 	setupShellCmdTest(t, func(state *EditorState, dir string) {
 		// Create a test file to load.
-		p := path.Join(dir, "test-file.txt")
+		p := filepath.Join(dir, "test-file.txt")
 		err := os.WriteFile(p, []byte("ab\ncd\nef\ngh"), 0644)
 		require.NoError(t, err)
 

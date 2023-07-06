@@ -3,7 +3,7 @@ package file
 import (
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -16,7 +16,7 @@ const testWatcherPollInterval time.Duration = time.Millisecond * 50
 func createTestFile(t *testing.T, s string) string {
 	tmpDir := t.TempDir()
 
-	filePath := path.Join(tmpDir, "test.txt")
+	filePath := filepath.Join(tmpDir, "test.txt")
 	f, err := os.Create(filePath)
 	require.NoError(t, err)
 	defer f.Close()

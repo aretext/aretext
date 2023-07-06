@@ -2,7 +2,7 @@ package file
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 func TestSaveNewFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	path := path.Join(tmpDir, "test.txt")
+	path := filepath.Join(tmpDir, "test.txt")
 	saveAndAssertContents(t, path, "abcd1234", 0644)
 }
 

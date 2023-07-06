@@ -192,9 +192,14 @@ func parentDirMenuItems() []menu.Item {
 		return nil
 	}
 
+	dir = filepath.Clean(dir)
+
 	// Create an item for each parent directory.
+	// We can detect when we've reached the root directory by checking the last character
+	// of the path because both filepath.Clean and filepath.Dir
+	// guarantee that only the root directory ends in a separator.
 	var items []menu.Item
-	for len(dir) > 0 && dir != "/" && dir != "." {
+	for len(dir) > 0 && dir[len(dir)-1] != os.PathSeparator {
 		dir = filepath.Dir(dir)
 		menuDir := dir // reference path in this iteration of the loop
 		items = append(items, menu.Item{

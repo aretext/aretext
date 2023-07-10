@@ -9185,7 +9185,7 @@ func lineBreaktestCaseGroup7() []lineBreakTestCase {
 		{
 			inputString: "가%",
 			segments:    [][]int32{{44032, 37}},
-			description: "× [0.3] HANGUL SYLLABLE GA (H2) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL SYLLABLE GA (H2) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "가 %",
@@ -9195,7 +9195,7 @@ func lineBreaktestCaseGroup7() []lineBreakTestCase {
 		{
 			inputString: "가̈%",
 			segments:    [][]int32{{44032, 776, 37}},
-			description: "× [0.3] HANGUL SYLLABLE GA (H2) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL SYLLABLE GA (H2) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "가̈ %",
@@ -10045,7 +10045,7 @@ func lineBreaktestCaseGroup7() []lineBreakTestCase {
 		{
 			inputString: "각%",
 			segments:    [][]int32{{44033, 37}},
-			description: "× [0.3] HANGUL SYLLABLE GAG (H3) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL SYLLABLE GAG (H3) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "각 %",
@@ -10055,7 +10055,7 @@ func lineBreaktestCaseGroup7() []lineBreakTestCase {
 		{
 			inputString: "각̈%",
 			segments:    [][]int32{{44033, 776, 37}},
-			description: "× [0.3] HANGUL SYLLABLE GAG (H3) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL SYLLABLE GAG (H3) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "각̈ %",
@@ -15225,7 +15225,7 @@ func lineBreaktestCaseGroup11() []lineBreakTestCase {
 		{
 			inputString: "ᄀ%",
 			segments:    [][]int32{{4352, 37}},
-			description: "× [0.3] HANGUL CHOSEONG KIYEOK (JL) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL CHOSEONG KIYEOK (JL) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᄀ %",
@@ -15235,7 +15235,7 @@ func lineBreaktestCaseGroup11() []lineBreakTestCase {
 		{
 			inputString: "ᄀ̈%",
 			segments:    [][]int32{{4352, 776, 37}},
-			description: "× [0.3] HANGUL CHOSEONG KIYEOK (JL) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL CHOSEONG KIYEOK (JL) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᄀ̈ %",
@@ -16090,7 +16090,7 @@ func lineBreaktestCaseGroup12() []lineBreakTestCase {
 		{
 			inputString: "ᆨ%",
 			segments:    [][]int32{{4520, 37}},
-			description: "× [0.3] HANGUL JONGSEONG KIYEOK (JT) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL JONGSEONG KIYEOK (JT) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᆨ %",
@@ -16100,7 +16100,7 @@ func lineBreaktestCaseGroup12() []lineBreakTestCase {
 		{
 			inputString: "ᆨ̈%",
 			segments:    [][]int32{{4520, 776, 37}},
-			description: "× [0.3] HANGUL JONGSEONG KIYEOK (JT) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL JONGSEONG KIYEOK (JT) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᆨ̈ %",
@@ -16955,7 +16955,7 @@ func lineBreaktestCaseGroup13() []lineBreakTestCase {
 		{
 			inputString: "ᅠ%",
 			segments:    [][]int32{{4448, 37}},
-			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᅠ %",
@@ -16965,7 +16965,7 @@ func lineBreaktestCaseGroup13() []lineBreakTestCase {
 		{
 			inputString: "ᅠ̈%",
 			segments:    [][]int32{{4448, 776, 37}},
-			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "ᅠ̈ %",
@@ -22695,7 +22695,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$가",
 			segments:    [][]int32{{36, 44032}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL SYLLABLE GA (H2) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL SYLLABLE GA (H2) ÷ [0.3]",
 		},
 		{
 			inputString: "$ 가",
@@ -22705,7 +22705,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$̈가",
 			segments:    [][]int32{{36, 776, 44032}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.03] HANGUL SYLLABLE GA (H2) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] HANGUL SYLLABLE GA (H2) ÷ [0.3]",
 		},
 		{
 			inputString: "$̈ 가",
@@ -22715,7 +22715,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$각",
 			segments:    [][]int32{{36, 44033}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL SYLLABLE GAG (H3) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL SYLLABLE GAG (H3) ÷ [0.3]",
 		},
 		{
 			inputString: "$ 각",
@@ -22725,7 +22725,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$̈각",
 			segments:    [][]int32{{36, 776, 44033}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.03] HANGUL SYLLABLE GAG (H3) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] HANGUL SYLLABLE GAG (H3) ÷ [0.3]",
 		},
 		{
 			inputString: "$̈ 각",
@@ -22835,7 +22835,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$ᄀ",
 			segments:    [][]int32{{36, 4352}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL CHOSEONG KIYEOK (JL) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL CHOSEONG KIYEOK (JL) ÷ [0.3]",
 		},
 		{
 			inputString: "$ ᄀ",
@@ -22845,7 +22845,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$̈ᄀ",
 			segments:    [][]int32{{36, 776, 4352}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.03] HANGUL CHOSEONG KIYEOK (JL) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] HANGUL CHOSEONG KIYEOK (JL) ÷ [0.3]",
 		},
 		{
 			inputString: "$̈ ᄀ",
@@ -22855,7 +22855,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$ᆨ",
 			segments:    [][]int32{{36, 4520}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL JONGSEONG KIYEOK (JT) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL JONGSEONG KIYEOK (JT) ÷ [0.3]",
 		},
 		{
 			inputString: "$ ᆨ",
@@ -22865,7 +22865,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$̈ᆨ",
 			segments:    [][]int32{{36, 776, 4520}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.03] HANGUL JONGSEONG KIYEOK (JT) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] HANGUL JONGSEONG KIYEOK (JT) ÷ [0.3]",
 		},
 		{
 			inputString: "$̈ ᆨ",
@@ -22875,7 +22875,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$ᅠ",
 			segments:    [][]int32{{36, 4448}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
 		},
 		{
 			inputString: "$ ᅠ",
@@ -22885,7 +22885,7 @@ func lineBreaktestCaseGroup17() []lineBreakTestCase {
 		{
 			inputString: "$̈ᅠ",
 			segments:    [][]int32{{36, 776, 4448}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.03] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [9.0] COMBINING DIAERESIS (CM1_CM) × [27.02] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
 		},
 		{
 			inputString: "$̈ ᅠ",
@@ -29220,7 +29220,7 @@ func lineBreaktestCaseGroup22() []lineBreakTestCase {
 		{
 			inputString: "☝🏻",
 			segments:    [][]int32{{9757, 127995}},
-			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [30.2] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
+			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [30.21] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
 		},
 		{
 			inputString: "☝ 🏻",
@@ -29230,7 +29230,7 @@ func lineBreaktestCaseGroup22() []lineBreakTestCase {
 		{
 			inputString: "☝̈🏻",
 			segments:    [][]int32{{9757, 776, 127995}},
-			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [9.0] COMBINING DIAERESIS (CM1_CM) × [30.2] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
+			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [9.0] COMBINING DIAERESIS (CM1_CM) × [30.21] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
 		},
 		{
 			inputString: "☝̈ 🏻",
@@ -37325,17 +37325,17 @@ func lineBreaktestCaseGroup29() []lineBreakTestCase {
 		{
 			inputString: "ᅠ%",
 			segments:    [][]int32{{4448, 37}},
-			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [27.02] PERCENT SIGN (PO) ÷ [0.3]",
+			description: "× [0.3] HANGUL JUNGSEONG FILLER (JV) × [27.01] PERCENT SIGN (PO) ÷ [0.3]",
 		},
 		{
 			inputString: "$ᅠ",
 			segments:    [][]int32{{36, 4448}},
-			description: "× [0.3] DOLLAR SIGN (PR) × [27.03] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
+			description: "× [0.3] DOLLAR SIGN (PR) × [27.02] HANGUL JUNGSEONG FILLER (JV) ÷ [0.3]",
 		},
 		{
 			inputString: "☝🏻",
 			segments:    [][]int32{{9757, 127995}},
-			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [30.2] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
+			description: "× [0.3] WHITE UP POINTING INDEX (EB) × [30.21] EMOJI MODIFIER FITZPATRICK TYPE-1-2 (EM) ÷ [0.3]",
 		},
 		{
 			inputString: "final",
@@ -38451,6 +38451,16 @@ func lineBreaktestCaseGroup29() []lineBreakTestCase {
 			inputString: "א-א",
 			segments:    [][]int32{{1488, 45, 1488}},
 			description: "× [0.3] HEBREW LETTER ALEF (HL) × [21.02] HYPHEN-MINUS (HY) × [21.1] HEBREW LETTER ALEF (HL) ÷ [0.3]",
+		},
+		{
+			inputString: "\U0001f02c🏿",
+			segments:    [][]int32{{127020, 127999}},
+			description: "× [0.3] <reserved-1F02C> (Other) × [30.22] EMOJI MODIFIER FITZPATRICK TYPE-6 (EM) ÷ [0.3]",
+		},
+		{
+			inputString: "©🏿",
+			segments:    [][]int32{{169}, {127999}},
+			description: "× [0.3] COPYRIGHT SIGN (AL) ÷ [999.0] EMOJI MODIFIER FITZPATRICK TYPE-6 (EM) ÷ [0.3]",
 		},
 	}
 }

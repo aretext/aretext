@@ -281,7 +281,7 @@ var gbAsciiLookupTbl = [256]gbProp{
 	gbPropNone,
 }
 
-var gbRanges = [1433]struct {
+var gbRanges = [1449]struct {
 	Prop  gbProp
 	Start rune
 	End   rune
@@ -892,6 +892,11 @@ var gbRanges = [1433]struct {
 		End:   3299,
 	},
 	{
+		Prop:  gbPropSpacingMark,
+		Start: 3315,
+		End:   3315,
+	},
+	{
 		Prop:  gbPropExtend,
 		Start: 3328,
 		End:   3329,
@@ -1039,7 +1044,7 @@ var gbRanges = [1433]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 3784,
-		End:   3789,
+		End:   3790,
 	},
 	{
 		Prop:  gbPropExtend,
@@ -6253,6 +6258,11 @@ var gbRanges = [1433]struct {
 	},
 	{
 		Prop:  gbPropExtend,
+		Start: 69373,
+		End:   69375,
+	},
+	{
+		Prop:  gbPropExtend,
 		Start: 69446,
 		End:   69456,
 	},
@@ -6445,6 +6455,11 @@ var gbRanges = [1433]struct {
 		Prop:  gbPropExtend,
 		Start: 70206,
 		End:   70206,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70209,
+		End:   70209,
 	},
 	{
 		Prop:  gbPropExtend,
@@ -7042,9 +7057,64 @@ var gbRanges = [1433]struct {
 		End:   73462,
 	},
 	{
+		Prop:  gbPropExtend,
+		Start: 73472,
+		End:   73473,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 73474,
+		End:   73474,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73475,
+		End:   73475,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73524,
+		End:   73525,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73526,
+		End:   73530,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73534,
+		End:   73535,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73536,
+		End:   73536,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 73537,
+		End:   73537,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 73538,
+		End:   73538,
+	},
+	{
 		Prop:  gbPropControl,
 		Start: 78896,
-		End:   78904,
+		End:   78911,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 78912,
+		End:   78912,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 78919,
+		End:   78933,
 	},
 	{
 		Prop:  gbPropExtend,
@@ -7208,6 +7278,11 @@ var gbRanges = [1433]struct {
 	},
 	{
 		Prop:  gbPropExtend,
+		Start: 123023,
+		End:   123023,
+	},
+	{
+		Prop:  gbPropExtend,
 		Start: 123184,
 		End:   123190,
 	},
@@ -7220,6 +7295,11 @@ var gbRanges = [1433]struct {
 		Prop:  gbPropExtend,
 		Start: 123628,
 		End:   123631,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 124140,
+		End:   124143,
 	},
 	{
 		Prop:  gbPropExtend,

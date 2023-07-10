@@ -657,8 +657,18 @@ var eaRanges = [129]struct {
 	},
 	{
 		Prop:  eaPropW,
+		Start: 110898,
+		End:   110898,
+	},
+	{
+		Prop:  eaPropW,
 		Start: 110928,
 		End:   110930,
+	},
+	{
+		Prop:  eaPropW,
+		Start: 110933,
+		End:   110933,
 	},
 	{
 		Prop:  eaPropW,
@@ -827,7 +837,7 @@ var eaRanges = [129]struct {
 	},
 	{
 		Prop:  eaPropW,
-		Start: 128733,
+		Start: 128732,
 		End:   128735,
 	},
 	{
@@ -868,47 +878,37 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 129648,
-		End:   129652,
-	},
-	{
-		Prop:  eaPropW,
-		Start: 129656,
 		End:   129660,
 	},
 	{
 		Prop:  eaPropW,
 		Start: 129664,
-		End:   129670,
+		End:   129672,
 	},
 	{
 		Prop:  eaPropW,
 		Start: 129680,
-		End:   129708,
+		End:   129725,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129712,
-		End:   129722,
-	},
-	{
-		Prop:  eaPropW,
-		Start: 129728,
+		Start: 129727,
 		End:   129733,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129744,
-		End:   129753,
+		Start: 129742,
+		End:   129755,
 	},
 	{
 		Prop:  eaPropW,
 		Start: 129760,
-		End:   129767,
+		End:   129768,
 	},
 	{
 		Prop:  eaPropW,
 		Start: 129776,
-		End:   129782,
+		End:   129784,
 	},
 	{
 		Prop:  eaPropW,

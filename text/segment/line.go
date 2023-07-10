@@ -11,6 +11,10 @@ import (
 
 //go:generate go run gen_props.go --prefix ea --dataPath data/EastAsianWidth.txt --propertyName F --propertyName W --propertyName H --outputPath east_asian_width_props.go
 
+//go:generate go run gen_props.go --prefix gc --dataPath data/DerivedGeneralCategory.txt --propertyName Cn --outputPath general_category_props.go
+
+//go:generate go run gen_props.go --prefix em --dataPath data/emoji-data.txt --propertyName Extended_Pictographic --outputPath emoji_props.go
+
 type LineBreakDecision byte
 
 const (
@@ -24,14 +28,15 @@ const (
 // This uses the Unicode line breaking algorithm from
 // https://www.unicode.org/reports/tr14/
 type LineBreaker struct {
-	lastProp             lbProp
-	lastLastProp         lbProp
-	inZeroWidthSpaceSeq  bool
-	inLeftBraceSpaceSeq  bool
-	inQuotationSpaceSeq  bool
-	inClosePunctSpaceSeq bool
-	inDashSpaceSeq       bool
-	lastPropsWereRIOdd   bool
+	lastProp                         lbProp
+	lastLastProp                     lbProp
+	inZeroWidthSpaceSeq              bool
+	inLeftBraceSpaceSeq              bool
+	inQuotationSpaceSeq              bool
+	inClosePunctSpaceSeq             bool
+	inDashSpaceSeq                   bool
+	lastPropsWereRIOdd               bool
+	lastWasExtendedPictographicAndCn bool
 }
 
 // ProcessRune finds valid breakpoints between lines.
@@ -278,8 +283,8 @@ func (lb *LineBreaker) ProcessRune(r rune) (decision LineBreakDecision) {
 	}
 
 	// LB30b: Do not break between an emoji base (or potential emoji) and an emoji modifier.
-	if lb.lastProp == lbPropEB && prop == lbPropEM {
-		// TODO: leaving out the second rule here...
+	if (lb.lastProp == lbPropEB && prop == lbPropEM) ||
+		(lb.lastWasExtendedPictographicAndCn && prop == lbPropEM) {
 		goto done
 	}
 
@@ -300,6 +305,7 @@ done:
 	lb.inClosePunctSpaceSeq = bool((prop == lbPropCL || prop == lbPropCP) || (lb.inClosePunctSpaceSeq && prop == lbPropSP))
 	lb.inDashSpaceSeq = bool(prop == lbPropB2 || (lb.inDashSpaceSeq && prop == lbPropSP))
 	lb.lastPropsWereRIOdd = bool(prop == lbPropRI && !lb.lastPropsWereRIOdd)
+	lb.lastWasExtendedPictographicAndCn = bool(emPropForRune(r) == emPropExtended_Pictographic && gcPropForRune(r) == gcPropCn)
 	return decision
 }
 

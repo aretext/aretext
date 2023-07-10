@@ -8,7 +8,7 @@ require (
 	github.com/google/renameio/v2 v2.0.0
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/text v0.10.0
+	golang.org/x/text v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

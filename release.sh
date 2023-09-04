@@ -30,6 +30,7 @@ build() {
     echo "$dir"
     mkdir -p "$dir"
     GOOS=$1 GOARCH=$2 go build \
+        -trimpath \
         -ldflags="-X 'main.version=${RELEASE_VERSION}'" \
         -o "$dir/aretext" \
         github.com/aretext/aretext

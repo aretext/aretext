@@ -538,6 +538,18 @@ func NormalModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete next char in line (delete key)",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyDelete)
+			},
+			MaxCount: defaultMaxCount,
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteNextCharInLine(1, clipboard.PageDefault),
+					addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "delete to end of line (d$)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("d", "$", captureOpts{clipboardPage: true})
@@ -1561,6 +1573,20 @@ func VisualModeCommands() []Command {
 			},
 		},
 		{
+			Name: "delete selection (delete key)",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyDelete)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorateNormalOrVisual(
+					DeleteSelectionAndReturnToNormalMode(
+						clipboard.PageDefault,
+						ctx.SelectionMode,
+						ctx.SelectionEndLocator,
+					), addToMacro{lastAction: true, user: true})
+			},
+		},
+		{
 			Name: "change selection (c)",
 			BuildExpr: func() vm.Expr {
 				return cmdExpr("c", "", captureOpts{clipboardPage: true})
@@ -1829,6 +1855,15 @@ func InsertModeCommands() []Command {
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(DeletePrevChar(clipboard.PageNull))
+			},
+		},
+		{
+			Name: "delete next char",
+			BuildExpr: func() vm.Expr {
+				return keyExpr(tcell.KeyDelete)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return decorate(DeleteNextCharInLine(1, clipboard.PageNull))
 			},
 		},
 		{

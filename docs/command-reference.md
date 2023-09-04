@@ -60,6 +60,7 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | new line above                                                  | O                         |                       |
 | join lines                                                      | J                         |                       |
 | delete next character in line                                   | x                         | count, clipboard page |
+| delete next character in line                                   | delete                    |                       |
 | delete line                                                     | dd                        | count, clipboard page |
 | delete previous character in line                               | dh                        | clipboard page        |
 | delete lines below                                              | dj                        | clipboard page        |
@@ -159,6 +160,7 @@ Visual Mode Commands
 | show command menu                   | :                      |                |
 | delete selection                    | x                      | clipboard page |
 | delete selection                    | d                      | clipboard page |
+| delete selection                    | delete                 |                |
 | change selection                    | c                      | clipboard page |
 | toggle case for selection           | ~                      |                |
 | indent selection                    | &gt;                   |                |

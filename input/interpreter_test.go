@@ -489,7 +489,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem test ipsum dolor\nsit amet consectetur\nadipiscing elit",
 		},
 		{
-			name:        "insert then delete",
+			name:        "insert then delete with backspace",
 			initialText: "",
 			events: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
@@ -506,6 +506,20 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 2,
 			expectedText:      "foo",
+		},
+		{
+			name:        "delete with delete key",
+			initialText: "foobar baz",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyEsc, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "far baz",
 		},
 		{
 			name:        "insert at start of line",
@@ -637,6 +651,27 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 0,
 			expectedText:      " ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "delete next character in line using delete key",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "orem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+		},
+		{
+			name:        "delete next character in line using delete key then paste from default clipboard",
+			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, '$', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModNone),
+			},
+			expectedCursorPos: 15,
+			expectedText:      "rem ipsum doloro\nsit amet consectetur\nadipiscing elit",
 		},
 		{
 			name:        "delete line",
@@ -2945,6 +2980,18 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 7,
 			expectedText:      "<html><></html>",
+		},
+		{
+			name:        "visual mode select then delete with delete key",
+			initialText: `Lorem ipsum`,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyDelete, '\x00', tcell.ModNone),
+			},
+			expectedCursorPos: 0,
+			expectedText:      "em ipsum",
 		},
 		{
 			name:        "visual mode select an angle block",

@@ -162,7 +162,7 @@ func rustNumberLiteralParseFunc() parser.Func {
 
 	consumeHexLiteral := consumeString("0x").
 		Then(rustConsumeDigitsAndSeparators(func(r rune) bool {
-			return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' || r <= 'F')
+			return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 		}))
 
 	consumeIntegerSuffix := consumeLongestMatchingOption([]string{

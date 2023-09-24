@@ -477,6 +477,21 @@ fn main() {
 				{Role: parser.TokenRoleNumber, Text: "1"},
 			},
 		},
+		{
+			name: "hex literal followed by other tokens",
+			text: `
+const VAR: u16 = 0x101;
+pub enum TEST{}
+`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleKeyword, Text: "const"},
+				{Role: parser.TokenRoleOperator, Text: ":"},
+				{Role: parser.TokenRoleOperator, Text: "="},
+				{Role: parser.TokenRoleNumber, Text: "0x101"},
+				{Role: parser.TokenRoleKeyword, Text: "pub"},
+				{Role: parser.TokenRoleKeyword, Text: "enum"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

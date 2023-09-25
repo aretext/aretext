@@ -93,7 +93,7 @@ func MakefileParseFunc() parser.Func {
 	parseTopLevelKeywords := matchState(
 		makefileTopLevelParseState,
 		consumeLongestMatchingOption([]string{
-			"ifeq", "ifneq", "ifdef", "else", "endif",
+			"ifeq", "ifneq", "ifdef", "ifndef", "else", "endif",
 			"export", "unexport", "override",
 			"include", "-include", "define", "endef",
 		}).Map(recognizeToken(parser.TokenRoleKeyword)))

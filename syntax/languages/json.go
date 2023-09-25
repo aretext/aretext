@@ -6,6 +6,10 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
+const (
+	jsonTokenRoleKey = parser.TokenRoleCustom1
+)
+
 // JsonParseFunc returns a parse func for JSON.
 func JsonParseFunc() parser.Func {
 	return jsonNumberParseFunc().
@@ -55,8 +59,7 @@ func jsonConsumeToKeyEndParseFunc() parser.Func {
 }
 
 func jsonStringOrKeyParseFunc() parser.Func {
-	const tokenRoleKey = parser.TokenRoleCustom1
-	recognizeKeyToken := recognizeToken(tokenRoleKey)
+	recognizeKeyToken := recognizeToken(jsonTokenRoleKey)
 	return parseCStyleString('"', false).
 		ThenMaybe(jsonConsumeToKeyEndParseFunc()).
 		Map(func(r parser.Result) parser.Result {

@@ -108,7 +108,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "key with string value",
 			text: `{"key": "abcd"}`,
 			expected: []TokenWithText{
-				{Text: `"key":`, Role: parser.TokenRoleCustom1},
+				{Text: `"key":`, Role: jsonTokenRoleKey},
 				{Text: `"abcd"`, Role: parser.TokenRoleString},
 			},
 		},
@@ -159,7 +159,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "true value",
 			text: `{"bool": true}`,
 			expected: []TokenWithText{
-				{Text: `"bool":`, Role: parser.TokenRoleCustom1},
+				{Text: `"bool":`, Role: jsonTokenRoleKey},
 				{Text: `true`, Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -167,7 +167,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "false value",
 			text: `{"bool": false}`,
 			expected: []TokenWithText{
-				{Text: `"bool":`, Role: parser.TokenRoleCustom1},
+				{Text: `"bool":`, Role: jsonTokenRoleKey},
 				{Text: `false`, Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -175,7 +175,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "null value",
 			text: `{"nullable": null}`,
 			expected: []TokenWithText{
-				{Text: `"nullable":`, Role: parser.TokenRoleCustom1},
+				{Text: `"nullable":`, Role: jsonTokenRoleKey},
 				{Text: `null`, Role: parser.TokenRoleKeyword},
 			},
 		},
@@ -191,9 +191,9 @@ func TestJsonParseFunc(t *testing.T) {
 				"k2": "v2"
 			}`,
 			expected: []TokenWithText{
-				{Text: `"k1":`, Role: parser.TokenRoleCustom1},
+				{Text: `"k1":`, Role: jsonTokenRoleKey},
 				{Text: `"v1"`, Role: parser.TokenRoleString},
-				{Text: `"k2":`, Role: parser.TokenRoleCustom1},
+				{Text: `"k2":`, Role: jsonTokenRoleKey},
 				{Text: `"v2"`, Role: parser.TokenRoleString},
 			},
 		},
@@ -206,10 +206,10 @@ func TestJsonParseFunc(t *testing.T) {
 				}
 			}`,
 			expected: []TokenWithText{
-				{Text: `"nested":`, Role: parser.TokenRoleCustom1},
-				{Text: `"k1":`, Role: parser.TokenRoleCustom1},
+				{Text: `"nested":`, Role: jsonTokenRoleKey},
+				{Text: `"k1":`, Role: jsonTokenRoleKey},
 				{Text: `123`, Role: parser.TokenRoleNumber},
-				{Text: `"k2":`, Role: parser.TokenRoleCustom1},
+				{Text: `"k2":`, Role: jsonTokenRoleKey},
 				{Text: `456`, Role: parser.TokenRoleNumber},
 			},
 		},
@@ -217,7 +217,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "spaces between key and colon",
 			text: `{"key"      : 1}`,
 			expected: []TokenWithText{
-				{Text: `"key"      :`, Role: parser.TokenRoleCustom1},
+				{Text: `"key"      :`, Role: jsonTokenRoleKey},
 				{Text: `1`, Role: parser.TokenRoleNumber},
 			},
 		},
@@ -225,7 +225,7 @@ func TestJsonParseFunc(t *testing.T) {
 			name: "tabs between key and colon",
 			text: "{\"key\"\t\t: 1}",
 			expected: []TokenWithText{
-				{Text: "\"key\"\t\t:", Role: parser.TokenRoleCustom1},
+				{Text: "\"key\"\t\t:", Role: jsonTokenRoleKey},
 				{Text: "1", Role: parser.TokenRoleNumber},
 			},
 		},

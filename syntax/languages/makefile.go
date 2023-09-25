@@ -64,16 +64,25 @@ func MakefileParseFunc() parser.Func {
 			ThenNot(consumeString("=")).
 			Map(setState(makefileRulePrereqParseState)))
 
-	// Recipe command must be preceded by either a rule or another recipe command.
-	// This usually occurs on the next line with tab-indentation, but can
-	// also use ";" to put the whole recipe on one line.
+	// Recipe command are tab-indented, or following rule prereqs separated by a semicolon.
 	// If the start of the recipe command has "@", treat that as an operator
 	// meaning "do not echo this line".
-	parseStartOfRecipe := matchStates(
-		[]parser.State{makefileRulePrereqParseState, makefileRecipeCmdParseState},
-		consumeString("\n\t").
-			Or(consumeString(";").ThenMaybe(consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' }))).
-			ThenMaybe(consumeString("@").Map(recognizeToken(parser.TokenRoleOperator))).
+	//
+	// Treating every tab-indented line as part of a recipe isn't completely accurate,
+	// since technically it's missing the target/prereqs, but I believe other editors
+	// also make this assumption.
+	parseAtOp := consumeString("@").
+		Map(recognizeToken(parser.TokenRoleOperator))
+
+	parseTabIndent := consumeString("\n\t").
+		ThenMaybe(parseAtOp).
+		Map(setState(makefileRecipeCmdParseState))
+
+	parseSemicolonInRule := matchState(
+		makefileRulePrereqParseState,
+		consumeString(";").
+			ThenMaybe(consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' })).
+			ThenMaybe(parseAtOp).
 			Map(setState(makefileRecipeCmdParseState)))
 
 	// Handle backslash line continuation everywhere except in recipe command.
@@ -137,7 +146,8 @@ func MakefileParseFunc() parser.Func {
 	return initialState(
 		makefileTopLevelParseState,
 		parseRuleSeparator.
-			Or(parseStartOfRecipe).
+			Or(parseTabIndent).
+			Or(parseSemicolonInRule).
 			Or(parseBackslashLineContinuation).
 			Or(parseBackToTopLevel).
 			Or(parseComment).

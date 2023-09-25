@@ -164,7 +164,7 @@ foo: foo.c
 			},
 		},
 		{
-			name: "conditional",
+			name: "conditional at top-level",
 			text: `
 ifeq ($(CC),gcc)
   libs=$(libs_for_gcc)
@@ -181,6 +181,22 @@ endif
 				{Text: "=", Role: parser.TokenRoleOperator},
 				{Text: "$(normal_libs)", Role: makefileTokenRoleVariable},
 				{Text: "endif", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
+			name: "conditional in recipe",
+			text: `
+foo.o: foo.c
+ifndef ENV_VAR
+	$(error ENV_VAR not set)
+endif
+	@echo "$$ENV_VAR"
+`,
+			expected: []TokenWithText{
+				{Text: "ifndef", Role: parser.TokenRoleKeyword},
+				{Text: "$(error ENV_VAR not set)", Role: makefileTokenRoleVariable},
+				{Text: "endif", Role: parser.TokenRoleKeyword},
+				{Text: "@", Role: parser.TokenRoleOperator},
 			},
 		},
 		{

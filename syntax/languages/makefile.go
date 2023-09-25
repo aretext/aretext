@@ -131,7 +131,7 @@ func MakefileParseFunc() parser.Func {
 
 	// Parse expansions (functions and variables) in all states.
 	parseExpansion := consumeString("$").
-		Then(makefileExpansionParseFunc('{').Or(makefileExpansionParseFunc('('))).
+		Then(makefileExpansionParseFunc()).
 		Map(recognizeToken(makefileTokenRoleVariable))
 
 	return initialState(
@@ -156,13 +156,13 @@ func MakefileParseFunc() parser.Func {
 //	${VAR}
 //	$(VAR)
 //	$(subst $(space),$(comma),$(foo))
-func makefileExpansionParseFunc(startRune rune) parser.Func {
+func makefileExpansionParseFunc() parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
 
 		// Open delimiter.
-		r, err := iter.NextRune()
-		if err != nil || r != startRune {
+		startRune, err := iter.NextRune()
+		if err != nil || !(startRune == '{' || startRune == '(') {
 			return parser.FailedResult
 		}
 		n++
@@ -174,7 +174,7 @@ func makefileExpansionParseFunc(startRune rune) parser.Func {
 		for len(stack) > 0 {
 			stackTop := stack[len(stack)-1]
 
-			r, err = iter.NextRune()
+			r, err := iter.NextRune()
 			if err != nil {
 				return parser.FailedResult
 			}

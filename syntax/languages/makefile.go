@@ -1,6 +1,8 @@
 package languages
 
 import (
+	"io"
+
 	"github.com/aretext/aretext/syntax/parser"
 )
 
@@ -101,9 +103,7 @@ func MakefileParseFunc() parser.Func {
 	// Parse comments everywhere except in recipe commands.
 	parseComment := matchStates(
 		[]parser.State{makefileTopLevelParseState, makefileRulePrereqParseState},
-		consumeString("#").
-			ThenMaybe(consumeToNextLineFeed).
-			Map(recognizeToken(parser.TokenRoleComment)))
+		makefileCommentParseFunc())
 
 	// Parse assign operators everywhere except in recipe commands.
 	parseAssignOp := matchStates(
@@ -147,6 +147,48 @@ func MakefileParseFunc() parser.Func {
 			Or(parseRulePattern).
 			Or(parseExpansion).
 			Or(parseTopLevelKeywords))
+}
+
+// makefileCommentParseFunc parses a comment in a makefile.
+// Comments are just "# ..." to end of line, but do NOT consume
+// the line feed, since that determines state transitions.
+func makefileCommentParseFunc() parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+
+		startRune, err := iter.NextRune()
+		if err != nil || startRune != '#' {
+			return parser.FailedResult
+		}
+		numConsumed++
+
+		for {
+			r, err := iter.NextRune()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			if r == '\n' {
+				// Do NOT consume the line feed.
+				break
+			}
+
+			numConsumed++
+		}
+
+		return parser.Result{
+			NumConsumed: numConsumed,
+			ComputedTokens: []parser.ComputedToken{
+				{
+					Length: numConsumed,
+					Role:   parser.TokenRoleComment,
+				},
+			},
+			NextState: state,
+		}
+	}
 }
 
 // makefileExpansionParseFunc handles variable and function expansions.

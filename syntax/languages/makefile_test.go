@@ -221,6 +221,35 @@ endef
 				{Text: "$(DEPS)", Role: makefileTokenRoleVariable},
 			},
 		},
+		{
+			name: "comment at end of rule",
+			text: `
+%.o: %.c # this is a comment
+	$(CC) X=123
+`,
+			expected: []TokenWithText{
+				{Text: "%", Role: makefileTokenRolePattern},
+				{Text: "%", Role: makefileTokenRolePattern},
+				{Text: "# this is a comment", Role: parser.TokenRoleComment},
+				{Text: "$(CC)", Role: makefileTokenRoleVariable},
+				// The "=" should NOT be parsed as an operator, since it's in a recipe command.
+			},
+		},
+		{
+			name: "comment at end of rule with variables",
+			text: `
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) # asdf
+	X=Y
+	foo % bar
+`,
+			expected: []TokenWithText{
+				{Text: "$(BUILD_DIR)", Role: makefileTokenRoleVariable},
+				{Text: "$(TARGET_EXEC)", Role: makefileTokenRoleVariable},
+				{Text: "$(OBJS)", Role: makefileTokenRoleVariable},
+				{Text: "# asdf", Role: parser.TokenRoleComment},
+				// The "=" and "%" should NOT be tokenized, since they're in a recipe command.
+			},
+		},
 	}
 
 	for _, tc := range testCases {

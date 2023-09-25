@@ -31,6 +31,7 @@ Syntax Languages
 | rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                      |
 | c            | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                          |
 | bash         | [bash](https://www.gnu.org/software/bash/manual/bash.html)                               |
+| makefile     | [Makefile](https://www.gnu.org/software/make/manual/make.html)                           |
 | xml          | [xml](https://www.w3.org/TR/2006/REC-xml11-20060816/)                                    |
 | markdown     | [Markdown](https://commonmark.org/)                                                      |
 | criticmarkup | [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)                     |

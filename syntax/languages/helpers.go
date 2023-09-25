@@ -29,6 +29,18 @@ func matchState(targetState parser.State, f parser.Func) parser.Func {
 	}
 }
 
+// matchStates executes `f` only if the parse state matches one of `targetStates`.
+func matchStates(targetStates []parser.State, f parser.Func) parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		for _, ts := range targetStates {
+			if state.Equals(ts) {
+				return f(iter, state)
+			}
+		}
+		return parser.FailedResult
+	}
+}
+
 // setState sets the next parser state to `targetState`.
 func setState(targetState parser.State) parser.MapFn {
 	return func(result parser.Result) parser.Result {

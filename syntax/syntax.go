@@ -28,6 +28,7 @@ const (
 	LanguageTodoTxt      = Language("todotxt")
 	LanguageMarkdown     = Language("markdown")
 	LanguageCriticMarkup = Language("criticmarkup")
+	LanguageMakefile     = Language("makefile")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -51,6 +52,7 @@ func init() {
 		LanguageTodoTxt:      languages.TodoTxtParseFunc(),
 		LanguageMarkdown:     languages.MarkdownParseFunc(),
 		LanguageCriticMarkup: languages.CriticMarkupParseFunc(),
+		LanguageMakefile:     languages.MakefileParseFunc(),
 	}
 
 	for language := range languageToParseFunc {

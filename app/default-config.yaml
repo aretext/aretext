@@ -171,6 +171,15 @@
     tabSize: 4
     showLineNumbers: true
 
+- name: makefile
+  pattern: "**/Makefile*"
+  config:
+    autoIndent: true
+    syntaxLanguage: makefile
+    tabExpand: false
+    tabSize: 4
+    showLineNumbers: true
+
 - name: xml
   pattern: "**/*.xml"
   config: &xmlconfig

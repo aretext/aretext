@@ -7,41 +7,41 @@ import (
 	"os"
 
 	"github.com/aretext/aretext/input"
-	"github.com/aretext/aretext/input/vm"
+	"github.com/aretext/aretext/input/engine"
 )
 
-// This generates virtual machine programs for each of the editor input modes.
+// This generates state machines for each of the editor input modes.
 // These are compiled, written to disk, then embedded in the aretext binary
 // so they can be quickly loaded on program startup.
 func main() {
-	generateProgram(input.NormalModeProgramPath, input.NormalModeCommands())
-	generateProgram(input.InsertModeProgramPath, input.InsertModeCommands())
-	generateProgram(input.VisualModeProgramPath, input.VisualModeCommands())
-	generateProgram(input.MenuModeProgramPath, input.MenuModeCommands())
-	generateProgram(input.SearchModeProgramPath, input.SearchModeCommands())
-	generateProgram(input.TaskModeProgramPath, input.TaskModeCommands())
+	generate(input.NormalModePath, input.NormalModeCommands())
+	generate(input.InsertModePath, input.InsertModeCommands())
+	generate(input.VisualModePath, input.VisualModeCommands())
+	generate(input.MenuModePath, input.MenuModeCommands())
+	generate(input.SearchModePath, input.SearchModeCommands())
+	generate(input.TaskModePath, input.TaskModeCommands())
 }
 
-func generateProgram(path string, commands []input.Command) {
-	fmt.Printf("Generating input program %s\n", path)
-	program := compileProgram(commands)
-	data := vm.SerializeProgram(program)
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		fmt.Printf("Error generating %s: %s", path, err)
-		os.Exit(1)
-	}
-}
+func generate(path string, commands []input.Command) {
+	fmt.Printf("Generating input state machine %s\n", path)
 
-func compileProgram(commands []input.Command) vm.Program {
-	// Build a single expression to recognize any of the commands for this mode.
-	// Wrap each command expression in CaptureExpr so we can determine which command
-	// was accepted by the virtual machine.
-	var expr vm.AltExpr
-	for i, c := range commands {
-		expr.Children = append(expr.Children, vm.CaptureExpr{
-			CaptureId: vm.CaptureId(i),
-			Child:     c.BuildExpr(),
+	cmdExprs := make([]engine.CmdExpr, 0, len(commands))
+	for i, cmd := range commands {
+		cmdExprs = append(cmdExprs, engine.CmdExpr{
+			CmdId: engine.CmdId(i),
+			Expr:  cmd.BuildExpr(),
 		})
 	}
-	return vm.MustCompile(expr)
+
+	sm, err := engine.Compile(cmdExprs)
+	if err != nil {
+		fmt.Printf("Error compiling commands for %s: %s", path, err)
+		os.Exit(1)
+	}
+
+	data := engine.Serialize(sm)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		fmt.Printf("Error writing file %s: %s", path, err)
+		os.Exit(1)
+	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aretext/aretext/input/vm"
+	"github.com/aretext/aretext/input/engine"
 	"github.com/aretext/aretext/state"
 )
 
@@ -3383,24 +3383,26 @@ func TestBracketedPasteInUserMacro(t *testing.T) {
 	assert.Equal(t, "abc\nabc\n", text)
 }
 
-func TestVerifyGeneratedPrograms(t *testing.T) {
+func TestLoadGeneratedStateMachines(t *testing.T) {
 	testCases := []struct {
 		name string
 		path string
 	}{
-		{name: "normal mode", path: NormalModeProgramPath},
-		{name: "insert mode", path: InsertModeProgramPath},
-		{name: "visual mode", path: VisualModeProgramPath},
-		{name: "menu mode", path: MenuModeProgramPath},
-		{name: "search mode", path: SearchModeProgramPath},
-		{name: "task mode", path: TaskModeProgramPath},
+		{name: "normal mode", path: NormalModePath},
+		{name: "insert mode", path: InsertModePath},
+		{name: "visual mode", path: VisualModePath},
+		{name: "menu mode", path: MenuModePath},
+		{name: "search mode", path: SearchModePath},
+		{name: "task mode", path: TaskModePath},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			prog := mustLoadProgram(tc.path)
-			err := vm.VerifyProgram(prog)
-			assert.NoError(t, err)
+			data, err := generatedFiles.ReadFile(tc.path)
+			require.NoError(t, err)
+			require.NotPanics(t, func() {
+				engine.Deserialize(data)
+			})
 		})
 	}
 }

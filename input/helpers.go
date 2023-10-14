@@ -8,35 +8,35 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/clipboard"
-	"github.com/aretext/aretext/input/vm"
+	"github.com/aretext/aretext/input/engine"
 )
 
-func eventKeyToVmEvent(eventKey *tcell.EventKey) vm.Event {
+func eventKeyToEngineEvent(eventKey *tcell.EventKey) engine.Event {
 	if eventKey.Key() == tcell.KeyRune {
-		return runeToVmEvent(eventKey.Rune())
+		return runeToEngineEvent(eventKey.Rune())
 	} else {
-		return keyToVmEvent(eventKey.Key())
+		return keyToEngineEvent(eventKey.Key())
 	}
 }
 
-func keyToVmEvent(key tcell.Key) vm.Event {
-	return vm.Event(int64(key) << 32)
+func keyToEngineEvent(key tcell.Key) engine.Event {
+	return engine.Event(int64(key) << 32)
 }
 
-func runeToVmEvent(r rune) vm.Event {
-	return vm.Event((int64(tcell.KeyRune) << 32) | int64(r))
+func runeToEngineEvent(r rune) engine.Event {
+	return engine.Event((int64(tcell.KeyRune) << 32) | int64(r))
 }
 
-func vmEventToKey(vmEvent vm.Event) tcell.Key {
-	return tcell.Key(vmEvent >> 32)
+func engineEventToKey(engineEvent engine.Event) tcell.Key {
+	return tcell.Key(engineEvent >> 32)
 }
 
-func vmEventToRune(vmEvent vm.Event) rune {
-	return rune(vmEvent & 0xFFFF)
+func engineEventToRune(engineEvent engine.Event) rune {
+	return rune(engineEvent & 0xFFFF)
 }
 
 const (
-	captureIdVerbCount = vm.CaptureId(1<<16) + iota
+	captureIdVerbCount = engine.CaptureId(1<<16) + iota
 	captureIdObjectCount
 	captureIdClipboardPage
 	captureIdMatchChar
@@ -45,22 +45,22 @@ const (
 )
 
 // Pre-compute and share these expressions to reduce number of allocations.
-var verbCountExpr, objectCountExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr vm.Expr
+var verbCountExpr, objectCountExpr, clipboardPageExpr, matchCharExpr, replaceCharExpr, insertExpr engine.Expr
 
 func init() {
-	verbCountExpr = vm.OptionExpr{
-		Child: vm.CaptureExpr{
+	verbCountExpr = engine.OptionExpr{
+		Child: engine.CaptureExpr{
 			CaptureId: captureIdVerbCount,
-			Child: vm.ConcatExpr{
-				Children: []vm.Expr{
-					vm.EventRangeExpr{
-						StartEvent: runeToVmEvent('1'),
-						EndEvent:   runeToVmEvent('9'),
+			Child: engine.ConcatExpr{
+				Children: []engine.Expr{
+					engine.EventRangeExpr{
+						StartEvent: runeToEngineEvent('1'),
+						EndEvent:   runeToEngineEvent('9'),
 					},
-					vm.StarExpr{
-						Child: vm.EventRangeExpr{
-							StartEvent: runeToVmEvent('0'),
-							EndEvent:   runeToVmEvent('9'),
+					engine.StarExpr{
+						Child: engine.EventRangeExpr{
+							StartEvent: runeToEngineEvent('0'),
+							EndEvent:   runeToEngineEvent('9'),
 						},
 					},
 				},
@@ -68,19 +68,19 @@ func init() {
 		},
 	}
 
-	objectCountExpr = vm.OptionExpr{
-		Child: vm.CaptureExpr{
+	objectCountExpr = engine.OptionExpr{
+		Child: engine.CaptureExpr{
 			CaptureId: captureIdObjectCount,
-			Child: vm.ConcatExpr{
-				Children: []vm.Expr{
-					vm.EventRangeExpr{
-						StartEvent: runeToVmEvent('1'),
-						EndEvent:   runeToVmEvent('9'),
+			Child: engine.ConcatExpr{
+				Children: []engine.Expr{
+					engine.EventRangeExpr{
+						StartEvent: runeToEngineEvent('1'),
+						EndEvent:   runeToEngineEvent('9'),
 					},
-					vm.StarExpr{
-						Child: vm.EventRangeExpr{
-							StartEvent: runeToVmEvent('0'),
-							EndEvent:   runeToVmEvent('9'),
+					engine.StarExpr{
+						Child: engine.EventRangeExpr{
+							StartEvent: runeToEngineEvent('0'),
+							EndEvent:   runeToEngineEvent('9'),
 						},
 					},
 				},
@@ -88,54 +88,54 @@ func init() {
 		},
 	}
 
-	clipboardPageExpr = vm.OptionExpr{
-		Child: vm.ConcatExpr{
-			Children: []vm.Expr{
-				vm.EventExpr{
-					Event: runeToVmEvent('"'),
+	clipboardPageExpr = engine.OptionExpr{
+		Child: engine.ConcatExpr{
+			Children: []engine.Expr{
+				engine.EventExpr{
+					Event: runeToEngineEvent('"'),
 				},
-				vm.CaptureExpr{
+				engine.CaptureExpr{
 					CaptureId: captureIdClipboardPage,
-					Child: vm.EventRangeExpr{
-						StartEvent: runeToVmEvent('a'),
-						EndEvent:   runeToVmEvent('z'),
+					Child: engine.EventRangeExpr{
+						StartEvent: runeToEngineEvent('a'),
+						EndEvent:   runeToEngineEvent('z'),
 					},
 				},
 			},
 		},
 	}
 
-	matchCharExpr = vm.CaptureExpr{
+	matchCharExpr = engine.CaptureExpr{
 		CaptureId: captureIdMatchChar,
-		Child: vm.EventRangeExpr{
-			StartEvent: runeToVmEvent(rune(0)),
-			EndEvent:   runeToVmEvent(rune(255)),
+		Child: engine.EventRangeExpr{
+			StartEvent: runeToEngineEvent(rune(0)),
+			EndEvent:   runeToEngineEvent(rune(255)),
 		},
 	}
 
-	replaceCharExpr = vm.CaptureExpr{
+	replaceCharExpr = engine.CaptureExpr{
 		CaptureId: captureIdReplaceChar,
-		Child: vm.AltExpr{
-			Children: []vm.Expr{
-				vm.EventRangeExpr{
-					StartEvent: runeToVmEvent(rune(0)),
-					EndEvent:   runeToVmEvent(rune(255)),
+		Child: engine.AltExpr{
+			Children: []engine.Expr{
+				engine.EventRangeExpr{
+					StartEvent: runeToEngineEvent(rune(0)),
+					EndEvent:   runeToEngineEvent(rune(255)),
 				},
-				vm.EventExpr{
-					Event: keyToVmEvent(tcell.KeyEnter),
+				engine.EventExpr{
+					Event: keyToEngineEvent(tcell.KeyEnter),
 				},
-				vm.EventExpr{
-					Event: keyToVmEvent(tcell.KeyTab),
+				engine.EventExpr{
+					Event: keyToEngineEvent(tcell.KeyTab),
 				},
 			},
 		},
 	}
 
-	insertExpr = vm.CaptureExpr{
+	insertExpr = engine.CaptureExpr{
 		CaptureId: captureIdInsertChar,
-		Child: vm.EventRangeExpr{
-			StartEvent: runeToVmEvent(rune(0)),
-			EndEvent:   runeToVmEvent(utf8.MaxRune),
+		Child: engine.EventRangeExpr{
+			StartEvent: runeToEngineEvent(rune(0)),
+			EndEvent:   runeToEngineEvent(utf8.MaxRune),
 		},
 	}
 }
@@ -147,66 +147,66 @@ type captureOpts struct {
 	replaceChar   bool
 }
 
-func altExpr(children ...vm.Expr) vm.Expr {
-	return vm.AltExpr{Children: children}
+func altExpr(children ...engine.Expr) engine.Expr {
+	return engine.AltExpr{Children: children}
 }
 
-func verbCountThenExpr(expr vm.Expr) vm.Expr {
-	return vm.ConcatExpr{Children: []vm.Expr{verbCountExpr, expr}}
+func verbCountThenExpr(expr engine.Expr) engine.Expr {
+	return engine.ConcatExpr{Children: []engine.Expr{verbCountExpr, expr}}
 }
 
-func runeExpr(r rune) vm.Expr {
-	return vm.EventExpr{Event: runeToVmEvent(r)}
+func runeExpr(r rune) engine.Expr {
+	return engine.EventExpr{Event: runeToEngineEvent(r)}
 }
 
-func keyExpr(key tcell.Key) vm.Expr {
-	return vm.EventExpr{Event: keyToVmEvent(key)}
+func keyExpr(key tcell.Key) engine.Expr {
+	return engine.EventExpr{Event: keyToEngineEvent(key)}
 }
 
-func cmdExpr(verb string, object string, opts captureOpts) vm.Expr {
-	expr := vm.ConcatExpr{Children: make([]vm.Expr, 0, len(verb))}
+func cmdExpr(verb string, object string, opts captureOpts) engine.Expr {
+	expr := engine.ConcatExpr{Children: make([]engine.Expr, 0, len(verb))}
 	for _, r := range verb {
-		expr.Children = append(expr.Children, vm.EventExpr{
-			Event: runeToVmEvent(r),
+		expr.Children = append(expr.Children, engine.EventExpr{
+			Event: runeToEngineEvent(r),
 		})
 	}
 
 	if object != "" {
 		verbExpr := expr
-		objExpr := vm.ConcatExpr{Children: make([]vm.Expr, 0, len(object))}
+		objExpr := engine.ConcatExpr{Children: make([]engine.Expr, 0, len(object))}
 		for _, r := range object {
-			objExpr.Children = append(objExpr.Children, vm.EventExpr{
-				Event: runeToVmEvent(r),
+			objExpr.Children = append(objExpr.Children, engine.EventExpr{
+				Event: runeToEngineEvent(r),
 			})
 		}
 
 		if opts.count {
-			objExpr = vm.ConcatExpr{Children: []vm.Expr{objectCountExpr, objExpr}}
+			objExpr = engine.ConcatExpr{Children: []engine.Expr{objectCountExpr, objExpr}}
 		}
 
-		expr = vm.ConcatExpr{Children: []vm.Expr{verbExpr, objExpr}}
+		expr = engine.ConcatExpr{Children: []engine.Expr{verbExpr, objExpr}}
 	}
 
 	if opts.count {
-		expr = vm.ConcatExpr{Children: []vm.Expr{verbCountExpr, expr}}
+		expr = engine.ConcatExpr{Children: []engine.Expr{verbCountExpr, expr}}
 	}
 
 	if opts.clipboardPage {
-		expr = vm.ConcatExpr{Children: []vm.Expr{clipboardPageExpr, expr}}
+		expr = engine.ConcatExpr{Children: []engine.Expr{clipboardPageExpr, expr}}
 	}
 
 	if opts.matchChar {
-		expr = vm.ConcatExpr{Children: []vm.Expr{expr, matchCharExpr}}
+		expr = engine.ConcatExpr{Children: []engine.Expr{expr, matchCharExpr}}
 	}
 
 	if opts.replaceChar {
-		expr = vm.ConcatExpr{Children: []vm.Expr{expr, replaceCharExpr}}
+		expr = engine.ConcatExpr{Children: []engine.Expr{expr, replaceCharExpr}}
 	}
 
 	return expr
 }
 
-func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandParams {
+func capturesToCommandParams(captures map[engine.CaptureId][]engine.Event) CommandParams {
 	p := CommandParams{
 		Count:         1,
 		ClipboardPage: clipboard.PageDefault,
@@ -214,9 +214,8 @@ func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandPa
 		ReplaceChar:   '\x00',
 		InsertChar:    '\x00',
 	}
-	for _, capture := range captures {
-		captureEvents := events[capture.StartIdx : capture.StartIdx+capture.Length]
-		switch capture.Id {
+	for captureId, captureEvents := range captures {
+		switch captureId {
 		case captureIdVerbCount, captureIdObjectCount:
 			// Multiply here so that if both verb and object count are provided,
 			// the total count is the product of the two counts.
@@ -235,10 +234,10 @@ func capturesToCommandParams(captures []vm.Capture, events []vm.Event) CommandPa
 	return p
 }
 
-func eventsToCount(events []vm.Event) uint64 {
+func eventsToCount(events []engine.Event) uint64 {
 	var sb strings.Builder
 	for _, e := range events {
-		sb.WriteRune(vmEventToRune(e))
+		sb.WriteRune(engineEventToRune(e))
 	}
 	i, err := strconv.Atoi(sb.String())
 	if err != nil || i < 0 {
@@ -247,32 +246,32 @@ func eventsToCount(events []vm.Event) uint64 {
 	return uint64(i)
 }
 
-func eventsToClipboardPage(events []vm.Event) clipboard.PageId {
+func eventsToClipboardPage(events []engine.Event) clipboard.PageId {
 	if len(events) != 1 {
 		return clipboard.PageNull
 	}
-	return clipboard.PageIdForLetter(vmEventToRune(events[0]))
+	return clipboard.PageIdForLetter(engineEventToRune(events[0]))
 }
 
-func eventsToChar(events []vm.Event) rune {
+func eventsToChar(events []engine.Event) rune {
 	if len(events) != 1 {
 		return '\x00'
 	}
-	return vmEventToRune(events[0])
+	return engineEventToRune(events[0])
 }
 
-func eventsToReplaceChar(events []vm.Event) rune {
+func eventsToReplaceChar(events []engine.Event) rune {
 	if len(events) != 1 {
 		return '\x00'
 	}
 
-	switch vmEventToKey(events[0]) {
+	switch engineEventToKey(events[0]) {
 	case tcell.KeyEnter:
 		return '\n'
 	case tcell.KeyTab:
 		return '\t'
 	case tcell.KeyRune:
-		return vmEventToRune(events[0])
+		return engineEventToRune(events[0])
 	default:
 		return '\x00'
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/clipboard"
-	"github.com/aretext/aretext/input/vm"
+	"github.com/aretext/aretext/input/engine"
 	"github.com/aretext/aretext/state"
 )
 
@@ -20,11 +20,11 @@ type CommandParams struct {
 }
 
 // Command defines a command that the input parser can recognize.
-// The VM expression defines how the input processor recognizes the command,
+// The expression defines how the input processor recognizes the command,
 // and the action defines how the editor executes the command.
 type Command struct {
 	Name        string
-	BuildExpr   func() vm.Expr
+	BuildExpr   func() engine.Expr
 	MaxCount    uint64 // Zero means no limit.
 	BuildAction func(Context, CommandParams) Action
 }
@@ -52,7 +52,7 @@ func cursorCommands() []Command {
 	return []Command{
 		{
 			Name: "cursor left (left arrow or h)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyLeft), runeExpr('h')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -61,7 +61,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor right (right arrow or l or space)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyRight), runeExpr('l'), runeExpr(' ')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -70,7 +70,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor up (up arrow or k)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyUp), runeExpr('k')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -79,7 +79,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor down (down arrow, j)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyDown), runeExpr('j')))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -88,7 +88,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "first non-whitespace of next line (enter)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(keyExpr(tcell.KeyEnter))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -97,7 +97,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor back (backspace)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2)))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -106,7 +106,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next word start (w)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("w", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -115,7 +115,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor prev word start (b)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("b", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -124,7 +124,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next word start - words can contain puctuation (W)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("W", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -133,7 +133,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor prev word start - words can contain puctuation (B)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("B", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -142,7 +142,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next word end (e)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("e", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -151,7 +151,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next word end - words can contain punctuation (E)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("E", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -160,7 +160,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor prev paragraph ({)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("{", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -169,7 +169,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next paragraph (})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("}", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -178,7 +178,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor to next matching char (f{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("f", "", captureOpts{count: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -188,7 +188,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor to prev matching char (F{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("F", "", captureOpts{count: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -198,7 +198,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor till next matching char (t{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("t", "", captureOpts{count: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -208,7 +208,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor to prev matching char (T{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("T", "", captureOpts{count: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -218,7 +218,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor line start (0)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("0", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -227,7 +227,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor line start non-whitespace (^)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("^", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -236,7 +236,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor line end ($)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("$", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -245,7 +245,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor start of line num (gg)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("gg", "", captureOpts{count: true})
 			},
 			// The text data structure allows efficient lookup by line
@@ -257,7 +257,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor start of last line (G)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("G", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -266,7 +266,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor matching code block delimiter (%)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("%", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -275,7 +275,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor prev unmatched open brace ([{)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("[{", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -284,7 +284,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next unmatched close brace (]})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("]}", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -293,7 +293,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor prev unmatched open paren ([()",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("[(", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -302,7 +302,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "cursor next unmatched close paren (]))",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("])", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -311,7 +311,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "scroll up (ctrl-u)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyCtrlU)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -320,7 +320,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "scroll forward (ctrl-f)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyCtrlF)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -329,7 +329,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "scroll back (ctrl-b)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyCtrlB)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -338,7 +338,7 @@ func cursorCommands() []Command {
 		},
 		{
 			Name: "scroll down (ctrl-d)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyCtrlD)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -402,7 +402,7 @@ func NormalModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "enter insert mode (i)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("i", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -413,7 +413,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at start of line (I)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("I", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -424,7 +424,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at next pos (a)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("a", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -435,7 +435,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "enter insert mode at end of line (A)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("A", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -446,7 +446,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "begin new line below (o)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("o", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -457,7 +457,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "begin new line above (O)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("O", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -468,7 +468,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "join lines (J)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("J", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -479,7 +479,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete line (dd)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("dd", "", captureOpts{count: true, clipboardPage: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -491,7 +491,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete prev char in line (dh)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "h", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -502,7 +502,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete down (dj)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "j", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -513,7 +513,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete up (dk)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "k", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -524,7 +524,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete next char in line (dl or x)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "l", captureOpts{count: true, clipboardPage: true}),
 					cmdExpr("x", "", captureOpts{count: true, clipboardPage: true}),
@@ -539,7 +539,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete next char in line (delete key)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyDelete)
 			},
 			MaxCount: defaultMaxCount,
@@ -551,7 +551,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to end of line (d$)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "$", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -562,7 +562,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to start of line (d0)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "0", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -573,7 +573,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to start of line non-whitespace (d^)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "^", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -584,7 +584,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to end of line (D)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("D", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -595,7 +595,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to next matching char (df{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -607,7 +607,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to prev matching char (dF{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -619,7 +619,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete till next matching char (dt{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -631,7 +631,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete till prev matching char (dT{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -643,7 +643,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to start of next word (dw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -654,7 +654,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete to start of next word - words can contain punctuation (dW)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "W", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -665,7 +665,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a word (daw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -676,7 +676,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner word (diw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -687,7 +687,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a string object with double quotes (da\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "a\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -698,7 +698,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner string object with double quotes (di\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "i\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -709,7 +709,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a string object with single quotes (da')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "a'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -720,7 +720,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner string object with single quotes (di')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "i'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -731,7 +731,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a string object with backtick (da`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "a`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -742,7 +742,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner string object with backtick (di`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d", "i`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -753,7 +753,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner paren block (dib)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "ib", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "i(", captureOpts{clipboardPage: true}),
@@ -768,7 +768,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a paren block (dab)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "ab", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "a(", captureOpts{clipboardPage: true}),
@@ -783,7 +783,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner brace block (diB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "iB", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "i{", captureOpts{clipboardPage: true}),
@@ -798,7 +798,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete a brace block (daB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "aB", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "a{", captureOpts{clipboardPage: true}),
@@ -813,7 +813,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete inner angle block (di<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "i<", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "i>", captureOpts{clipboardPage: true}),
@@ -827,7 +827,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "delete an angle block block (da<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("d", "a<", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "a>", captureOpts{clipboardPage: true}),
@@ -841,7 +841,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change word (cw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -852,7 +852,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a word (caw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -863,7 +863,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner word (ciw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -874,7 +874,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a string object with double quotes (ca\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "a\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -885,7 +885,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner string object with double quotes (ci\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "i\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -896,7 +896,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a string object with single quotes (ca')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "a'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -907,7 +907,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner string object with single quotes (ci')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "i'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -918,7 +918,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a string object with backtick (ca`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "a`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -929,7 +929,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner string object with backtick (ci`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "i`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -940,7 +940,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change to next matching char (cf{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -952,7 +952,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change to prev matching char (cF{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -964,7 +964,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change till next matching char (ct{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -976,7 +976,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change till prev matching char (cT{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -988,7 +988,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner paren block (cib)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "ib", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "i(", captureOpts{clipboardPage: true}),
@@ -1003,7 +1003,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a paren block (cab)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "ab", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "a(", captureOpts{clipboardPage: true}),
@@ -1018,7 +1018,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner brace block (ciB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "iB", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "i{", captureOpts{clipboardPage: true}),
@@ -1033,7 +1033,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change a brace block (caB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "aB", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "a{", captureOpts{clipboardPage: true}),
@@ -1048,7 +1048,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change inner angle block (ci<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "i<", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "i>", captureOpts{clipboardPage: true}),
@@ -1062,7 +1062,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "change an angle block (ca<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("c", "a<", captureOpts{clipboardPage: true}),
 					cmdExpr("c", "a>", captureOpts{clipboardPage: true}),
@@ -1076,7 +1076,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "replace character (r)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("r", "", captureOpts{replaceChar: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1087,7 +1087,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "toggle case (~)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("~", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1098,7 +1098,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "indent (>>)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr(">>", "", captureOpts{count: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1110,7 +1110,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "outdent (<<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("<<", "", captureOpts{count: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1122,7 +1122,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank to start of next word (yw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "w", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1133,7 +1133,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank to start of next word - words can contain punctuation (yW)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "W", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1144,7 +1144,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank a word (yaw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "aw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1155,7 +1155,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank inner word (yiw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "iw", captureOpts{count: true, clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1166,7 +1166,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank a string object with double quotes (ya\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "a\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1177,7 +1177,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank inner string object with double quotes (yi\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "i\"", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1188,7 +1188,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank a string object with single quotes (ya')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "a'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1199,7 +1199,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank inner string object with single quotes (yi')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "i'", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1210,7 +1210,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank a string object with backtick (ya`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "a`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1221,7 +1221,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank inner string object with backtick (yi`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "i`", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1232,7 +1232,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank line (yy)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("yy", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1243,7 +1243,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank to next matching char (yf{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "f", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1255,7 +1255,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank to prev matching char (yF{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "F", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1267,7 +1267,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank till next matching char (yt{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "t", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1279,7 +1279,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "yank till prev matching char (yT{char})",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "T", captureOpts{count: true, clipboardPage: true, matchChar: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1291,7 +1291,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "put after cursor (p)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("p", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1302,7 +1302,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "put before cursor (P)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("P", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1313,7 +1313,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "show command menu (:)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr(':')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1324,7 +1324,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "start forward search (/)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('/')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1335,7 +1335,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "start backward search (?)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('?')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1346,7 +1346,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search forward and delete (d/)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d/", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1357,7 +1357,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search backward and delete (d?)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("d?", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1368,7 +1368,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search forward and change (c/)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c/", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1379,7 +1379,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search backward and change (c?)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c?", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1390,7 +1390,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search forward and yank (y/)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y/", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1401,7 +1401,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search backward and yank (y?)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y?", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1412,7 +1412,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "find next match (n)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('n')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1423,7 +1423,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "find previous match (N)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('N')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1434,7 +1434,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search forward for word under cursor (*)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("*", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1445,7 +1445,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "search backward for word under cursor (#)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("#", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1456,7 +1456,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "undo (u)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('u')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1465,7 +1465,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "redo (ctrl-r)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyCtrlR)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1474,7 +1474,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "enter visual mode charwise (v)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('v')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1485,7 +1485,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "enter visual mode linewise (V)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('V')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1496,7 +1496,7 @@ func NormalModeCommands() []Command {
 		},
 		{
 			Name: "repeat last action (.)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr(".", "", captureOpts{count: true})
 			},
 			MaxCount: defaultMaxCount,
@@ -1513,7 +1513,7 @@ func VisualModeCommands() []Command {
 	return append(cursorCommands(), []Command{
 		{
 			Name: "toggle visual mode charwise (v)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('v')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1524,7 +1524,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "toggle visual mode linewise (V)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr('V')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1535,7 +1535,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "return to normal mode (esc)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1546,7 +1546,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "show command menu",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return runeExpr(':')
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1557,7 +1557,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "delete selection (x or d)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("x", "", captureOpts{clipboardPage: true}),
 					cmdExpr("d", "", captureOpts{clipboardPage: true}),
@@ -1574,7 +1574,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "delete selection (delete key)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyDelete)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1588,7 +1588,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "change selection (c)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("c", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1602,7 +1602,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "toggle case for selection (~)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("~", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1613,7 +1613,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "indent selection (>)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr(">", "", captureOpts{count: true})
 			},
 			MaxCount: 32, // Reparsing is expensive, so set this lower.
@@ -1625,7 +1625,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "outdent selection (<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("<", "", captureOpts{count: true})
 			},
 			MaxCount: 32, // Reparsing is expensive, so set this lower.
@@ -1637,7 +1637,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "yank selection (y)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("y", "", captureOpts{clipboardPage: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1648,7 +1648,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner word (iw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("iw", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1659,7 +1659,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a word (aw)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("aw", "", captureOpts{count: true})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1670,7 +1670,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a string object with double quotes (a\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("a\"", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1681,7 +1681,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner string object with double quotes (i\")",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("i\"", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1692,7 +1692,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a string object with single quotes (a')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("a'", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1703,7 +1703,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner string object with single quotes (i')",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("i'", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1714,7 +1714,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a string object with backtick (a`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("a`", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1725,7 +1725,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner string object with backtick (i`)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return cmdExpr("i`", "", captureOpts{})
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1736,7 +1736,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner paren block (ib)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("ib", "", captureOpts{}),
 					cmdExpr("i(", "", captureOpts{}),
@@ -1751,7 +1751,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a paren block (ab)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("ab", "", captureOpts{}),
 					cmdExpr("a(", "", captureOpts{}),
@@ -1766,7 +1766,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner brace block (iB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("iB", "", captureOpts{}),
 					cmdExpr("i{", "", captureOpts{}),
@@ -1781,7 +1781,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select a brace block (aB)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("aB", "", captureOpts{}),
 					cmdExpr("a{", "", captureOpts{}),
@@ -1796,7 +1796,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select inner angle block (i<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("i<", "", captureOpts{}),
 					cmdExpr("i>", "", captureOpts{}),
@@ -1810,7 +1810,7 @@ func VisualModeCommands() []Command {
 		},
 		{
 			Name: "select an angle block (a<)",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(
 					cmdExpr("a<", "", captureOpts{}),
 					cmdExpr("a>", "", captureOpts{}),
@@ -1841,7 +1841,7 @@ func InsertModeCommands() []Command {
 	return []Command{
 		{
 			Name: "insert rune",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return insertExpr
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1850,7 +1850,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "delete prev char",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1859,7 +1859,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "delete next char",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyDelete)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1868,7 +1868,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "insert newline",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1877,7 +1877,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "insert tab",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyTab)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1886,7 +1886,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "cursor left",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyLeft)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1895,7 +1895,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "cursor right",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyRight)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1904,7 +1904,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "cursor up",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyUp)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1913,7 +1913,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "cursor down",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyDown)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1922,7 +1922,7 @@ func InsertModeCommands() []Command {
 		},
 		{
 			Name: "escape to normal mode",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1936,7 +1936,7 @@ func MenuModeCommands() []Command {
 	return []Command{
 		{
 			Name: "escape to normal mode",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1945,7 +1945,7 @@ func MenuModeCommands() []Command {
 		},
 		{
 			Name: "execute menu item",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1954,7 +1954,7 @@ func MenuModeCommands() []Command {
 		},
 		{
 			Name: "move menu selection up",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyUp)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1963,7 +1963,7 @@ func MenuModeCommands() []Command {
 		},
 		{
 			Name: "move menu selection down",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(keyExpr(tcell.KeyDown), keyExpr(tcell.KeyTab))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1972,7 +1972,7 @@ func MenuModeCommands() []Command {
 		},
 		{
 			Name: "insert char to menu query",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return insertExpr
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -1981,7 +1981,7 @@ func MenuModeCommands() []Command {
 		},
 		{
 			Name: "delete char from menu query",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2002,7 +2002,7 @@ func SearchModeCommands() []Command {
 	return []Command{
 		{
 			Name: "escape to normal mode",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2011,7 +2011,7 @@ func SearchModeCommands() []Command {
 		},
 		{
 			Name: "commit search",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEnter)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2020,7 +2020,7 @@ func SearchModeCommands() []Command {
 		},
 		{
 			Name: "insert char to search query",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return insertExpr
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2029,7 +2029,7 @@ func SearchModeCommands() []Command {
 		},
 		{
 			Name: "delete char from search query",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2039,7 +2039,7 @@ func SearchModeCommands() []Command {
 		},
 		{
 			Name: "previous search query in history",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyUp)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2048,7 +2048,7 @@ func SearchModeCommands() []Command {
 		},
 		{
 			Name: "next search query in history",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyDown)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
@@ -2062,7 +2062,7 @@ func TaskModeCommands() []Command {
 	return []Command{
 		{
 			Name: "cancel task",
-			BuildExpr: func() vm.Expr {
+			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {

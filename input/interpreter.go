@@ -8,7 +8,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/input/vm"
+	"github.com/aretext/aretext/input/engine"
 	"github.com/aretext/aretext/state"
 )
 
@@ -27,35 +27,35 @@ func NewInterpreter() *Interpreter {
 			state.InputModeNormal: {
 				name:     "normal",
 				commands: NormalModeCommands(),
-				runtime:  runtimeForMode(NormalModeProgramPath),
+				runtime:  runtimeForMode(NormalModePath),
 			},
 
 			// insert mode is used for inserting characters into the document.
 			state.InputModeInsert: {
 				name:     "insert",
 				commands: InsertModeCommands(),
-				runtime:  runtimeForMode(InsertModeProgramPath),
+				runtime:  runtimeForMode(InsertModePath),
 			},
 
 			// visual mode is used to visually select a region of the document.
 			state.InputModeVisual: {
 				name:     "visual",
 				commands: VisualModeCommands(),
-				runtime:  runtimeForMode(VisualModeProgramPath),
+				runtime:  runtimeForMode(VisualModePath),
 			},
 
 			// menu mode allows the user to search for and select items in a menu.
 			state.InputModeMenu: {
 				name:     "menu",
 				commands: MenuModeCommands(),
-				runtime:  runtimeForMode(MenuModeProgramPath),
+				runtime:  runtimeForMode(MenuModePath),
 			},
 
 			// search mode is used to search the document for a substring.
 			state.InputModeSearch: {
 				name:     "search",
 				commands: SearchModeCommands(),
-				runtime:  runtimeForMode(SearchModeProgramPath),
+				runtime:  runtimeForMode(SearchModePath),
 			},
 
 			// task mode is used while a task is running asynchronously.
@@ -63,7 +63,7 @@ func NewInterpreter() *Interpreter {
 			state.InputModeTask: {
 				name:     "task",
 				commands: TaskModeCommands(),
-				runtime:  runtimeForMode(TaskModeProgramPath),
+				runtime:  runtimeForMode(TaskModePath),
 			},
 		},
 	}
@@ -151,38 +151,37 @@ func (inp *Interpreter) InputBufferString(mode state.InputMode) string {
 }
 
 const (
-	NormalModeProgramPath = "generated/normal.bin"
-	InsertModeProgramPath = "generated/insert.bin"
-	VisualModeProgramPath = "generated/visual.bin"
-	MenuModeProgramPath   = "generated/menu.bin"
-	SearchModeProgramPath = "generated/search.bin"
-	TaskModeProgramPath   = "generated/task.bin"
+	NormalModePath = "generated/normal.bin"
+	InsertModePath = "generated/insert.bin"
+	VisualModePath = "generated/visual.bin"
+	MenuModePath   = "generated/menu.bin"
+	SearchModePath = "generated/search.bin"
+	TaskModePath   = "generated/task.bin"
 )
 
 //go:generate go run generate.go
 //go:embed generated/*
 var generatedFiles embed.FS
 
-// mustLoadProgram loads an input VM program from an embedded file.
-// This avoids the overhead of compiling VM programs from command expressions
-// on program startup.
-// See input/generate.go for the code that compiles the programs.
-func mustLoadProgram(path string) vm.Program {
-	data, err := generatedFiles.ReadFile(path)
-	if err != nil {
-		log.Fatalf("Could not read generated program file %s: %s", path, err)
-	}
-	return vm.DeserializeProgram(data)
-}
-
-func runtimeForMode(programPath string) *vm.Runtime {
+// runtimeForMode loads a state machine for an input mode.
+// The state machine is serialized and embedded in the aretext binary.
+// See input/generate.go for the code that compiles the state machines.
+func runtimeForMode(path string) *engine.Runtime {
 	// This should be long enough for any valid input sequence,
 	// but not long enough that count params can overflow uint64.
 	const maxInputLen = 64
 
-	// Load the pre-compiled program and initialize the runtime.
-	program := mustLoadProgram(programPath)
-	return vm.NewRuntime(program, maxInputLen)
+	data, err := generatedFiles.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Could not read %s: %s", path, err)
+	}
+
+	stateMachine, err := engine.Deserialize(data)
+	if err != nil {
+		log.Fatalf("Could not deserialize state machine %s: %s", path, err)
+	}
+
+	return engine.NewRuntime(stateMachine, maxInputLen)
 }
 
 // mode is an editor input mode.
@@ -190,51 +189,40 @@ func runtimeForMode(programPath string) *vm.Runtime {
 type mode struct {
 	name        string
 	commands    []Command
-	runtime     *vm.Runtime
-	eventBuffer []vm.Event
+	runtime     *engine.Runtime
 	inputBuffer strings.Builder
 }
 
 func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
-	vmEvent := eventKeyToVmEvent(event)
-	m.eventBuffer = append(m.eventBuffer, vmEvent)
+	engineEvent := eventKeyToEngineEvent(event)
 	if event.Key() == tcell.KeyRune {
 		m.inputBuffer.WriteRune(event.Rune())
 	}
 
 	action := EmptyAction
-	result := m.runtime.ProcessEvent(vmEvent)
-	if result.Accepted {
-		for _, capture := range result.Captures {
-			// The capture ID encodes the command associated with this input.
-			// See input/generate.go for details.
-			if int(capture.Id) < len(m.commands) {
-				command := m.commands[capture.Id]
-				params := capturesToCommandParams(result.Captures, m.eventBuffer)
-				log.Printf(
-					"%s mode accepted input for command %q with params %+v and ctx %+v\n",
-					m.name, command.Name,
-					params, ctx,
-				)
+	result := m.runtime.ProcessEvent(engineEvent)
+	if result.Decision == engine.DecisionAccept {
+		command := m.commands[result.CmdId]
+		params := capturesToCommandParams(result.Captures)
+		log.Printf(
+			"%s mode accepted input for command %q with params %+v and ctx %+v\n",
+			m.name, command.Name,
+			params, ctx,
+		)
 
-				if err := m.validateParams(command, params); err != nil {
-					action = func(s *state.EditorState) {
-						state.SetStatusMsg(s, state.StatusMsg{
-							Style: state.StatusMsgStyleError,
-							Text:  err.Error(),
-						})
-					}
-				} else {
-					action = command.BuildAction(ctx, params)
-				}
-
-				break
+		if err := m.validateParams(command, params); err != nil {
+			action = func(s *state.EditorState) {
+				state.SetStatusMsg(s, state.StatusMsg{
+					Style: state.StatusMsgStyleError,
+					Text:  err.Error(),
+				})
 			}
+		} else {
+			action = command.BuildAction(ctx, params)
 		}
 	}
 
-	if result.Reset {
-		m.eventBuffer = m.eventBuffer[:0]
+	if result.Decision != engine.DecisionWait {
 		m.inputBuffer.Reset()
 	}
 

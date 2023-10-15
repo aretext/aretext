@@ -21,7 +21,7 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string) stri
 		sb.WriteString(s)
 	}
 
-	sb.WriteString("	node [shape = circle, width=0.2, style=filled, label=\"%s\"];\n")
+	sb.WriteString("	node [shape = circle, width=0.2, style=filled, label=\"\"];\n")
 	for state, transitions := range sm.transitions {
 		for _, t := range transitions {
 			eventLabel := eventLabelFunc(t.eventRange.start, t.eventRange.end)

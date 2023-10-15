@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -76,8 +77,14 @@ func generate(path string, commands []input.Command) {
 }
 
 func eventLabelFunc(start, end engine.Event) string {
-	if rune(start&0xFFFF) == rune(0) && rune(end&0xFFFF) == rune(255) {
-		return "any ASCII"
+	if tcell.Key(start>>32) == tcell.KeyRune && tcell.Key(end>>32) == tcell.KeyRune {
+		if rune(start&0xFFFFFF) == rune(0) {
+			if rune(end&0xFFFFFF) == rune(255) {
+				return "any ASCII"
+			} else if rune(end&0xFFFFFF) == utf8.MaxRune {
+				return "any unicode"
+			}
+		}
 	}
 
 	startLabel := eventToName(start)

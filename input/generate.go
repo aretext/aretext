@@ -44,4 +44,17 @@ func generate(path string, commands []input.Command) {
 		fmt.Printf("Error writing file %s: %s", path, err)
 		os.Exit(1)
 	}
+
+	// Hack to output graphviz dot file for each state machine.
+	dotFilePath := fmt.Sprintf("%s.dot", path)
+	fmt.Printf("Generating graphviz dot file for input state machine %s\n", dotFilePath)
+	dotData := engine.Render(sm, eventLabelFunc)
+	if err := os.WriteFile(dotFilePath, []byte(dotData), 0644); err != nil {
+		fmt.Printf("Error writing file %s: %s", dotFilePath, err)
+		os.Exit(1)
+	}
+}
+
+func eventLabelFunc(start, end engine.Event) string {
+	return "TODO"
 }

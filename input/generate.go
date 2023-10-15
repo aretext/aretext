@@ -5,6 +5,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/gdamore/tcell/v2"
 
 	"github.com/aretext/aretext/input"
 	"github.com/aretext/aretext/input/engine"
@@ -56,5 +59,25 @@ func generate(path string, commands []input.Command) {
 }
 
 func eventLabelFunc(start, end engine.Event) string {
-	return "TODO"
+	if rune(start&0xFFFF) == rune(0) && rune(end&0xFFFF) == rune(255) {
+		return "any ASCII"
+	}
+
+	startLabel := eventToName(start)
+	endLabel := eventToName(end)
+	if startLabel == endLabel {
+		return startLabel
+	} else {
+		return fmt.Sprintf("%s-%s", startLabel, endLabel)
+	}
+}
+
+func eventToName(event engine.Event) string {
+	k := tcell.Key(event >> 32)
+	r := rune(event & 0xFFFF)
+	if k == tcell.KeyRune {
+		return strings.ReplaceAll(fmt.Sprintf("'%c'", r), `"`, `\"`)
+	} else {
+		return tcell.KeyNames[k]
+	}
 }

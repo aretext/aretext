@@ -32,7 +32,7 @@ func engineEventToKey(engineEvent engine.Event) tcell.Key {
 }
 
 func engineEventToRune(engineEvent engine.Event) rune {
-	return rune(engineEvent & 0xFFFF)
+	return rune(engineEvent & 0xFFFFFFFF)
 }
 
 const (

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
@@ -506,6 +507,16 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			},
 			expectedCursorPos: 2,
 			expectedText:      "foo",
+		},
+		{
+			name:        "insert max rune",
+			initialText: "",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, utf8.MaxRune, tcell.ModNone),
+			},
+			expectedCursorPos: 1,
+			expectedText:      "\U0010FFFF",
 		},
 		{
 			name:        "delete with delete key",

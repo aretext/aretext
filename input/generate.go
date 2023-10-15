@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -54,6 +55,22 @@ func generate(path string, commands []input.Command) {
 	dotData := engine.Render(sm, eventLabelFunc)
 	if err := os.WriteFile(dotFilePath, []byte(dotData), 0644); err != nil {
 		fmt.Printf("Error writing file %s: %s", dotFilePath, err)
+		os.Exit(1)
+	}
+
+	// Hack to generate SVGs from the graphviz dot file.
+	svgFilePath := fmt.Sprintf("%s.svg", path)
+	svgFile, err := os.Create(svgFilePath)
+	if err != nil {
+		fmt.Printf("Error creating file %s: %s", svgFilePath, err)
+		os.Exit(1)
+	}
+	defer svgFile.Close()
+
+	cmd := exec.Command("dot", "-Tsvg", dotFilePath)
+	cmd.Stdout = svgFile
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Error running dot cmd to generate %s: %s", svgFilePath, err)
 		os.Exit(1)
 	}
 }

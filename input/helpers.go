@@ -36,7 +36,7 @@ func engineEventToRune(engineEvent engine.Event) rune {
 }
 
 const (
-	captureIdVerbCount = engine.CaptureId(1<<16) + iota
+	captureIdVerbCount = iota
 	captureIdObjectCount
 	captureIdClipboardPage
 	captureIdMatchChar

@@ -114,6 +114,16 @@ func delimitedBlockMatchSyntaxToken(delimiterPair DelimiterPair, textTree *text.
 		endPos++
 	} else {
 		startPos++
+
+		// Also preserve newlines immediately after the open delimiter and immediately before the close delimiter.
+		if ok, _ := findNewlineAtPos(textTree, startPos); ok {
+			startPos++
+		}
+		if endPos > 0 {
+			if ok, _ := findNewlineAtPos(textTree, endPos-1); ok {
+				endPos--
+			}
+		}
 	}
 
 	return startPos, endPos

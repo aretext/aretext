@@ -313,12 +313,6 @@ func ChangeBraceBlock(includeBraces bool, clipboardPage clipboard.PageId) Action
 			return
 		}
 
-		if !includeBraces {
-			state.InsertNewline(s)
-			state.InsertNewline(s)
-			state.MoveCursorToLineAbove(s, 1)
-		}
-
 		EnterInsertMode(s)
 	}
 }

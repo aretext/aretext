@@ -1702,8 +1702,22 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "bc (def) ghi",
 		},
 		{
-			name:        "change inner brace block (ciB)",
+			name:        "change inner brace block (ciB), single line",
 			initialText: `func() { fmt.Printf("abc") }`,
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, '9', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'B', tcell.ModNone),
+				tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone),
+			},
+			expectedCursorPos: 9,
+			expectedText:      "func() {x}",
+		},
+		{
+			name:        "change inner brace block (ciB), multiple lines",
+			initialText: "func() {\n\tfmt.Printf(\"abc\")\n\tfmt.Printf(\"xyz\")\n}",
 			events: []tcell.Event{
 				tcell.NewEventKey(tcell.KeyRune, '9', tcell.ModNone),
 				tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModNone),

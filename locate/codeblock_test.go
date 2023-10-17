@@ -544,8 +544,8 @@ func TestDelimitedBlock(t *testing.T) {
 }`,
 			pos:            53,
 			delimiterPair:  BracePair,
-			expectStartPos: 2,
-			expectEndPos:   53,
+			expectStartPos: 3,
+			expectEndPos:   52,
 		},
 		{
 			name:           "end of nested braces, within Go string",
@@ -564,6 +564,22 @@ func TestDelimitedBlock(t *testing.T) {
 			delimiterPair:  BracePair,
 			expectStartPos: 2,
 			expectEndPos:   26,
+		},
+		{
+			name:           "braces without delimiters single line",
+			inputString:    `{  x  }`,
+			pos:            3,
+			delimiterPair:  BracePair,
+			expectStartPos: 1,
+			expectEndPos:   6,
+		},
+		{
+			name:           "braces without delimiters multiple lines",
+			inputString:    "{\n\nx\n\n}",
+			pos:            3,
+			delimiterPair:  BracePair,
+			expectStartPos: 2,
+			expectEndPos:   5,
 		},
 	}
 

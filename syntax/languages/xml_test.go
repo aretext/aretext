@@ -166,6 +166,11 @@ comment
 				{Role: xmlTokenRoleTag, Text: `</p`}, {Role: xmlTokenRoleTag, Text: `>`},
 			},
 		},
+		{
+			name:     "invalid tag with space between open delim and name",
+			text:     `< p>`,
+			expected: []TokenWithText{},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -50,7 +50,7 @@ func XmlParseFunc() parser.Func {
 	parseTagStart := matchState(
 		xmlParseStateNormal,
 		consumeLongestMatchingOption([]string{"<", "</"}).
-			ThenMaybe(consumeRunesLike(func(r rune) bool { return r != '>' && r != '/' && !unicode.IsSpace(r) })).
+			Then(consumeRunesLike(func(r rune) bool { return r != '>' && r != '/' && !unicode.IsSpace(r) })).
 			Map(recognizeToken(xmlTokenRoleTag)).
 			Map(setState(xmlParseStateInTag)))
 

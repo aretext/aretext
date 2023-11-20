@@ -14,6 +14,7 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string) stri
 	node [fontname="Helvetica,Arial,sans-serif"]
 	edge [fontname="Helvetica,Arial,sans-serif"]
 	rankdir=LR;
+	overlap="orthoxyz";
 `)
 
 	// How many states do we have total?

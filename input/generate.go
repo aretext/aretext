@@ -100,7 +100,7 @@ func eventToName(event engine.Event) string {
 	k := tcell.Key(event >> 32)
 	r := rune(event & 0xFFFF)
 	if k == tcell.KeyRune {
-		return strings.ReplaceAll(fmt.Sprintf("'%c'", r), `"`, `\"`)
+		return strings.ReplaceAll(fmt.Sprintf("%c", r), `"`, `\"`)
 	} else {
 		return tcell.KeyNames[k]
 	}

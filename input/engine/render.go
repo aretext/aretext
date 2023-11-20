@@ -29,9 +29,9 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string) stri
 	for state := stateId(0); state <= maxState; state++ {
 		var s string
 		if cmdId, ok := sm.acceptCmd[state]; ok {
-			s = fmt.Sprintf("	node [shape = doublecircle, label=\"%d\"]; %d;\n", cmdId, state)
+			s = fmt.Sprintf("	node [shape = doublecircle, label=\"%d\", fillcolor=\"#FFFFFF\"]; %d;\n", cmdId, state)
 		} else {
-			s = fmt.Sprintf("	node [shape = circle, width=0.2, style=filled, label=\"\"]; %d;\n", state)
+			s = fmt.Sprintf("	node [shape = circle, width=0.2, style=filled, label=\"\", fillcolor=\"#FFFFFF\"]; %d;\n", state)
 		}
 		sb.WriteString(s)
 	}

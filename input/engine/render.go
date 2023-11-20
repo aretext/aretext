@@ -46,7 +46,11 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string, cmdL
 			// hack: split each edge into two so we can inject the label as an intermediate node.
 			e1 := fmt.Sprintf("  %d -> %d [dir=none];\n", state, pseudoState)
 			s1 := fmt.Sprintf("  node [shape = \"box\", style=\"filled\", fillcolor=\"#E6E6E6\", color=\"#FFFFFF\", label=\"%s\"]; %d;\n", eventLabel, pseudoState)
-			e2 := fmt.Sprintf("	%d -> %d [dir=forward];\n", pseudoState, t.nextState)
+
+			e2 := fmt.Sprintf("	%d -> %d [dir=forward, headport=\"w\"];\n", pseudoState, t.nextState)
+			if state == t.nextState {
+				e2 = fmt.Sprintf("	%d -> %d [dir=forward];\n", pseudoState, t.nextState)
+			}
 
 			sb.WriteString(s1)
 			sb.WriteString(e1)

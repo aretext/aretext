@@ -19,9 +19,14 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string, cmdL
 
 	// How many states do we have total?
 	var maxState stateId
-	for s := range sm.transitions {
+	for s, transitions := range sm.transitions {
 		if s > maxState {
 			maxState = s
+		}
+		for _, t := range transitions {
+			if t.nextState > maxState {
+				maxState = t.nextState
+			}
 		}
 	}
 

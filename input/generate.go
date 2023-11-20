@@ -53,7 +53,7 @@ func generate(path string, commands []input.Command) {
 	// Hack to output graphviz dot file for each state machine.
 	dotFilePath := fmt.Sprintf("%s.dot", path)
 	fmt.Printf("Generating graphviz dot file for input state machine %s\n", dotFilePath)
-	dotData := engine.Render(sm, eventLabelFunc)
+	dotData := engine.Render(sm, eventLabelFunc, cmdLabelFunc(commands))
 	if err := os.WriteFile(dotFilePath, []byte(dotData), 0644); err != nil {
 		fmt.Printf("Error writing file %s: %s", dotFilePath, err)
 		os.Exit(1)
@@ -103,5 +103,12 @@ func eventToName(event engine.Event) string {
 		return strings.ReplaceAll(fmt.Sprintf("%c", r), `"`, `\"`)
 	} else {
 		return tcell.KeyNames[k]
+	}
+}
+
+func cmdLabelFunc(commands []input.Command) func(engine.CmdId) string {
+	return func(id engine.CmdId) string {
+		c := commands[int(id)]
+		return strings.ReplaceAll(c.Name, `"`, `\"`)
 	}
 }

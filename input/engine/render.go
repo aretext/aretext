@@ -6,7 +6,7 @@ import (
 )
 
 // Hack to render a state machine as a graphviz dot file.
-func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string) string {
+func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string, cmdLabelFunc func(CmdId) string) string {
 	var sb strings.Builder
 
 	sb.WriteString(`digraph finite_state_machine {
@@ -29,7 +29,8 @@ func Render(sm *StateMachine, eventLabelFunc func(start, end Event) string) stri
 	for state := stateId(0); state <= maxState; state++ {
 		var s string
 		if cmdId, ok := sm.acceptCmd[state]; ok {
-			s = fmt.Sprintf("	node [shape = doublecircle, label=\"%d\", fillcolor=\"#FFFFFF\"]; %d;\n", cmdId, state)
+			cmdLabel := cmdLabelFunc(cmdId)
+			s = fmt.Sprintf("	node [shape = box, label=\"%s\", fillcolor=\"#FFFFFF\"]; %d;\n", cmdLabel, state)
 		} else {
 			s = fmt.Sprintf("	node [shape = circle, width=0.2, style=filled, label=\"\", fillcolor=\"#FFFFFF\"]; %d;\n", state)
 		}

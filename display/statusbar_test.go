@@ -1,9 +1,11 @@
 package display
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
 )
@@ -24,7 +26,7 @@ func TestDrawStatusBar(t *testing.T) {
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'.', '/', 'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
 		{
@@ -51,7 +53,7 @@ func TestDrawStatusBar(t *testing.T) {
 			filePath:  "./foo/bar",
 			expectedContents: [][]rune{
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'.', '/', 'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
 		{
@@ -97,6 +99,9 @@ func TestDrawStatusBar(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			absFilePath, err := filepath.Abs(tc.filePath)
+			require.NoError(t, err)
+
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(16, 2)
 				palette := NewPalette()
@@ -107,7 +112,7 @@ func TestDrawStatusBar(t *testing.T) {
 					tc.inputMode,
 					tc.inputBufferString,
 					tc.isRecordingUserMacro,
-					tc.filePath,
+					absFilePath,
 				)
 				s.Sync()
 				assertCellContents(t, s, tc.expectedContents)

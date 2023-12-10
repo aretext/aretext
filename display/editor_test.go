@@ -1,9 +1,11 @@
 package display
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
 )
@@ -17,7 +19,8 @@ func TestDrawEditor(t *testing.T) {
 		{
 			name: "normal mode",
 			buildState: func() *state.EditorState {
-				s := state.NewEditorState(10, 6, nil, nil)
+				s, err := newEditorStateWithPath("test.txt")
+				require.NoError(t, err)
 				state.InsertRune(s, 'a')
 				state.InsertRune(s, 'b')
 				state.InsertRune(s, 'c')
@@ -29,13 +32,14 @@ func TestDrawEditor(t *testing.T) {
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'t', 'e', 's', 't', '.', 't', 'x', 't', ' ', ' '},
 			},
 		},
 		{
 			name: "menu mode",
 			buildState: func() *state.EditorState {
-				s := state.NewEditorState(10, 6, nil, nil)
+				s, err := newEditorStateWithPath("test.txt")
+				require.NoError(t, err)
 				state.ShowMenu(s, state.MenuStyleCommand, nil)
 				state.AppendRuneToMenuSearch(s, 'a')
 				state.AppendRuneToMenuSearch(s, 'b')
@@ -48,13 +52,14 @@ func TestDrawEditor(t *testing.T) {
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'t', 'e', 's', 't', '.', 't', 'x', 't', ' ', ' '},
 			},
 		},
 		{
 			name: "search mode",
 			buildState: func() *state.EditorState {
-				s := state.NewEditorState(10, 6, nil, nil)
+				s, err := newEditorStateWithPath("test.txt")
+				require.NoError(t, err)
 				state.StartSearch(s, state.SearchDirectionForward, state.SearchCompleteMoveCursorToMatch)
 				state.AppendRuneToSearchQuery(s, 'a')
 				state.AppendRuneToSearchQuery(s, 'b')
@@ -85,4 +90,16 @@ func TestDrawEditor(t *testing.T) {
 			})
 		})
 	}
+}
+
+func newEditorStateWithPath(path string) (*state.EditorState, error) {
+	s := state.NewEditorState(10, 6, nil, nil)
+	cursorLoc := func(p state.LocatorParams) uint64 { return 0 }
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	state.LoadDocument(s, absPath, false, cursorLoc)
+	state.SetStatusMsg(s, state.StatusMsg{})
+	return s, nil
 }

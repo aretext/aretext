@@ -50,6 +50,9 @@ type MenuState struct {
 	// If there are no results, this is set to zero.
 	// If there are results, this must be less than the number of results.
 	selectedResultIdx int
+
+	// prevInputMode is the input mode to set after exiting menu mode.
+	prevInputMode InputMode
 }
 
 func (m *MenuState) Style() MenuStyle {
@@ -89,6 +92,7 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 		style:             style,
 		search:            search,
 		selectedResultIdx: 0,
+		prevInputMode:     state.inputMode,
 	}
 	SetInputMode(state, InputModeMenu)
 }
@@ -207,8 +211,9 @@ func parentDirMenuItems() []menu.Item {
 
 // HideMenu hides the menu.
 func HideMenu(state *EditorState) {
+	prevInputMode := state.menu.prevInputMode
 	state.menu = &MenuState{}
-	SetInputMode(state, state.prevInputMode)
+	SetInputMode(state, prevInputMode)
 }
 
 // ExecuteSelectedMenuItem executes the action of the selected menu item and closes the menu.
@@ -227,7 +232,12 @@ func ExecuteSelectedMenuItem(state *EditorState) {
 
 	idx := state.menu.selectedResultIdx
 	selectedItem := results[idx]
+
+	// Some menu commands enter a different input mode (like task mode for shell commands),
+	// then return to whatever the input mode was at the start of the action.
+	// Hide the menu first so that these actions return to normal/visual mode, not menu mode.
 	HideMenu(state)
+
 	executeMenuItemAction(state, selectedItem)
 	ScrollViewToCursor(state)
 }

@@ -203,7 +203,6 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.fileWatcher.Stop()
 	state.fileWatcher = watcher
 	state.inputMode = InputModeNormal
-	state.prevInputMode = InputModeNormal
 	state.documentBuffer.cursor = cursorState{}
 	state.documentBuffer.view.textOrigin = 0
 	state.documentBuffer.selector.Clear()

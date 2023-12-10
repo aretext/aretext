@@ -20,7 +20,6 @@ type EditorState struct {
 	configRuleSet             config.RuleSet
 	documentLoadCount         int
 	inputMode                 InputMode
-	prevInputMode             InputMode
 	documentBuffer            *BufferState
 	clipboard                 *clipboard.C
 	fileWatcher               *file.Watcher

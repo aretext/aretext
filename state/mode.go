@@ -42,7 +42,6 @@ func SetInputMode(state *EditorState, mode InputMode) {
 		state.documentBuffer.selector.Clear()
 	}
 
-	state.prevInputMode = state.inputMode
 	state.inputMode = mode
 }
 

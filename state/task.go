@@ -18,6 +18,9 @@ type TaskState struct {
 
 	// cancelFunc is the function to cancel the task's context.
 	cancelFunc context.CancelFunc
+
+	// prevInputMode is the input mode to set once the task completes or is cancelled.
+	prevInputMode InputMode
 }
 
 // StartTask starts a task executing asynchronously in a separate goroutine.
@@ -30,15 +33,20 @@ func StartTask(state *EditorState, task TaskFunc) {
 
 	resultChan := make(chan func(*EditorState), 1)
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	state.task = &TaskState{resultChan, cancelFunc}
+	state.task = &TaskState{
+		resultChan:    resultChan,
+		cancelFunc:    cancelFunc,
+		prevInputMode: state.inputMode,
+	}
 	SetInputMode(state, InputModeTask)
 
 	log.Printf("Starting task goroutine...\n")
 	go func(ctx context.Context) {
 		action := task(ctx)
 		resultChan <- func(state *EditorState) {
+			prevInputMode := state.task.prevInputMode
 			state.task = nil
-			SetInputMode(state, state.prevInputMode) // from InputModeTask -> prevInputMode
+			SetInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
 			action(state)
 		}
 	}(ctx)
@@ -48,8 +56,9 @@ func StartTask(state *EditorState, task TaskFunc) {
 func CancelTaskIfRunning(state *EditorState) {
 	if state.task != nil {
 		log.Printf("Cancelling current task...\n")
+		prevInputMode := state.task.prevInputMode
 		state.task.cancelFunc()
 		state.task = nil
-		SetInputMode(state, state.prevInputMode) // from InputModeTask -> prevInputMode
+		SetInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
 	}
 }

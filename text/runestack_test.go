@@ -84,3 +84,13 @@ func TestRuneStackInterleavePushAndPop(t *testing.T) {
 	assert.Equal(t, 2, rs.Len())
 	assert.Equal(t, "ax", rs.String())
 }
+
+func TestRuneStackRepeatedlyRetrieveString(t *testing.T) {
+	var rs RuneStack
+	rs.Push('a')
+	rs.Push('b')
+	rs.Push('c')
+	for i := 0; i < 5; i++ {
+		assert.Equal(t, "abc", rs.String())
+	}
+}

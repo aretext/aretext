@@ -31,6 +31,7 @@ func (rs *RuneStack) Len() int {
 func (rs *RuneStack) String() string {
 	if rs.dirty {
 		rs.cached = string(rs.runes)
+		rs.dirty = false
 	}
 	return rs.cached
 }

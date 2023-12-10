@@ -26,7 +26,7 @@ func TestSearch(t *testing.T) {
 			query:             "",
 			emptyQueryShowAll: true,
 			items:             nil,
-			expected:          nil,
+			expected:          []Item{},
 		},
 		{
 			name:     "no items, nonempty query",
@@ -139,7 +139,7 @@ func TestSearch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := NewSearch(tc.items, tc.emptyQueryShowAll)
-			s.SetQuery(tc.query)
+			s.Execute(tc.query)
 			assert.Equal(t, tc.expected, s.Results())
 		})
 	}
@@ -149,9 +149,9 @@ func BenchmarkSearch(b *testing.B) {
 	s := NewSearch(fakeItems(1000, "foo/bar/baz/bat/test"), false)
 	for i := 0; i < b.N; i++ {
 		if i%2 == 0 {
-			s.SetQuery("foo")
+			s.Execute("foo")
 		} else {
-			s.SetQuery("bar")
+			s.Execute("bar")
 		}
 		s.Results()
 	}
@@ -162,7 +162,7 @@ func BenchmarkIncrementalSearch(b *testing.B) {
 	q := "test/123"
 	for i := 0; i < b.N; i++ {
 		for i := 1; i < len(q); i++ {
-			s.SetQuery(q[0:i])
+			s.Execute(q[0:i])
 		}
 		s.Results()
 	}

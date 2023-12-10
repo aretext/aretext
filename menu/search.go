@@ -13,7 +13,6 @@ const (
 
 // Search performs approximate text searches for menu items matching a query string.
 type Search struct {
-	query             string
 	emptyQueryShowAll bool
 	fuzzyIndex        *fuzzy.Index
 	aliasIndex        map[string]int
@@ -46,19 +45,8 @@ func NewSearch(items []Item, emptyQueryShowAll bool) *Search {
 	}
 }
 
-// Query returns the current query.
-func (s *Search) Query() string {
-	return s.query
-}
-
-// SetQuery updates the query for the search.
-func (s *Search) SetQuery(q string) {
-	if q == s.query {
-		return
-	} else {
-		s.query = q
-	}
-
+// Execute searches for the given query.
+func (s *Search) Execute(q string) {
 	if len(q) == 0 {
 		if s.emptyQueryShowAll {
 			s.results = make([]Item, 0, len(s.items))

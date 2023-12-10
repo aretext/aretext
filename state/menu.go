@@ -10,6 +10,7 @@ import (
 
 	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/menu"
+	"github.com/aretext/aretext/text"
 )
 
 type MenuStyle int
@@ -42,6 +43,9 @@ type MenuState struct {
 	// style controls how the menu is displayed.
 	style MenuStyle
 
+	// query is the text input by the user to search for a menu item.
+	query text.RuneStack
+
 	// search controls which items are visible based on the user's current search query.
 	search *menu.Search
 
@@ -60,10 +64,7 @@ func (m *MenuState) Style() MenuStyle {
 }
 
 func (m *MenuState) SearchQuery() string {
-	if m.search == nil {
-		return ""
-	}
-	return m.search.Query()
+	return m.query.String()
 }
 
 func (m *MenuState) SearchResults() (results []menu.Item, selectedResultIdx int) {
@@ -267,19 +268,17 @@ func MoveMenuSelection(state *EditorState, delta int) {
 // AppendMenuSearch appends a rune to the menu search query.
 func AppendRuneToMenuSearch(state *EditorState, r rune) {
 	menu := state.menu
-	newQuery := menu.search.Query() + string(r)
-	menu.search.SetQuery(newQuery)
+	menu.query.Push(r)
+	menu.search.Execute(menu.query.String())
 	menu.selectedResultIdx = 0
 }
 
 // DeleteMenuSearch deletes a rune from the menu search query.
 func DeleteRuneFromMenuSearch(state *EditorState) {
 	menu := state.menu
-	query := menu.search.Query()
-	if len(query) > 0 {
-		queryRunes := []rune(query)
-		newQueryRunes := queryRunes[0 : len(queryRunes)-1]
-		menu.search.SetQuery(string(newQueryRunes))
+	if menu.query.Len() > 0 {
+		menu.query.Pop()
+		menu.search.Execute(menu.query.String())
 		menu.selectedResultIdx = 0
 	}
 }

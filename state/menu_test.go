@@ -20,7 +20,7 @@ func TestShowMenu(t *testing.T) {
 		{Name: "test item 2"},
 	}
 	ShowMenu(state, MenuStyleCommand, items)
-	assert.True(t, state.Menu().Visible())
+	assert.Equal(t, InputModeMenu, state.InputMode())
 	assert.Equal(t, MenuStyleCommand, state.Menu().Style())
 	assert.Equal(t, "", state.Menu().SearchQuery())
 
@@ -36,7 +36,7 @@ func TestHideMenu(t *testing.T) {
 	}
 	ShowMenu(state, MenuStyleCommand, items)
 	HideMenu(state)
-	assert.False(t, state.Menu().Visible())
+	assert.Equal(t, InputModeNormal, state.InputMode())
 }
 
 func TestShowMenuFromVisualMode(t *testing.T) {
@@ -63,7 +63,7 @@ func TestSelectAndExecuteMenuItem(t *testing.T) {
 	ShowMenu(state, MenuStyleCommand, items)
 	AppendRuneToMenuSearch(state, 'q') // search for "q", should match "quit"
 	ExecuteSelectedMenuItem(state)
-	assert.False(t, state.Menu().Visible())
+	assert.Equal(t, InputModeNormal, state.InputMode())
 	assert.Equal(t, "", state.Menu().SearchQuery())
 	assert.True(t, state.QuitFlag())
 }

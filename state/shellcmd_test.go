@@ -341,7 +341,6 @@ func TestRunShellCmdInsertChoiceMenu(t *testing.T) {
 
 		// Verify that the insert choice menu loads with the two lines.
 		assert.Equal(t, InputModeMenu, state.InputMode())
-		assert.True(t, state.Menu().Visible())
 		menuItems, _ := state.Menu().SearchResults()
 		require.Equal(t, 2, len(menuItems))
 		assert.Equal(t, "abc", menuItems[0].Name)
@@ -370,7 +369,6 @@ func TestRunShellCmdFileLocationsMenu(t *testing.T) {
 
 		// Verify that the location list menu opens.
 		assert.Equal(t, InputModeMenu, state.InputMode())
-		assert.True(t, state.Menu().Visible())
 		menuItems, _ := state.Menu().SearchResults()
 		require.Equal(t, 1, len(menuItems))
 		expectedName := fmt.Sprintf("%s:2  cd", p)
@@ -401,7 +399,6 @@ func TestRunShellCmdWorkingDirMenu(t *testing.T) {
 
 		// Verify that the menu shows the path.
 		assert.Equal(t, InputModeMenu, state.InputMode())
-		assert.True(t, state.Menu().Visible())
 		menuItems, _ := state.Menu().SearchResults()
 		require.Equal(t, 1, len(menuItems))
 		assert.Equal(t, dirPath, menuItems[0].Name)

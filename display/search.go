@@ -8,11 +8,7 @@ import (
 
 // DrawSearchQuery draws the search query (if any) on the last line of the screen.
 // This overwrites the status bar.
-func DrawSearchQuery(screen tcell.Screen, palette *Palette, inputMode state.InputMode, query string, direction state.SearchDirection) {
-	if inputMode != state.InputModeSearch {
-		return
-	}
-
+func DrawSearchQuery(screen tcell.Screen, palette *Palette, query string, direction state.SearchDirection) {
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 {
 		return

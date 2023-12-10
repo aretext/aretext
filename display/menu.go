@@ -9,10 +9,6 @@ import (
 
 // DrawMenu draws the menu at the top of the screen.
 func DrawMenu(screen tcell.Screen, palette *Palette, menu *state.MenuState) {
-	if !menu.Visible() {
-		return
-	}
-
 	screenWidth, screenHeight := screen.Size()
 	if screenHeight == 0 || screenWidth == 0 {
 		return

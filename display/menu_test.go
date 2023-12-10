@@ -16,21 +16,7 @@ func TestDrawMenu(t *testing.T) {
 		expectedContents [][]rune
 	}{
 		{
-			name: "not visible",
-			buildMenu: func() *state.MenuState {
-				return &state.MenuState{}
-			},
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-			},
-		},
-		{
-			name: "visible, initial state with prompt",
+			name: "initial state with prompt",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
 				state.ShowMenu(editorState, state.MenuStyleCommand, nil)
@@ -46,7 +32,7 @@ func TestDrawMenu(t *testing.T) {
 			},
 		},
 		{
-			name: "visible, query with no results",
+			name: "query with no results",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
 				state.ShowMenu(editorState, state.MenuStyleCommand, nil)
@@ -65,7 +51,7 @@ func TestDrawMenu(t *testing.T) {
 			},
 		},
 		{
-			name: "visible, query with results, first selected",
+			name: "query with results, first selected",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
 				items := []menu.Item{
@@ -87,7 +73,7 @@ func TestDrawMenu(t *testing.T) {
 			},
 		},
 		{
-			name: "visible, query with many results, second-to-last selected",
+			name: "query with many results, second-to-last selected",
 			buildMenu: func() *state.MenuState {
 				editorState := state.NewEditorState(100, 100, nil, nil)
 				items := []menu.Item{

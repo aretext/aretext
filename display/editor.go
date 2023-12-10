@@ -9,8 +9,9 @@ import (
 // DrawEditor draws the editor in the screen.
 func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.EditorState, inputBufferString string) {
 	screen.Fill(' ', tcell.StyleDefault)
+
 	DrawBuffer(screen, palette, editorState.DocumentBuffer(), editorState.InputMode())
-	DrawMenu(screen, palette, editorState.Menu())
+
 	DrawStatusBar(
 		screen,
 		palette,
@@ -20,12 +21,12 @@ func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.Editor
 		editorState.IsRecordingUserMacro(),
 		editorState.FileWatcher().Path(),
 	)
-	searchQuery, searchDirection := editorState.DocumentBuffer().SearchQueryAndDirection()
-	DrawSearchQuery(
-		screen,
-		palette,
-		editorState.InputMode(),
-		searchQuery,
-		searchDirection,
-	)
+
+	switch editorState.InputMode() {
+	case state.InputModeMenu:
+		DrawMenu(screen, palette, editorState.Menu())
+	case state.InputModeSearch:
+		searchQuery, searchDirection := editorState.DocumentBuffer().SearchQueryAndDirection()
+		DrawSearchQuery(screen, palette, searchQuery, searchDirection)
+	}
 }

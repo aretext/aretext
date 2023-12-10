@@ -37,9 +37,6 @@ func (s MenuStyle) EmptyQueryShowAll() bool {
 
 // MenuState represents the menu for searching and selecting items.
 type MenuState struct {
-	// visible indicates whether the menu is currently displayed.
-	visible bool
-
 	// style controls how the menu is displayed.
 	style MenuStyle
 
@@ -53,10 +50,6 @@ type MenuState struct {
 	// If there are no results, this is set to zero.
 	// If there are results, this must be less than the number of results.
 	selectedResultIdx int
-}
-
-func (m *MenuState) Visible() bool {
-	return m.visible
 }
 
 func (m *MenuState) Style() MenuStyle {
@@ -93,7 +86,6 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 
 	search := menu.NewSearch(items, style.EmptyQueryShowAll())
 	state.menu = &MenuState{
-		visible:           true,
 		style:             style,
 		search:            search,
 		selectedResultIdx: 0,

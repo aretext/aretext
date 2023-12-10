@@ -19,8 +19,8 @@ func withSimScreen(t *testing.T, f func(tcell.SimulationScreen)) {
 
 func assertCellContents(t *testing.T, s tcell.SimulationScreen, expectedChars [][]rune) {
 	cells, width, height := s.GetContents()
-	require.Equal(t, height, len(expectedChars))
-	require.Equal(t, width, len(expectedChars[0]))
+	require.Equal(t, len(expectedChars), height)
+	require.Equal(t, len(expectedChars[0]), width)
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
 			actualChar := cells[x+y*width].Runes[0]

@@ -224,7 +224,6 @@ func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	// Expect that the input mode is normal and the menu is hidden.
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 	assert.Equal(t, InputModeNormal, state.InputMode())
-	assert.False(t, state.Menu().Visible())
 }
 
 func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {

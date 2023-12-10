@@ -12,7 +12,6 @@ import (
 func TestDrawSearchQuery(t *testing.T) {
 	testCases := []struct {
 		name                string
-		inputMode           state.InputMode
 		query               string
 		direction           state.SearchDirection
 		expectContents      [][]rune
@@ -21,18 +20,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		expectCursorRow     int
 	}{
 		{
-			name:      "normal mode hides search query",
-			inputMode: state.InputModeNormal,
-			query:     "abcd1234",
-			direction: state.SearchDirectionForward,
-			expectContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' '},
-			},
-		},
-		{
-			name:      "search mode with empty query",
-			inputMode: state.InputModeSearch,
+			name:      "empty query",
 			query:     "",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
@@ -44,8 +32,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			expectCursorRow:     1,
 		},
 		{
-			name:      "search mode with non-empty query",
-			inputMode: state.InputModeSearch,
+			name:      "non-empty query",
 			query:     "abcd",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
@@ -57,8 +44,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			expectCursorRow:     1,
 		},
 		{
-			name:      "search mode with clipped query",
-			inputMode: state.InputModeSearch,
+			name:      "clipped query",
 			query:     "abcd1234",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]rune{
@@ -67,8 +53,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			},
 		},
 		{
-			name:      "search mode for backward search",
-			inputMode: state.InputModeSearch,
+			name:      "backward search",
 			query:     "abcd",
 			direction: state.SearchDirectionBackward,
 			expectContents: [][]rune{
@@ -86,7 +71,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			withSimScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(6, 2)
 				palette := NewPalette()
-				DrawSearchQuery(s, palette, tc.inputMode, tc.query, tc.direction)
+				DrawSearchQuery(s, palette, tc.query, tc.direction)
 				s.Sync()
 				assertCellContents(t, s, tc.expectContents)
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()

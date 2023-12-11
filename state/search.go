@@ -87,6 +87,11 @@ func CompleteSearch(state *EditorState, commit bool) {
 		}
 	}
 
+	// Return to normal mode.
+	// This must run BEFORE executing the complete action, because some actions
+	// change the input mode again to insert mode (specifically "c/" and "c?")
+	SetInputMode(state, InputModeNormal)
+
 	if commit {
 		if search.match != nil {
 			search.completeAction(state, search.query, search.direction, *search.match)
@@ -101,12 +106,6 @@ func CompleteSearch(state *EditorState, commit bool) {
 	}
 
 	search.match = nil
-
-	// If the complete action didn't change the input mode (e.g. "c/" or "c?" commands go to insert mode),
-	// assume we're going back to normal mode.
-	if state.inputMode == InputModeSearch {
-		SetInputMode(state, InputModeNormal)
-	}
 
 	ScrollViewToCursor(state)
 }

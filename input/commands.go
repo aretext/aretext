@@ -1940,7 +1940,7 @@ func MenuModeCommands() []Command {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return HideMenuAndReturnToNormalMode
+				return HideMenu
 			},
 		},
 		{
@@ -2001,12 +2001,12 @@ func SearchModeCommands() []Command {
 
 	return []Command{
 		{
-			Name: "escape to normal mode",
+			Name: "abort search (esc)",
 			BuildExpr: func() engine.Expr {
 				return keyExpr(tcell.KeyEscape)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
-				return decorate(AbortSearchAndReturnToNormalMode)
+				return decorate(AbortSearch)
 			},
 		},
 		{

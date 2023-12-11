@@ -805,7 +805,7 @@ func ShowFileMenu(ctx Context) Action {
 	}
 }
 
-func HideMenuAndReturnToNormalMode(s *state.EditorState) {
+func HideMenu(s *state.EditorState) {
 	state.HideMenu(s)
 }
 
@@ -861,8 +861,8 @@ func StartSearchForCopy(direction state.SearchDirection, clipboardPage clipboard
 	}
 }
 
-func AbortSearchAndReturnToNormalMode(s *state.EditorState) {
-	// This always transitions back to normal mode.
+func AbortSearch(s *state.EditorState) {
+	// This transitions back insert mode (for "c/" and "c?") or normal mode (for everything else).
 	state.CompleteSearch(s, false)
 }
 

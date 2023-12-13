@@ -121,27 +121,3 @@ func TestScreenRegionFill(t *testing.T) {
 		})
 	})
 }
-
-func TestScreenRegionResize(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(10, 10)
-		r := NewScreenRegion(s, 1, 2, 5, 5)
-		r.Fill('^', tcell.StyleDefault.Bold(true))
-		r.Resize(2, 2)
-		r.Fill('x', tcell.StyleDefault)
-		s.Sync()
-
-		assertCellContents(t, s, [][]rune{
-			{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-			{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-			{' ', 'x', 'x', '^', '^', '^', ' ', ' ', ' ', ' '},
-			{' ', 'x', 'x', '^', '^', '^', ' ', ' ', ' ', ' '},
-			{' ', '^', '^', '^', '^', '^', ' ', ' ', ' ', ' '},
-			{' ', '^', '^', '^', '^', '^', ' ', ' ', ' ', ' '},
-			{' ', '^', '^', '^', '^', '^', ' ', ' ', ' ', ' '},
-			{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-			{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-			{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-		})
-	})
-}

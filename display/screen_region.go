@@ -15,12 +15,6 @@ func NewScreenRegion(screen tcell.Screen, x, y, width, height int) *ScreenRegion
 	return &ScreenRegion{screen, x, y, width, height}
 }
 
-// Resize changes the size of the region.
-func (r *ScreenRegion) Resize(newWidth, newHeight int) {
-	r.width = newWidth
-	r.height = newHeight
-}
-
 // Clear resets a rectangular region of the screen to its initial state.
 func (r *ScreenRegion) Clear() {
 	r.Fill(' ', tcell.StyleDefault)

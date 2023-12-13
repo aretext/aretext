@@ -1078,7 +1078,7 @@ func TestIsPunct(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%q", tc.r), func(t *testing.T) {
 			seg := segment.Empty()
-			seg.Extend([]rune{tc.r})
+			seg.Append(tc.r)
 			assert.Equal(t, tc.expectPunct, isPunct(seg))
 		})
 	}

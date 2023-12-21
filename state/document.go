@@ -367,7 +367,7 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 		if showStatus {
 			SetStatusMsg(state, StatusMsg{
 				Style: StatusMsgStyleError,
-				Text:  "Document has unsaved changes - either save the changes or force-quit",
+				Text:  "Document has unsaved changes",
 			})
 		}
 	} else {

@@ -38,7 +38,7 @@ func StartTask(state *EditorState, task TaskFunc) {
 		cancelFunc:    cancelFunc,
 		prevInputMode: state.inputMode,
 	}
-	SetInputMode(state, InputModeTask)
+	setInputMode(state, InputModeTask)
 
 	log.Printf("Starting task goroutine...\n")
 	go func(ctx context.Context) {
@@ -46,7 +46,7 @@ func StartTask(state *EditorState, task TaskFunc) {
 		resultChan <- func(state *EditorState) {
 			prevInputMode := state.task.prevInputMode
 			state.task = nil
-			SetInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
+			setInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
 			action(state)
 		}
 	}(ctx)
@@ -59,6 +59,6 @@ func CancelTaskIfRunning(state *EditorState) {
 		prevInputMode := state.task.prevInputMode
 		state.task.cancelFunc()
 		state.task = nil
-		SetInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
+		setInputMode(state, prevInputMode) // from InputModeTask -> prevInputMode
 	}
 }

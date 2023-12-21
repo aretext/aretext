@@ -94,7 +94,7 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 		selectedResultIdx: 0,
 		prevInputMode:     state.inputMode,
 	}
-	SetInputMode(state, InputModeMenu)
+	setInputMode(state, InputModeMenu)
 }
 
 // ShowFileMenu displays a menu for finding and loading files in the current working directory.
@@ -213,7 +213,7 @@ func parentDirMenuItems() []menu.Item {
 func HideMenu(state *EditorState) {
 	prevInputMode := state.menu.prevInputMode
 	state.menu = &MenuState{}
-	SetInputMode(state, prevInputMode)
+	setInputMode(state, prevInputMode)
 }
 
 // ExecuteSelectedMenuItem executes the action of the selected menu item and closes the menu.

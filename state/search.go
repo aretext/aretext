@@ -72,7 +72,7 @@ func StartSearch(state *EditorState, direction SearchDirection, completeAction S
 		history:        search.history,
 		historyIdx:     len(search.history),
 	}
-	SetInputMode(state, InputModeSearch)
+	setInputMode(state, InputModeSearch)
 }
 
 // CompleteSearch terminates a text search and returns to normal mode.
@@ -90,7 +90,7 @@ func CompleteSearch(state *EditorState, commit bool) {
 	// Return to normal mode.
 	// This must run BEFORE executing the complete action, because some actions
 	// change the input mode again to insert mode (specifically "c/" and "c?")
-	SetInputMode(state, InputModeNormal)
+	setInputMode(state, InputModeNormal)
 
 	if commit {
 		if search.match != nil {
@@ -381,7 +381,7 @@ func SearchCompleteChangeToMatch(clipboardPage clipboard.PageId) SearchCompleteA
 			// Delete to the match (exactly the same as the "search and delete" commands).
 			// Then go to insert mode (override default transition back to normal mode).
 			deleteToSearchMatch(state, direction, match, clipboardPage)
-			SetInputMode(state, InputModeInsert)
+			setInputMode(state, InputModeInsert)
 		}
 		completeAction(state, query, direction, match)
 		replaySearchInLastActionMacro(state, query, direction, completeAction)

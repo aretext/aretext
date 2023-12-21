@@ -333,26 +333,26 @@ func ChangeAngleBlock(includeAngleBrackets bool, clipboardPage clipboard.PageId)
 }
 
 func EnterInsertMode(s *state.EditorState) {
-	state.SetInputMode(s, state.InputModeInsert)
+	state.EnterInsertMode(s)
 }
 
 func EnterInsertModeAtStartOfLine(s *state.EditorState) {
-	state.SetInputMode(s, state.InputModeInsert)
+	state.EnterInsertMode(s)
 	CursorLineStartNonWhitespace(s)
 }
 
 func EnterInsertModeAtNextPos(s *state.EditorState) {
-	state.SetInputMode(s, state.InputModeInsert)
+	state.EnterInsertMode(s)
 	CursorRightIncludeEndOfLineOrFile(s)
 }
 
 func EnterInsertModeAtEndOfLine(s *state.EditorState) {
-	state.SetInputMode(s, state.InputModeInsert)
+	state.EnterInsertMode(s)
 	CursorLineEndIncludeEndOfLineOrFile(s)
 }
 
 func ReturnToNormalMode(s *state.EditorState) {
-	state.SetInputMode(s, state.InputModeNormal)
+	state.EnterNormalMode(s)
 }
 
 func ReturnToNormalModeAfterInsert(s *state.EditorState) {
@@ -362,7 +362,7 @@ func ReturnToNormalModeAfterInsert(s *state.EditorState) {
 	state.MoveCursor(s, func(params state.LocatorParams) uint64 {
 		return locate.PrevCharInLine(params.TextTree, 1, false, params.CursorPos)
 	})
-	state.SetInputMode(s, state.InputModeNormal)
+	state.EnterNormalMode(s)
 
 	// Undo entry began in normal mode before we entered insert mode.
 	// Commit the entry before returning to normal mode so that the next undo
@@ -411,7 +411,7 @@ func DeletePrevChar(clipboardPage clipboard.PageId) Action {
 func BeginNewLineBelow(s *state.EditorState) {
 	CursorLineEndIncludeEndOfLineOrFile(s)
 	state.InsertNewline(s)
-	state.SetInputMode(s, state.InputModeInsert)
+	state.EnterInsertMode(s)
 }
 
 func BeginNewLineAbove(s *state.EditorState) {

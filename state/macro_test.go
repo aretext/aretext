@@ -197,21 +197,21 @@ func TestReplayCheckpointUndo(t *testing.T) {
 	ToggleUserMacroRecording(state)
 	AddToRecordingUserMacro(state, func(s *EditorState) {
 		BeginUndoEntry(s)
-		SetInputMode(s, InputModeInsert)
+		setInputMode(s, InputModeInsert)
 		InsertRune(s, 'a')
 	})
 	AddToRecordingUserMacro(state, func(s *EditorState) {
 		CommitUndoEntry(s)
-		SetInputMode(s, InputModeNormal)
+		setInputMode(s, InputModeNormal)
 	})
 	AddToRecordingUserMacro(state, func(s *EditorState) {
 		BeginUndoEntry(s)
-		SetInputMode(s, InputModeInsert)
+		setInputMode(s, InputModeInsert)
 		InsertRune(s, 'b')
 	})
 	AddToRecordingUserMacro(state, func(s *EditorState) {
 		CommitUndoEntry(s)
-		SetInputMode(s, InputModeNormal)
+		setInputMode(s, InputModeNormal)
 	})
 	ToggleUserMacroRecording(state)
 

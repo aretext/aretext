@@ -10,7 +10,7 @@ import (
 
 func TestNormalToVisualMode(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
-	SetInputMode(state, InputModeNormal)
+	setInputMode(state, InputModeNormal)
 	ToggleVisualMode(state, selection.ModeChar)
 	assert.Equal(t, InputModeVisual, state.inputMode)
 	assert.Equal(t, selection.ModeChar, state.documentBuffer.selector.Mode())
@@ -19,7 +19,7 @@ func TestNormalToVisualMode(t *testing.T) {
 func TestVisualModeToNormalMode(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	ToggleVisualMode(state, selection.ModeChar)
-	SetInputMode(state, InputModeNormal)
+	setInputMode(state, InputModeNormal)
 	assert.Equal(t, InputModeNormal, state.inputMode)
 	assert.Equal(t, selection.ModeNone, state.documentBuffer.selector.Mode())
 }
@@ -27,7 +27,7 @@ func TestVisualModeToNormalMode(t *testing.T) {
 func TestVisualModeToInsertMode(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	ToggleVisualMode(state, selection.ModeChar)
-	SetInputMode(state, InputModeInsert)
+	setInputMode(state, InputModeInsert)
 	assert.Equal(t, InputModeInsert, state.inputMode)
 	assert.Equal(t, selection.ModeNone, state.documentBuffer.selector.Mode())
 }

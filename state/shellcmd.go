@@ -185,7 +185,7 @@ func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 	}
 	CommitUndoEntry(state)
 
-	SetInputMode(state, InputModeNormal)
+	setInputMode(state, InputModeNormal)
 }
 
 func deleteCurrentSelection(state *EditorState) {

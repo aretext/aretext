@@ -35,8 +35,17 @@ func (im InputMode) String() string {
 	}
 }
 
-// SetInputMode sets the editor input mode.
-func SetInputMode(state *EditorState, mode InputMode) {
+// EnterNormalMode sets the editor to normal mode.
+func EnterNormalMode(state *EditorState) {
+	setInputMode(state, InputModeNormal)
+}
+
+// EnterInsertMode sets the editor to insert mode.
+func EnterInsertMode(state *EditorState) {
+	setInputMode(state, InputModeInsert)
+}
+
+func setInputMode(state *EditorState, mode InputMode) {
 	if state.inputMode == InputModeVisual && (mode == InputModeNormal || mode == InputModeInsert) {
 		// Clear selection when exiting visual mode.
 		state.documentBuffer.selector.Clear()
@@ -51,7 +60,7 @@ func ToggleVisualMode(state *EditorState, selectionMode selection.Mode) {
 
 	// If we're not already in visual mode, enter visual mode and start a new selection.
 	if state.inputMode != InputModeVisual {
-		SetInputMode(state, InputModeVisual)
+		setInputMode(state, InputModeVisual)
 		buffer.selector.Start(selectionMode, buffer.cursor.position)
 		return
 	}
@@ -66,5 +75,5 @@ func ToggleVisualMode(state *EditorState, selectionMode selection.Mode) {
 
 	// If we're already in visual mode and the requested selection mode,
 	// toggle back to normal mode.  This will also clear the selection.
-	SetInputMode(state, InputModeNormal)
+	setInputMode(state, InputModeNormal)
 }

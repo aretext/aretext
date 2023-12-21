@@ -19,6 +19,22 @@ import (
 	"github.com/aretext/aretext/undo"
 )
 
+// NewDocument opens a new document at the given path.
+// Returns an error if the file already exists or the directory doesn't exist.
+// This won't create a new file on disk until the user saves it.
+func NewDocument(state *EditorState, path string) error {
+	err := file.ValidateCreate(path)
+	if err != nil {
+		return err
+	}
+	// Initialize the editor with the file path.
+	// This won't create the file on disk until the user saves it.
+	// It's possible that some other process created a file at the path
+	// before or after it's loaded, but this is handled gracefully.
+	LoadDocument(state, path, false, func(_ LocatorParams) uint64 { return 0 })
+	return nil
+}
+
 // LoadDocument loads a file into the editor.
 func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc Locator) {
 	timelineState := currentTimelineState(state)

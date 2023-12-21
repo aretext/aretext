@@ -905,6 +905,18 @@ func SearchWordUnderCursor(direction state.SearchDirection, count uint64) Action
 	}
 }
 
+func ShowNewFileTextField(s *state.EditorState) {
+	state.AbortIfUnsavedChanges(s, func(s *state.EditorState) {
+		state.ShowTextField(s, "New document file path:", state.NewDocument)
+	}, true)
+}
+
+func AppendRuneToTextField(r rune) Action {
+	return func(s *state.EditorState) {
+		state.AppendRuneToTextField(s, r)
+	}
+}
+
 func Undo(s *state.EditorState) {
 	state.Undo(s)
 }

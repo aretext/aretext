@@ -65,6 +65,13 @@ func NewInterpreter() *Interpreter {
 				commands: TaskModeCommands(),
 				runtime:  runtimeForMode(TaskModePath),
 			},
+
+			// textfield mode allows the user to enter a text response to a prompt.
+			state.InputModeTextField: {
+				name:     "textfield",
+				commands: TextFieldCommands(),
+				runtime:  runtimeForMode(TextFieldModePath),
+			},
 		},
 	}
 }
@@ -151,12 +158,13 @@ func (inp *Interpreter) InputBufferString(mode state.InputMode) string {
 }
 
 const (
-	NormalModePath = "generated/normal.bin"
-	InsertModePath = "generated/insert.bin"
-	VisualModePath = "generated/visual.bin"
-	MenuModePath   = "generated/menu.bin"
-	SearchModePath = "generated/search.bin"
-	TaskModePath   = "generated/task.bin"
+	NormalModePath    = "generated/normal.bin"
+	InsertModePath    = "generated/insert.bin"
+	VisualModePath    = "generated/visual.bin"
+	MenuModePath      = "generated/menu.bin"
+	SearchModePath    = "generated/search.bin"
+	TaskModePath      = "generated/task.bin"
+	TextFieldModePath = "generated/textfield.bin"
 )
 
 //go:generate go run generate.go

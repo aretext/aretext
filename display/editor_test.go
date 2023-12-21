@@ -75,6 +75,27 @@ func TestDrawEditor(t *testing.T) {
 				{'/', 'a', 'b', 'c', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
+		{
+			name: "textfield mode",
+			buildState: func() *state.EditorState {
+				s, err := newEditorStateWithPath("test.txt")
+				require.NoError(t, err)
+				emptyAction := func(_ *state.EditorState, _ string) error { return nil }
+				state.ShowTextField(s, "Test:", emptyAction)
+				state.AppendRuneToTextField(s, 'a')
+				state.AppendRuneToTextField(s, 'b')
+				state.AppendRuneToTextField(s, 'c')
+				return s
+			},
+			expectedContents: [][]rune{
+				{'T', 'e', 's', 't', ':', ' ', ' ', ' ', ' ', ' '},
+				{'a', 'b', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'─', '─', '─', '─', '─', '─', '─', '─', '─', '─'},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{'t', 'e', 's', 't', '.', 't', 'x', 't', ' ', ' '},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -188,6 +188,7 @@ Menu Commands
 |------------------------------|-----------|
 | quit                         | q         |
 | force quit                   | q!        |
+| new document                 |           |
 | save document                | s, w      |
 | save document and quit       | sq, wq, x |
 | force save document          | s!, w!    |

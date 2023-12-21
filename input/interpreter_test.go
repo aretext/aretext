@@ -3419,6 +3419,7 @@ func TestLoadGeneratedStateMachines(t *testing.T) {
 		{name: "menu mode", path: MenuModePath},
 		{name: "search mode", path: SearchModePath},
 		{name: "task mode", path: TaskModePath},
+		{name: "textfield mode", path: TextFieldModePath},
 	}
 
 	for _, tc := range testCases {
@@ -3473,6 +3474,61 @@ func TestCountLimits(t *testing.T) {
 			assert.Contains(t, msg.Text, "count")
 		})
 	}
+}
+
+func TestTextFieldMode(t *testing.T) {
+	interpreter := NewInterpreter()
+	editorState := state.NewEditorState(100, 100, nil, nil)
+
+	inputEvent := func(event tcell.Event) {
+		inputCtx := ContextFromEditorState(editorState)
+		action := interpreter.ProcessEvent(event, inputCtx)
+		action(editorState)
+	}
+
+	// Enter menu mode, select "new document"
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, ':', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'n', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone))
+
+	// Expect that we're in text field mode with a prompt.
+	assert.Equal(t, state.InputModeTextField, editorState.InputMode())
+	assert.Equal(t, "New document file path:", editorState.TextField().PromptText())
+	assert.Equal(t, "", editorState.TextField().InputText())
+
+	// Enter some text.
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, '.', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
+
+	// Expect that we're stil in text field mode, and input text is stored.
+	assert.Equal(t, state.InputModeTextField, editorState.InputMode())
+	assert.Equal(t, "test.txt", editorState.TextField().InputText())
+
+	// Delete some text, then add a new extension.
+	inputEvent(tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyBackspace, '\x00', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModNone))
+	inputEvent(tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModNone))
+
+	// Expect updated input text.
+	assert.Equal(t, state.InputModeTextField, editorState.InputMode())
+	assert.Equal(t, "test.go", editorState.TextField().InputText())
+
+	// Execute the action (load new file).
+	inputEvent(tcell.NewEventKey(tcell.KeyEnter, '\x00', tcell.ModNone))
+
+	// Expect back to normal mode, with the new file path loaded.
+	assert.Equal(t, state.InputModeNormal, editorState.InputMode())
+	assert.Equal(t, "test.go", editorState.FileWatcher().Path())
 }
 
 func BenchmarkNewInterpreter(b *testing.B) {

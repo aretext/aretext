@@ -25,6 +25,7 @@ type EditorState struct {
 	fileWatcher               *file.Watcher
 	fileTimeline              *file.Timeline
 	menu                      *MenuState
+	textfield                 *TextFieldState
 	task                      *TaskState
 	macroState                MacroState
 	customMenuItems           []menu.Item
@@ -74,6 +75,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		fileWatcher:       file.NewEmptyWatcher(),
 		fileTimeline:      file.NewTimeline(),
 		menu:              &MenuState{},
+		textfield:         &TextFieldState{},
 		customMenuItems:   nil,
 		dirPatternsToHide: nil,
 		statusMsg:         StatusMsg{},
@@ -105,6 +107,10 @@ func (s *EditorState) DocumentBuffer() *BufferState {
 
 func (s *EditorState) Menu() *MenuState {
 	return s.menu
+}
+
+func (s *EditorState) TextField() *TextFieldState {
+	return s.textfield
 }
 
 func (s *EditorState) TaskResultChan() chan func(*EditorState) {

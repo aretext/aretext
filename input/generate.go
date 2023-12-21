@@ -20,6 +20,7 @@ func main() {
 	generate(input.MenuModePath, input.MenuModeCommands())
 	generate(input.SearchModePath, input.SearchModeCommands())
 	generate(input.TaskModePath, input.TaskModeCommands())
+	generate(input.TextFieldModePath, input.TextFieldCommands())
 }
 
 func generate(path string, commands []input.Command) {

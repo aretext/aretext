@@ -51,6 +51,9 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 		menuCursorStyle:           s.Bold(true),
 		menuItemSelectedStyle:     s.Underline(true),
 		menuItemUnselectedStyle:   s,
+		textFieldPromptStyle:      s.Dim(true),
+		textFieldInputTextStyle:   s,
+		textFieldBorderStyle:      s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
 		tokenRoleStyle: map[parser.TokenRole]tcell.Style{

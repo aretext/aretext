@@ -21,6 +21,10 @@ func menuItems(ctx Context) []menu.Item {
 			Action:  state.Quit,
 		},
 		{
+			Name:   "new document",
+			Action: ShowNewFileTextField,
+		},
+		{
 			Name:    "save document",
 			Aliases: []string{"s", "w"},
 			Action: func(s *state.EditorState) {

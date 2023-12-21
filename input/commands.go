@@ -2071,3 +2071,44 @@ func TaskModeCommands() []Command {
 		},
 	}
 }
+
+func TextFieldCommands() []Command {
+	return []Command{
+		{
+			Name: "escape",
+			BuildExpr: func() engine.Expr {
+				return keyExpr(tcell.KeyEscape)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return state.HideTextField
+			},
+		},
+		{
+			Name: "append char to textfield",
+			BuildExpr: func() engine.Expr {
+				return insertExpr
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return AppendRuneToTextField(p.InsertChar)
+			},
+		},
+		{
+			Name: "delete char from textfield",
+			BuildExpr: func() engine.Expr {
+				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return state.DeleteRuneFromTextField
+			},
+		},
+		{
+			Name: "execute textfield action",
+			BuildExpr: func() engine.Expr {
+				return keyExpr(tcell.KeyEnter)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return state.ExecuteTextFieldAction
+			},
+		},
+	}
+}

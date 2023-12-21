@@ -28,5 +28,7 @@ func DrawEditor(screen tcell.Screen, palette *Palette, editorState *state.Editor
 	case state.InputModeSearch:
 		searchQuery, searchDirection := editorState.DocumentBuffer().SearchQueryAndDirection()
 		DrawSearchQuery(screen, palette, searchQuery, searchDirection)
+	case state.InputModeTextField:
+		DrawTextField(screen, palette, editorState.TextField())
 	}
 }

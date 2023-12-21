@@ -29,6 +29,9 @@ type Palette struct {
 	menuCursorStyle           tcell.Style
 	menuItemSelectedStyle     tcell.Style
 	menuItemUnselectedStyle   tcell.Style
+	textFieldPromptStyle      tcell.Style
+	textFieldInputTextStyle   tcell.Style
+	textFieldBorderStyle      tcell.Style
 	searchPrefixStyle         tcell.Style
 	searchQueryStyle          tcell.Style
 	tokenRoleStyle            map[parser.TokenRole]tcell.Style
@@ -54,6 +57,9 @@ func NewPalette() *Palette {
 		menuCursorStyle:           s.Bold(true),
 		menuItemSelectedStyle:     s.Underline(true),
 		menuItemUnselectedStyle:   s,
+		textFieldPromptStyle:      s.Dim(true),
+		textFieldInputTextStyle:   s,
+		textFieldBorderStyle:      s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
 		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
@@ -207,6 +213,18 @@ func (p *Palette) StyleForMenuItem(selected bool) tcell.Style {
 	} else {
 		return p.menuItemUnselectedStyle
 	}
+}
+
+func (p *Palette) StyleForTextFieldPrompt() tcell.Style {
+	return p.textFieldPromptStyle
+}
+
+func (p *Palette) StyleForTextFieldInputText() tcell.Style {
+	return p.textFieldInputTextStyle
+}
+
+func (p *Palette) StyleForTextFieldBorder() tcell.Style {
+	return p.textFieldBorderStyle
 }
 
 func (p *Palette) StyleForSearchPrefix() tcell.Style {

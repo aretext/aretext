@@ -14,6 +14,7 @@ const (
 	InputModeSearch
 	InputModeVisual
 	InputModeTask
+	InputModeTextField
 )
 
 func (im InputMode) String() string {
@@ -30,6 +31,8 @@ func (im InputMode) String() string {
 		return "visual"
 	case InputModeTask:
 		return "task"
+	case InputModeTextField:
+		return "textfield"
 	default:
 		panic("invalid input mode")
 	}

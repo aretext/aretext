@@ -285,7 +285,7 @@ func customMenuItems(cfg config.Config) []menu.Item {
 func actionForCustomMenuItem(cmd config.MenuCommandConfig) func(*EditorState) {
 	if cmd.Save {
 		return func(state *EditorState) {
-			AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+			AbortIfFileChanged(state, func(state *EditorState) {
 				SaveDocumentIfUnsavedChanges(state)
 				RunShellCmd(state, cmd.ShellCmd, cmd.Mode)
 			})
@@ -392,9 +392,30 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 	f(state)
 }
 
-// AbortIfFileExistsWithChangedContent aborts with an error message if the file exists with a different checksum than the last load/save.
-func AbortIfFileExistsWithChangedContent(state *EditorState, f func(*EditorState)) {
+// AbortIfFileChanged aborts with an error message if the file has changed on disk.
+// Specifically, abort if the file was moved/deleted or its content checksum has changed.
+func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
 	path := state.fileWatcher.Path()
+
+	movedOrDeleted, err := state.fileWatcher.CheckFileMovedOrDeleted()
+	if err != nil {
+		log.Printf("Aborting operation because error occurred checking if file was moved or deleted: %s\n", err)
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("Could not check file: %s", err),
+		})
+		return
+	}
+
+	if movedOrDeleted {
+		log.Printf("Aborting operation because file was moved or deleted\n")
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("%s was moved or deleted. Use \"force save\" to save the file at the current path", path),
+		})
+		return
+	}
+
 	changed, err := state.fileWatcher.CheckFileContentsChanged()
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		log.Printf("Aborting operation because error occurred checking the file contents: %s\n", err)
@@ -414,6 +435,6 @@ func AbortIfFileExistsWithChangedContent(state *EditorState, f func(*EditorState
 		return
 	}
 
-	// Document's checksum hasn't changed, so execute the operation.
+	// All checks passed, so execute the action.
 	f(state)
 }

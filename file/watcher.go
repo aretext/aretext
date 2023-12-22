@@ -15,9 +15,10 @@ const DefaultPollInterval = time.Second
 // Watcher checks if a file's contents have changed.
 type Watcher struct {
 	// These fields are immutable, so they can be read safely from any goroutine.
-	path     string
-	size     int64
-	checksum string
+	path      string
+	isNewFile bool
+	size      int64
+	checksum  string
 
 	// After the watcher is constructed, this field is read and written
 	// only by the watcher goroutine.
@@ -31,6 +32,7 @@ type Watcher struct {
 func NewWatcherForNewFile(pollInterval time.Duration, path string) *Watcher {
 	w := &Watcher{
 		path:        path,
+		isNewFile:   true,
 		changedChan: make(chan struct{}),
 		quitChan:    make(chan struct{}),
 	}
@@ -73,6 +75,29 @@ func (w *Watcher) Stop() {
 	log.Printf("Stopping file watcher for %s...\n", w.path)
 	close(w.quitChan)
 	w.quitChan = nil
+}
+
+// CheckFileMovedOrDeleted checks whether the file used to exist
+// at the path but has since been moved or deleted.
+func (w *Watcher) CheckFileMovedOrDeleted() (bool, error) {
+	if w.isNewFile {
+		// File has not been created yet, so it can't have been moved or deleted.
+		return false, nil
+	}
+
+	_, err := os.Stat(w.path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			// File used to exist, but no longer exists at the path,
+			// so it must have been moved or deleted.
+			return true, nil
+		}
+
+		return false, fmt.Errorf("os.Stat: %w", err)
+	}
+
+	// File still exists at the path.
+	return false, nil
 }
 
 // CheckFileContentsChanged checks whether the file's checksum has changed.

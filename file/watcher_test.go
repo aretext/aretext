@@ -27,6 +27,10 @@ func TestWatcherNewFile(t *testing.T) {
 	case <-watcher.ChangedChan():
 		assert.Fail(t, "Unexpected change reported")
 	default:
+		movedOrDeleted, err := watcher.CheckFileMovedOrDeleted()
+		require.NoError(t, err)
+		assert.False(t, movedOrDeleted)
+
 		changed, err := watcher.CheckFileContentsChanged()
 		assert.True(t, errors.Is(err, fs.ErrNotExist))
 		assert.False(t, changed)
@@ -46,6 +50,11 @@ func TestWatcherNewFile(t *testing.T) {
 	case <-time.After(testWatcherPollInterval * 10):
 		assert.Fail(t, "Timed out waiting for change")
 	}
+
+	// Verify that the file was NOT moved or deleted.
+	movedOrDeleted, err := watcher.CheckFileMovedOrDeleted()
+	require.NoError(t, err)
+	assert.False(t, movedOrDeleted)
 }
 
 func TestWatcherFromLoadExistingFile(t *testing.T) {
@@ -79,4 +88,18 @@ func TestWatcherFromLoadExistingFile(t *testing.T) {
 	case <-time.After(testWatcherPollInterval * 10):
 		assert.Fail(t, "Timed out waiting for change")
 	}
+
+	// Verify that the file was NOT moved or deleted.
+	movedOrDeleted, err := watcher.CheckFileMovedOrDeleted()
+	require.NoError(t, err)
+	assert.False(t, movedOrDeleted)
+
+	// Delete the file.
+	err = os.Remove(filePath)
+	require.NoError(t, err)
+
+	// Should detect that the file was moved or deleted.
+	movedOrDeleted, err = watcher.CheckFileMovedOrDeleted()
+	require.NoError(t, err)
+	assert.True(t, movedOrDeleted)
 }

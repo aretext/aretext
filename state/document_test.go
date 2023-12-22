@@ -350,7 +350,7 @@ func TestSaveDocumentIfUnsavedChanges(t *testing.T) {
 	assert.Equal(t, "x\n", string(contents))
 }
 
-func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
+func TestAbortIfFileChanged(t *testing.T) {
 	testCases := []struct {
 		name        string
 		didChange   bool
@@ -386,7 +386,7 @@ func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 			}
 
 			// Attempt an operation, but abort if the file changed.
-			AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+			AbortIfFileChanged(state, func(state *EditorState) {
 				SetStatusMsg(state, StatusMsg{
 					Style: StatusMsgStyleSuccess,
 					Text:  "Operation executed",
@@ -404,7 +404,7 @@ func TestAbortIfFileExistsWithChangedContent(t *testing.T) {
 	}
 }
 
-func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
+func TestAbortIfFileChangedNewFile(t *testing.T) {
 	dir := t.TempDir()
 
 	path := filepath.Join(dir, "aretext-does-not-exist")
@@ -412,7 +412,7 @@ func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
 	LoadDocument(state, path, false, startOfDocLocator)
 
 	// File doesn't exist on disk, so the operation should succeed.
-	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+	AbortIfFileChanged(state, func(state *EditorState) {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleSuccess,
 			Text:  "Operation executed",
@@ -430,7 +430,7 @@ func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now the operation should abort.
-	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+	AbortIfFileChanged(state, func(state *EditorState) {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleSuccess,
 			Text:  "Operation executed",
@@ -440,24 +440,24 @@ func TestAbortIfFileExistsWithChangedContentNewFile(t *testing.T) {
 	assert.Contains(t, state.statusMsg.Text, "changed since last save")
 }
 
-func TestAbortIfFileExistsWithChangedContentFileDeleted(t *testing.T) {
+func TestAbortIfFileChangedExistingFileDeleted(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abc")
 	state := NewEditorState(100, 100, nil, nil)
 	LoadDocument(state, path, true, startOfDocLocator)
 
-	// Delete the file
+	// Delete the file.
 	cleanup()
 
-	// The operation should succeed, since the file does not exist.
-	AbortIfFileExistsWithChangedContent(state, func(state *EditorState) {
+	// The operation should fail, since the file was deleted.
+	AbortIfFileChanged(state, func(state *EditorState) {
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleSuccess,
 			Text:  "Operation executed",
 		})
 	})
-	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
-	assert.Equal(t, "Operation executed", state.statusMsg.Text)
+	assert.Equal(t, StatusMsgStyleError, state.statusMsg.Style)
+	assert.Contains(t, state.statusMsg.Text, "moved or deleted")
 }
 
 func TestDeduplicateCustomMenuItems(t *testing.T) {

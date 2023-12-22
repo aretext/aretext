@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -396,6 +397,7 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 // Specifically, abort if the file was moved/deleted or its content checksum has changed.
 func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
 	path := state.fileWatcher.Path()
+	filename := filepath.Base(path)
 
 	movedOrDeleted, err := state.fileWatcher.CheckFileMovedOrDeleted()
 	if err != nil {
@@ -411,7 +413,7 @@ func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
 		log.Printf("Aborting operation because file was moved or deleted\n")
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("%s was moved or deleted. Use \"force save\" to save the file at the current path", path),
+			Text:  fmt.Sprintf("File %s was moved or deleted. Use \"force save\" to save the file at the current path", filename),
 		})
 		return
 	}
@@ -430,7 +432,7 @@ func AbortIfFileChanged(state *EditorState, f func(*EditorState)) {
 		log.Printf("Aborting operation because file changed on disk\n")
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
+			Text:  fmt.Sprintf("File %s has changed since last save.  Use \"force save\" to overwrite.", filename),
 		})
 		return
 	}

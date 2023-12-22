@@ -386,28 +386,35 @@ func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus 
 				Text:  "Document has unsaved changes",
 			})
 		}
-	} else {
-		f(state)
+		return
 	}
+
+	// Document has no unsaved changes, so execute the operation.
+	f(state)
 }
 
 // AbortIfFileExistsWithChangedContent aborts with an error message if the file exists with a different checksum than the last load/save.
 func AbortIfFileExistsWithChangedContent(state *EditorState, f func(*EditorState)) {
 	path := state.fileWatcher.Path()
 	changed, err := state.fileWatcher.CheckFileContentsChanged()
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		log.Printf("Aborting operation because error occurred checking the file contents: %s\n", err)
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  fmt.Sprintf("Could not checksum file: %s", err),
+		})
+		return
+	}
+
 	if changed {
 		log.Printf("Aborting operation because file changed on disk\n")
 		SetStatusMsg(state, StatusMsg{
 			Style: StatusMsgStyleError,
 			Text:  fmt.Sprintf("%s has changed since last save.  Use \"force save\" to overwrite.", path),
 		})
-	} else if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		log.Printf("Aborting operation because error occurred checking the file contents: %s\n", err)
-		SetStatusMsg(state, StatusMsg{
-			Style: StatusMsgStyleError,
-			Text:  fmt.Sprintf("Could not checksum file: %s", err),
-		})
-	} else {
-		f(state)
+		return
 	}
+
+	// Document's checksum hasn't changed, so execute the operation.
+	f(state)
 }

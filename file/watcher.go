@@ -14,12 +14,17 @@ const DefaultPollInterval = time.Second
 
 // Watcher checks if a file's contents have changed.
 type Watcher struct {
-	path         string
+	// These fields are immutable, so they can be read safely from any goroutine.
+	path     string
+	size     int64
+	checksum string
+
+	// After the watcher is constructed, this field is read and written
+	// only by the watcher goroutine.
 	lastModified time.Time
-	size         int64
-	checksum     string
-	changedChan  chan struct{}
-	quitChan     chan struct{}
+
+	changedChan chan struct{}
+	quitChan    chan struct{}
 }
 
 // NewWatcher returns a watcher for a file.

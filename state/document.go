@@ -8,7 +8,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/file"
@@ -44,7 +43,7 @@ func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc
 		// even if the load failed.  This retains the attempted path so the user
 		// can try saving or reloading the document later.
 		if state.fileWatcher.Path() == "" {
-			state.fileWatcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
+			state.fileWatcher = file.NewWatcherForNewFile(file.DefaultPollInterval, path)
 		}
 
 		reportLoadError(state, err, path)
@@ -206,7 +205,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	tree, watcher, err := file.Load(path, file.DefaultPollInterval)
 	if errors.Is(err, fs.ErrNotExist) && !requireExists {
 		tree = text.NewTree()
-		watcher = file.NewWatcher(file.DefaultPollInterval, path, time.Time{}, 0, "")
+		watcher = file.NewWatcherForNewFile(file.DefaultPollInterval, path)
 	} else if err != nil {
 		return false, err
 	} else {

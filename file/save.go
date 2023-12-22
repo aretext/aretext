@@ -50,7 +50,7 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 		return nil, fmt.Errorf("os.Stat: %w", err)
 	}
 	checksum := checksummer.Checksum()
-	watcher := NewWatcher(watcherPollInterval, path, fileInfo.ModTime(), fileInfo.Size(), checksum)
+	watcher := NewWatcherForExistingFile(watcherPollInterval, path, fileInfo.ModTime(), fileInfo.Size(), checksum)
 
 	return watcher, nil
 }

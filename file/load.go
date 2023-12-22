@@ -38,7 +38,7 @@ func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher,
 	// We remove it from the tree to simplify editor operations; we'll add it back when saving the file.
 	removePosixEof(tree)
 
-	watcher := NewWatcher(watcherPollInterval, path, lastModifiedTime, size, checksum)
+	watcher := NewWatcherForExistingFile(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
 	return tree, watcher, nil
 }

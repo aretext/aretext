@@ -27,11 +27,22 @@ type Watcher struct {
 	quitChan    chan struct{}
 }
 
-// NewWatcher returns a watcher for a file.
+// NewWatcherForNewFile returns a watcher for a file that does not yet exist on disk.
+func NewWatcherForNewFile(pollInterval time.Duration, path string) *Watcher {
+	w := &Watcher{
+		path:        path,
+		changedChan: make(chan struct{}),
+		quitChan:    make(chan struct{}),
+	}
+	go w.checkFileLoop(pollInterval)
+	return w
+}
+
+// NewWatcherForExistingFile returns a watcher for a file that exists on disk.
 // lastModified is the time the file was last modified, as reported when the file was loaded.
 // size is the size in bytes of the file when it was loaded.
 // checksum is an MD5 hash of the file's contents when it was loaded.
-func NewWatcher(pollInterval time.Duration, path string, lastModified time.Time, size int64, checksum string) *Watcher {
+func NewWatcherForExistingFile(pollInterval time.Duration, path string, lastModified time.Time, size int64, checksum string) *Watcher {
 	w := &Watcher{
 		path:         path,
 		size:         size,

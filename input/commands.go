@@ -2110,5 +2110,14 @@ func TextFieldCommands() []Command {
 				return state.ExecuteTextFieldAction
 			},
 		},
+		{
+			Name: "autocomplete",
+			BuildExpr: func() engine.Expr {
+				return keyExpr(tcell.KeyTab)
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return state.AutocompleteTextField
+			},
+		},
 	}
 }

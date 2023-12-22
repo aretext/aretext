@@ -26,8 +26,12 @@ func DrawTextField(screen tcell.Screen, palette *Palette, textfield *state.TextF
 	drawStringNoWrap(sr, promptText, 0, 0, palette.StyleForTextFieldPrompt())
 
 	// Draw the user input on the second row, with the cursor at the end.
-	inputText := textfield.InputText()
-	col := drawStringNoWrap(sr, inputText, 0, 1, palette.StyleForTextFieldInputText())
+	col := drawStringNoWrap(sr, textfield.InputText(), 0, 1, palette.StyleForTextFieldInputText())
+
+	// Append autocomplete suffix (could be empty).
+	col = drawStringNoWrap(sr, textfield.AutocompleteSuffix(), col, 1, palette.StyleForTextFieldInputText())
+
+	// Cursor the end of user input + autocomplete suffix.
 	sr.ShowCursor(col, 1)
 
 	// Draw bottom border, unless it would overlap the status bar in last row.

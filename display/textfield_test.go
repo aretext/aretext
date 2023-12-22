@@ -15,7 +15,7 @@ func buildTextFieldState(t *testing.T, promptText, inputText string) *state.Text
 	require.NoError(t, err)
 
 	emptyAction := func(_ *state.EditorState, _ string) error { return nil }
-	state.ShowTextField(s, promptText, emptyAction)
+	state.ShowTextField(s, promptText, emptyAction, nil)
 	for _, r := range inputText {
 		state.AppendRuneToTextField(s, r)
 	}

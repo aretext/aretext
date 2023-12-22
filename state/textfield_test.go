@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestShowAndHideTextField(t *testing.T) {
 			setInputMode(state, tc.fromInputMode)
 			emptyAction := func(_ *EditorState, _ string) error { return nil }
 
-			ShowTextField(state, "test prompt", emptyAction)
+			ShowTextField(state, "test prompt", emptyAction, nil)
 			assert.Equal(t, InputModeTextField, state.InputMode())
 			assert.Equal(t, "test prompt", state.TextField().PromptText())
 			assert.Equal(t, "", state.TextField().InputText())
@@ -44,7 +45,7 @@ func TestShowAndHideTextField(t *testing.T) {
 func TestAppendRuneToTextField(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	emptyAction := func(_ *EditorState, _ string) error { return nil }
-	ShowTextField(state, "test prompt", emptyAction)
+	ShowTextField(state, "test prompt", emptyAction, nil)
 	assert.Equal(t, InputModeTextField, state.InputMode())
 	assert.Equal(t, "test prompt", state.TextField().PromptText())
 
@@ -59,7 +60,7 @@ func TestAppendRuneToTextField(t *testing.T) {
 func TestAppendRuneToTextFieldMaxLimit(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	emptyAction := func(_ *EditorState, _ string) error { return nil }
-	ShowTextField(state, "test prompt", emptyAction)
+	ShowTextField(state, "test prompt", emptyAction, nil)
 
 	for i := 0; i < maxTextFieldLen+5; i++ {
 		AppendRuneToTextField(state, 'x')
@@ -70,7 +71,7 @@ func TestAppendRuneToTextFieldMaxLimit(t *testing.T) {
 func TestDeleteRuneFromTextField(t *testing.T) {
 	state := NewEditorState(100, 100, nil, nil)
 	emptyAction := func(_ *EditorState, _ string) error { return nil }
-	ShowTextField(state, "test prompt", emptyAction)
+	ShowTextField(state, "test prompt", emptyAction, nil)
 	assert.Equal(t, InputModeTextField, state.InputMode())
 	assert.Equal(t, "test prompt", state.TextField().PromptText())
 
@@ -101,7 +102,7 @@ func TestExecuteTextFieldActionSuccess(t *testing.T) {
 		return nil
 	}
 
-	ShowTextField(state, "test prompt", fakeAction)
+	ShowTextField(state, "test prompt", fakeAction, nil)
 	AppendRuneToTextField(state, 'a')
 	AppendRuneToTextField(state, 'b')
 	AppendRuneToTextField(state, 'c')
@@ -118,7 +119,7 @@ func TestExecuteTextFieldActionError(t *testing.T) {
 	errorAction := func(_ *EditorState, _ string) error {
 		return fmt.Errorf("TEST ERROR")
 	}
-	ShowTextField(state, "test prompt", errorAction)
+	ShowTextField(state, "test prompt", errorAction, nil)
 	AppendRuneToTextField(state, 'a')
 	AppendRuneToTextField(state, 'b')
 	AppendRuneToTextField(state, 'c')
@@ -129,4 +130,97 @@ func TestExecuteTextFieldActionError(t *testing.T) {
 	assert.Equal(t, "abc", state.TextField().InputText())
 	assert.Equal(t, StatusMsgStyleError, state.StatusMsg().Style)
 	assert.Equal(t, "TEST ERROR", state.StatusMsg().Text)
+}
+
+func TestAutocompleteTextField(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+	fakeAction := func(state *EditorState, inputText string) error {
+		SetStatusMsg(state, StatusMsg{
+			Style: StatusMsgStyleSuccess,
+			Text:  fmt.Sprintf("Input: %s", inputText),
+		})
+		return nil
+	}
+
+	fakeCandidates := []string{"aa", "ab", "ba", "bb"}
+	fakeAutocompleteFunc := func(prefix string) ([]string, error) {
+		var suffixes []string
+		for _, s := range fakeCandidates {
+			if strings.HasPrefix(s, prefix) && len(prefix) < len(s) {
+				suffixes = append(suffixes, s[len(prefix):])
+			}
+		}
+		return suffixes, nil
+	}
+
+	ShowTextField(state, "test prompt", fakeAction, fakeAutocompleteFunc)
+	assert.Equal(t, InputModeTextField, state.InputMode())
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "aa", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "ab", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "ba", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "bb", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "", state.TextField().AutocompleteSuffix())
+
+	AppendRuneToTextField(state, 'b')
+	assert.Equal(t, "b", state.TextField().InputText())
+	assert.Equal(t, "", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "b", state.TextField().InputText())
+	assert.Equal(t, "a", state.TextField().AutocompleteSuffix())
+
+	AutocompleteTextField(state)
+	assert.Equal(t, "b", state.TextField().InputText())
+	assert.Equal(t, "b", state.TextField().AutocompleteSuffix())
+
+	ExecuteTextFieldAction(state)
+	assert.Equal(t, InputModeNormal, state.InputMode())
+	assert.Equal(t, "", state.TextField().PromptText())
+	assert.Equal(t, "", state.TextField().InputText())
+	assert.Equal(t, "Input: bb", state.StatusMsg().Text)
+}
+
+func TestAutocompleteTextFieldError(t *testing.T) {
+	state := NewEditorState(100, 100, nil, nil)
+	emptyAction := func(_ *EditorState, _ string) error { return nil }
+	errorAutocompleteFunc := func(prefix string) ([]string, error) {
+		return nil, fmt.Errorf("autocomplete error")
+	}
+
+	// Show autocomplete error in status msg.
+	ShowTextField(state, "test prompt", emptyAction, errorAutocompleteFunc)
+	AutocompleteTextField(state)
+	assert.Equal(t, InputModeTextField, state.InputMode())
+	assert.Equal(t, StatusMsgStyleError, state.StatusMsg().Style)
+	assert.Equal(t, "Error occurred during autocomplete: autocomplete error", state.StatusMsg().Text)
+
+	// Typing more clears the status msg.
+	AppendRuneToTextField(state, 'a')
+	assert.Equal(t, "", state.StatusMsg().Text)
+
+	// Autocomplete again to bring the error back.
+	AutocompleteTextField(state)
+	assert.Equal(t, StatusMsgStyleError, state.StatusMsg().Style)
+	assert.Equal(t, "Error occurred during autocomplete: autocomplete error", state.StatusMsg().Text)
+
+	// Deleting also clears the status msg.
+	DeleteRuneFromTextField(state)
+	assert.Equal(t, "", state.StatusMsg().Text)
 }

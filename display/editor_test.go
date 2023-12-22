@@ -81,7 +81,7 @@ func TestDrawEditor(t *testing.T) {
 				s, err := newEditorStateWithPath("test.txt")
 				require.NoError(t, err)
 				emptyAction := func(_ *state.EditorState, _ string) error { return nil }
-				state.ShowTextField(s, "Test:", emptyAction)
+				state.ShowTextField(s, "Test:", emptyAction, nil)
 				state.AppendRuneToTextField(s, 'a')
 				state.AppendRuneToTextField(s, 'b')
 				state.AppendRuneToTextField(s, 'c')

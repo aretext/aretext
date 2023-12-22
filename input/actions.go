@@ -2,6 +2,7 @@ package input
 
 import (
 	"github.com/aretext/aretext/clipboard"
+	"github.com/aretext/aretext/file"
 	"github.com/aretext/aretext/locate"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
@@ -907,7 +908,10 @@ func SearchWordUnderCursor(direction state.SearchDirection, count uint64) Action
 
 func ShowNewFileTextField(s *state.EditorState) {
 	state.AbortIfUnsavedChanges(s, state.DefaultUnsavedChangesAbortMsg, func(s *state.EditorState) {
-		state.ShowTextField(s, "New document file path:", state.NewDocument)
+		state.ShowTextField(s,
+			"New document file path:",
+			state.NewDocument,
+			file.AutocompleteDirectory)
 	})
 }
 

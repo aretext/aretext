@@ -376,14 +376,16 @@ func reportSaveSuccess(state *EditorState, path string) {
 	})
 }
 
+const DefaultUnsavedChangesAbortMsg = `Document has unsaved changes. Either save them ("force save") or discard them ("force reload") and try again`
+
 // AbortIfUnsavedChanges executes a function only if the document does not have unsaved changes and shows an error status msg otherwise.
-func AbortIfUnsavedChanges(state *EditorState, f func(*EditorState), showStatus bool) {
+func AbortIfUnsavedChanges(state *EditorState, abortMsg string, f func(*EditorState)) {
 	if state.documentBuffer.undoLog.HasUnsavedChanges() {
 		log.Printf("Aborting operation because document has unsaved changes\n")
-		if showStatus {
+		if abortMsg != "" {
 			SetStatusMsg(state, StatusMsg{
 				Style: StatusMsgStyleError,
-				Text:  "Document has unsaved changes",
+				Text:  abortMsg,
 			})
 		}
 		return

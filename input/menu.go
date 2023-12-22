@@ -12,7 +12,8 @@ func menuItems(ctx Context) []menu.Item {
 			Name:    "quit",
 			Aliases: []string{"q"},
 			Action: func(s *state.EditorState) {
-				state.AbortIfUnsavedChanges(s, state.Quit, true)
+				abortMsg := `Document has unsaved changes. Either save them ("force save") or quit without saving ("force quit")`
+				state.AbortIfUnsavedChanges(s, abortMsg, state.Quit)
 			},
 		},
 		{
@@ -63,21 +64,21 @@ func menuItems(ctx Context) []menu.Item {
 			Name:    "find and open",
 			Aliases: []string{"f"},
 			Action: func(s *state.EditorState) {
-				state.AbortIfUnsavedChanges(s, ShowFileMenu(ctx), true)
+				state.AbortIfUnsavedChanges(s, state.DefaultUnsavedChangesAbortMsg, ShowFileMenu(ctx))
 			},
 		},
 		{
 			Name:    "open previous document",
 			Aliases: []string{"p"},
 			Action: func(s *state.EditorState) {
-				state.AbortIfUnsavedChanges(s, state.LoadPrevDocument, true)
+				state.AbortIfUnsavedChanges(s, state.DefaultUnsavedChangesAbortMsg, state.LoadPrevDocument)
 			},
 		},
 		{
 			Name:    "open next document",
 			Aliases: []string{"n"},
 			Action: func(s *state.EditorState) {
-				state.AbortIfUnsavedChanges(s, state.LoadNextDocument, true)
+				state.AbortIfUnsavedChanges(s, state.DefaultUnsavedChangesAbortMsg, state.LoadNextDocument)
 			},
 		},
 		{

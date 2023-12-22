@@ -50,7 +50,7 @@ func TestQuit(t *testing.T) {
 			if tc.force {
 				Quit(state)
 			} else {
-				AbortIfUnsavedChanges(state, Quit, true)
+				AbortIfUnsavedChanges(state, "Document has unsaved changes", Quit)
 			}
 
 			assert.Equal(t, tc.expectQuitFlag, state.QuitFlag())

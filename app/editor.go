@@ -136,7 +136,7 @@ func (e *Editor) handleTermEvent(event tcell.Event) {
 
 func (e *Editor) handleFileChanged() {
 	log.Printf("File change detected, reloading file...\n")
-	state.AbortIfUnsavedChanges(e.editorState, state.ReloadDocument, false)
+	state.AbortIfUnsavedChanges(e.editorState, "", state.ReloadDocument)
 }
 
 func (e *Editor) handleIfDocumentLoaded() {

@@ -1,7 +1,8 @@
 package file
 
 import (
-	"io"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,54 +14,41 @@ import (
 
 const testWatcherPollInterval time.Duration = time.Millisecond * 50
 
-func createTestFile(t *testing.T, s string) string {
+func TestWatcherNewFile(t *testing.T) {
 	tmpDir := t.TempDir()
-
 	filePath := filepath.Join(tmpDir, "test.txt")
-	f, err := os.Create(filePath)
-	require.NoError(t, err)
-	defer f.Close()
 
-	_, err = io.WriteString(f, s)
-	require.NoError(t, err)
+	// Start a watcher for a new (non-existent) file.
+	watcher := NewWatcherForNewFile(testWatcherPollInterval, filePath)
+	defer watcher.Stop()
 
-	return filePath
-}
-
-func appendToTestFile(t *testing.T, path string, s string) {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
-	require.NoError(t, err)
-	defer f.Close()
-
-	_, err = io.WriteString(f, s)
-	require.NoError(t, err)
-}
-
-func expectNoChange(t *testing.T, watcher *Watcher) {
+	// Initially there should be no changes.
 	select {
 	case <-watcher.ChangedChan():
 		assert.Fail(t, "Unexpected change reported")
 	default:
 		changed, err := watcher.CheckFileContentsChanged()
-		assert.NoError(t, err)
+		assert.True(t, errors.Is(err, fs.ErrNotExist))
 		assert.False(t, changed)
-		return
 	}
-}
 
-func waitForChangeOrTimeout(t *testing.T, watcher *Watcher) {
+	// Create a file at the path.
+	f, err := os.Create(filePath)
+	require.NoError(t, err)
+	defer f.Close()
+
+	// Wait for changes to be detected (or time out and fail the test).
 	select {
 	case <-watcher.ChangedChan():
 		changed, err := watcher.CheckFileContentsChanged()
 		assert.NoError(t, err)
 		assert.True(t, changed)
-		return
 	case <-time.After(testWatcherPollInterval * 10):
 		assert.Fail(t, "Timed out waiting for change")
 	}
 }
 
-func TestWatcher(t *testing.T) {
+func TestWatcherFromLoadExistingFile(t *testing.T) {
 	// Create a test file in a temporary directory.
 	filePath := createTestFile(t, "abcd")
 
@@ -70,11 +58,25 @@ func TestWatcher(t *testing.T) {
 	defer watcher.Stop()
 
 	// Initially, there should be no changes.
-	expectNoChange(t, watcher)
+	select {
+	case <-watcher.ChangedChan():
+		assert.Fail(t, "Unexpected change reported")
+	default:
+		changed, err := watcher.CheckFileContentsChanged()
+		assert.NoError(t, err)
+		assert.False(t, changed)
+	}
 
 	// Modify the file.
 	appendToTestFile(t, filePath, "xyz")
 
 	// Wait for changes to be detected (or time out and fail the test).
-	waitForChangeOrTimeout(t, watcher)
+	select {
+	case <-watcher.ChangedChan():
+		changed, err := watcher.CheckFileContentsChanged()
+		assert.NoError(t, err)
+		assert.True(t, changed)
+	case <-time.After(testWatcherPollInterval * 10):
+		assert.Fail(t, "Timed out waiting for change")
+	}
 }

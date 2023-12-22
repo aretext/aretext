@@ -262,12 +262,18 @@ func markdownSetextHeadingParseFunc() parser.Func {
 		n++
 
 		// Consume repeats of the underline rune.
+		var (
+			underlineRepeatCount int
+			hitEndOfLineOrFile   bool
+		)
+
 		for {
 			r, err := iter.NextRune()
 			if err != nil {
 				// Found EOF (without trailing whitespace),
 				// so this is a valid setext underline.
-				return n, true
+				hitEndOfLineOrFile = true
+				break
 			}
 
 			n++
@@ -275,12 +281,31 @@ func markdownSetextHeadingParseFunc() parser.Func {
 			if r == '\n' {
 				// Found end of line (without trailing whitespace),
 				// so this is a valid setext underline.
-				return n, true
+				hitEndOfLineOrFile = true
+				break
 			} else if r == ' ' || r == '\t' {
 				break
 			} else if r != underlineRune {
 				return 0, false
 			}
+
+			underlineRepeatCount++
+		}
+
+		// The commonmark spec says:
+		//
+		//   If a line containing a single - can be interpreted as an empty list items,
+		//   it should be interpreted this way and not as a setext heading underline.
+		//
+		// We're approximating this by rejecting a single '-'. This avoids an
+		// annoying behavior when the user starts typing a list, and the text above
+		// gets briefly highlighted as a setext heading.
+		if underlineRune == '-' && underlineRepeatCount == 0 {
+			return 0, false
+		}
+
+		if hitEndOfLineOrFile {
+			return n, true
 		}
 
 		// Consume trailing whitespace.

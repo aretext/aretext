@@ -54,6 +54,26 @@ func TestMarkdownParseFunc(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "paragraph followed by list with single hyphen and eof",
+			text:     "foobar\n-",
+			expected: []TokenWithText{},
+		},
+		{
+			name:     "paragraph followed by list with single hyphen and newline",
+			text:     "foobar\n-\n",
+			expected: []TokenWithText{},
+		},
+		{
+			name: "paragraph followed by list with single hyphen empty list",
+			text: "foobar\n- \n",
+			expected: []TokenWithText{
+				{
+					Role: markdownListBulletRole,
+					Text: "-",
+				},
+			},
+		},
 	}...)
 
 	for _, tc := range testCases {

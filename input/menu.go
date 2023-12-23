@@ -26,6 +26,10 @@ func menuItems(ctx Context) []menu.Item {
 			Action: ShowNewDocumentTextField,
 		},
 		{
+			Name:   "move or rename document",
+			Action: ShowMoveOrRenameDocumentTextField,
+		},
+		{
 			Name:    "save document",
 			Aliases: []string{"s", "w"},
 			Action: func(s *state.EditorState) {

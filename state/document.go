@@ -35,6 +35,37 @@ func NewDocument(state *EditorState, path string) error {
 	return nil
 }
 
+// RenameDocument moves a document to a different file path.
+// Returns an error if the file already exists or the directory doesn't exist.
+func RenameDocument(state *EditorState, newPath string) error {
+	// Validate that we can create a file at the new path.
+	// This isn't 100% reliable, since some other process could create a file
+	// at the target path between this check and the rename below, but it at least
+	// reduces the risk of overwriting another file.
+	err := file.ValidateCreate(newPath)
+	if err != nil {
+		return err
+	}
+
+	// Move the file on disk. Ignore fs.ErrNotExist which can happen if
+	// the file was never saved to the old path.
+	//
+	// The rename won't trigger a reload of the old document because:
+	// 1. file.Watcher's check loop ignores fs.ErrNotExist.
+	// 2. LoadDocument below starts a new file watcher, so the main event loop
+	//    won't check the old file.Watcher's changed channel anyway.
+	oldPath := state.fileWatcher.Path()
+	err = os.Rename(oldPath, newPath)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+
+	// Load the document at the new path, retaining the original cursor position.
+	cursorPos := state.documentBuffer.cursor.position
+	LoadDocument(state, newPath, false, func(_ LocatorParams) uint64 { return cursorPos })
+	return nil
+}
+
 // LoadDocument loads a file into the editor.
 func LoadDocument(state *EditorState, path string, requireExists bool, cursorLoc Locator) {
 	timelineState := currentTimelineState(state)

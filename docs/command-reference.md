@@ -189,6 +189,7 @@ Menu Commands
 | quit                         | q         |
 | force quit                   | q!        |
 | new document                 |           |
+| move or rename document      |           |
 | save document                | s, w      |
 | save document and quit       | sq, wq, x |
 | force save document          | s!, w!    |

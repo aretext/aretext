@@ -554,3 +554,49 @@ func TestNewDocumentFileAlreadyExists(t *testing.T) {
 	err := NewDocument(state, path)
 	assert.ErrorContains(t, err, "File already exists")
 }
+
+func TestRenameDocument(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "before.txt")
+	_, err := os.Create(path)
+	require.NoError(t, err)
+
+	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	newPath := filepath.Join(filepath.Dir(path), "renamed.txt")
+	err = RenameDocument(state, newPath)
+	require.NoError(t, err)
+	assert.Equal(t, newPath, state.FileWatcher().Path())
+}
+
+func TestRenameDocumentSrcFileNotSaved(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.txt")
+
+	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	newPath := filepath.Join(filepath.Dir(path), "renamed.txt")
+	err := RenameDocument(state, newPath)
+	require.NoError(t, err)
+	assert.Equal(t, newPath, state.FileWatcher().Path())
+}
+
+func TestRenameDocumentDestFileAlreadyExists(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.txt")
+
+	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	newPath := filepath.Join(filepath.Dir(path), "renamed.txt")
+	_, err := os.Create(newPath)
+	require.NoError(t, err)
+
+	err = RenameDocument(state, newPath)
+	assert.ErrorContains(t, err, "File already exists")
+}

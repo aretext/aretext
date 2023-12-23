@@ -915,6 +915,15 @@ func ShowNewDocumentTextField(s *state.EditorState) {
 	})
 }
 
+func ShowMoveOrRenameDocumentTextField(s *state.EditorState) {
+	state.AbortIfUnsavedChanges(s, state.DefaultUnsavedChangesAbortMsg, func(s *state.EditorState) {
+		state.ShowTextField(s,
+			"Move/rename document file path:",
+			state.RenameDocument,
+			file.AutocompleteDirectory)
+	})
+}
+
 func AppendRuneToTextField(r rune) Action {
 	return func(s *state.EditorState) {
 		state.AppendRuneToTextField(s, r)

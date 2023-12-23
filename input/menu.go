@@ -23,7 +23,7 @@ func menuItems(ctx Context) []menu.Item {
 		},
 		{
 			Name:   "new document",
-			Action: ShowNewFileTextField,
+			Action: ShowNewDocumentTextField,
 		},
 		{
 			Name:    "save document",

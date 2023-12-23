@@ -31,13 +31,13 @@ func startOfDocLocator(LocatorParams) uint64 { return 0 }
 func TestLoadDocumentShowStatus(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	assert.Equal(t, "", state.documentBuffer.textTree.String())
 	assert.Equal(t, "", state.FileWatcher().Path())
 
 	// Load a document.
 	path, cleanup := createTestFile(t, "abcd")
 	LoadDocument(state, path, true, startOfDocLocator)
-	defer state.fileWatcher.Stop()
 
 	// Expect that the text and watcher are installed.
 	assert.Equal(t, "abcd", state.documentBuffer.textTree.String())
@@ -62,6 +62,7 @@ func TestLoadDocumentSameFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	state.documentBuffer.cursor.position = 22
 
@@ -87,6 +88,7 @@ func TestLoadDocumentDifferentFile(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	state.documentBuffer.cursor.position = 22
 
@@ -116,6 +118,7 @@ func TestLoadPrevDocument(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	MoveCursor(state, func(LocatorParams) uint64 {
 		return 7
@@ -125,6 +128,7 @@ func TestLoadPrevDocument(t *testing.T) {
 	path2, cleanup2 := createTestFile(t, "xyz")
 	defer cleanup2()
 	LoadDocument(state, path2, true, startOfDocLocator)
+	defer state.fileWatcher.Stop()
 	assert.Equal(t, "xyz", state.documentBuffer.textTree.String())
 
 	// Return to the previous document.
@@ -139,6 +143,7 @@ func TestLoadNextDocument(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	MoveCursor(state, func(LocatorParams) uint64 { return 7 })
 
@@ -146,6 +151,7 @@ func TestLoadNextDocument(t *testing.T) {
 	path2, cleanup2 := createTestFile(t, "qrs\ntuv\nwxyz")
 	defer cleanup2()
 	LoadDocument(state, path2, true, startOfDocLocator)
+	defer state.fileWatcher.Stop()
 	assert.Equal(t, path2, state.fileWatcher.Path())
 	MoveCursor(state, func(LocatorParams) uint64 { return 5 })
 
@@ -163,12 +169,12 @@ func TestLoadNextDocument(t *testing.T) {
 func TestLoadDocumentIncrementLoadCount(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	assert.Equal(t, state.DocumentLoadCount(), 0)
 
 	// Load a document.
 	path, cleanup := createTestFile(t, "abcd")
 	LoadDocument(state, path, true, startOfDocLocator)
-	defer state.fileWatcher.Stop()
 	defer cleanup()
 
 	// Expect that the load count was bumped.
@@ -181,6 +187,7 @@ func TestReloadDocumentAlignCursorAndScroll(t *testing.T) {
 	path, cleanup := createTestFile(t, initialText)
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	state.documentBuffer.cursor.position = 14
 
@@ -209,6 +216,7 @@ func TestReloadDocumentWithMenuOpen(t *testing.T) {
 	path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 	defer cleanup()
 	state := NewEditorState(5, 3, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 
 	// Open the command menu
@@ -260,6 +268,7 @@ func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {
 			path, cleanup := createTestFile(t, "abcd\nefghi\njklmnop\nqrst")
 			defer cleanup()
 			state := NewEditorState(5, 3, nil, nil)
+			defer state.fileWatcher.Stop()
 			LoadDocument(state, path, true, startOfDocLocator)
 
 			// Text search.
@@ -293,17 +302,16 @@ func TestReloadDocumentPreserveSearchQueryAndDirection(t *testing.T) {
 func TestSaveDocument(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 
 	// Load an existing document.
 	path, cleanup := createTestFile(t, "")
 	defer cleanup()
 	LoadDocument(state, path, true, startOfDocLocator)
-	defer state.fileWatcher.Stop()
 
 	// Modify and save the document
 	InsertRune(state, 'x')
 	SaveDocument(state)
-	defer state.fileWatcher.Stop()
 
 	// Expect a success message.
 	assert.Contains(t, state.statusMsg.Text, "Saved")
@@ -318,9 +326,9 @@ func TestSaveDocument(t *testing.T) {
 func TestSaveDocumentIfUnsavedChanges(t *testing.T) {
 	// Start with an empty document.
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	path := filepath.Join(t.TempDir(), "test-save-document-if-unsaved-changes.txt")
 	LoadDocument(state, path, false, func(LocatorParams) uint64 { return 0 })
-	defer state.fileWatcher.Stop()
 
 	// Save the document. The file should be created even though the document is empty.
 	SaveDocumentIfUnsavedChanges(state)
@@ -374,6 +382,7 @@ func TestAbortIfFileChanged(t *testing.T) {
 			path, cleanup := createTestFile(t, "")
 			defer cleanup()
 			state := NewEditorState(100, 100, nil, nil)
+			defer state.fileWatcher.Stop()
 			LoadDocument(state, path, true, startOfDocLocator)
 
 			// Modify the file.
@@ -409,6 +418,7 @@ func TestAbortIfFileChangedNewFile(t *testing.T) {
 
 	path := filepath.Join(dir, "aretext-does-not-exist")
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, false, startOfDocLocator)
 
 	// File doesn't exist on disk, so the operation should succeed.
@@ -444,6 +454,7 @@ func TestAbortIfFileChangedExistingFileDeleted(t *testing.T) {
 	// Load the initial document.
 	path, cleanup := createTestFile(t, "abc")
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 
 	// Delete the file.
@@ -491,6 +502,7 @@ func TestDeduplicateCustomMenuItems(t *testing.T) {
 	// Load the document.
 	path, cleanup := createTestFile(t, "")
 	state := NewEditorState(100, 100, configRuleSet, nil)
+	defer state.fileWatcher.Stop()
 	LoadDocument(state, path, true, startOfDocLocator)
 	defer cleanup()
 
@@ -526,6 +538,7 @@ func TestNewDocument(t *testing.T) {
 	path := filepath.Join(tmpDir, "test.txt")
 
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	err := NewDocument(state, path)
 	require.NoError(t, err)
 
@@ -537,6 +550,7 @@ func TestNewDocumentFileAlreadyExists(t *testing.T) {
 	defer cleanup()
 
 	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
 	err := NewDocument(state, path)
 	assert.ErrorContains(t, err, "File already exists")
 }

@@ -422,6 +422,7 @@ func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
 
 	suspendScreenFunc := func(f func() error) error { return f() }
 	state := NewEditorState(100, 100, nil, suspendScreenFunc)
+	defer state.fileWatcher.Stop()
 
 	dir := t.TempDir()
 

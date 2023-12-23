@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,7 @@ type Watcher struct {
 
 	changedChan chan struct{}
 	quitChan    chan struct{}
+	stopOnce    sync.Once
 }
 
 // NewWatcherForNewFile returns a watcher for a file that does not yet exist on disk.
@@ -69,12 +71,12 @@ func (w *Watcher) Path() string {
 
 // Stop stops the watcher from checking for changes.
 func (w *Watcher) Stop() {
-	if w.quitChan == nil {
-		return
-	}
-	log.Printf("Stopping file watcher for %s...\n", w.path)
-	close(w.quitChan)
-	w.quitChan = nil
+	w.stopOnce.Do(func() {
+		if w.quitChan != nil {
+			log.Printf("Stopping file watcher for %s...\n", w.path)
+			close(w.quitChan)
+		}
+	})
 }
 
 // CheckFileMovedOrDeleted checks whether the file used to exist

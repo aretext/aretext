@@ -520,3 +520,23 @@ func TestDeduplicateCustomMenuItems(t *testing.T) {
 	text := state.DocumentBuffer().TextTree().String()
 	assert.Equal(t, text, "foo2\n")
 }
+
+func TestNewDocument(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.txt")
+
+	state := NewEditorState(100, 100, nil, nil)
+	err := NewDocument(state, path)
+	require.NoError(t, err)
+
+	assert.Equal(t, path, state.FileWatcher().Path())
+}
+
+func TestNewDocumentFileAlreadyExists(t *testing.T) {
+	path, cleanup := createTestFile(t, "abcd")
+	defer cleanup()
+
+	state := NewEditorState(100, 100, nil, nil)
+	err := NewDocument(state, path)
+	assert.ErrorContains(t, err, "File already exists")
+}

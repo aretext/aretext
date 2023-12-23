@@ -15,9 +15,14 @@ func TestValidateCreateSuccess(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestValidateCreateEmptyFilename(t *testing.T) {
+func TestValidateCreateEmptyPath(t *testing.T) {
 	err := ValidateCreate("")
-	require.EqualError(t, err, "File name cannot be empty")
+	require.EqualError(t, err, "File path is empty")
+}
+
+func TestValidateCreatePathEndingWithDirectory(t *testing.T) {
+	err := ValidateCreate("foobar/")
+	require.EqualError(t, err, "File path must end with a file name")
 }
 
 func TestValidateCreateDirectoryDoesNotExist(t *testing.T) {

@@ -12,12 +12,17 @@ import (
 // after the check, or the user might not have permission to create the file.
 func ValidateCreate(path string) error {
 	dir, filename := filepath.Split(path)
-	dir = filepath.Clean(dir)
 
 	// If the filename is empty, return an error.
 	if filename == "" {
-		return fmt.Errorf("File name cannot be empty")
+		if dir == "" {
+			return fmt.Errorf("File path is empty")
+		} else {
+			return fmt.Errorf("File path must end with a file name")
+		}
 	}
+
+	dir = filepath.Clean(dir)
 
 	// If the directory doesn't exist, return an error.
 	if f, err := os.Stat(dir); err != nil {

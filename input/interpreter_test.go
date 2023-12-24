@@ -3142,7 +3142,7 @@ func TestInterpreterStateIntegration(t *testing.T) {
 
 			// Write the initial text to a temp file, which we will load into the editor.
 			// Append a final "\n" to the contents as the POSIX end-of-file indicator.
-			tmpFile, err := os.CreateTemp("", "")
+			tmpFile, err := os.CreateTemp(t.TempDir(), "")
 			require.NoError(t, err)
 			path := tmpFile.Name()
 			defer os.Remove(path)

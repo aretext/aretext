@@ -15,7 +15,7 @@ import (
 )
 
 func createTestFile(t *testing.T, contents string) (path string, cleanup func()) {
-	f, err := os.CreateTemp(os.TempDir(), "aretext-")
+	f, err := os.CreateTemp(t.TempDir(), "aretext-")
 	require.NoError(t, err)
 	defer f.Close()
 

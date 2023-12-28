@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,8 @@ func AutocompleteDirectory(path string) ([]string, error) {
 		if e.IsDir() {
 			name := e.Name()
 			if strings.HasPrefix(name, subdirPrefix) && len(subdirPrefix) < len(name) {
-				suffixes = append(suffixes, name[len(subdirPrefix):])
+				s := fmt.Sprintf("%s%c", name[len(subdirPrefix):], filepath.Separator)
+				suffixes = append(suffixes, s)
 			}
 		}
 	}

@@ -10,6 +10,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func pathWithTrailingSlash(p string) string {
+	if len(p) > 0 && p[len(p)-1] == filepath.Separator {
+		return p
+	}
+	return fmt.Sprintf("%s%c", p, filepath.Separator)
+}
+
+func pathsWithTrailingSlashes(paths []string) []string {
+	result := make([]string, 0, len(paths))
+	for _, p := range paths {
+		result = append(result, pathWithTrailingSlash(p))
+	}
+	return result
+}
+
 func TestAutocompleteDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -29,7 +44,7 @@ func TestAutocompleteDirectory(t *testing.T) {
 			name:             "empty prefix",
 			prefix:           "",
 			chdir:            tmpDir,
-			expectedSuffixes: []string{"aaa", "aab", "aac", "aba", "abb", "abc", "xyz"},
+			expectedSuffixes: pathsWithTrailingSlashes([]string{"aaa", "aab", "aac", "aba", "abb", "abc", "xyz"}),
 		},
 		{
 			name:             "base directory, no trailing slash",
@@ -38,18 +53,18 @@ func TestAutocompleteDirectory(t *testing.T) {
 		},
 		{
 			name:             "base directory with trailing slash",
-			prefix:           fmt.Sprintf("%s%c", tmpDir, filepath.Separator),
-			expectedSuffixes: []string{"aaa", "aab", "aac", "aba", "abb", "abc", "xyz"},
+			prefix:           pathWithTrailingSlash(tmpDir),
+			expectedSuffixes: pathsWithTrailingSlashes([]string{"aaa", "aab", "aac", "aba", "abb", "abc", "xyz"}),
 		},
 		{
 			name:             "first character matches",
 			prefix:           filepath.Join(tmpDir, "x"),
-			expectedSuffixes: []string{"yz"},
+			expectedSuffixes: pathsWithTrailingSlashes([]string{"yz"}),
 		},
 		{
 			name:             "first two characters match",
 			prefix:           filepath.Join(tmpDir, "ab"),
-			expectedSuffixes: []string{"a", "b", "c"},
+			expectedSuffixes: pathsWithTrailingSlashes([]string{"a", "b", "c"}),
 		},
 		{
 			name:             "all characters match",

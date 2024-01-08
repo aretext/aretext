@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"io"
 	"unicode"
 
 	"github.com/aretext/aretext/syntax/parser"
@@ -37,79 +36,11 @@ func cCommentParseFunc() parser.Func {
 }
 
 func cPreprocessorDirective() parser.Func {
-	// Consume leading '#' with optional whitespace after.
-	consumeStartOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-		var sawHashmark bool
-		for {
-			r, err := iter.NextRune()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return parser.FailedResult
-			}
-
-			if r == '#' && !sawHashmark {
-				sawHashmark = true
-				numConsumed++
-			} else if sawHashmark && (r == ' ' || r == '\t') {
-				numConsumed++
-			} else {
-				break
-			}
-		}
-
-		if !sawHashmark {
-			return parser.FailedResult
-		}
-
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
+	directives := []string{
+		"include", "pragma", "ifndef", "define", "error", "undef",
+		"endif", "ifdef", "elif", "else", "if",
 	}
-
-	// Consume to the end of line or EOF, unless the line ends with a backslash.
-	consumeToEndOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-		var lastWasBackslash bool
-		for {
-			r, err := iter.NextRune()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return parser.FailedResult
-			}
-
-			numConsumed++
-
-			if r == '\n' && !lastWasBackslash {
-				break
-			}
-			lastWasBackslash = (r == '\\')
-		}
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
-	}
-
-	return parser.Func(consumeStartOfDirective).
-		Then(consumeString("include").
-			Or(consumeString("pragma")).
-			Or(consumeString("ifndef")).
-			Or(consumeString("define")).
-			Or(consumeString("error")).
-			Or(consumeString("undef")).
-			Or(consumeString("endif")).
-			Or(consumeString("ifdef")).
-			Or(consumeString("elif")).
-			Or(consumeString("else")).
-			Or(consumeString("if"))).
-		ThenNot(consumeSingleRuneLike(func(r rune) bool {
-			return !unicode.IsSpace(r) // must be followed by space, newline, or EOF
-		})).
-		ThenMaybe(consumeToEndOfDirective).
+	return consumeCStylePreprocessorDirective(directives).
 		Map(recognizeToken(cTokenRolePreprocessorDirective))
 }
 

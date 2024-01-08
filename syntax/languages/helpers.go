@@ -4,6 +4,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/aretext/aretext/syntax/parser"
@@ -366,4 +367,72 @@ func consumeCStyleString(quoteRune rune, allowLineBreaks bool) parser.Func {
 func parseCStyleString(quoteRune rune, allowLineBreaks bool) parser.Func {
 	return consumeCStyleString(quoteRune, allowLineBreaks).
 		Map(recognizeToken(parser.TokenRoleString))
+}
+
+// consumeCStylePreprocessorDirective parses a preprocessor directive (like "#include")
+func consumeCStylePreprocessorDirective(directives []string) parser.Func {
+	// Consume leading '#' with optional whitespace after.
+	consumeStartOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+		var sawHashmark bool
+		for {
+			r, err := iter.NextRune()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			if r == '#' && !sawHashmark {
+				sawHashmark = true
+				numConsumed++
+			} else if sawHashmark && (r == ' ' || r == '\t') {
+				numConsumed++
+			} else {
+				break
+			}
+		}
+
+		if !sawHashmark {
+			return parser.FailedResult
+		}
+
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState:   state,
+		}
+	}
+
+	// Consume to the end of line or EOF, unless the line ends with a backslash.
+	consumeToEndOfDirective := func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var numConsumed uint64
+		var lastWasBackslash bool
+		for {
+			r, err := iter.NextRune()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			numConsumed++
+
+			if r == '\n' && !lastWasBackslash {
+				break
+			}
+			lastWasBackslash = (r == '\\')
+		}
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState:   state,
+		}
+	}
+
+	return parser.Func(consumeStartOfDirective).
+		Then(consumeLongestMatchingOption(directives)).
+		ThenNot(consumeSingleRuneLike(func(r rune) bool {
+			return !unicode.IsSpace(r) // must be followed by space, newline, or EOF
+		})).
+		ThenMaybe(consumeToEndOfDirective).
+		Map(recognizeToken(cTokenRolePreprocessorDirective))
 }

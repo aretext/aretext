@@ -1,6 +1,6 @@
 module github.com/aretext/aretext
 
-go 1.20
+go 1.22
 
 require (
 	github.com/adrg/xdg v0.4.0

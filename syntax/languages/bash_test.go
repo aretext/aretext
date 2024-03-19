@@ -431,6 +431,14 @@ heredoc text
 			},
 		},
 		{
+			name: "append operator",
+			text: `GLOB+="foo"`,
+			expected: []TokenWithText{
+				{Role: parser.TokenRoleOperator, Text: `+=`},
+				{Role: parser.TokenRoleString, Text: `"foo"`},
+			},
+		},
+		{
 			name: "conditional with regex start of line",
 			text: `[[ $line =~ ^"initial string" ]]`,
 			expected: []TokenWithText{

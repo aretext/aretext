@@ -76,7 +76,7 @@ func BashParseFunc() parser.Func {
 
 	parseOperator := consumeLongestMatchingOption([]string{
 		"$", "!", "<", ">", "<<", ">>",
-		"|", "&&", "||", "=", "&>", ">&", "&>>",
+		"|", "&&", "||", "=", "+=", "&>", ">&", "&>>",
 	}).Map(recognizeToken(parser.TokenRoleOperator))
 
 	parseStartConditional := matchState(

@@ -44,19 +44,20 @@ func BashParseFunc() parser.Func {
 	// From the GNU bash manual:
 	// "in is recognized as a reserved word if it is the third word of a case or select command.
 	// in and do are recognized as reserved words if they are the third word in a for command."
-	isLetter := func(r rune) bool { return unicode.IsLetter(r) || r == '_' || r == '-' }
-	isLetterOrDigit := func(r rune) bool { return isLetter(r) || unicode.IsDigit(r) }
+	isWordStart := func(r rune) bool { return unicode.IsLetter(r) || r == '_' }
+	isWordContinue := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-' }
 	keywords := []string{
 		"if", "then", "elif", "else", "fi", "time",
 		"for", "in", "until", "while", "do", "done",
 		"case", "esac", "coproc", "select", "function",
 	}
-	parseKeyword := consumeSingleRuneLike(isLetter).
-		ThenMaybe(consumeRunesLike(isLetterOrDigit)).
+	parseKeyword := consumeSingleRuneLike(isWordStart).
+		ThenMaybe(consumeRunesLike(isWordContinue)).
 		MapWithInput(recognizeKeywordOrConsume(keywords))
 
+	isVariableNameRune := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' }
 	parseVariable := consumeString("$").
-		Then(consumeRunesLike(isLetterOrDigit).
+		Then(consumeRunesLike(isVariableNameRune).
 			Or(consumeLongestMatchingOption([]string{"!", "#", "$", "*", "-", "0", "?", "@", "-"}))).
 		Map(recognizeToken(bashTokenRoleVariable))
 

@@ -71,6 +71,13 @@ esac`,
 			},
 		},
 		{
+			name: "variable followed by hyphen",
+			text: "$FOO-bar",
+			expected: []TokenWithText{
+				{Role: bashTokenRoleVariable, Text: `$FOO`},
+			},
+		},
+		{
 			name: "variable brace expansion",
 			text: `${PATH:-}`,
 			expected: []TokenWithText{

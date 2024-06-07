@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/adrg/xdg"
 	"gopkg.in/yaml.v3"
 
 	"github.com/aretext/aretext/config"
@@ -18,8 +17,12 @@ var DefaultConfigYaml []byte
 
 // ConfigPath returns the path to the configuration file.
 func ConfigPath() (string, error) {
-	path := filepath.Join("aretext", "config.yaml")
-	return xdg.ConfigFile(path)
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("Could not retrieve user config directory: %w", err)
+	}
+	path := filepath.Join(dir, "aretext", "config.yaml")
+	return path, nil
 }
 
 // LoadOrCreateConfig loads the config file if it exists and creates a default config file otherwise.

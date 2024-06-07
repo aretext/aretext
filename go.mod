@@ -3,7 +3,6 @@ module github.com/aretext/aretext
 go 1.22
 
 require (
-	github.com/adrg/xdg v0.4.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/google/renameio/v2 v2.0.0
 	github.com/mattn/go-runewidth v0.0.15

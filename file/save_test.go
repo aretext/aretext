@@ -66,7 +66,7 @@ func saveAndAssertContents(t *testing.T, path string, contents string, perms os.
 	tree, err := text.NewTreeFromString(contents)
 	require.NoError(t, err)
 
-	watcher, err := Save(path, tree, testWatcherPollInterval)
+	watcher, err := Save(path, tree, true, testWatcherPollInterval)
 	require.NoError(t, err)
 	assert.Equal(t, path, watcher.Path())
 	defer watcher.Stop()

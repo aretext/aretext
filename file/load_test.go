@@ -35,11 +35,11 @@ func TestLoad(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			filePath := createTestFile(t, tc.fileContents)
 
-			tree, watcher, err := Load(filePath, time.Second)
+			loadedFile, err := Load(filePath, time.Second)
 			require.NoError(t, err)
-			defer watcher.Stop()
+			defer loadedFile.FileWatcher.Stop()
 
-			assert.Equal(t, tc.expectedTreeContents, tree.String())
+			assert.Equal(t, tc.expectedTreeContents, loadedFile.TextTree.String())
 		})
 	}
 }

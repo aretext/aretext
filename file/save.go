@@ -15,7 +15,7 @@ import (
 
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.
 // This adds the POSIX end-of-file indicator (line feed at the end of the file).
-func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Watcher, error) {
+func Save(path string, tree *text.Tree, appendPosixEof bool, watcherPollInterval time.Duration) (*Watcher, error) {
 	// If the path is a symlink, this will return the symlink target so we save
 	// over the target file instead of overwriting the symlink itself.
 	targetPath, err := targetPathForSave(path)
@@ -38,8 +38,12 @@ func Save(path string, tree *text.Tree, watcherPollInterval time.Duration) (*Wat
 	// Compose a reader that calculates the checksum and appends the POSIX EOF indicator.
 	checksummer := NewChecksummer()
 	textReader := tree.ReaderAtPosition(0)
-	posixEofReader := strings.NewReader("\n")
-	r := io.TeeReader(io.MultiReader(&textReader, posixEofReader), checksummer)
+	r := io.Reader(&textReader)
+	if appendPosixEof {
+		posixEofReader := strings.NewReader("\n")
+		r = io.MultiReader(r, posixEofReader)
+	}
+	r = io.TeeReader(r, checksummer)
 
 	// Write to the file and calculate the checksum.
 	_, err = io.Copy(pf, r)

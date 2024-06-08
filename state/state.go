@@ -147,6 +147,7 @@ func (s *EditorState) QuitFlag() bool {
 // BufferState represents the current state of a text buffer.
 type BufferState struct {
 	textTree                *text.Tree
+	posixEof                bool
 	cursor                  cursorState
 	selector                *selection.Selector
 	view                    viewState

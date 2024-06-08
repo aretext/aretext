@@ -10,37 +10,51 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
+type LoadedFile struct {
+	TextTree    *text.Tree
+	FileWatcher *Watcher
+	PosixEof    bool
+}
+
 // Load reads a file from disk and starts a watcher to detect changes.
 // This will remove the POSIX end-of-file indicator (line feed at end of file).
-func Load(path string, watcherPollInterval time.Duration) (*text.Tree, *Watcher, error) {
+func Load(path string, watcherPollInterval time.Duration) (LoadedFile, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("filepath.Abs: %w", err)
+		return LoadedFile{}, fmt.Errorf("filepath.Abs: %w", err)
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("os.Open: %w", err)
+		return LoadedFile{}, fmt.Errorf("os.Open: %w", err)
 	}
 	defer f.Close()
 
 	lastModifiedTime, size, err := lastModifiedTimeAndSize(f)
 	if err != nil {
-		return nil, nil, fmt.Errorf("lastModifiedTime: %w", err)
+		return LoadedFile{}, fmt.Errorf("lastModifiedTime: %w", err)
 	}
 
 	tree, checksum, err := readContentsAndChecksum(f)
 	if err != nil {
-		return nil, nil, fmt.Errorf("readContentsAndChecksum: %w", err)
+		return LoadedFile{}, fmt.Errorf("readContentsAndChecksum: %w", err)
 	}
 
 	// POSIX files end with a single line feed to indicate the end of the file.
 	// We remove it from the tree to simplify editor operations; we'll add it back when saving the file.
-	removePosixEof(tree)
+	hasPosixEof := endsWithLineFeed(tree)
+	if hasPosixEof {
+		lastPos := tree.NumChars() - 1
+		tree.DeleteAtPosition(lastPos)
+	}
 
 	watcher := NewWatcherForExistingFile(watcherPollInterval, path, lastModifiedTime, size, checksum)
 
-	return tree, watcher, nil
+	return LoadedFile{
+		TextTree:    tree,
+		FileWatcher: watcher,
+		PosixEof:    hasPosixEof,
+	}, nil
 }
 
 func readContentsAndChecksum(f *os.File) (*text.Tree, string, error) {
@@ -60,13 +74,6 @@ func lastModifiedTimeAndSize(f *os.File) (time.Time, int64, error) {
 	}
 
 	return fileInfo.ModTime(), fileInfo.Size(), nil
-}
-
-func removePosixEof(tree *text.Tree) {
-	if endsWithLineFeed(tree) {
-		lastPos := tree.NumChars() - 1
-		tree.DeleteAtPosition(lastPos)
-	}
 }
 
 func endsWithLineFeed(tree *text.Tree) bool {

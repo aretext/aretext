@@ -237,9 +237,9 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	loadedFile, err := file.Load(path, file.DefaultPollInterval)
 	if errors.Is(err, fs.ErrNotExist) && !requireExists {
 		loadedFile = file.LoadedFile{
-			TextTree: text.NewTree(),
-			FileWatcher:  file.NewWatcherForNewFile(file.DefaultPollInterval, path),
-			PosixEof: true,
+			TextTree:    text.NewTree(),
+			FileWatcher: file.NewWatcherForNewFile(file.DefaultPollInterval, path),
+			PosixEof:    true,
 		}
 	} else if err != nil {
 		return false, err

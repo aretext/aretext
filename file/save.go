@@ -14,7 +14,7 @@ import (
 )
 
 // Save writes the text to disk and starts a new watcher to detect subsequent changes.
-// This adds the POSIX end-of-file indicator (line feed at the end of the file).
+// This optionally adds the POSIX end-of-file indicator (line feed at the end of the file).
 func Save(path string, tree *text.Tree, appendPosixEof bool, watcherPollInterval time.Duration) (*Watcher, error) {
 	// If the path is a symlink, this will return the symlink target so we save
 	// over the target file instead of overwriting the symlink itself.

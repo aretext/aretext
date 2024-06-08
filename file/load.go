@@ -13,7 +13,7 @@ import (
 type LoadedFile struct {
 	TextTree    *text.Tree
 	FileWatcher *Watcher
-	PosixEof    bool
+	PosixEof    bool // Whether loaded document had POSIX EOF newline.
 }
 
 // Load reads a file from disk and starts a watcher to detect changes.

@@ -320,7 +320,29 @@ func TestSaveDocument(t *testing.T) {
 	// Check that the changes were persisted
 	contents, err := os.ReadFile(path)
 	require.NoError(t, err)
-	assert.Equal(t, "x\n", string(contents))
+	assert.Equal(t, "x", string(contents))
+}
+
+func TestSaveDocumentPreservePosixEof(t *testing.T) {
+	// Start with a document that has a POSIX EOF newline.
+	state := NewEditorState(100, 100, nil, nil)
+	defer state.fileWatcher.Stop()
+	path, cleanup := createTestFile(t, "test with POSIX EOF\n")
+	defer cleanup()
+	LoadDocument(state, path, true, startOfDocLocator)
+
+	// Modify and save the document
+	InsertRune(state, 'x')
+	SaveDocument(state)
+
+	// Expect a success message.
+	assert.Contains(t, state.statusMsg.Text, "Saved")
+	assert.Equal(t, StatusMsgStyleSuccess, state.statusMsg.Style)
+
+	// Check that the changes were persisted and POSIX EOF preserved.
+	contents, err := os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, "xtest with POSIX EOF\n", string(contents))
 }
 
 func TestSaveDocumentIfUnsavedChanges(t *testing.T) {

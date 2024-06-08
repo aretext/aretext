@@ -45,6 +45,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 
 	buffer := &BufferState{
 		textTree: text.NewTree(),
+		posixEof: true,
 		cursor:   cursorState{},
 		selector: &selection.Selector{},
 		view: viewState{

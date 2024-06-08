@@ -1,6 +1,7 @@
 package file
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,6 +30,36 @@ func TestSaveModifyExistingFilePreservePermissions(t *testing.T) {
 	err := os.Chmod(path, 0600)
 	require.NoError(t, err)
 	saveAndAssertContents(t, path, "new contents", 0600)
+}
+
+func TestSavePathToSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+	targetPath := filepath.Join(tmpDir, "test.txt")
+	symlinkPath := filepath.Join(tmpDir, "testsymlink")
+
+	// Create the target file.
+	f, err := os.Create(targetPath)
+	require.NoError(t, err)
+	defer f.Close()
+	_, err = io.WriteString(f, "test")
+	require.NoError(t, err)
+
+	// Create symlink to the target file.
+	err = os.Symlink(targetPath, symlinkPath)
+	require.NoError(t, err)
+
+	// Save to the symlink path.
+	saveAndAssertContents(t, symlinkPath, "new contents", 0644)
+
+	// Verify that the symlink is still a symlink.
+	fileInfo, err := os.Lstat(symlinkPath)
+	require.NoError(t, err)
+	assert.True(t, fileInfo.Mode()&os.ModeSymlink != 0)
+
+	// Verify that the target file was modified.
+	fileBytes, err := os.ReadFile(targetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "new contents\n", string(fileBytes))
 }
 
 func saveAndAssertContents(t *testing.T, path string, contents string, perms os.FileMode) {

@@ -172,3 +172,47 @@ func TestValidateConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestHidePatternsAndHideDirectories(t *testing.T) {
+	testCases := []struct {
+		name            string
+		hidePatterns    []string
+		hideDirectories []string
+		expected        []string
+	}{
+		{
+			name:            "both empty",
+			hidePatterns:    nil,
+			hideDirectories: nil,
+			expected:        []string{},
+		},
+		{
+			name:            "just hide patterns",
+			hidePatterns:    []string{"a", "b"},
+			hideDirectories: nil,
+			expected:        []string{"a", "b"},
+		},
+		{
+			name:            "just hide directories",
+			hidePatterns:    nil,
+			hideDirectories: []string{"a", "b"},
+			expected:        []string{"a", "b"},
+		},
+		{
+			name:            "both set",
+			hidePatterns:    []string{"a", "b"},
+			hideDirectories: []string{"c", "d"},
+			expected:        []string{"a", "b", "c", "d"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := Config{
+				HidePatterns:    tc.hidePatterns,
+				HideDirectories: tc.hideDirectories,
+			}
+			assert.Equal(t, tc.expected, c.HidePatternsAndHideDirectories())
+		})
+	}
+}

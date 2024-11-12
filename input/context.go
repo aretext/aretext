@@ -14,8 +14,8 @@ type Context struct {
 	// Ctrl-U / Ctrl-D scroll for half of that amount.
 	ScrollLines uint64
 
-	// Glob patterns for directories to hide from file search.
-	DirPatternsToHide []string
+	// Glob patterns for files and directories to hide from file search.
+	HidePatterns []string
 
 	// Information about the current selection (visual mode).
 	// If not in visual mode, the mode will be selection.ModeNone
@@ -30,7 +30,7 @@ func ContextFromEditorState(editorState *state.EditorState) Context {
 	return Context{
 		InputMode:           editorState.InputMode(),
 		ScrollLines:         scrollLines,
-		DirPatternsToHide:   editorState.DirPatternsToHide(),
+		HidePatterns:        editorState.HidePatterns(),
 		SelectionMode:       editorState.DocumentBuffer().SelectionMode(),
 		SelectionEndLocator: editorState.DocumentBuffer().SelectionEndLocator(),
 	}

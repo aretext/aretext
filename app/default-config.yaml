@@ -10,7 +10,7 @@
   pattern: "**"
   config:
     autoIndent: false
-    hideDirectories: ["**/.git"]
+    hidePatterns: ["**/.git", "**/*.o"]
     syntaxLanguage: plaintext
     tabExpand: false
     tabSize: 4

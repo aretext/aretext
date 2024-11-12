@@ -89,7 +89,7 @@ func menuItems(ctx Context) []menu.Item {
 			Name:    "child directory",
 			Aliases: []string{"cd"},
 			Action: func(s *state.EditorState) {
-				state.ShowChildDirsMenu(s, ctx.DirPatternsToHide)
+				state.ShowChildDirsMenu(s, ctx.HidePatterns)
 			},
 		},
 		{

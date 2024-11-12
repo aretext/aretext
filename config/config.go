@@ -48,7 +48,10 @@ type Config struct {
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
 
-	// Glob patterns for directories to exclude from file search.
+	// Glob patterns for files or directories to exclude from file search.
+	HidePatterns []string
+
+	// (DEPRECATED) Glob patterns for directories to exclude from file search.
 	HideDirectories []string
 
 	// Style overrides.
@@ -157,7 +160,8 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		LineNumberMode:  stringOrDefault(m, "lineNumberMode", string(DefaultLineNumberMode)),
 		LineWrap:        stringOrDefault(m, "lineWrap", DefaultLineWrap),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
-		HideDirectories: stringSliceOrNil(m, "hideDirectories"),
+		HidePatterns:    stringSliceOrNil(m, "hidePatterns"),
+		HideDirectories: stringSliceOrNil(m, "hideDirectories"), // Deprecated by HidePatterns
 		Styles:          stylesFromMap(mapOrNil(m, "styles")),
 	}
 }
@@ -201,6 +205,13 @@ func (c Config) Validate() error {
 	}
 
 	return nil
+}
+
+func (c Config) HidePatternsAndHideDirectories() []string {
+	result := make([]string, 0, len(c.HidePatterns)+len(c.HideDirectories))
+	result = append(result, c.HidePatterns...)
+	result = append(result, c.HideDirectories...)
+	return result
 }
 
 func stringOrDefault(m map[string]any, key string, defaultVal string) string {

@@ -12,8 +12,8 @@ import (
 )
 
 type ListDirOptions struct {
-	DirPatternsToHide []string // Glob patterns for directories to skip.
-	DirectoriesOnly   bool     // If true, return directories (not files) in results.
+	HidePatterns    []string // Glob patterns for files and directories to skip.
+	DirectoriesOnly bool     // If true, return directories (not files) in results.
 }
 
 // ListDir lists every file in a root directory and its subdirectories.
@@ -52,16 +52,16 @@ func listDirRec(ctx context.Context, root string, options ListDirOptions, semaph
 	for _, d := range dirEntries {
 		path := filepath.Join(root, d.Name())
 
+		if shouldSkipPath(path, options.HidePatterns) {
+			continue
+		}
+
 		if !d.IsDir() {
 			if !options.DirectoriesOnly {
 				mu.Lock()
 				results = append(results, path)
 				mu.Unlock()
 			}
-			continue
-		}
-
-		if shouldSkipDir(path, options.DirPatternsToHide) {
 			continue
 		}
 
@@ -99,8 +99,8 @@ func listDir(path string) ([]fs.DirEntry, error) {
 	return dirs, nil
 }
 
-func shouldSkipDir(path string, dirPatternsToHide []string) bool {
-	for _, pattern := range dirPatternsToHide {
+func shouldSkipPath(path string, hidePatterns []string) bool {
+	for _, pattern := range hidePatterns {
 		if GlobMatch(pattern, path) {
 			return true
 		}

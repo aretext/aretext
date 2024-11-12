@@ -265,7 +265,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.undoLog = undo.NewLog()
 	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(cfg)
-	state.dirPatternsToHide = cfg.HideDirectories
+	state.hidePatterns = cfg.HidePatternsAndHideDirectories()
 	state.styles = cfg.Styles
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.Language(cfg.SyntaxLanguage))
 

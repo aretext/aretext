@@ -19,7 +19,7 @@ When you open the config file, you should see something like:
   pattern: "**"
   config:
     autoIndent: false
-    hideDirectories: [".git"]
+    hidePatterns: ["**/.git"]
     syntaxLanguage: plaintext
     tabExpand: false
     tabSize: 4
@@ -46,7 +46,7 @@ For example, if aretext loaded the file "foo/bar.json" using the above configura
 ```yaml
 config:
   autoIndent: true           # from the "json" rule
-  hideDirectories: [".git"]  # from the "default" rule
+  hidePatterns: ["**/.git"]  # from the "default" rule
   syntaxLanguage: json       # from the "json" rule
   tabExpand: true            # from the "json" rule
   tabSize: 2                 # from the "json" rule

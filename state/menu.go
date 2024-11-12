@@ -99,11 +99,11 @@ func ShowMenu(state *EditorState, style MenuStyle, items []menu.Item) {
 
 // ShowFileMenu displays a menu for finding and loading files in the current working directory.
 // The files are loaded asynchronously as a task that the user can cancel.
-func ShowFileMenu(s *EditorState, dirPatternsToHide []string) {
+func ShowFileMenu(s *EditorState, hidePatterns []string) {
 	log.Printf("Scheduling task to load file menu items...\n")
 	StartTask(s, func(ctx context.Context) func(*EditorState) {
 		log.Printf("Starting to load file menu items...\n")
-		items := loadFileMenuItems(ctx, dirPatternsToHide)
+		items := loadFileMenuItems(ctx, hidePatterns)
 		log.Printf("Successfully loaded %d file menu items\n", len(items))
 		return func(s *EditorState) {
 			ShowMenu(s, MenuStyleFilePath, items)
@@ -111,7 +111,7 @@ func ShowFileMenu(s *EditorState, dirPatternsToHide []string) {
 	})
 }
 
-func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
+func loadFileMenuItems(ctx context.Context, hidePatterns []string) []menu.Item {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error loading menu items: %v\n", fmt.Errorf("os.GetCwd: %w", err))
@@ -119,7 +119,7 @@ func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.I
 	}
 
 	paths := file.ListDir(ctx, dir, file.ListDirOptions{
-		DirPatternsToHide: dirPatternsToHide,
+		HidePatterns: hidePatterns,
 	})
 	log.Printf("Listed %d paths for dir %q\n", len(paths), dir)
 
@@ -139,11 +139,11 @@ func loadFileMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.I
 }
 
 // ShowChildDirsMenu displays a menu for changing the working directory to a child directory.
-func ShowChildDirsMenu(s *EditorState, dirPatternsToHide []string) {
+func ShowChildDirsMenu(s *EditorState, hidePatterns []string) {
 	log.Printf("Scheduling task to load child dir menu items...\n")
 	StartTask(s, func(ctx context.Context) func(*EditorState) {
 		log.Printf("Starting to load child dir menu items...\n")
-		items := loadChildDirMenuItems(ctx, dirPatternsToHide)
+		items := loadChildDirMenuItems(ctx, hidePatterns)
 		log.Printf("Successfully loaded %d child dir menu items\n", len(items))
 		return func(s *EditorState) {
 			ShowMenu(s, MenuStyleChildDir, items)
@@ -151,7 +151,7 @@ func ShowChildDirsMenu(s *EditorState, dirPatternsToHide []string) {
 	})
 }
 
-func loadChildDirMenuItems(ctx context.Context, dirPatternsToHide []string) []menu.Item {
+func loadChildDirMenuItems(ctx context.Context, hidePatterns []string) []menu.Item {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error loading menu items: %v\n", fmt.Errorf("os.GetCwd: %w", err))
@@ -159,8 +159,8 @@ func loadChildDirMenuItems(ctx context.Context, dirPatternsToHide []string) []me
 	}
 
 	paths := file.ListDir(ctx, dir, file.ListDirOptions{
-		DirectoriesOnly:   true,
-		DirPatternsToHide: dirPatternsToHide,
+		DirectoriesOnly: true,
+		HidePatterns:    hidePatterns,
 	})
 	log.Printf("Listed %d subdirectory paths for dir %q\n", len(paths), dir)
 

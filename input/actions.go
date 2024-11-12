@@ -802,7 +802,7 @@ func ShowCommandMenu(ctx Context) Action {
 
 func ShowFileMenu(ctx Context) Action {
 	return func(s *state.EditorState) {
-		state.ShowFileMenu(s, ctx.DirPatternsToHide)
+		state.ShowFileMenu(s, ctx.HidePatterns)
 	}
 }
 

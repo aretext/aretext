@@ -29,7 +29,7 @@ type EditorState struct {
 	task                      *TaskState
 	macroState                MacroState
 	customMenuItems           []menu.Item
-	dirPatternsToHide         []string
+	hidePatterns              []string
 	styles                    map[string]config.StyleConfig
 	statusMsg                 StatusMsg
 	suspendScreenFunc         SuspendScreenFunc
@@ -77,7 +77,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		menu:              &MenuState{},
 		textfield:         &TextFieldState{},
 		customMenuItems:   nil,
-		dirPatternsToHide: nil,
+		hidePatterns:      nil,
 		statusMsg:         StatusMsg{},
 		styles:            nil,
 		suspendScreenFunc: suspendScreenFunc,
@@ -124,8 +124,8 @@ func (s *EditorState) IsRecordingUserMacro() bool {
 	return s.macroState.isRecordingUserMacro
 }
 
-func (s *EditorState) DirPatternsToHide() []string {
-	return s.dirPatternsToHide
+func (s *EditorState) HidePatterns() []string {
+	return s.hidePatterns
 }
 
 func (s *EditorState) StatusMsg() StatusMsg {

@@ -6,7 +6,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/google/renameio/v2 v2.0.0
 	github.com/mattn/go-runewidth v0.0.16
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )

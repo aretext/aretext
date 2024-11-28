@@ -62,6 +62,31 @@ func TestSavePathToSymlink(t *testing.T) {
 	assert.Equal(t, "new contents\n", string(fileBytes))
 }
 
+func TestSavePathToHardLink(t *testing.T) {
+	tmpDir := t.TempDir()
+	targetPath := filepath.Join(tmpDir, "test.txt")
+	hardlinkPath := filepath.Join(tmpDir, "testhardlink")
+
+	// Create the target file.
+	f, err := os.Create(targetPath)
+	require.NoError(t, err)
+	defer f.Close()
+	_, err = io.WriteString(f, "test")
+	require.NoError(t, err)
+
+	// Create hardlink to the target file.
+	err = os.Link(targetPath, hardlinkPath)
+	require.NoError(t, err)
+
+	// Save to the hardlink path.
+	saveAndAssertContents(t, hardlinkPath, "new contents", 0644)
+
+	// Verify that the target file was modified.
+	fileBytes, err := os.ReadFile(targetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "new contents\n", string(fileBytes))
+}
+
 func saveAndAssertContents(t *testing.T, path string, contents string, perms os.FileMode) {
 	tree, err := text.NewTreeFromString(contents)
 	require.NoError(t, err)

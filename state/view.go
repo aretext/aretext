@@ -16,8 +16,6 @@ const (
 func ResizeView(state *EditorState, width, height uint64) {
 	state.screenWidth = width
 	state.screenHeight = height
-	state.documentBuffer.view.x = 0
-	state.documentBuffer.view.y = 0
 	state.documentBuffer.view.width = state.screenWidth
 	state.documentBuffer.view.height = 0
 	if height > 0 {

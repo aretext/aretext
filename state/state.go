@@ -49,8 +49,6 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		selector: &selection.Selector{},
 		view: viewState{
 			textOrigin: 0,
-			x:          0,
-			y:          0,
 			width:      screenWidth,
 			height:     documentBufferHeight,
 		},
@@ -195,10 +193,6 @@ func (s *BufferState) ViewTextOrigin() uint64 {
 	return s.view.textOrigin
 }
 
-func (s *BufferState) ViewOrigin() (uint64, uint64) {
-	return s.view.x, s.view.y
-}
-
 func (s *BufferState) ViewSize() (uint64, uint64) {
 	return s.view.width, s.view.height
 }
@@ -275,9 +269,6 @@ func (s *BufferState) LineWrapConfig() segment.LineWrapConfig {
 type viewState struct {
 	// textOrigin is the location in the text tree of the first visible character.
 	textOrigin uint64
-
-	// x and y are the screen coordinates of the top-left corner
-	x, y uint64
 
 	// width and height are the visible width (in columns) and height (in rows) of the document.
 	width, height uint64

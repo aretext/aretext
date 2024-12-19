@@ -16,8 +16,8 @@ import (
 
 // DrawBuffer draws text buffer in the screen.
 func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState, inputMode state.InputMode) {
-	x, y, width, height := viewDimensions(buffer)
-	sr := NewScreenRegion(screen, x, y, width, height)
+	width, height := viewSize(buffer)
+	sr := NewScreenRegion(screen, 0, 0, width, height)
 	textTree := buffer.TextTree()
 	cursorPos := buffer.CursorPosition()
 	selectedRegion := buffer.SelectedRegion()
@@ -78,10 +78,9 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	}
 }
 
-func viewDimensions(buffer *state.BufferState) (int, int, int, int) {
-	x, y := buffer.ViewOrigin()
+func viewSize(buffer *state.BufferState) (int, int) {
 	width, height := buffer.ViewSize()
-	return int(x), int(y), int(width), int(height)
+	return int(width), int(height)
 }
 
 func drawLineAndSetCursor(

@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,9 +18,10 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
-// SuspendScreenFunc suspends the screen, executes a function, then resumes the screen.
+// TakeoverTtyFunc suspends the screen, executes a function, then resumes the screen.
 // This allows the shell command to take control of the terminal.
-type SuspendScreenFunc func(func() error) error
+// The function accepts an io.ReadWriter for the tty.
+type TakeoverTtyFunc func(func(io.ReadWriter) error) error
 
 // RunShellCmd executes the command in a shell.
 // Mode must be a valid command mode, as defined in config.
@@ -34,8 +36,8 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 	case config.CmdModeTerminal:
 		// Run synchronously because the command takes over stdin/stdout.
 		ctx := context.Background()
-		err := state.suspendScreenFunc(func() error {
-			return shellcmd.RunInTerminal(ctx, shellCmd, env)
+		err := state.takeoverTtyFunc(func(tty io.ReadWriter) error {
+			return shellcmd.RunInTerminal(ctx, tty, shellCmd, env)
 		})
 		setStatusForShellCmdResult(state, err)
 

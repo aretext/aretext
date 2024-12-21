@@ -1,7 +1,9 @@
 package app
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"path/filepath"
 	"time"
@@ -32,7 +34,7 @@ func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet c
 		uint64(screenWidth),
 		uint64(screenHeight),
 		configRuleSet,
-		suspendScreenFunc(screen),
+		takeoverTtyFunc(screen),
 	)
 	inputInterpreter := input.NewInterpreter()
 	palette := display.NewPalette()
@@ -171,8 +173,8 @@ func (e *Editor) redraw(sync bool) {
 	}
 }
 
-func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
-	return func(f func() error) error {
+func takeoverTtyFunc(screen tcell.Screen) state.TakeoverTtyFunc {
+	return func(f func(io.ReadWriter) error) error {
 		// Suspend input processing and reset the terminal to its original state.
 		if err := screen.Suspend(); err != nil {
 			return fmt.Errorf("screen.Suspend: %w", err)
@@ -185,7 +187,11 @@ func suspendScreenFunc(screen tcell.Screen) state.SuspendScreenFunc {
 			}
 		}()
 
-		// Execute the function.
-		return f()
+		// Execute the function with the screen's tty.
+		tty, hasTty := screen.Tty()
+		if !hasTty {
+			return errors.New("screen not attached to a tty")
+		}
+		return f(tty)
 	}
 }

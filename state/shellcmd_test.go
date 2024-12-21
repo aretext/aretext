@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -420,8 +421,10 @@ func setupShellCmdTest(t *testing.T, f func(*EditorState, string)) {
 	defer os.Setenv("ARETEXT_SHELL", oldAretextShellEnv)
 	os.Setenv("ARETEXT_SHELL", "")
 
-	suspendScreenFunc := func(f func() error) error { return f() }
-	state := NewEditorState(100, 100, nil, suspendScreenFunc)
+	takeoverTtyFunc := func(f func(io.ReadWriter) error) error {
+		return f(nil)
+	}
+	state := NewEditorState(100, 100, nil, takeoverTtyFunc)
 	defer state.fileWatcher.Stop()
 
 	dir := t.TempDir()

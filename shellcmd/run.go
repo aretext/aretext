@@ -17,9 +17,9 @@ func RunSilent(ctx context.Context, cmd string, env []string) error {
 }
 
 // RunInTerminal runs the command using inputs and outputs of the current process.
-func RunInTerminal(ctx context.Context, cmd string, env []string) error {
-	clearTerminal(ctx)
-	return runInShell(ctx, cmd, env, os.Stdin, os.Stdout, os.Stderr)
+func RunInTerminal(ctx context.Context, tty io.ReadWriter, cmd string, env []string) error {
+	clearTerminal(ctx, tty)
+	return runInShell(ctx, cmd, env, tty, tty, tty)
 }
 
 // RunAndCaptureOutput runs the command and returns its stdout as a byte slice.
@@ -39,10 +39,10 @@ func RunAndCaptureOutput(ctx context.Context, cmd string, env []string) (string,
 	return buf.String(), nil
 }
 
-func clearTerminal(ctx context.Context) {
+func clearTerminal(ctx context.Context, tty io.ReadWriter) {
 	clearCmd := exec.CommandContext(ctx, "clear")
-	clearCmd.Stdout = os.Stdout
-	clearCmd.Stderr = os.Stderr
+	clearCmd.Stdout = tty
+	clearCmd.Stderr = tty
 	if err := clearCmd.Run(); err != nil {
 		log.Printf("Error clearing screen: %v\n", err)
 	}

@@ -32,11 +32,11 @@ type EditorState struct {
 	hidePatterns              []string
 	styles                    map[string]config.StyleConfig
 	statusMsg                 StatusMsg
-	suspendScreenFunc         SuspendScreenFunc
+	takeoverTtyFunc           TakeoverTtyFunc
 	quitFlag                  bool
 }
 
-func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleSet, suspendScreenFunc SuspendScreenFunc) *EditorState {
+func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleSet, takeoverTtyFunc TakeoverTtyFunc) *EditorState {
 	var documentBufferHeight uint64
 	if screenHeight > 0 {
 		// Leave one line for the status bar at the bottom.
@@ -65,20 +65,20 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 	}
 
 	return &EditorState{
-		screenWidth:       screenWidth,
-		screenHeight:      screenHeight,
-		configRuleSet:     configRuleSet,
-		documentBuffer:    buffer,
-		clipboard:         clipboard.New(),
-		fileWatcher:       file.NewEmptyWatcher(),
-		fileTimeline:      file.NewTimeline(),
-		menu:              &MenuState{},
-		textfield:         &TextFieldState{},
-		customMenuItems:   nil,
-		hidePatterns:      nil,
-		statusMsg:         StatusMsg{},
-		styles:            nil,
-		suspendScreenFunc: suspendScreenFunc,
+		screenWidth:     screenWidth,
+		screenHeight:    screenHeight,
+		configRuleSet:   configRuleSet,
+		documentBuffer:  buffer,
+		clipboard:       clipboard.New(),
+		fileWatcher:     file.NewEmptyWatcher(),
+		fileTimeline:    file.NewTimeline(),
+		menu:            &MenuState{},
+		textfield:       &TextFieldState{},
+		customMenuItems: nil,
+		hidePatterns:    nil,
+		statusMsg:       StatusMsg{},
+		styles:          nil,
+		takeoverTtyFunc: takeoverTtyFunc,
 	}
 }
 

@@ -5,7 +5,7 @@ Aretext is currently a single binary. To open multiple documents concurrently, u
 
 1.	There is no synchronization between unsaved changes of the same document opened in multiple editor instances, leading to conflicts on save.
 2.	It duplicates document and syntax parser state in the common case of viewing/editing the same document in multiple editor instances.
-3.	It greatly complicates language server protocol (LSP) integration, since LSP assumes a single editor per LSP server. parts of a single document.
+3.	It greatly complicates language server protocol (LSP) integration, since LSP assumes a single editor per LSP server.
 
 (These problems aren't unique to aretext: vim and its descendants have the same limitations.)
 

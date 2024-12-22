@@ -65,6 +65,7 @@ Messages will be serialized as JSON, with a uint32 header indicating msg length.
 	-	fields:
 		-	current working directory
 		-	filepath to open
+		-	`$TERM` and other env vars used by tcell and other TUI programs
 	-	out-of-band data:
 		-	SCM_RIGHTS with the pty file descriptor.
 -	`ServerHelloMsg`:
@@ -142,7 +143,9 @@ When one client modifies a document, the server must update the per-client state
 Shell commands
 --------------
 
-All shell commands are executed by the server on behalf of a client. The user is responsible for configuring env vars needed by shell commands the server executes. The shell command's working directory will be set to the current working directory of the client. Shell commands always execute asynchronously to avoid blocking the server.
+All shell commands are executed by the server on behalf of a client. The user is responsible for configuring env vars needed by shell commands the server executes. The shell command's working directory will be set to the current working directory of the client. Likewise, env vars affecting TUI programs like `$TERM` will be set to match the client.
+
+Shell commands always execute asynchronously to avoid blocking the server.
 
 By default, the client and server processes run as the same user/group. The unix domain socket and config files are writable only by this user. This avoids any risk of privilege escalation / confused deputy. To protect against misconfiguration, aretext will require and verify that configuration and unix domain socket files have only user write permission (not group or other).
 

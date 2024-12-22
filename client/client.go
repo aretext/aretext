@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"unsafe"
 
+	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 )
 
@@ -22,7 +24,7 @@ import (
 // 3. detecting if the server has terminated and, if so, exiting.
 //
 // The server handles everything else.
-func RunClient(ctx context.Context) error {
+func RunClient(ctx context.Context, config Config) error {
 	// Register for SIGINT to notify server of client termination.
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
@@ -44,7 +46,7 @@ func RunClient(ctx context.Context) error {
 	}
 
 	// Connect to the server over unix domain socket (UDS).
-	conn, err := connectToServer() // TODO: configure path
+	conn, err := connectToServer(config.ServerSocketPath)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
@@ -77,11 +79,44 @@ func RunClient(ctx context.Context) error {
 }
 
 func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
-	// TODO
-	return nil, nil, nil
+	// Create the pty pair.
+	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not open /dev/ptmx: %w", err)
+	}
+
+	// Unlock pts.
+	locked := 0
+	result, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCSPTLCK, uintptr(unsafe.Pointer(&locked)))
+	if int(result) == -1 {
+		return nil, nil, fmt.Errorf("could not unlock pty: %w", err)
+	}
+
+	// Retrieve pts file descriptor.
+	ptsFd, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCGPTPEER, unix.O_RDWR|unix.O_NOCTTY)
+	if int(ptsFd) == -1 {
+		if errno, isErrno := err.(syscall.Errno); !isErrno || (errno != syscall.EINVAL && errno != syscall.ENOTTY) {
+			return nil, nil, fmt.Errorf("could not retrieve pts file descriptor: %w", err)
+		}
+		// On EINVAL or ENOTTY, fallback to TIOCGPTN.
+		ptyN, err := unix.IoctlGetInt(ptmxFd, unix.TIOCGPTN)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not find pty number: %w", err)
+		}
+		ptyName := fmt.Sprintf("/dev/pts/%d", ptyN)
+		fd, err := unix.Open(ptyName, unix.O_RDWR|unix.O_NOCTTY, 0o620)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not open pty %s: %w", ptyName, err)
+		}
+		ptsFd = uintptr(fd)
+	}
+
+	ptmx = os.NewFile(uintptr(ptmxFd), "")
+	pts = os.NewFile(ptsFd, "")
+	return ptmx, pts, nil
 }
 
-func connectToServer() (*net.UnixConn, error) {
+func connectToServer(socketPath string) (*net.UnixConn, error) {
 	// TODO
 	return nil, nil
 }

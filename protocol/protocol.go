@@ -56,7 +56,7 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 	var oob [2]byte
 	var headerData [4]byte
 
-	n, oobn, _, _, err := conn.ReadMsgUnix(headerData, oob)
+	n, oobn, _, _, err := conn.ReadMsgUnix(headerData[:], oob[:])
 	if err != nil {
 		return nil, fmt.Errorf("net.ReadMsgUnix: %w", err)
 	} else if n != 4 {
@@ -71,7 +71,7 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 	}
 
 	msgData := make([]byte, msgLen)
-	n, _, _, _, err := conn.ReadMsgUnix(msgData, nil)
+	n, _, _, _, err = conn.ReadMsgUnix(msgData, nil)
 	if err != nil {
 		return nil, fmt.Errorf("net.ReadMsgUnix: %w", err)
 	} else if n != msgLen {
@@ -97,11 +97,12 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 			return nil, errors.New("invalid number of file descriptors received for pty")
 		}
 
-		msg.Pts := os.NewFile(uintptr(fds[0]), "")
-		if fd == nil {
+		pts := os.NewFile(uintptr(fds[0]), "")
+		if pts == nil {
 			return nil, errors.New("invalid file descriptor for pty")
 		}
 
+		msg.Pts = pts
 		return msg, nil
 
 	case clientGoodbyeMsgType:

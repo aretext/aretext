@@ -15,16 +15,14 @@ const (
 	TerminalResizeMsgType
 )
 
-// Message is a serializable message sent between a client and a server.
-type Message struct {
-	MsgType MsgType
+// Message represents a serializable message sent between a client and a server.
+type Message interface {
+	MsgType() MsgType
 }
 
 // ClientHelloMsg is sent from client to server immediately after opening a connection.
 // Along with this message, the client sends out-of-band SCM_RIGHTS with the file descriptor for the pts.
 type ClientHelloMsg struct {
-	Message
-
 	// FilePath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
 	FilePath string
@@ -39,38 +37,60 @@ type ClientHelloMsg struct {
 	TerminalEnv []string
 }
 
+func (m ClientHelloMsg) MsgType() MsgType {
+	return ClientHelloMsgType
+}
+
+var _ Message = (*ClientHelloMsg)(nil)
+
 // ClientGoodbyeMsg is sent from a client to gracefully terminate a connection to the server.
 type ClientGoodbyeMsg struct {
-	Message
-
 	// Reason indicates the reason why the client terminated the connection.
 	Reason string
 }
 
+func (m ClientGoodbyeMsg) MsgType() MsgType {
+	return ClientGoodbyeMsg
+}
+
+var _ Message = (*ClientGoodbyeMsg)(nil)
+
 // ServerHelloMsg is sent from a server after receiving ClientHello.
 // This tells the client that it has successfully connected to a server.
 type ServerHelloMsg struct {
-	Message
-
 	// ClientId is the unique ID the server has assigned to the client.
 	ClientId ClientId
 }
 
+func (m ServerHelloMsg) MsgType() MsgType {
+	return ServerHelloMsgType
+}
+
+var _ Message = (*ServerHelloMsg)(nil)
+
 // ServerGoodbyeMsg is sent from a server to gracefully terminate a connection to the client.
 type ServerGoodbyeMsg struct {
-	Message
-
 	// Reason indicates the reason why the server terminated the connection.
 	Reason string
 }
 
+func (m ServerGoodbyeMsg) MsgType() MsgType {
+	return ServerGoodbyeMsgType
+}
+
+var _ Message = (*ServerGoodbyeMsg)(nil)
+
 // TerminalResizeMsg is sent from a client to the server to signal that the terminal has been resized.
 type TerminalResizeMsg struct {
-	Message
-
 	// Width is the new width of the client's terminal.
 	Width int
 
 	// Height is the new height of the client's terminal.
 	Height int
 }
+
+func (m TerminalResizeMsg) MsgType() MsgType {
+	return TerminalResizeMsgType
+}
+
+var _ Message = (*TerminalResizeMsg)(nil)

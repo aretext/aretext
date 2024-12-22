@@ -14,12 +14,11 @@ import (
 
 // TODO
 func SendClientHello(ctx context.Context, conn *net.UnixConn, msg *ClientHelloMsg, pts *os.File) error {
-	ptsFd := int(pts.Fd())
-	return sendFramedMsgData(ctx, conn, msg, &ptsFd)
+	return sendFramedMsgData(ctx, conn, msg, pts)
 }
 
 func ReceiveClientHello(ctx context.Context, conn *net.UnixConn) (*ClientHelloMsg, *os.File, error) {
-
+	return nil, nil, nil
 }
 
 func SendClientGoodbye(ctx context.Context, conn *net.UnixConn, msg *ClientGoodbyeMsg) error {
@@ -54,7 +53,7 @@ func ReceiveTerminalResize(ctx context.Context, conn *net.UnixConn) (*TerminalRe
 	return nil, nil
 }
 
-func sendFramedMsgData[M any](ctx context.Context, conn *net.UnixConn, msg *M, oobFileDesc *int) error {
+func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *M, oobFile *os.File) error {
 	if msg == nil {
 		return errors.New("Message cannot be nil")
 	}
@@ -70,11 +69,12 @@ func sendFramedMsgData[M any](ctx context.Context, conn *net.UnixConn, msg *M, o
 
 	data := make([]byte, len(encodedMsg)+4)
 	binary.BigEndian.PutUint16(data[0:], uint16(len(encodedMsg)))
-	copy(data[4:], encodedMsg)
+	binary.BigEndian.PutUint16(data[4:], uint16(msg.MsgType()))
+	copy(data[8:], encodedMsg)
 
 	var oob []byte
-	if oobFileDesc != nil {
-		oob = syscall.UnixRights(*oobFileDesc)
+	if oobFile != nil {
+		oob = syscall.UnixRights(int(oobFile.Fd()))
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -85,5 +85,5 @@ func sendFramedMsgData[M any](ctx context.Context, conn *net.UnixConn, msg *M, o
 	return nil
 }
 
-func receiveFramedMsgData[M any](ctx context.Context, conn *net.UnixConn) (*M, *int, error) {
+func receiveFramedMsgData[M any](ctx context.Context, conn *net.UnixConn) (*M, *os.File, error) {
 }

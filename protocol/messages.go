@@ -21,6 +21,7 @@ type Message struct {
 }
 
 // ClientHelloMsg is sent from client to server immediately after opening a connection.
+// Along with this message, the client sends out-of-band SCM_RIGHTS with the file descriptor for the pts.
 type ClientHelloMsg struct {
 	Message
 

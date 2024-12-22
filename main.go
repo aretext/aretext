@@ -13,7 +13,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/app"
+	"github.com/aretext/aretext/editor"
 )
 
 // This variable is set automatically as part of the release process.
@@ -94,7 +94,7 @@ func main() {
 
 	path := flag.Arg(0)
 	if *editconfig {
-		configPath, err := app.ConfigPath()
+		configPath, err := editor.ConfigPath()
 		if err != nil {
 			exitWithError(err)
 		}
@@ -123,7 +123,7 @@ func runEditor(path string, lineNum uint64) error {
 	log.Printf("lineNum: %d\n", lineNum)
 	log.Printf("$TERM env var: %q\n", os.Getenv("TERM"))
 
-	configRuleSet, err := app.LoadOrCreateConfig(*noconfig)
+	configRuleSet, err := editor.LoadOrCreateConfig(*noconfig)
 	if err != nil {
 		return err
 	}
@@ -140,8 +140,9 @@ func runEditor(path string, lineNum uint64) error {
 
 	screen.EnablePaste()
 
-	editor := app.NewEditor(screen, path, uint64(lineNum), configRuleSet)
-	editor.RunEventLoop()
+	editor.NewEditor(screen, path, uint64(lineNum), configRuleSet).
+		RunEventLoop()
+
 	return nil
 }
 

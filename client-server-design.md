@@ -40,15 +40,20 @@ Client TTY Delegation
 
 The client delegates all interactions with its TTY to the server using the following procedure:
 
-1.	Create a pseudoterminal (pty) pair.
-2.	Send the secondary pty to the server over UDS using SCM_RIGHTS out-of-band data.
+1.	Create a pseudoterminal (pty) pair: ptmx (primary) and pts (secondary)
+2.	Send pts to the server over UDS using SCM_RIGHTS out-of-band data.
 3.	Send a "hello" message to the server encoding the arguments to the client (e.g. the filepath to open).
-4.	Copy stdin -> pty and pty -> stdout until the pty is closed.
+4.	Copy stdin -> ptmx and ptmx -> stdout until the pty is closed.
 
-The server receives a pty file descriptor over UDS and uses it to control the client's terminal:
+The server receives a file descriptor for pts over UDS and uses it to control the client's terminal:
 
-1.	Initialize a tcell `Screen` for the client using the pty file descriptor. This is used for all input/output to/from the editor.
-2.	When executing shell commands with `CmdModeTerminal`, use the pty file descriptor as stdin, stdout, stderr, and the controlling terminal for the subprocess.
+1.	Initialize a tcell `Screen` for the client using the pts file descriptor. This is used for all input/output to/from the editor.
+2.	When executing shell commands with `CmdModeTerminal`, use the pts file descriptor as stdin, stdout, stderr, and the controlling terminal for the subprocess.
+
+When tty dimensions change, the client will receive a SIGWINCH signal. To propagate the change, the client must:
+
+1.	Resize ptmx to match the client's tty. This causes the kernel to signal SIGWINCH to all server subprocesses whose controlling terminal is pts.
+2.	Send a `WindowResizeMsg` to the server. This allows the server to update screen dimensions for the client's editor.
 
 Client-Server Messages
 ----------------------
@@ -70,6 +75,11 @@ Messages will be serialized as JSON, with a uint32 header indicating msg length.
 	-	sent from either client or server to gracefully terminate
 	-	fields:
 		-	code: used to differentiate user-initiated quit from an error.
+-	`WindowResizeMsg`
+	-	sent from client to server on receipt of SIGWINCH signal.
+	-	fields:
+		-	width
+		-	height
 
 The server will close the connection if it receives a message larger than some limit.
 
@@ -132,16 +142,19 @@ When one client modifies a document, the server must update the per-client state
 Shell commands
 --------------
 
-All shell commands are executed by the server on behalf of a client. The user is responsible for configuring env vars needed by shell commands the server executes. The shell command's working directory will be set to the current working directory of the client.
+All shell commands are executed by the server on behalf of a client. The user is responsible for configuring env vars needed by shell commands the server executes. The shell command's working directory will be set to the current working directory of the client. Shell commands always execute asynchronously to avoid blocking the server.
 
 By default, the client and server processes run as the same user/group. The unix domain socket and config files are writable only by this user. This avoids any risk of privilege escalation / confused deputy. To protect against misconfiguration, aretext will require and verify that configuration and unix domain socket files have only user write permission (not group or other).
 
 Configuration
 -------------
 
+The current configuration format derives the effective configuration by matching rules to the filepath of the current document. The server will manage multiple documents, so the current format provides no way to specify global configuration.
+
 Since the server loads the configuration once, it is no longer necessary to store all configuration in a single YAML file. New configuration options will be added for client and server settings.
 
 -	`config.yaml` for top-level client/server config.
+	-	config version (to allow future migrations)
 	-	server timeout after all clients disconnect
 	-	whether the client should try to start the server
 	-	debug logging
@@ -151,4 +164,47 @@ Since the server loads the configuration once, it is no longer necessary to stor
 
 The user can reload configuration using a menu command. On reload, the server will validate the config and display error status on failure. The new configuration applies immediately to all documents.
 
-Both the client and server will have debug options to log messages sent/received.
+As this is a breaking change, aretext will provide a built-in migration tool `aretext --migrate-config` that:
+
+1.	Detects old config.yaml format.
+2.	Prompts for confirmation.
+3.	Moves `config.yaml` to `rules/01-config.yaml`
+4.	Creates default global config.yaml.
+
+If the server detects an old configuration, it will exit with an error recommending that the user run `aretext --migrate-config`. The same process will be used moving forward to automate changes to the configuration format.
+
+File Watching
+-------------
+
+The server will watch all open files to detect changes. The initial implementation will poll the filesystem (as today), from a single goroutine checking all open files. This could be optimized later by registering for notifications from the operating system.
+
+LSP Integration
+---------------
+
+Initial support for the following commands, accessible via menu items:
+
+-	Go to definition
+-	Find references
+-	Find implementations
+
+The server synchronizes document state with the LSP servers, including edits (insert/delete), document saves, and reloads.
+
+Workspace directories are inferred from the file path by traversing up directories until a file matching a "root pattern" is found (for example, the git repository, Go module, ...). If no match is found, fallback to the client's working directory. The server is responsible for adding/removing workspace directories as client's open files and change their working directories.
+
+Versioning
+----------
+
+This is a significant and breaking change, necessitating a major version increment to `2.0`. Users will need to migrate their configuration to the new format.
+
+Development Milestones
+----------------------
+
+1.	client/server tty delegation, proving tcell integration and subprocess execution.
+2.	client daemonizes server and server exits when all clients disconnect.
+3.	multi-client input system -- process input for each client and output the command (without executing anything).
+4.	multi-client editor state and actions, with input coordination (without file watch).
+5.	file watch and reload.
+6.	shellcmd in client tty (run async).
+7.	config file refactor, hot reload.
+8.	configuration migration tool
+9.	LSP integration.

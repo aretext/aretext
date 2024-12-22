@@ -21,16 +21,15 @@ Architecture
 The **server** is responsible for:
 
 -	listening on a unix domain socket (UDS) and accepting client connections.
--	loading documents from disk, including watching and reloading on changes.
 -	receiving and processing input from clients.
--	calculating terminal contents to display (but delegate rendering to the terminal).
--	detecting on-disk changes to all open documents and reloading contents.
--	executing shell commands on behalf of the client.
+-	rendering to the client terminal, using the tty delegation mechanism described below.
+-	loading documents from disk, including watching and reloading on changes.
+-	executing shell commands.
 -	managing LSP lifecycle and communication.
 
 The **clients** are responsible for:
 
--	proxying terminal input/output to the server, using a mechanism described below.
+-	proxying terminal input/output to the server, using the tty delegation mechanism described below.
 -	(optionally) starting and daemonizing server process.
 
 To avoid conflict between different user accounts, the UDS path will be `$XDG_RUNTIME_DIR/aretext.socket`.

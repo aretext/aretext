@@ -8,33 +8,11 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"os"
 	"syscall"
 )
 
-func SendClientHello(ctx context.Context, conn *net.UnixConn, msg *ClientHelloMsg, pts *os.File) error {
-	return sendFramedMsgData(ctx, conn, msg, pts)
-}
-
-func SendClientGoodbye(ctx context.Context, conn *net.UnixConn, msg *ClientGoodbyeMsg) error {
-	return sendFramedMsgData(ctx, conn, msg, nil)
-}
-
-func SendServerHello(ctx context.Context, conn *net.UnixConn, msg *ServerHelloMsg) error {
-	return sendFramedMsgData(ctx, conn, msg, nil)
-}
-
-func SendServerGoodbye(ctx context.Context, conn *net.UnixConn, msg *ServerGoodbyeMsg) error {
-	return sendFramedMsgData(ctx, conn, msg, nil)
-}
-
-func SendTerminalResize(ctx context.Context, conn *net.UnixConn, msg *TerminalResizeMsg) error {
-	return sendFramedMsgData(ctx, conn, msg, nil)
-}
-
-func ReceiveMessage(ctx context.Context, conn *net.UnixConn) (
-
-func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *M, oobFile *os.File) error {
+// SendMessage sends a message over a Unix socket between a client and a server.
+func SendMessage(ctx context.Context, conn *net.UnixConn, msg Message) error {
 	if msg == nil {
 		return errors.New("Message cannot be nil")
 	}
@@ -44,7 +22,7 @@ func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *
 		return errors.New("Invalid message type")
 	}
 
-	encodedMsg, err := json.Marshal(*msg)
+	encodedMsg, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("json.Marshal: %w", err)
 	}
@@ -54,13 +32,13 @@ func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *
 	}
 
 	data := make([]byte, len(encodedMsg)+4)
-	binary.BigEndian.PutUint16(data[0:], uint16(len(encodedMsg)))
 	binary.BigEndian.PutUint16(data[4:], uint16(msgType))
+	binary.BigEndian.PutUint16(data[0:], uint16(len(encodedMsg)))
 	copy(data[8:], encodedMsg)
 
 	var oob []byte
-	if oobFile != nil {
-		oob = syscall.UnixRights(int(oobFile.Fd()))
+	if clientHelloMsg, ok := msg.(*ClientHelloMsg); ok {
+		oob = syscall.UnixRights(int(clientHelloMsg.Pts.Fd()))
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -71,5 +49,8 @@ func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *
 	return nil
 }
 
-func receiveFramedMsgData[M any](ctx context.Context, conn *net.UnixConn) (*M, *os.File, error) {
+// ReceiveMessage receives a mesage over a Unix socket.
+func ReceiveMessage(ctx context.Context, conn *net.UnixConn) (Message, error) {
+	// TODO
+	return nil, nil
 }

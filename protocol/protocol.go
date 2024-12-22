@@ -11,9 +11,9 @@ import (
 	"syscall"
 )
 
-const maxMsgLen = 102400
+const maxMsgLen = 102400 // 100 KiB
 
-// SendMessage sends a message over a Unix socket between a client and a server.
+// SendMessage sends a message over a Unix socket.
 func SendMessage(conn *net.UnixConn, msg Message) error {
 	if msg == nil {
 		return errors.New("Message cannot be nil")

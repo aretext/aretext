@@ -117,8 +117,17 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 }
 
 func connectToServer(socketPath string) (*net.UnixConn, error) {
-	// TODO
-	return nil, nil
+	addr, err := net.ResolveUnixAddr("unix", socketPath)
+	if err != nil {
+		return nil, fmt.Errorf("net.ResolveUnixAddr: %w", err)
+	}
+
+	conn, err := net.DialUnix("unix", nil, addr)
+	if err != nil {
+		return nil, fmt.Errorf("net.DialUnix: %w", err)
+	}
+
+	return conn, nil
 }
 
 func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {

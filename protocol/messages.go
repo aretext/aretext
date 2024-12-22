@@ -3,21 +3,36 @@ package protocol
 // ClientId is a unique identifier for a client assigned by the server on connection.
 type ClientId int
 
+// Message represents a serializable message sent between a client and a server.
+type Message interface{}
+
 // MsgType encodes the type of message.
-type MsgType int
+type msgType int
 
 const (
-	InvalidMsgType = MsgType(iota) // Zero value is invalid.
-	ClientHelloMsgType
-	ClientGoodbyeMsgType
-	ServerHelloMsgType
-	ServerGoodbyeMsgType
-	TerminalResizeMsgType
+	invalidMsgType = MsgType(iota) // Zero value is invalid.
+	clientHelloMsgType
+	clientGoodbyeMsgType
+	serverHelloMsgType
+	serverGoodbyeMsgType
+	terminalResizeMsgType
 )
 
-// Message represents a serializable message sent between a client and a server.
-type Message interface {
-	MsgType() MsgType
+func msgTypeForMessage(msg Message) msgType {
+	switch msg.(type) {
+	case *ClientHelloMsg:
+		return clientHelloMsgType
+	case *ClientGoodbyeMsg:
+		return clientGoodbyeMsgType
+	case *ServerHelloMsg:
+		return serverHelloMsgType
+	case *ServerGoodbyeMsg:
+		return serverGoodbyeMsgType
+	case *TerminalResizeMsg:
+		return terminalResizeMsgType
+	default:
+		return invalidMsgType
+	}
 }
 
 // ClientHelloMsg is sent from client to server immediately after opening a connection.

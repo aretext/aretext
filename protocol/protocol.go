@@ -12,50 +12,36 @@ import (
 	"syscall"
 )
 
-// TODO
 func SendClientHello(ctx context.Context, conn *net.UnixConn, msg *ClientHelloMsg, pts *os.File) error {
 	return sendFramedMsgData(ctx, conn, msg, pts)
 }
 
-func ReceiveClientHello(ctx context.Context, conn *net.UnixConn) (*ClientHelloMsg, *os.File, error) {
-	return nil, nil, nil
-}
-
 func SendClientGoodbye(ctx context.Context, conn *net.UnixConn, msg *ClientGoodbyeMsg) error {
-	return nil
-}
-
-func ReceiveClientGoodbye(ctx context.Context, conn *net.UnixConn) (*ClientGoodbyeMsg, error) {
-	return nil, nil
+	return sendFramedMsgData(ctx, conn, msg, nil)
 }
 
 func SendServerHello(ctx context.Context, conn *net.UnixConn, msg *ServerHelloMsg) error {
-	return nil
-}
-
-func ReceiveServerHello(ctx context.Context, conn *net.UnixConn) (*ServerHelloMsg, error) {
-	return nil, nil
+	return sendFramedMsgData(ctx, conn, msg, nil)
 }
 
 func SendServerGoodbye(ctx context.Context, conn *net.UnixConn, msg *ServerGoodbyeMsg) error {
-	return nil
-}
-
-func ReceiveServerGoodbye(ctx context.Context, conn *net.UnixConn) (*ServerGoodbyeMsg, error) {
-	return nil, nil
+	return sendFramedMsgData(ctx, conn, msg, nil)
 }
 
 func SendTerminalResize(ctx context.Context, conn *net.UnixConn, msg *TerminalResizeMsg) error {
-	return nil
+	return sendFramedMsgData(ctx, conn, msg, nil)
 }
 
-func ReceiveTerminalResize(ctx context.Context, conn *net.UnixConn) (*TerminalResizeMsg, error) {
-	return nil, nil
-}
+func ReceiveMessage(ctx context.Context, conn *net.UnixConn) (
 
 func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *M, oobFile *os.File) error {
 	if msg == nil {
 		return errors.New("Message cannot be nil")
+	}
+
+	msgType := msgTypeForMessage(msg)
+	if msgType == invalidMsgType {
+		return errors.New("Invalid message type")
 	}
 
 	encodedMsg, err := json.Marshal(*msg)
@@ -69,7 +55,7 @@ func sendFramedMsgData[M Message](ctx context.Context, conn *net.UnixConn, msg *
 
 	data := make([]byte, len(encodedMsg)+4)
 	binary.BigEndian.PutUint16(data[0:], uint16(len(encodedMsg)))
-	binary.BigEndian.PutUint16(data[4:], uint16(msg.MsgType()))
+	binary.BigEndian.PutUint16(data[4:], uint16(msgType))
 	copy(data[8:], encodedMsg)
 
 	var oob []byte

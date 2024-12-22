@@ -71,12 +71,50 @@ func RunClient(ctx context.Context) error {
 	go handleServerMessages(conn, ptmx)
 
 	// Proxy ptmx <-> tty.
+	proxyTtyUntilClosed(ptmx)
+
+	return nil
+}
+
+func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
+	// TODO
+	return nil, nil, nil
+}
+
+func connectToServer() (*net.UnixConn, error) {
+	// TODO
+	return nil, nil
+}
+
+func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {
+	// TODO
+	return nil
+}
+
+func waitForServerHello(ctx context.Context, conn *net.UnixConn) (clientId int, err error) {
+	// TODO
+	return 0, nil
+}
+
+func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) error {
+	// TODO
+	return nil
+}
+
+func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {
+	// TODO
+}
+
+func proxyTtyUntilClosed(ptmx *os.File) {
 	doneCh := make(chan struct{})
+
+	// Copy pty -> tty
 	go func(ptyOut io.Writer, ttyIn io.Reader) {
 		_, _ = io.Copy(ptyOut, ttyIn)
 		doneCh <- struct{}{}
 	}(ptmx, os.Stdin)
 
+	// Copy tty -> pty
 	go func(ttyOut io.Writer, ptyIn io.Reader) {
 		_, _ = io.Copy(ttyOut, ptyIn)
 		doneCh <- struct{}{}
@@ -86,29 +124,4 @@ func RunClient(ctx context.Context) error {
 	select {
 	case <-doneCh:
 	}
-
-	return nil
-}
-
-func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
-	return nil, nil, nil
-}
-
-func connectToServer() (*net.UnixConn, error) {
-	return nil, nil
-}
-
-func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {
-	return nil
-}
-
-func waitForServerHello(ctx context.Context, conn *net.UnixConn) (clientId int, err error) {
-	return 0, nil
-}
-
-func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) error {
-	return nil
-}
-
-func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {
 }

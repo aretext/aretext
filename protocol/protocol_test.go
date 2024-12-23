@@ -32,6 +32,12 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	assert.Equal(t, msg.WorkingDir, receivedClientHelloMsg.WorkingDir)
 	assert.Equal(t, msg.TerminalEnv, receivedClientHelloMsg.TerminalEnv)
 	assert.NotNil(t, receivedClientHelloMsg.Pts)
+
+	sentPtsFileInfo, err := msg.Pts.Stat()
+	require.NoError(t, err)
+	receivedPtsFileInfo, err := receivedClientHelloMsg.Pts.Stat()
+	require.NoError(t, err)
+	assert.True(t, os.SameFile(sentPtsFileInfo, receivedPtsFileInfo))
 }
 
 func TestSendAndReceiveClientGoodbyeMsg(t *testing.T) {

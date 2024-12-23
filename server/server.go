@@ -29,6 +29,8 @@ func RunServer(config Config) error {
 	// TODO: setup some kind of channel and background thread to manage editor state?
 	// or do the accept/conn dance in background?
 
+	// TODO: and need to figure out tcell screen for pty situation
+
 	clientId := protocol.ClientId(0)
 	for {
 		conn, err := ul.AcceptUnix()

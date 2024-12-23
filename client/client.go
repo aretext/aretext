@@ -230,8 +230,10 @@ func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
 func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {
 	for {
 		msg, err := protocol.ReceiveMessage(conn)
-		if err != nil {
-			// TODO: handle connection closed
+		if errors.Is(err, io.EOF) {
+			log.Printf("server closed the connection\n")
+			return
+		} else if err != nil {
 			log.Printf("error receiving server msg: %s\n", err)
 			return
 		}

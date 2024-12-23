@@ -107,35 +107,35 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 		}
 
 		msg.Pts = pts
-		return msg, nil
+		return &msg, nil
 
 	case clientGoodbyeMsgType:
 		var msg ClientGoodbyeMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
-		return msg, nil
+		return &msg, nil
 
 	case serverHelloMsgType:
 		var msg ServerHelloMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
-		return msg, nil
+		return &msg, nil
 
 	case serverGoodbyeMsgType:
 		var msg ServerGoodbyeMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
-		return msg, nil
+		return &msg, nil
 
 	case terminalResizeMsgType:
 		var msg TerminalResizeMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
-		return msg, nil
+		return &msg, nil
 
 	default:
 		return nil, errors.New("Unrecognized message type")

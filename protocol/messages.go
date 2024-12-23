@@ -6,7 +6,9 @@ import "os"
 type ClientId int
 
 // Message represents a serializable message sent between a client and a server.
-type Message interface{}
+type Message interface{
+	closed() // Prevent other implementations.
+}
 
 // msgType encodes the type of message.
 type msgType int
@@ -22,15 +24,15 @@ const (
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case ClientHelloMsg, *ClientHelloMsg:
+	case  *ClientHelloMsg:
 		return clientHelloMsgType
-	case ClientGoodbyeMsg, *ClientGoodbyeMsg:
+	case  *ClientGoodbyeMsg:
 		return clientGoodbyeMsgType
-	case ServerHelloMsg, *ServerHelloMsg:
+	case  *ServerHelloMsg:
 		return serverHelloMsgType
-	case ServerGoodbyeMsg, *ServerGoodbyeMsg:
+	case  *ServerGoodbyeMsg:
 		return serverGoodbyeMsgType
-	case TerminalResizeMsg, *TerminalResizeMsg:
+	case  *TerminalResizeMsg:
 		return terminalResizeMsgType
 	default:
 		return invalidMsgType
@@ -57,11 +59,17 @@ type ClientHelloMsg struct {
 	Pts *os.File `json:"-"`
 }
 
+func (m *ClientHelloMsg) closed() {}
+var _ Message = (*ClientHelloMsg)(nil)
+
 // ClientGoodbyeMsg is sent from a client to gracefully terminate a connection to the server.
 type ClientGoodbyeMsg struct {
 	// Reason indicates the reason why the client terminated the connection.
 	Reason string
 }
+
+func (m *ClientGoodbyeMsg) closed() {}
+var _ Message = (*ClientGoodbyeMsg)(nil)
 
 // ServerHelloMsg is sent from a server after receiving ClientHello.
 // This tells the client that it has successfully connected to a server.
@@ -70,11 +78,17 @@ type ServerHelloMsg struct {
 	ClientId ClientId
 }
 
+func (m *ServerHelloMsg) closed() {}
+var _ Message = (*ServerHelloMsg)(nil)
+
 // ServerGoodbyeMsg is sent from a server to gracefully terminate a connection to the client.
 type ServerGoodbyeMsg struct {
 	// Reason indicates the reason why the server terminated the connection.
 	Reason string
 }
+
+func (m *ServerGoodbyeMsg) closed() {}
+var _ Message = (*ServerGoodbyeMsg)(nil)
 
 // TerminalResizeMsg is sent from a client to the server to signal that the terminal has been resized.
 type TerminalResizeMsg struct {
@@ -84,3 +98,6 @@ type TerminalResizeMsg struct {
 	// Height is the new height of the client's terminal.
 	Height int
 }
+
+func (m *TerminalResizeMsg) closed() {}
+var _ Message = (*TerminalResizeMsg)(nil)

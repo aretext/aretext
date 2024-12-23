@@ -66,7 +66,7 @@ func TestSendAndReceive(t *testing.T) {
 	require.NoError(t, err)
 	defer clientConn.Close()
 
-	msg := ClientHelloMsg{
+	msg := &ClientHelloMsg{
 		FilePath:    "/test/file",
 		WorkingDir:  "/test",
 		TerminalEnv: []string{"TERM=tmux"},

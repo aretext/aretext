@@ -56,6 +56,9 @@ func RunClient(ctx context.Context, config Config) error {
 	}
 	defer conn.Close()
 
+	// Handle signals (SIGWINCH, SIGINT) asynchronously.
+	go handleSignals(signalCh, ptmx, conn)
+
 	// Send ClientHello to the server, along with pts to delegate
 	// the psuedoterminal to the server.
 	err = sendClientHelloWithPty(conn, pts)
@@ -72,8 +75,7 @@ func RunClient(ctx context.Context, config Config) error {
 	// Close pts as it's now owned by the server.
 	pts.Close()
 
-	// Handle signals and server messages.
-	go handleSignals(signalCh, ptmx, conn)
+	// Handle server messages asynchronously.
 	go handleServerMessages(conn, ptmx)
 
 	// Proxy ptmx <-> tty.

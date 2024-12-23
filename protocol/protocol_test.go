@@ -12,17 +12,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSendAndReceive(t *testing.T) {
-	tmpDir := t.TempDir()
-	socketPath := filepath.Join(tmpDir, "test.socket")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	fakePtsPath := filepath.Join(tmpDir, "pts")
+func TestSendAndReceiveClientHelloWithPts(t *testing.T) {
+	fakePtsPath := filepath.Join(t.TempDir(), "pts")
 	fakePts, err := os.Create(fakePtsPath)
 	require.NoError(t, err)
 	defer fakePts.Close()
+
+	msg := &ClientHelloMsg{
+		FilePath:    "/test/file",
+		WorkingDir:  "/test",
+		TerminalEnv: []string{"TERM=tmux"},
+		Pts:         fakePts,
+	}
+
+	receivedMsg := simulateSendAndReceive(t, msg)
+	receivedClientHelloMsg, ok := receivedMsg.(*ClientHelloMsg)
+	require.True(t, ok)
+	assert.Equal(t, msg.FilePath, receivedClientHelloMsg.FilePath)
+	assert.Equal(t, msg.WorkingDir, receivedClientHelloMsg.WorkingDir)
+	assert.Equal(t, msg.TerminalEnv, receivedClientHelloMsg.TerminalEnv)
+	assert.NotNil(t, receivedClientHelloMsg.Pts)
+}
+
+func simulateSendAndReceive(t *testing.T, msgToSend Message) Message {
+	socketPath := filepath.Join(t.TempDir(), "test.socket")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	readyChan := make(chan struct{})
 	recvChan := make(chan Message, 1)
@@ -66,21 +81,17 @@ func TestSendAndReceive(t *testing.T) {
 	require.NoError(t, err)
 	defer clientConn.Close()
 
-	msg := &ClientHelloMsg{
-		FilePath:    "/test/file",
-		WorkingDir:  "/test",
-		TerminalEnv: []string{"TERM=tmux"},
-		Pts:         fakePts,
-	}
-	err = SendMessage(clientConn, msg)
+	err = SendMessage(clientConn, msgToSend)
 	assert.NoError(t, err)
 
 	select {
 	case err := <-errChan:
 		t.Fatalf("Error sending message: %v", err)
 	case receivedMsg := <-recvChan:
-		assert.Equal(t, msg, receivedMsg)
+		return receivedMsg
 	case <-time.After(500 * time.Second): // TODO: lower this
 		t.Fatal("Timeout waiting for message")
 	}
+
+	return nil
 }

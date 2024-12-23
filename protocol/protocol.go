@@ -40,6 +40,9 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 
 	var oob []byte
 	if clientHelloMsg, ok := msg.(*ClientHelloMsg); ok {
+		if clientHelloMsg.Pts == nil {
+			return errors.New("ClientHelloMsg.Pts must not be nil")
+		}
 		oob = syscall.UnixRights(int(clientHelloMsg.Pts.Fd()))
 	}
 

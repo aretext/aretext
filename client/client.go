@@ -28,7 +28,7 @@ import (
 // 3. detecting if the server has terminated and, if so, exiting.
 //
 // The server handles everything else.
-func RunClient(ctx context.Context, config Config) error {
+func RunClient(ctx context.Context, config Config, documentPath string) error {
 	// Register for SIGINT to notify server of client termination.
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
@@ -61,7 +61,7 @@ func RunClient(ctx context.Context, config Config) error {
 
 	// Send ClientHello to the server, along with pts to delegate
 	// the psuedoterminal to the server.
-	err = sendClientHelloWithPty(conn, pts)
+	err = sendClientHello(conn, pts, documentPath)
 	if err != nil {
 		return fmt.Errorf("failed to send ClientHello: %w", err)
 	}
@@ -136,12 +136,27 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 	return conn, nil
 }
 
-func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {
+var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
+
+func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) error {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("os.Getwd: %w", err)
+	}
+
+	var terminalEnv []string
+	for _, key := range allTerminalEnvVars {
+		val, found := os.LookupEnv(key)
+		if found {
+			terminalEnv = append(terminalEnv, fmt.Sprintf("%s=%s", key, val))
+		}
+	}
+
 	msg := &protocol.ClientHelloMsg{
-		FilePath:    "TODO",
-		WorkingDir:  "TODO",
-		TerminalEnv: []string{"TODO"},
-		Pts:         pts,
+		DocumentPath: documentPath,
+		WorkingDir:   workingDir,
+		TerminalEnv:  terminalEnv,
+		Pts:          pts,
 	}
 
 	return protocol.SendMessage(conn, msg)
@@ -201,7 +216,7 @@ func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
 
 	// Notify the server that the terminal size changed.
 	msg := &protocol.TerminalResizeMsg{
-		Width: int(ws.Row),
+		Width:  int(ws.Row),
 		Height: int(ws.Col),
 	}
 	err = protocol.SendMessage(conn, msg)

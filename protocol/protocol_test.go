@@ -19,7 +19,7 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	defer fakePts.Close()
 
 	msg := &ClientHelloMsg{
-		FilePath:    "/test/file",
+		DocumentPath:    "/test/file",
 		WorkingDir:  "/test",
 		TerminalEnv: []string{"TERM=tmux"},
 		Pts:         fakePts,
@@ -28,7 +28,7 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	receivedMsg := simulateSendAndReceive(t, msg)
 	receivedClientHelloMsg, ok := receivedMsg.(*ClientHelloMsg)
 	require.True(t, ok)
-	assert.Equal(t, msg.FilePath, receivedClientHelloMsg.FilePath)
+	assert.Equal(t, msg.DocumentPath, receivedClientHelloMsg.DocumentPath)
 	assert.Equal(t, msg.WorkingDir, receivedClientHelloMsg.WorkingDir)
 	assert.Equal(t, msg.TerminalEnv, receivedClientHelloMsg.TerminalEnv)
 	assert.NotNil(t, receivedClientHelloMsg.Pts)

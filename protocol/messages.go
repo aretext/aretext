@@ -41,9 +41,9 @@ func msgTypeForMessage(msg Message) msgType {
 
 // ClientHelloMsg is sent from client to server immediately after opening a connection.
 type ClientHelloMsg struct {
-	// FilePath is the path to the initial file to open in the editor.
+	// DocumentPath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
-	FilePath string
+	DocumentPath string
 
 	// WorkingDir is the initial working directory of the client.
 	// The server uses this when searching for files or executing shell commands on behalf of a client.

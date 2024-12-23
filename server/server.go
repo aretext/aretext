@@ -1,5 +1,15 @@
 package server
 
+import (
+	"fmt"
+	"log"
+	"net"
+	"os"
+	"syscall"
+
+	"github.com/aretext/aretext/protocol"
+)
+
 // RunServer starts an aretext server.
 // The server listens on a Unix Domain Socket (UDS) for clients to connect.
 // The client sends the server a pseudoterminal (pty), which the server uses
@@ -16,7 +26,10 @@ func RunServer(config Config) error {
 		return fmt.Errorf("createListenSocket: %w", err)
 	}
 
-	clientId := 0
+	// TODO: setup some kind of channel and background thread to manage editor state?
+	// or do the accept/conn dance in background?
+
+	clientId := protocol.ClientId(0)
 	for {
 		conn, err := ul.AcceptUnix()
 		if err != nil {
@@ -39,7 +52,7 @@ func createListenSocket(socketPath string) (*net.UnixListener, error) {
 		return nil, fmt.Errorf("net.ResolveUnixAddr: %w", err)
 	}
 
-	fmt.Printf("listening on %s\n", addr)
+	log.Printf("listening on %s\n", addr)
 	ul, err := net.ListenUnix("unix", addr)
 	if err != nil {
 		return nil, fmt.Errorf("net.ListenUnix: %w", err)
@@ -48,39 +61,15 @@ func createListenSocket(socketPath string) (*net.UnixListener, error) {
 	return ul, nil
 }
 
-func handleConnection(uc *net.UnixConn, clientId int) {
-	fmt.Printf("client %d connected\n", clientId)
+func handleConnection(conn *net.UnixConn, clientId protocol.ClientId) {
+	log.Printf("client %d connected\n", clientId)
+	defer conn.Close()
 
-	// Receive client TTY file descriptor over the Unix socket.
-	tty, err := receiveTTY(uc)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error receiving tty: %s\n", err)
-		return
-	}
-	defer tty.Close()
-
-	fmt.Printf("received tty from client %d\n", clientId)
-
-	// Start a shell subprocess connected to the client's tty.
-	ctx := context.Background()
-	cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
-	cmd.Env = []string{fmt.Sprintf("CLIENT_ID=%d", clientId)}
-	cmd.Stdin = tty
-	cmd.Stdout = tty
-	cmd.Stderr = tty
-	// https://github.com/golang/go/issues/29458
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setsid:  true,
-		Setctty: true,
-		Ctty:    0, // this must be a valid FD in the child process, so choose stdin (fd=0)
-	}
-
-	err = cmd.Run()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running cmd: %s\n", err)
-		return
-	}
-
-	fmt.Printf("cmd completed for client %d\n", clientId)
+	// TODO: receive ClientHelloMsg
+	//  - add client state with pty, working dir, etc.
+	// TODO: send ServerHelloMsg
+	// TODO: loop wating for TerminalResize or ClientGoodbye
+	//   - on TerminalResize, update editor state
+	//   - on ClientGoodbye, remove client state and exit
+	//   - on any other error, remove client state and exit
 }
-

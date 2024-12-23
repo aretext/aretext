@@ -85,6 +85,10 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
+		if oobn != 2 {
+			return nil, errors.New("Missing expected OOB data in ClientHello")
+		}
+
 		cmsgs, err := syscall.ParseSocketControlMessage(oob[0:oobn])
 		if err != nil {
 			return nil, fmt.Errorf("syscall.ParseSocketControlMessage: %w", err)

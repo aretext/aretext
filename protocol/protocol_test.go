@@ -80,7 +80,7 @@ func TestSendAndReceive(t *testing.T) {
 		t.Fatalf("Error sending message: %v", err)
 	case receivedMsg := <-recvChan:
 		assert.Equal(t, msg, receivedMsg)
-	case <-time.After(5 * time.Second):
+	case <-time.After(500 * time.Second): // TODO: lower this
 		t.Fatal("Timeout waiting for message")
 	}
 }

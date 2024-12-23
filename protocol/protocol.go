@@ -53,7 +53,7 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 
 // ReceiveMessage receives a mesage over a Unix socket.
 func ReceiveMessage(conn *net.UnixConn) (Message, error) {
-	var oob [2]byte
+	var oob [128]byte
 	var headerData [4]byte
 
 	n, oobn, _, _, err := conn.ReadMsgUnix(headerData[:], oob[:])
@@ -85,7 +85,7 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
-		if oobn != 2 {
+		if oobn == 0 {
 			return nil, errors.New("Missing expected OOB data in ClientHello")
 		}
 

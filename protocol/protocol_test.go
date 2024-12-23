@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSendAndReceiveClientHelloWithPts(t *testing.T) {
+func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	fakePtsPath := filepath.Join(t.TempDir(), "pts")
 	fakePts, err := os.Create(fakePtsPath)
 	require.NoError(t, err)
@@ -32,6 +32,39 @@ func TestSendAndReceiveClientHelloWithPts(t *testing.T) {
 	assert.Equal(t, msg.WorkingDir, receivedClientHelloMsg.WorkingDir)
 	assert.Equal(t, msg.TerminalEnv, receivedClientHelloMsg.TerminalEnv)
 	assert.NotNil(t, receivedClientHelloMsg.Pts)
+}
+
+func TestSendAndReceiveClientGoodbyeMsg(t *testing.T) {
+	msg := &ClientGoodbyeMsg{
+		Reason: "Test reason",
+	}
+	receivedMsg := simulateSendAndReceive(t, msg)
+	assert.Equal(t, msg, receivedMsg)
+}
+
+func TestSendAndReceiveServerHelloMsg(t *testing.T) {
+	msg := &ServerHelloMsg{
+		ClientId: 123,
+	}
+	receivedMsg := simulateSendAndReceive(t, msg)
+	assert.Equal(t, msg, receivedMsg)
+}
+
+func TestSendAndReceiveServerGoodbyeMsg(t *testing.T) {
+	msg := &ServerGoodbyeMsg{
+		Reason: "Test reason",
+	}
+	receivedMsg := simulateSendAndReceive(t, msg)
+	assert.Equal(t, msg, receivedMsg)
+}
+
+func TestSendAndReceiveTerminalResizeMsg(t *testing.T) {
+	msg := &TerminalResizeMsg{
+		Width:  123,
+		Height: 456,
+	}
+	receivedMsg := simulateSendAndReceive(t, msg)
+	assert.Equal(t, msg, receivedMsg)
 }
 
 func simulateSendAndReceive(t *testing.T, msgToSend Message) Message {

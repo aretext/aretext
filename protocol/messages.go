@@ -16,7 +16,6 @@ type msgType int
 const (
 	invalidMsgType = msgType(iota) // Zero value is invalid.
 	clientHelloMsgType
-	clientGoodbyeMsgType
 	serverHelloMsgType
 	serverGoodbyeMsgType
 	terminalResizeMsgType
@@ -26,8 +25,6 @@ func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
 	case *ClientHelloMsg:
 		return clientHelloMsgType
-	case *ClientGoodbyeMsg:
-		return clientGoodbyeMsgType
 	case *ServerHelloMsg:
 		return serverHelloMsgType
 	case *ServerGoodbyeMsg:
@@ -62,16 +59,6 @@ type ClientHelloMsg struct {
 func (m *ClientHelloMsg) closed() {}
 
 var _ Message = (*ClientHelloMsg)(nil)
-
-// ClientGoodbyeMsg is sent from a client to gracefully terminate a connection to the server.
-type ClientGoodbyeMsg struct {
-	// Reason indicates the reason why the client terminated the connection.
-	Reason string
-}
-
-func (m *ClientGoodbyeMsg) closed() {}
-
-var _ Message = (*ClientGoodbyeMsg)(nil)
 
 // ServerHelloMsg is sent from a server after receiving ClientHello.
 // This tells the client that it has successfully connected to a server.

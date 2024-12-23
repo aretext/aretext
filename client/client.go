@@ -28,11 +28,9 @@ import (
 //
 // The server handles everything else.
 func RunClient(config Config, documentPath string) error {
-	// Register for SIGINT to notify server of client termination.
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, syscall.SIGWINCH)
-	signal.Notify(signalCh, syscall.SIGINT)
 
 	// Set tty to raw mode and restore on exit.
 	ttyFd := int(os.Stdin.Fd())
@@ -55,7 +53,7 @@ func RunClient(config Config, documentPath string) error {
 	}
 	defer conn.Close()
 
-	// Handle signals (SIGWINCH, SIGINT) asynchronously.
+	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, ptmx, conn)
 
 	// Send ClientHello to the server, along with pts to delegate
@@ -194,13 +192,6 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 				if err != nil {
 					log.Printf("could not resize tty: %s\n", err)
 				}
-			case syscall.SIGINT:
-				log.Printf("received SIGINT signal\n")
-				err := ptmx.Close()
-				if err != nil {
-					log.Printf("could not close pty: %s\n", err)
-				}
-				return
 			}
 		}
 	}

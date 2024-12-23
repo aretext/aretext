@@ -112,13 +112,6 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 		msg.Pts = pts
 		return &msg, nil
 
-	case clientGoodbyeMsgType:
-		var msg ClientGoodbyeMsg
-		if err := json.Unmarshal(msgData, &msg); err != nil {
-			return nil, fmt.Errorf("json.Unmarshal: %w", err)
-		}
-		return &msg, nil
-
 	case serverHelloMsgType:
 		var msg ServerHelloMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {

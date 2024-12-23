@@ -40,14 +40,6 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	assert.True(t, os.SameFile(sentPtsFileInfo, receivedPtsFileInfo))
 }
 
-func TestSendAndReceiveClientGoodbyeMsg(t *testing.T) {
-	msg := &ClientGoodbyeMsg{
-		Reason: "Test reason",
-	}
-	receivedMsg := simulateSendAndReceive(t, msg)
-	assert.Equal(t, msg, receivedMsg)
-}
-
 func TestSendAndReceiveServerHelloMsg(t *testing.T) {
 	msg := &ServerHelloMsg{
 		ClientId: 123,

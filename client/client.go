@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -158,9 +159,29 @@ func waitForServerHello(ctx context.Context, conn *net.UnixConn) (clientId int, 
 	return serverHelloMsg.ClientId, nil
 }
 
-func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) error {
-	// TODO
-	return nil
+func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
+	for {
+		select {
+		case signal := <-signalCh:
+			switch signal {
+			case syscall.SIGWINCH:
+				err := resizePtmxAndNotifyServer(ptmx, conn)
+				if err != nil {
+					log.Printf("could not resize tty: %s", err)
+				}
+			case syscall.SIGINT:
+				err := ptmx.Close()
+				if err != nil {
+					log.Printf("could not close pty: %s", err)
+				}
+				return
+			}
+		}
+	}
+}
+
+func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
+
 }
 
 func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {

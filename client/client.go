@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -28,7 +27,7 @@ import (
 // 3. detecting if the server has terminated and, if so, exiting.
 //
 // The server handles everything else.
-func RunClient(ctx context.Context, config Config, documentPath string) error {
+func RunClient(config Config, documentPath string) error {
 	// Register for SIGINT to notify server of client termination.
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
@@ -67,7 +66,7 @@ func RunClient(ctx context.Context, config Config, documentPath string) error {
 	}
 
 	// Wait for server to reply with ServerHello.
-	err = waitForServerHello(ctx, conn)
+	err = waitForServerHello(conn)
 	if err != nil {
 		return fmt.Errorf("failed waiting for ServerHello: %w", err)
 	}
@@ -167,7 +166,7 @@ func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) erro
 	return protocol.SendMessage(conn, msg)
 }
 
-func waitForServerHello(ctx context.Context, conn *net.UnixConn) error {
+func waitForServerHello(conn *net.UnixConn) error {
 	log.Printf("waiting for ServerHelloMsg\n")
 
 	msg, err := protocol.ReceiveMessage(conn)

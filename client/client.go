@@ -64,7 +64,7 @@ func RunClient(ctx context.Context, config Config) error {
 	}
 
 	// Wait for server to reply with ServerHello.
-	clientId, err := waitForServerHello(ctx, conn)
+	err = waitForServerHello(ctx, conn)
 	if err != nil {
 		return fmt.Errorf("failed waiting for ServerHello: %w", err)
 	}
@@ -138,25 +138,28 @@ func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {
 	msg := &protocol.ClientHelloMsg{
 		FilePath:    "TODO",
 		WorkingDir:  "TODO",
-		TerminalEnv: "TODO",
+		TerminalEnv: []string{"TODO"},
 		Pts:         pts,
 	}
 
 	return protocol.SendMessage(conn, msg)
 }
 
-func waitForServerHello(ctx context.Context, conn *net.UnixConn) (clientId int, err error) {
+func waitForServerHello(ctx context.Context, conn *net.UnixConn) error {
+	log.Printf("waiting for ServerHelloMsg\n")
+
 	msg, err := protocol.ReceiveMessage(conn)
 	if err != nil {
-		return 0, fmt.Errorf("protocol.ReceiveMessage: %w", err)
+		return fmt.Errorf("protocol.ReceiveMessage: %w", err)
 	}
 
 	serverHelloMsg, ok := msg.(*protocol.ServerHelloMsg)
 	if !ok {
-		return 0, errors.New("unexpected reply from server")
+		return errors.New("unexpected reply from server")
 	}
 
-	return serverHelloMsg.ClientId, nil
+	log.Printf("received ServerHelloMsg with clientId=%d\n", serverHelloMsg.ClientId)
+	return nil
 }
 
 func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
@@ -165,14 +168,16 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 		case signal := <-signalCh:
 			switch signal {
 			case syscall.SIGWINCH:
+				log.Printf("received SIGWINCH signal\n")
 				err := resizePtmxAndNotifyServer(ptmx, conn)
 				if err != nil {
-					log.Printf("could not resize tty: %s", err)
+					log.Printf("could not resize tty: %s\n", err)
 				}
 			case syscall.SIGINT:
+				log.Printf("received SIGINT signal\n")
 				err := ptmx.Close()
 				if err != nil {
-					log.Printf("could not close pty: %s", err)
+					log.Printf("could not close pty: %s\n", err)
 				}
 				return
 			}
@@ -181,11 +186,31 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 }
 
 func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
-
+	// TODO
+	return nil
 }
 
 func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {
-	// TODO
+	for {
+		msg, err := protocol.ReceiveMessage(conn)
+		if err != nil {
+			// TODO: handle connection closed
+			log.Printf("error receiving server msg: %s\n", err)
+			return
+		}
+
+		switch msg := msg.(type) {
+		case *protocol.ServerGoodbyeMsg:
+			log.Printf("received ServerGoodbyeMsg with reason: %s\n", msg.Reason)
+			err := ptmx.Close()
+			if err != nil {
+				log.Printf("could not close pty: %s\n", err)
+			}
+			return
+		default:
+			log.Printf("unexpected msg from server\n")
+		}
+	}
 }
 
 func proxyTtyUntilClosed(ptmx *os.File) {

@@ -139,10 +139,14 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
 func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) error {
+	log.Printf("constructing ClientHelloMsg\n")
+	log.Printf("ClientHello documentPath=%q\n", documentPath)
+
 	workingDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("os.Getwd: %w", err)
 	}
+	log.Printf("ClientHello workingDir=%q\n", workingDir)
 
 	var terminalEnv []string
 	for _, key := range allTerminalEnvVars {
@@ -151,6 +155,7 @@ func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) erro
 			terminalEnv = append(terminalEnv, fmt.Sprintf("%s=%s", key, val))
 		}
 	}
+	log.Printf("ClientHello terminalEnv=%s\n", terminalEnv)
 
 	msg := &protocol.ClientHelloMsg{
 		DocumentPath: documentPath,

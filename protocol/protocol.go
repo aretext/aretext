@@ -36,7 +36,7 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 	data := make([]byte, len(encodedMsg)+4)
 	binary.BigEndian.PutUint16(data[0:], uint16(msgType))
 	binary.BigEndian.PutUint16(data[2:], uint16(len(encodedMsg)))
-	copy(data[8:], encodedMsg)
+	copy(data[4:], encodedMsg)
 
 	var oob []byte
 	if clientHelloMsg, ok := msg.(*ClientHelloMsg); ok {

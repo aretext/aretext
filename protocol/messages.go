@@ -22,15 +22,15 @@ const (
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case *ClientHelloMsg:
+	case ClientHelloMsg, *ClientHelloMsg:
 		return clientHelloMsgType
-	case *ClientGoodbyeMsg:
+	case ClientGoodbyeMsg, *ClientGoodbyeMsg:
 		return clientGoodbyeMsgType
-	case *ServerHelloMsg:
+	case ServerHelloMsg, *ServerHelloMsg:
 		return serverHelloMsgType
-	case *ServerGoodbyeMsg:
+	case ServerGoodbyeMsg, *ServerGoodbyeMsg:
 		return serverGoodbyeMsgType
-	case *TerminalResizeMsg:
+	case TerminalResizeMsg, *TerminalResizeMsg:
 		return terminalResizeMsgType
 	default:
 		return invalidMsgType

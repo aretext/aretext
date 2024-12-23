@@ -188,7 +188,27 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 }
 
 func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
-	// TODO
+	// Update ptmx with the same size as client tty.
+	ws, err := unix.IoctlGetWinsize(int(os.Stdin.Fd()), unix.TIOCGWINSZ)
+	if err != nil {
+		return fmt.Errorf("unix.IoctlGetWinsize: %w", err)
+	}
+
+	err = unix.IoctlSetWinsize(int(ptmx.Fd()), unix.TIOCSWINSZ, ws)
+	if err != nil {
+		return fmt.Errorf("unix.IoctlSetWinsize: %w", err)
+	}
+
+	// Notify the server that the terminal size changed.
+	msg := &protocol.TerminalResizeMsg{
+		Width: int(ws.Row),
+		Height: int(ws.Col),
+	}
+	err = protocol.SendMessage(conn, msg)
+	if err != nil {
+		return fmt.Errorf("failed to send TerminalResizeMsg: %w", err)
+	}
+
 	return nil
 }
 

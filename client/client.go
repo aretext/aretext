@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -12,6 +13,8 @@ import (
 
 	"golang.org/x/sys/unix"
 	"golang.org/x/term"
+
+	"github.com/aretext/aretext/protocol"
 )
 
 // RunClient starts an aretext client.
@@ -131,13 +134,28 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 }
 
 func sendClientHelloWithPty(conn *net.UnixConn, pts *os.File) error {
-	// TODO
-	return nil
+	msg := &protocol.ClientHelloMsg{
+		FilePath:    "TODO",
+		WorkingDir:  "TODO",
+		TerminalEnv: "TODO",
+		Pts:         pts,
+	}
+
+	return protocol.SendMessage(conn, msg)
 }
 
 func waitForServerHello(ctx context.Context, conn *net.UnixConn) (clientId int, err error) {
-	// TODO
-	return 0, nil
+	msg, err := protocol.ReceiveMessage(conn)
+	if err != nil {
+		return 0, fmt.Errorf("protocol.ReceiveMessage: %w", err)
+	}
+
+	serverHelloMsg, ok := msg.(*protocol.ServerHelloMsg)
+	if !ok {
+		return 0, errors.New("unexpected reply from server")
+	}
+
+	return serverHelloMsg.ClientId, nil
 }
 
 func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) error {

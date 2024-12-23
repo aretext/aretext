@@ -19,10 +19,10 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	defer fakePts.Close()
 
 	msg := &ClientHelloMsg{
-		DocumentPath:    "/test/file",
-		WorkingDir:  "/test",
-		TerminalEnv: []string{"TERM=tmux"},
-		Pts:         fakePts,
+		DocumentPath: "/test/file",
+		WorkingDir:   "/test",
+		TerminalEnv:  []string{"TERM=tmux"},
+		Pts:          fakePts,
 	}
 
 	receivedMsg := simulateSendAndReceive(t, msg)

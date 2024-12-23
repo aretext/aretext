@@ -6,7 +6,7 @@ import "os"
 type ClientId int
 
 // Message represents a serializable message sent between a client and a server.
-type Message interface{
+type Message interface {
 	closed() // Prevent other implementations.
 }
 
@@ -24,15 +24,15 @@ const (
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case  *ClientHelloMsg:
+	case *ClientHelloMsg:
 		return clientHelloMsgType
-	case  *ClientGoodbyeMsg:
+	case *ClientGoodbyeMsg:
 		return clientGoodbyeMsgType
-	case  *ServerHelloMsg:
+	case *ServerHelloMsg:
 		return serverHelloMsgType
-	case  *ServerGoodbyeMsg:
+	case *ServerGoodbyeMsg:
 		return serverGoodbyeMsgType
-	case  *TerminalResizeMsg:
+	case *TerminalResizeMsg:
 		return terminalResizeMsgType
 	default:
 		return invalidMsgType
@@ -60,6 +60,7 @@ type ClientHelloMsg struct {
 }
 
 func (m *ClientHelloMsg) closed() {}
+
 var _ Message = (*ClientHelloMsg)(nil)
 
 // ClientGoodbyeMsg is sent from a client to gracefully terminate a connection to the server.
@@ -69,6 +70,7 @@ type ClientGoodbyeMsg struct {
 }
 
 func (m *ClientGoodbyeMsg) closed() {}
+
 var _ Message = (*ClientGoodbyeMsg)(nil)
 
 // ServerHelloMsg is sent from a server after receiving ClientHello.
@@ -79,6 +81,7 @@ type ServerHelloMsg struct {
 }
 
 func (m *ServerHelloMsg) closed() {}
+
 var _ Message = (*ServerHelloMsg)(nil)
 
 // ServerGoodbyeMsg is sent from a server to gracefully terminate a connection to the client.
@@ -88,6 +91,7 @@ type ServerGoodbyeMsg struct {
 }
 
 func (m *ServerGoodbyeMsg) closed() {}
+
 var _ Message = (*ServerGoodbyeMsg)(nil)
 
 // TerminalResizeMsg is sent from a client to the server to signal that the terminal has been resized.
@@ -100,4 +104,5 @@ type TerminalResizeMsg struct {
 }
 
 func (m *TerminalResizeMsg) closed() {}
+
 var _ Message = (*TerminalResizeMsg)(nil)

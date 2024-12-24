@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -63,17 +62,8 @@ func RunClient(config Config, documentPath string) error {
 		return fmt.Errorf("failed to send RegisterClient: %w", err)
 	}
 
-	// Wait for server to reply with ServerHello.
-	err = waitForServerHello(conn)
-	if err != nil {
-		return fmt.Errorf("failed waiting for ServerHello: %w", err)
-	}
-
 	// Close pts as it's now owned by the server.
 	pts.Close()
-
-	// Handle server messages asynchronously.
-	go handleServerMessages(conn, ptmx)
 
 	// Proxy ptmx <-> tty.
 	proxyTtyUntilClosed(ptmx)
@@ -164,23 +154,6 @@ func sendRegisterClient(conn *net.UnixConn, pts *os.File, documentPath string) e
 	return protocol.SendMessage(conn, msg)
 }
 
-func waitForServerHello(conn *net.UnixConn) error {
-	log.Printf("waiting for ServerHelloMsg\n")
-
-	msg, err := protocol.ReceiveMessage(conn)
-	if err != nil {
-		return fmt.Errorf("protocol.ReceiveMessage: %w", err)
-	}
-
-	serverHelloMsg, ok := msg.(*protocol.ServerHelloMsg)
-	if !ok {
-		return errors.New("unexpected reply from server")
-	}
-
-	log.Printf("received ServerHelloMsg with clientId=%d\n", serverHelloMsg.ClientId)
-	return nil
-}
-
 func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 	for {
 		select {
@@ -220,31 +193,6 @@ func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
 	}
 
 	return nil
-}
-
-func handleServerMessages(conn *net.UnixConn, ptmx *os.File) {
-	for {
-		msg, err := protocol.ReceiveMessage(conn)
-		if errors.Is(err, io.EOF) {
-			log.Printf("server closed the connection\n")
-			return
-		} else if err != nil {
-			log.Printf("error receiving server msg: %s\n", err)
-			return
-		}
-
-		switch msg := msg.(type) {
-		case *protocol.ServerGoodbyeMsg:
-			log.Printf("received ServerGoodbyeMsg with reason: %s\n", msg.Reason)
-			err := ptmx.Close()
-			if err != nil {
-				log.Printf("could not close pty: %s\n", err)
-			}
-			return
-		default:
-			log.Printf("unexpected msg from server\n")
-		}
-	}
 }
 
 func proxyTtyUntilClosed(ptmx *os.File) {

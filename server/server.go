@@ -67,7 +67,7 @@ func handleConnection(conn *net.UnixConn, clientId protocol.ClientId) {
 	log.Printf("client %d connected\n", clientId)
 	defer conn.Close()
 
-	// TODO: receive ClientHelloMsg
+	// TODO: receive RegisterClientMsg
 	//  - add client state with pty, working dir, etc.
 	// TODO: send ServerHelloMsg
 	// TODO: loop wating for TerminalResize or ClientGoodbye

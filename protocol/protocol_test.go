@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSendAndReceiveClientHelloMsg(t *testing.T) {
+func TestSendAndReceiveRegisterClientMsg(t *testing.T) {
 	fakePtsPath := filepath.Join(t.TempDir(), "pts")
 	fakePts, err := os.Create(fakePtsPath)
 	require.NoError(t, err)
 	defer fakePts.Close()
 
-	msg := &ClientHelloMsg{
+	msg := &RegisterClientMsg{
 		DocumentPath: "/test/file",
 		WorkingDir:   "/test",
 		TerminalEnv:  []string{"TERM=tmux"},
@@ -26,38 +26,22 @@ func TestSendAndReceiveClientHelloMsg(t *testing.T) {
 	}
 
 	receivedMsg := simulateSendAndReceive(t, msg)
-	receivedClientHelloMsg, ok := receivedMsg.(*ClientHelloMsg)
+	receivedRegisterClientMsg, ok := receivedMsg.(*RegisterClientMsg)
 	require.True(t, ok)
-	assert.Equal(t, msg.DocumentPath, receivedClientHelloMsg.DocumentPath)
-	assert.Equal(t, msg.WorkingDir, receivedClientHelloMsg.WorkingDir)
-	assert.Equal(t, msg.TerminalEnv, receivedClientHelloMsg.TerminalEnv)
-	assert.NotNil(t, receivedClientHelloMsg.Pts)
+	assert.Equal(t, msg.DocumentPath, receivedRegisterClientMsg.DocumentPath)
+	assert.Equal(t, msg.WorkingDir, receivedRegisterClientMsg.WorkingDir)
+	assert.Equal(t, msg.TerminalEnv, receivedRegisterClientMsg.TerminalEnv)
+	assert.NotNil(t, receivedRegisterClientMsg.Pts)
 
 	sentPtsFileInfo, err := msg.Pts.Stat()
 	require.NoError(t, err)
-	receivedPtsFileInfo, err := receivedClientHelloMsg.Pts.Stat()
+	receivedPtsFileInfo, err := receivedRegisterClientMsg.Pts.Stat()
 	require.NoError(t, err)
 	assert.True(t, os.SameFile(sentPtsFileInfo, receivedPtsFileInfo))
 }
 
-func TestSendAndReceiveServerHelloMsg(t *testing.T) {
-	msg := &ServerHelloMsg{
-		ClientId: 123,
-	}
-	receivedMsg := simulateSendAndReceive(t, msg)
-	assert.Equal(t, msg, receivedMsg)
-}
-
-func TestSendAndReceiveServerGoodbyeMsg(t *testing.T) {
-	msg := &ServerGoodbyeMsg{
-		Reason: "Test reason",
-	}
-	receivedMsg := simulateSendAndReceive(t, msg)
-	assert.Equal(t, msg, receivedMsg)
-}
-
-func TestSendAndReceiveTerminalResizeMsg(t *testing.T) {
-	msg := &TerminalResizeMsg{
+func TestSendAndReceiveResizeTerminalMsg(t *testing.T) {
+	msg := &ResizeTerminalMsg{
 		Width:  123,
 		Height: 456,
 	}

@@ -56,11 +56,11 @@ func RunClient(config Config, documentPath string) error {
 	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, ptmx, conn)
 
-	// Send ClientHello to the server, along with pts to delegate
+	// Send RegisterClient to the server, along with pts to delegate
 	// the psuedoterminal to the server.
-	err = sendClientHello(conn, pts, documentPath)
+	err = sendRegisterClient(conn, pts, documentPath)
 	if err != nil {
-		return fmt.Errorf("failed to send ClientHello: %w", err)
+		return fmt.Errorf("failed to send RegisterClient: %w", err)
 	}
 
 	// Wait for server to reply with ServerHello.
@@ -135,15 +135,15 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
-func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) error {
-	log.Printf("constructing ClientHelloMsg\n")
-	log.Printf("ClientHello documentPath=%q\n", documentPath)
+func sendRegisterClient(conn *net.UnixConn, pts *os.File, documentPath string) error {
+	log.Printf("constructing RegisterClientMsg\n")
+	log.Printf("RegisterClient documentPath=%q\n", documentPath)
 
 	workingDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("os.Getwd: %w", err)
 	}
-	log.Printf("ClientHello workingDir=%q\n", workingDir)
+	log.Printf("RegisterClient workingDir=%q\n", workingDir)
 
 	var terminalEnv []string
 	for _, key := range allTerminalEnvVars {
@@ -152,9 +152,9 @@ func sendClientHello(conn *net.UnixConn, pts *os.File, documentPath string) erro
 			terminalEnv = append(terminalEnv, fmt.Sprintf("%s=%s", key, val))
 		}
 	}
-	log.Printf("ClientHello terminalEnv=%s\n", terminalEnv)
+	log.Printf("RegisterClient terminalEnv=%s\n", terminalEnv)
 
-	msg := &protocol.ClientHelloMsg{
+	msg := &protocol.RegisterClientMsg{
 		DocumentPath: documentPath,
 		WorkingDir:   workingDir,
 		TerminalEnv:  terminalEnv,
@@ -210,13 +210,13 @@ func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
 	}
 
 	// Notify the server that the terminal size changed.
-	msg := &protocol.TerminalResizeMsg{
+	msg := &protocol.ResizeTerminalMsg{
 		Width:  int(ws.Row),
 		Height: int(ws.Col),
 	}
 	err = protocol.SendMessage(conn, msg)
 	if err != nil {
-		return fmt.Errorf("failed to send TerminalResizeMsg: %w", err)
+		return fmt.Errorf("failed to send ResizeTerminalMsg: %w", err)
 	}
 
 	return nil

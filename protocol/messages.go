@@ -15,29 +15,23 @@ type msgType int
 
 const (
 	invalidMsgType = msgType(iota) // Zero value is invalid.
-	clientHelloMsgType
-	serverHelloMsgType
-	serverGoodbyeMsgType
-	terminalResizeMsgType
+	registerClientMsgType
+	resizeTerminalMsgType
 )
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case *ClientHelloMsg:
-		return clientHelloMsgType
-	case *ServerHelloMsg:
-		return serverHelloMsgType
-	case *ServerGoodbyeMsg:
-		return serverGoodbyeMsgType
-	case *TerminalResizeMsg:
-		return terminalResizeMsgType
+	case *RegisterClientMsg:
+		return registerClientMsgType
+	case *ResizeTerminalMsg:
+		return resizeTerminalMsgType
 	default:
 		return invalidMsgType
 	}
 }
 
-// ClientHelloMsg is sent from client to server immediately after opening a connection.
-type ClientHelloMsg struct {
+// RegisterClientMsg is sent from client to server immediately after opening a connection.
+type RegisterClientMsg struct {
 	// DocumentPath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
 	DocumentPath string
@@ -56,33 +50,12 @@ type ClientHelloMsg struct {
 	Pts *os.File `json:"-"`
 }
 
-func (m *ClientHelloMsg) closed() {}
+func (m *RegisterClientMsg) closed() {}
 
-var _ Message = (*ClientHelloMsg)(nil)
+var _ Message = (*RegisterClientMsg)(nil)
 
-// ServerHelloMsg is sent from a server after receiving ClientHello.
-// This tells the client that it has successfully connected to a server.
-type ServerHelloMsg struct {
-	// ClientId is the unique ID the server has assigned to the client.
-	ClientId ClientId
-}
-
-func (m *ServerHelloMsg) closed() {}
-
-var _ Message = (*ServerHelloMsg)(nil)
-
-// ServerGoodbyeMsg is sent from a server to gracefully terminate a connection to the client.
-type ServerGoodbyeMsg struct {
-	// Reason indicates the reason why the server terminated the connection.
-	Reason string
-}
-
-func (m *ServerGoodbyeMsg) closed() {}
-
-var _ Message = (*ServerGoodbyeMsg)(nil)
-
-// TerminalResizeMsg is sent from a client to the server to signal that the terminal has been resized.
-type TerminalResizeMsg struct {
+// ResizeTerminalMsg is sent from a client to the server to signal that the terminal has been resized.
+type ResizeTerminalMsg struct {
 	// Width is the new width of the client's terminal.
 	Width int
 
@@ -90,6 +63,6 @@ type TerminalResizeMsg struct {
 	Height int
 }
 
-func (m *TerminalResizeMsg) closed() {}
+func (m *ResizeTerminalMsg) closed() {}
 
-var _ Message = (*TerminalResizeMsg)(nil)
+var _ Message = (*ResizeTerminalMsg)(nil)

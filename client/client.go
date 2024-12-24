@@ -2,22 +2,18 @@ package client
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"unsafe"
 
-	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 
 	"github.com/aretext/aretext/protocol"
 )
 
-// RunClient starts an aretext client.
-// The client connects to an aretext server over a Unix Domain Socket (UDS),
+// Client connects to an aretext server over a Unix Domain Socket (UDS),
 // opens a pseudoterminal (pty), and sends the server one end of the pty over UDS.
 //
 // The client is responsible only for:
@@ -26,7 +22,17 @@ import (
 // 3. detecting if the server has terminated and, if so, exiting.
 //
 // The server handles everything else.
-func RunClient(config Config, documentPath string) error {
+type Client struct {
+	config Config
+}
+
+// NewClient creates (but does not start) a new client with the given config.
+func NewClient(config Config) *Client {
+	return &Client{config}
+}
+
+// Run starts an aretext client and runs until the server terminates the connection.
+func (c *Client) Run(documentPath string) error {
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, syscall.SIGWINCH)
@@ -46,7 +52,7 @@ func RunClient(config Config, documentPath string) error {
 	}
 
 	// Connect to the server over unix domain socket (UDS).
-	conn, err := connectToServer(config.ServerSocketPath)
+	conn, err := connectToServer(c.config.ServerSocketPath)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
@@ -55,9 +61,9 @@ func RunClient(config Config, documentPath string) error {
 	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, ptmx, conn)
 
-	// Send RegisterClient to the server, along with pts to delegate
+	// Send RegisterClientMsg to the server, along with pts to delegate
 	// the psuedoterminal to the server.
-	err = sendRegisterClient(conn, pts, documentPath)
+	err = sendRegisterClientMsg(conn, pts, documentPath)
 	if err != nil {
 		return fmt.Errorf("failed to send RegisterClient: %w", err)
 	}
@@ -69,44 +75,6 @@ func RunClient(config Config, documentPath string) error {
 	proxyTtyUntilClosed(ptmx)
 
 	return nil
-}
-
-func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
-	// Create the pty pair.
-	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not open /dev/ptmx: %w", err)
-	}
-
-	// Unlock pts.
-	locked := 0
-	result, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCSPTLCK, uintptr(unsafe.Pointer(&locked)))
-	if int(result) == -1 {
-		return nil, nil, fmt.Errorf("could not unlock pty: %w", err)
-	}
-
-	// Retrieve pts file descriptor.
-	ptsFd, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCGPTPEER, unix.O_RDWR|unix.O_NOCTTY)
-	if int(ptsFd) == -1 {
-		if errno, isErrno := err.(syscall.Errno); !isErrno || (errno != syscall.EINVAL && errno != syscall.ENOTTY) {
-			return nil, nil, fmt.Errorf("could not retrieve pts file descriptor: %w", err)
-		}
-		// On EINVAL or ENOTTY, fallback to TIOCGPTN.
-		ptyN, err := unix.IoctlGetInt(ptmxFd, unix.TIOCGPTN)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not find pty number: %w", err)
-		}
-		ptyName := fmt.Sprintf("/dev/pts/%d", ptyN)
-		fd, err := unix.Open(ptyName, unix.O_RDWR|unix.O_NOCTTY, 0o620)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not open pty %s: %w", ptyName, err)
-		}
-		ptsFd = uintptr(fd)
-	}
-
-	ptmx = os.NewFile(uintptr(ptmxFd), "")
-	pts = os.NewFile(ptsFd, "")
-	return ptmx, pts, nil
 }
 
 func connectToServer(socketPath string) (*net.UnixConn, error) {
@@ -125,7 +93,7 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
-func sendRegisterClient(conn *net.UnixConn, pts *os.File, documentPath string) error {
+func sendRegisterClientMsg(conn *net.UnixConn, pts *os.File, documentPath string) error {
 	log.Printf("constructing RegisterClientMsg\n")
 	log.Printf("RegisterClient documentPath=%q\n", documentPath)
 
@@ -161,57 +129,22 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 			switch signal {
 			case syscall.SIGWINCH:
 				log.Printf("received SIGWINCH signal\n")
-				err := resizePtmxAndNotifyServer(ptmx, conn)
+				width, height, err := resizePtyToMatchTty(os.Stdin, ptmx)
 				if err != nil {
-					log.Printf("could not resize tty: %s\n", err)
+					log.Printf("could not resize pty to match tty: %s\n", err)
+					return
+				}
+
+				// Notify the server that the terminal size changed.
+				msg := &protocol.ResizeTerminalMsg{
+					Width:  width,
+					Height: height,
+				}
+				err = protocol.SendMessage(conn, msg)
+				if err != nil {
+					fmt.Printf("failed to send ResizeTerminalMsg: %s\n", err)
 				}
 			}
 		}
-	}
-}
-
-func resizePtmxAndNotifyServer(ptmx *os.File, conn *net.UnixConn) error {
-	// Update ptmx with the same size as client tty.
-	ws, err := unix.IoctlGetWinsize(int(os.Stdin.Fd()), unix.TIOCGWINSZ)
-	if err != nil {
-		return fmt.Errorf("unix.IoctlGetWinsize: %w", err)
-	}
-
-	err = unix.IoctlSetWinsize(int(ptmx.Fd()), unix.TIOCSWINSZ, ws)
-	if err != nil {
-		return fmt.Errorf("unix.IoctlSetWinsize: %w", err)
-	}
-
-	// Notify the server that the terminal size changed.
-	msg := &protocol.ResizeTerminalMsg{
-		Width:  int(ws.Row),
-		Height: int(ws.Col),
-	}
-	err = protocol.SendMessage(conn, msg)
-	if err != nil {
-		return fmt.Errorf("failed to send ResizeTerminalMsg: %w", err)
-	}
-
-	return nil
-}
-
-func proxyTtyUntilClosed(ptmx *os.File) {
-	doneCh := make(chan struct{})
-
-	// Copy pty -> tty
-	go func(ptyOut io.Writer, ttyIn io.Reader) {
-		_, _ = io.Copy(ptyOut, ttyIn)
-		doneCh <- struct{}{}
-	}(ptmx, os.Stdin)
-
-	// Copy tty -> pty
-	go func(ttyOut io.Writer, ptyIn io.Reader) {
-		_, _ = io.Copy(ttyOut, ptyIn)
-		doneCh <- struct{}{}
-	}(os.Stdout, ptmx)
-
-	// Block until pty closed (either by client or server).
-	select {
-	case <-doneCh:
 	}
 }

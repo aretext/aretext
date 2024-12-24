@@ -10,11 +10,22 @@ import (
 	"github.com/aretext/aretext/protocol"
 )
 
+// Server listens on a Unix Domain Socket (UDS) for clients to connect.
+// The client sends the server a pseudoterminal (pty), which the server uses
+// for input/output from/to the client's terminal.
+type Server struct {
+}
+
+// NewServer creates (but does not start) a new server with the given config.
+func NewServer(config Config) *Server {
+	return &Server{config}
+}
+
 // RunServer starts an aretext server.
 // The server listens on a Unix Domain Socket (UDS) for clients to connect.
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
-func RunServer(config Config) error {
+func (s *Server) Run() error {
 	releaseLock, err := acquireLock(config.LockPath)
 	if err != nil {
 		return fmt.Errorf("acquireLock: %w", err)

@@ -10,15 +10,26 @@ import (
 	"github.com/aretext/aretext/protocol"
 )
 
+const clientMsgChanSize = 1024
+
 // Server listens on a Unix Domain Socket (UDS) for clients to connect.
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
 type Server struct {
+	config        Config
+	listenSocket  *net.UnixListener
+	connections   map[clientId]connection
+	clientMsgChan chan clientMsg
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
-	return &Server{config}
+	return &Server{
+		config:        config,
+		listenSocket:  nil,
+		connections:   make(map[clientId]connection),
+		clientMsgChan: make(chan clientMsgChan, clientMsgChanSize),
+	}
 }
 
 // RunServer starts an aretext server.

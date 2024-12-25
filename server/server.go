@@ -20,7 +20,7 @@ type Server struct {
 	sessions                    map[sessionId]session
 	sessionStartedEventChan     chan sessionStartedEvent
 	clientDisconnectedEventChan chan clientDisconnectedEvent
-	terminalResizedEventChan     chan terminalResizedEvent
+	terminalResizedEventChan    chan terminalResizedEvent
 	terminalScreenEventChan     chan terminalScreenEvent
 }
 
@@ -31,7 +31,7 @@ func NewServer(config Config) *Server {
 		sessions:                    make(map[sessionId]session),
 		sessionStartedEventChan:     make(chan sessionStartedEvent, 1024),
 		clientDisconnectedEventChan: make(chan clientDisconnectedEvent, 1024),
-		terminalResizedEventChan:     make(chan terminalResizedEvent, 1024),
+		terminalResizedEventChan:    make(chan terminalResizedEvent, 1024),
 		terminalScreenEventChan:     make(chan terminalScreenEvent, 1024),
 	}
 }
@@ -99,6 +99,7 @@ func (s *Server) listenForConnections(ul *net.UnixListener) {
 
 func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	log.Printf("client connected, sessionId=%d\n", sessionId)
+	defer uc.Close()
 
 	msg, err := receiveRegisterClientMsg(uc)
 	if err != nil {
@@ -106,6 +107,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 
 	// TODO: construct a screen for the session
+	// and defer screen.Fini()
 
 	notifyClientDisconnected := func() {
 		s.clientDisconnectedEventChan <- clientDisconnectedEvent{sessionId: id}
@@ -162,11 +164,11 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 
 	// Wait for quit signal, then cleanup.
-	// Closing the connection and pts will cause the other goroutines to exit.
+	// Deferred cleanup will close the Unix socket and finalize the screen, which will cause
+	// the above goroutines to exit.
 	select {
 	case <-quitChan:
-		screen.Fini()
-		uc.Close()
+		log.Printf("quitting session %d\n", sessionId)
 	}
 }
 

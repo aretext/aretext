@@ -101,13 +101,6 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 
 	// TODO: construct a screen for the session
 
-	quitChan := make(chan struct{})
-	s.sessionStartedEventChan <- sessionStartedEvent{
-		sessionId: id,
-		screen:    screen,
-		quitChan:  quitChan,
-	}
-
 	notifyClientDisconnected := func() {
 		s.clientDisconnectedEventChan <- clientDisconnectedEvent{sessionId: id}
 	}
@@ -133,7 +126,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 					height:    msg.Height,
 				}
 			default:
-				log.Printf("unexpected message received from client, sessionId=%d", id)
+				log.Printf("unexpected message received from client, sessionId=%d\n", id)
 			}
 		}
 	}(uc)
@@ -141,18 +134,33 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	// Process pty terminal events from the client.
 	go func() {
 		defer notifyClientDisconnected()
-
+		for {
+			termEvent := screen.PollEvent()
+			if termEvent == nil {
+				log.Printf("screen.PollEvent returned nil, screen must be finalized, sessionId=%d\n", id)
+				return
+			}
+			s.terminalScreenEventChan <- terminalScreenEvent{
+				sessionId: id,
+				termEvent: termEvent,
+			}
+		}
 	}()
 
-	// Notify the main event loop that a new session has started.
-	// TODO
+	// Notify main event loop that new session has started.
+	quitChan := make(chan struct{})
+	s.sessionStartedEventChan <- sessionStartedEvent{
+		sessionId: id,
+		screen:    screen,
+		quitChan:  quitChan,
+	}
 
 	// Wait for quit signal, then cleanup.
 	// Closing the connection and pts will cause the other goroutines to exit.
 	select {
 	case <-quitChan:
+		screen.Fini()
 		uc.Close()
-		msg.Pts.Close()
 	}
 }
 

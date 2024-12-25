@@ -1,7 +1,9 @@
 package server
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -10,25 +12,21 @@ import (
 	"github.com/aretext/aretext/protocol"
 )
 
-const clientMsgChanSize = 1024
-
 // Server listens on a Unix Domain Socket (UDS) for clients to connect.
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
 type Server struct {
-	config        Config
-	listenSocket  *net.UnixListener
-	connections   map[clientId]connection
-	clientMsgChan chan clientMsg
+	config              Config
+	clientEventChannels *clientEventChannels
+	sessions            map[sessionId]session
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
 	return &Server{
-		config:        config,
-		listenSocket:  nil,
-		connections:   make(map[clientId]connection),
-		clientMsgChan: make(chan clientMsgChan, clientMsgChanSize),
+		config:              config,
+		clientEventChannels: newClientEventChannels(),
+		sessions:            make(map[sessionId]session),
 	}
 }
 
@@ -37,32 +35,26 @@ func NewServer(config Config) *Server {
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
 func (s *Server) Run() error {
-	releaseLock, err := acquireLock(config.LockPath)
+	// Acquire a filelock to ensure at most one server running at a time.
+	releaseLock, err := acquireLock(s.config.LockPath)
 	if err != nil {
 		return fmt.Errorf("acquireLock: %w", err)
 	}
 	defer releaseLock()
 
-	ul, err := createListenSocket(config.SocketPath)
+	ul, err := createListenSocket(s.config.SocketPath)
 	if err != nil {
-		return fmt.Errorf("createListenSocket: %w", err)
+		return fmt.Errorf("could not create listen socket: %w", err)
 	}
+	defer ul.Close()
 
-	// TODO: setup some kind of channel and background thread to manage editor state?
-	// or do the accept/conn dance in background?
+	// Start listening for clients to connect.
+	// This will spawn goroutines to manage each connection, each of which send
+	// events to clientEventChannels for processing by the main event loop.
+	go s.listenForConnections(ul)
 
-	// TODO: and need to figure out tcell screen for pty situation
-
-	clientId := protocol.ClientId(0)
-	for {
-		conn, err := ul.AcceptUnix()
-		if err != nil {
-			return err
-		}
-
-		go handleConnection(conn, clientId)
-		clientId++
-	}
+	// Run the main event loop in the current goroutine.
+	return s.runMainEventLoop()
 }
 
 func createListenSocket(socketPath string) (*net.UnixListener, error) {
@@ -85,15 +77,95 @@ func createListenSocket(socketPath string) (*net.UnixListener, error) {
 	return ul, nil
 }
 
-func handleConnection(conn *net.UnixConn, clientId protocol.ClientId) {
-	log.Printf("client %d connected\n", clientId)
-	defer conn.Close()
+func (s *Server) listenForConnections(ul *net.UnixListener) {
+	nextSessionId := sessionId(0)
+	for {
+		uc, err := ul.AcceptUnix()
+		if err != nil {
+			log.Printf("net.AcceptUnix: %s\n", err)
+			continue
+		}
 
-	// TODO: receive RegisterClientMsg
-	//  - add client state with pty, working dir, etc.
-	// TODO: send ServerHelloMsg
-	// TODO: loop wating for TerminalResize or ClientGoodbye
-	//   - on TerminalResize, update editor state
-	//   - on ClientGoodbye, remove client state and exit
-	//   - on any other error, remove client state and exit
+		go s.handleConnection(nextConnectionId, uc)
+		nextConnectionId++
+	}
+}
+
+func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
+	log.Printf("client connected, sessionId=%d\n", sessionId)
+
+	msg, err := receiveRegisterClientMsg(uc)
+	if err != nil {
+		log.Printf("error registering client, sessionId=%d: %s\n", sessionId, err)
+	}
+
+	// TODO: construct a screen for the session
+
+	quitChan := make(chan struct{})
+	s.sessionStartedEventChan <- sessionStartedEvent{
+		sessionId: id,
+		screen:    screen,
+		quitChan:  quitChan,
+	}
+
+	notifyClientDisconnected := func() {
+		s.clientDisconnectedEventChan <- clientDisconnectedEvent{sessionId: id}
+	}
+
+	// Process ResizeTerminalMsg from the client.
+	go func(uc *net.UnixConn) {
+		defer notifyClientDisconnected()
+		for {
+			msg, err := protocol.ReceiveMessage(uc)
+			if errors.Is(err, io.EOF) {
+				log.Printf("EOF received on client socket, sessionId=%d: %w\n", sessionId, err)
+				return
+			} else if err != nil {
+				log.Printf("error receiving message from client: %s\n", err)
+				return
+			}
+
+			switch msg := msg.(type) {
+			case *protocol.ResizeTerminalMsg:
+				s.terminalResizeEventChan <- terminalResizeEvent{
+					sessionId: id,
+					width:     msg.Width,
+					height:    msg.Height,
+				}
+			default:
+				log.Printf("unexpected message received from client, sessionId=%d", id)
+			}
+		}
+	}(uc)
+
+	// Process pty terminal events from the client.
+	go func() {
+		defer notifyClientDisconnected()
+
+	}()
+
+	// Notify the main event loop that a new session has started.
+	// TODO
+
+	// Wait for quit signal, then cleanup.
+	// Closing the connection and pts will cause the other goroutines to exit.
+	select {
+	case <-quitChan:
+		uc.Close()
+		msg.Pts.Close()
+	}
+}
+
+func receiveRegisterClientMsg(uc *net.UnixConn) (*protocol.RegisterClientMsg, error) {
+	msg, err := protocol.ReceiveMessage(uc)
+	if err != nil {
+		return nil, fmt.Errorf("protocol.ReceiveMessage: %w", err)
+	}
+
+	registerClientMsg, ok := msg.(*protocol.RegisterClientMsg)
+	if !ok {
+		return nil, errors.New("incorrect message type received, expected RegisterClientMsg")
+	}
+
+	return registerClientMsg, nil
 }

@@ -1,29 +1,16 @@
 package server
 
 import (
+	"net"
 	"os"
-
-	"github.com/aretext/aretext/protocol"
 )
 
-type clientId int
+// sessionId uniquely identifies a session.
+type sessionId int
 
-type connectionState int
-
-const (
-	connectionStateRegistering = connectionState(iota)
-	connectionStateActive
-	connectionStateTerminating
-)
-
-type connection struct {
-	clientId clientId
-	state    connectionState
-	pty      *os.File
-	quitChan chan struct{}
-}
-
-type clientMsg struct {
-	clientId clientId
-	msg      protocol.Message
+// session is the data associated with a connected client.
+type session struct {
+	id  sessionId
+	uc  *net.UnixConn
+	pty *os.File
 }

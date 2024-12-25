@@ -16,17 +16,23 @@ import (
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
 type Server struct {
-	config              Config
-	clientEventChannels *clientEventChannels
-	sessions            map[sessionId]session
+	config                      Config
+	sessions                    map[sessionId]session
+	sessionStartedEventChan     chan sessionStartedEvent
+	clientDisconnectedEventChan chan clientDisconnectedEvent
+	terminalResizeEventChan     chan terminalResizeEvent
+	terminalScreenEventChan     chan terminalScreenEvent
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
 	return &Server{
-		config:              config,
-		clientEventChannels: newClientEventChannels(),
-		sessions:            make(map[sessionId]session),
+		config:                      config,
+		sessions:                    make(map[sessionId]session),
+		sessionStartedEventChan:     make(chan sessionStartedEvent, 1024),
+		clientDisconnectedEventChan: make(chan clientDisconnectedEvent, 1024),
+		terminalResizeEventChan:     make(chan terminalResizeEvent, 1024),
+		terminalScreenEventChan:     make(chan terminalScreenEvent, 1024),
 	}
 }
 
@@ -176,4 +182,22 @@ func receiveRegisterClientMsg(uc *net.UnixConn) (*protocol.RegisterClientMsg, er
 	}
 
 	return registerClientMsg, nil
+}
+
+func (s *Server) runMainEventLoop() error {
+	for {
+		select {
+		case event := <-s.sessionStartedEventChan:
+			// TODO: register new session
+
+		case event := <-s.clientDisconnectedEventChan:
+			// TODO: remove session if it exists
+
+		case event := <-s.terminalResizeEventChan:
+			// TODO: update screen size
+
+		case event := <-s.terminalScreenEventChan:
+			// TODO: process terminal event (just log for now...)
+		}
+	}
 }

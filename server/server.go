@@ -20,7 +20,7 @@ type Server struct {
 	sessions                    map[sessionId]session
 	sessionStartedEventChan     chan sessionStartedEvent
 	clientDisconnectedEventChan chan clientDisconnectedEvent
-	terminalResizeEventChan     chan terminalResizeEvent
+	terminalResizedEventChan     chan terminalResizedEvent
 	terminalScreenEventChan     chan terminalScreenEvent
 }
 
@@ -31,7 +31,7 @@ func NewServer(config Config) *Server {
 		sessions:                    make(map[sessionId]session),
 		sessionStartedEventChan:     make(chan sessionStartedEvent, 1024),
 		clientDisconnectedEventChan: make(chan clientDisconnectedEvent, 1024),
-		terminalResizeEventChan:     make(chan terminalResizeEvent, 1024),
+		terminalResizedEventChan:     make(chan terminalResizedEvent, 1024),
 		terminalScreenEventChan:     make(chan terminalScreenEvent, 1024),
 	}
 }
@@ -126,7 +126,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 
 			switch msg := msg.(type) {
 			case *protocol.ResizeTerminalMsg:
-				s.terminalResizeEventChan <- terminalResizeEvent{
+				s.terminalResizedEventChan <- terminalResizedEvent{
 					sessionId: id,
 					width:     msg.Width,
 					height:    msg.Height,
@@ -193,7 +193,7 @@ func (s *Server) runMainEventLoop() error {
 		case event := <-s.clientDisconnectedEventChan:
 			// TODO: remove session if it exists
 
-		case event := <-s.terminalResizeEventChan:
+		case event := <-s.terminalResizedEventChan:
 			// TODO: update screen size
 
 		case event := <-s.terminalScreenEventChan:

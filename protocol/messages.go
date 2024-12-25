@@ -2,9 +2,6 @@ package protocol
 
 import "os"
 
-// ClientId is a unique identifier for a client assigned by the server on connection.
-type ClientId int
-
 // Message represents a serializable message sent between a client and a server.
 type Message interface {
 	closed() // Prevent other implementations.
@@ -15,14 +12,14 @@ type msgType int
 
 const (
 	invalidMsgType = msgType(iota) // Zero value is invalid.
-	registerClientMsgType
+	createSessionMsgType
 	resizeTerminalMsgType
 )
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case *RegisterClientMsg:
-		return registerClientMsgType
+	case *CreateSessionMsg:
+		return createSessionMsgType
 	case *ResizeTerminalMsg:
 		return resizeTerminalMsgType
 	default:
@@ -30,8 +27,8 @@ func msgTypeForMessage(msg Message) msgType {
 	}
 }
 
-// RegisterClientMsg is sent from client to server immediately after opening a connection.
-type RegisterClientMsg struct {
+// CreateSessionMsg is sent from client to server immediately after opening a connection.
+type CreateSessionMsg struct {
 	// DocumentPath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
 	DocumentPath string
@@ -50,9 +47,9 @@ type RegisterClientMsg struct {
 	Pts *os.File `json:"-"`
 }
 
-func (m *RegisterClientMsg) closed() {}
+func (m *CreateSessionMsg) closed() {}
 
-var _ Message = (*RegisterClientMsg)(nil)
+var _ Message = (*CreateSessionMsg)(nil)
 
 // ResizeTerminalMsg is sent from a client to the server to signal that the terminal has been resized.
 type ResizeTerminalMsg struct {

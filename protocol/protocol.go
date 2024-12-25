@@ -39,11 +39,11 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 	copy(data[4:], encodedMsg)
 
 	var oob []byte
-	if registerClientMsg, ok := msg.(*RegisterClientMsg); ok {
-		if registerClientMsg.Pts == nil {
-			return errors.New("RegisterClientMsg.Pts must not be nil")
+	if createSessionMsg, ok := msg.(*CreateSessionMsg); ok {
+		if createSessionMsg.Pts == nil {
+			return errors.New("CreateSessionMsg.Pts must not be nil")
 		}
-		oob = syscall.UnixRights(int(registerClientMsg.Pts.Fd()))
+		oob = syscall.UnixRights(int(createSessionMsg.Pts.Fd()))
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -82,14 +82,14 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 	}
 
 	switch msgType {
-	case registerClientMsgType:
-		var msg RegisterClientMsg
+	case createSessionMsgType:
+		var msg CreateSessionMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
 		if oobn == 0 {
-			return nil, errors.New("Missing expected OOB data in RegisterClient")
+			return nil, errors.New("Missing expected OOB data in CreateSessionMsg")
 		}
 
 		cmsgs, err := syscall.ParseSocketControlMessage(oob[0:oobn])

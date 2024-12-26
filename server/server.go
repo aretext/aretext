@@ -125,9 +125,13 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 	defer screen.Fini()
 
-	resizeTermChan := make(chan struct{}, 1)
+	// Process terminal events from client tty.
+	termEventChan := make(chan tcell.Event, 1024)
+	quitChan := make(chan struct{}, 1)
+	go screen.ChannelEvents(termEventChan, quitChan)
 
 	// Process ResizeTerminalMsg from the client.
+	resizeTermChan := make(chan struct{}, 1)
 	go func(uc *net.UnixConn) {
 		for {
 			msg, err := protocol.ReceiveMessage(uc)
@@ -148,30 +152,6 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 			}
 		}
 	}(uc)
-
-	// Process pty terminal events from the client.
-	go func() {
-		defer notifyClientDisconnected()
-		for {
-			termEvent := screen.PollEvent()
-			if termEvent == nil {
-				log.Printf("screen.PollEvent returned nil, screen must be finalized, sessionId=%d\n", id)
-				return
-			}
-			s.terminalScreenEventChan <- terminalScreenEvent{
-				sessionId: id,
-				termEvent: termEvent,
-			}
-		}
-	}()
-
-	// Notify main event loop that new session has started.
-	quitChan := make(chan struct{})
-	s.sessionStartedEventChan <- sessionStartedEvent{
-		sessionId: id,
-		screen:    screen,
-		quitChan:  quitChan,
-	}
 
 	// Wait for quit signal, then cleanup.
 	// Deferred cleanup will close the Unix socket and finalize the screen, which will cause
@@ -194,25 +174,4 @@ func receiveStartSessionMsg(uc *net.UnixConn) (*protocol.StartSessionMsg, error)
 	}
 
 	return startSessionMsg, nil
-}
-
-// TODO: ugh, there's a race condition here.
-// what if session start processed after other events?
-// events need to be ordered within a session.
-func (s *Server) runMainEventLoop() error {
-	for {
-		select {
-		case event := <-s.sessionStartedEventChan:
-			// TODO: register new session
-
-		case event := <-s.clientDisconnectedEventChan:
-			// TODO: remove session if it exists
-
-		case event := <-s.terminalResizedEventChan:
-			// TODO: update screen size
-
-		case event := <-s.terminalScreenEventChan:
-			// TODO: process terminal event (just log for now...)
-		}
-	}
 }

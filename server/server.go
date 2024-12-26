@@ -18,13 +18,15 @@ import (
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
 type Server struct {
-	config Config
+	config   Config
+	quitChan chan struct{}
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
 	return &Server{
-		config: config,
+		config:   config,
+		quitChan: make(chan struct{}),
 	}
 }
 
@@ -46,13 +48,7 @@ func (s *Server) Run() error {
 	}
 	defer ul.Close()
 
-	// Start listening for clients to connect.
-	// This will spawn goroutines to manage each connection, each of which send
-	// events to clientEventChannels for processing by the main event loop.
-	go s.listenForConnections(ul)
-
-	// Run the main event loop in the current goroutine.
-	return s.runMainEventLoop()
+	return s.listenForConnections(ul)
 }
 
 func createListenSocket(socketPath string) (*net.UnixListener, error) {
@@ -87,6 +83,8 @@ func (s *Server) listenForConnections(ul *net.UnixListener) {
 		go s.handleConnection(nextConnectionId, uc)
 		nextConnectionId++
 	}
+
+	return nil
 }
 
 func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
@@ -169,6 +167,9 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		case msg := <-resizeTermMsgChan:
 			// TODO: process resize terminal msg
 			// if action, acquire lock on editor state and apply
+		case <-s.quitChan:
+			log.Printf("terminating sessionId=%d for server quit\n", id)
+			return
 		}
 
 		// TODO: check quit flag, exit

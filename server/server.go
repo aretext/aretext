@@ -125,13 +125,18 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 	defer screen.Fini()
 
+	// TODO: better acquire a lock and add the session to editor state
+
 	// Process terminal events from client tty.
 	termEventChan := make(chan tcell.Event, 1024)
-	quitChan := make(chan struct{}, 1)
-	go screen.ChannelEvents(termEventChan, quitChan)
+	screenQuitChan := make(chan struct{}, 1)
+	go screen.ChannelEvents(termEventChan, screenQuitChan)
+	defer func() {
+		screenQuitChan <- struct{}{}
+	}()
 
 	// Process ResizeTerminalMsg from the client.
-	resizeTermChan := make(chan struct{}, 1)
+	resizeTermMsgChan := make(chan protocol.ResizeTerminalMsg, 1)
 	go func(uc *net.UnixConn) {
 		for {
 			msg, err := protocol.ReceiveMessage(uc)
@@ -146,19 +151,28 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 			switch msg := msg.(type) {
 			case *protocol.ResizeTerminalMsg:
 				log.Printf("received ResizeTerminalMsg from client, sessionId=%d\n", id)
-				resizeTermChan <- struct{}{}
+				resizeTermMsgChan <- msg
 			default:
 				log.Printf("unexpected message received from client, sessionId=%d\n", id)
 			}
 		}
 	}(uc)
 
-	// Wait for quit signal, then cleanup.
-	// Deferred cleanup will close the Unix socket and finalize the screen, which will cause
-	// the above goroutines to exit.
-	select {
-	case <-quitChan:
-		log.Printf("quitting session %d\n", sessionId)
+	// Main event loop.
+	log.Printf("starting main event loop for sessionId=%d\n", id)
+	for {
+		select {
+		case event := <-termEventChan:
+			// TODO: process term event
+			// process event -> input
+			// if action, acquire lock on editor state and apply
+		case msg := <-resizeTermMsgChan:
+			// TODO: process resize terminal msg
+			// if action, acquire lock on editor state and apply
+		}
+
+		// TODO: check quit flag, exit
+		// TODO: redraw
 	}
 }
 

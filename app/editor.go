@@ -23,6 +23,7 @@ type Editor struct {
 	palette           *display.Palette
 	documentLoadCount int
 	termEventChan     chan tcell.Event
+	quitChan          chan struct{}
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
@@ -38,6 +39,7 @@ func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet c
 	palette := display.NewPalette()
 	documentLoadCount := editorState.DocumentLoadCount()
 	termEventChan := make(chan tcell.Event, 1)
+	quitChan := make(chan struct{}, 1)
 	editor := &Editor{
 		inputInterpreter,
 		editorState,
@@ -45,6 +47,7 @@ func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet c
 		palette,
 		documentLoadCount,
 		termEventChan,
+		quitChan,
 	}
 
 	// Attempt to load the file.
@@ -81,16 +84,9 @@ func effectivePath(path string) string {
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
 	e.redraw(true)
-	go e.pollTermEvents()
+	go e.screen.ChannelEvents(e.termEventChan, e.quitChan)
 	e.runMainEventLoop()
 	e.shutdown()
-}
-
-func (e *Editor) pollTermEvents() {
-	for {
-		event := e.screen.PollEvent()
-		e.termEventChan <- event
-	}
 }
 
 func (e *Editor) runMainEventLoop() {
@@ -158,6 +154,7 @@ func (e *Editor) handleIfDocumentLoaded() {
 
 func (e *Editor) shutdown() {
 	e.editorState.FileWatcher().Stop()
+	e.quitChan <- struct{}{}
 }
 
 func (e *Editor) redraw(sync bool) {

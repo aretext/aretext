@@ -41,7 +41,7 @@ The client delegates all interactions with its TTY to the server using the follo
 
 1.	Create a pseudoterminal (pty) pair: ptmx (primary) and pts (secondary)
 2.	Send pts to the server over UDS using SCM_RIGHTS out-of-band data.
-3.	Send a "hello" message to the server encoding the arguments to the client (e.g. the filepath to open).
+3.	Send a "start session" message to the server encoding the arguments to the client (e.g. the filepath to open).
 4.	Copy stdin -> ptmx and ptmx -> stdout until the pty is closed.
 
 The server receives a file descriptor for pts over UDS and uses it to control the client's terminal:
@@ -52,14 +52,14 @@ The server receives a file descriptor for pts over UDS and uses it to control th
 When tty dimensions change, the client will receive a SIGWINCH signal. To propagate the change, the client must:
 
 1.	Resize ptmx to match the client's tty. This causes the kernel to signal SIGWINCH to all server subprocesses whose controlling terminal is pts.
-2.	Send a `WindowResizeMsg` to the server. This allows the server to update screen dimensions for the client's editor.
+2.	Send a `TerminalResizeMsg` to the server. This allows the server to update screen dimensions for the client's editor.
 
 Client-Server Messages
 ----------------------
 
 Messages will be serialized as JSON, with a uint32 header indicating msg length.
 
--	`ClientHelloMsg`:
+-	`StartSessionMsg`:
 	-	sent from client to server after connect
 	-	fields:
 		-	current working directory
@@ -67,15 +67,7 @@ Messages will be serialized as JSON, with a uint32 header indicating msg length.
 		-	`$TERM` and other env vars used by tcell and other TUI programs
 	-	out-of-band data:
 		-	SCM_RIGHTS with the pty file descriptor.
--	`ServerHelloMsg`:
-	-	sent from server to client after connect
-	-	fields:
-		-	client ID (used for debug logging)
--	`GoodbyeMsg`
-	-	sent from either client or server to gracefully terminate
-	-	fields:
-		-	code: used to differentiate user-initiated quit from an error.
--	`WindowResizeMsg`
+-	`TerminalResizeMsg`
 	-	sent from client to server on receipt of SIGWINCH signal.
 	-	fields:
 		-	width
@@ -103,7 +95,7 @@ The client and server can detect that the other side has terminated if writes to
 -	If a client detects the server has terminated, the client should exit immediately.
 -	If a server detects a client has terminated, the server should remove all per-client state for that client.
 
-When the user quits from the aretext menu, the server will remove all per-client state, send the client a `GoodbyeMsg`, then close the client's pty.
+When the user quits from the aretext menu, the server will remove all per-client state, then close the client's pty.
 
 Editor state
 ------------

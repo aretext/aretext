@@ -186,6 +186,9 @@ func receiveRegisterClientMsg(uc *net.UnixConn) (*protocol.RegisterClientMsg, er
 	return registerClientMsg, nil
 }
 
+// TODO: ugh, there's a race condition here.
+// what if session start processed after other events?
+// events need to be ordered within a session.
 func (s *Server) runMainEventLoop() error {
 	for {
 		select {

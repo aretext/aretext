@@ -62,11 +62,11 @@ func (c *Client) Run(documentPath string) error {
 	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, ptmx, conn)
 
-	// Send RegisterClientMsg to the server, along with pts to delegate
+	// Send StartSessionMsg to the server, along with pts to delegate
 	// the psuedoterminal to the server.
-	err = sendRegisterClientMsg(conn, pts, documentPath)
+	err = sendStartSessionMsg(conn, pts, documentPath)
 	if err != nil {
-		return fmt.Errorf("failed to send RegisterClient: %w", err)
+		return fmt.Errorf("failed to send StartSessionMsg: %w", err)
 	}
 
 	// Close pts as it's now owned by the server.
@@ -94,26 +94,26 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
-func sendRegisterClientMsg(conn *net.UnixConn, pts *os.File, documentPath string) error {
-	log.Printf("constructing RegisterClientMsg\n")
-	log.Printf("RegisterClient documentPath=%q\n", documentPath)
+func sendStartSessionMsg(conn *net.UnixConn, pts *os.File, documentPath string) error {
+	log.Printf("constructing StartSessionMsg\n")
+	log.Printf("StartSessionMsg documentPath=%q\n", documentPath)
 
 	workingDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("os.Getwd: %w", err)
 	}
-	log.Printf("RegisterClient workingDir=%q\n", workingDir)
+	log.Printf("StartSessionMsg workingDir=%q\n", workingDir)
 
-	var terminalEnv []string
+	terminalEnv := make(map[string]string)
 	for _, key := range allTerminalEnvVars {
 		val, found := os.LookupEnv(key)
 		if found {
-			terminalEnv = append(terminalEnv, fmt.Sprintf("%s=%s", key, val))
+			terminalEnv[key] = val
+			log.Printf("StartSessionMsg terminalEnv[%q]=%q\n", key, val)
 		}
 	}
-	log.Printf("RegisterClient terminalEnv=%s\n", terminalEnv)
 
-	msg := &protocol.RegisterClientMsg{
+	msg := &protocol.StartSessionMsg{
 		DocumentPath: documentPath,
 		WorkingDir:   workingDir,
 		TerminalEnv:  terminalEnv,

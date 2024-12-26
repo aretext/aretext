@@ -39,11 +39,11 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 	copy(data[4:], encodedMsg)
 
 	var oob []byte
-	if createSessionMsg, ok := msg.(*CreateSessionMsg); ok {
-		if createSessionMsg.Pts == nil {
-			return errors.New("CreateSessionMsg.Pts must not be nil")
+	if startSessionMsg, ok := msg.(*StartSessionMsg); ok {
+		if startSessionMsg.Pts == nil {
+			return errors.New("StartSessionMsg.Pts must not be nil")
 		}
-		oob = syscall.UnixRights(int(createSessionMsg.Pts.Fd()))
+		oob = syscall.UnixRights(int(startSessionMsg.Pts.Fd()))
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -82,14 +82,14 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 	}
 
 	switch msgType {
-	case createSessionMsgType:
-		var msg CreateSessionMsg
+	case startSessionMsgType:
+		var msg StartSessionMsg
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
 		if oobn == 0 {
-			return nil, errors.New("Missing expected OOB data in CreateSessionMsg")
+			return nil, errors.New("Missing expected OOB data in StartSessionMsg")
 		}
 
 		cmsgs, err := syscall.ParseSocketControlMessage(oob[0:oobn])

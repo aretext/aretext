@@ -17,22 +17,12 @@ import (
 // for input/output from/to the client's terminal.
 type Server struct {
 	config                      Config
-	sessions                    map[sessionId]session
-	sessionStartedEventChan     chan sessionStartedEvent
-	clientDisconnectedEventChan chan clientDisconnectedEvent
-	terminalResizedEventChan    chan terminalResizedEvent
-	terminalScreenEventChan     chan terminalScreenEvent
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
 	return &Server{
 		config:                      config,
-		sessions:                    make(map[sessionId]session),
-		sessionStartedEventChan:     make(chan sessionStartedEvent, 1024),
-		clientDisconnectedEventChan: make(chan clientDisconnectedEvent, 1024),
-		terminalResizedEventChan:    make(chan terminalResizedEvent, 1024),
-		terminalScreenEventChan:     make(chan terminalScreenEvent, 1024),
 	}
 }
 
@@ -101,10 +91,21 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	log.Printf("client connected, sessionId=%d\n", sessionId)
 	defer uc.Close()
 
-	msg, err := receiveRegisterClientMsg(uc)
+	msg, err := receiveStartSessionMsg(uc)
 	if err != nil {
-		log.Printf("error registering client, sessionId=%d: %s\n", sessionId, err)
+		log.Printf("error receiving StartSesssionMsg, sessionId=%d: %s\n", sessionId, err)
+		return
 	}
+
+	termInfo, err := tcell.LookupTerminfo(msg.TerminalEnv["TERM"])
+
+	tty, err := NewTtyFromPts(msg.Pts)
+	if err != nil {
+		log.Printf("error constructing tty from pts, sessionId=%d\n", sessionId)
+		return
+	}
+	defer tty.Close()
+
 
 	// TODO: construct a screen for the session
 	// and defer screen.Fini()
@@ -172,18 +173,18 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 }
 
-func receiveRegisterClientMsg(uc *net.UnixConn) (*protocol.RegisterClientMsg, error) {
+func receiveStartSessionMsg(uc *net.UnixConn) (*protocol.StartSessionMsg, error) {
 	msg, err := protocol.ReceiveMessage(uc)
 	if err != nil {
 		return nil, fmt.Errorf("protocol.ReceiveMessage: %w", err)
 	}
 
-	registerClientMsg, ok := msg.(*protocol.RegisterClientMsg)
+	startSessionMsg, ok := msg.(*protocol.StartSessionMsg)
 	if !ok {
-		return nil, errors.New("incorrect message type received, expected RegisterClientMsg")
+		return nil, errors.New("incorrect message type received, expected StartSessionMsg")
 	}
 
-	return registerClientMsg, nil
+	return startSessionMsg, nil
 }
 
 // TODO: ugh, there's a race condition here.

@@ -12,30 +12,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSendAndReceiveCreateSessionMsg(t *testing.T) {
+func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	fakePtsPath := filepath.Join(t.TempDir(), "pts")
 	fakePts, err := os.Create(fakePtsPath)
 	require.NoError(t, err)
 	defer fakePts.Close()
 
-	msg := &CreateSessionMsg{
+	msg := &StartSessionMsg{
 		DocumentPath: "/test/file",
 		WorkingDir:   "/test",
-		TerminalEnv:  []string{"TERM=tmux"},
+		TerminalEnv:  map[string]string{"TERM": "tmux"},
 		Pts:          fakePts,
 	}
 
 	receivedMsg := simulateSendAndReceive(t, msg)
-	receivedCreateSessionMsg, ok := receivedMsg.(*CreateSessionMsg)
+	receivedStartSessionMsg, ok := receivedMsg.(*StartSessionMsg)
 	require.True(t, ok)
-	assert.Equal(t, msg.DocumentPath, receivedCreateSessionMsg.DocumentPath)
-	assert.Equal(t, msg.WorkingDir, receivedCreateSessionMsg.WorkingDir)
-	assert.Equal(t, msg.TerminalEnv, receivedCreateSessionMsg.TerminalEnv)
-	assert.NotNil(t, receivedCreateSessionMsg.Pts)
+	assert.Equal(t, msg.DocumentPath, receivedStartSessionMsg.DocumentPath)
+	assert.Equal(t, msg.WorkingDir, receivedStartSessionMsg.WorkingDir)
+	assert.Equal(t, msg.TerminalEnv, receivedStartSessionMsg.TerminalEnv)
+	assert.NotNil(t, receivedStartSessionMsg.Pts)
 
 	sentPtsFileInfo, err := msg.Pts.Stat()
 	require.NoError(t, err)
-	receivedPtsFileInfo, err := receivedCreateSessionMsg.Pts.Stat()
+	receivedPtsFileInfo, err := receivedStartSessionMsg.Pts.Stat()
 	require.NoError(t, err)
 	assert.True(t, os.SameFile(sentPtsFileInfo, receivedPtsFileInfo))
 }

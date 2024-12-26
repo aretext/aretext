@@ -12,14 +12,14 @@ type msgType int
 
 const (
 	invalidMsgType = msgType(iota) // Zero value is invalid.
-	createSessionMsgType
+	startSessionMsgType
 	resizeTerminalMsgType
 )
 
 func msgTypeForMessage(msg Message) msgType {
 	switch msg.(type) {
-	case *CreateSessionMsg:
-		return createSessionMsgType
+	case *StartSessionMsg:
+		return startSessionMsgType
 	case *ResizeTerminalMsg:
 		return resizeTerminalMsgType
 	default:
@@ -27,8 +27,8 @@ func msgTypeForMessage(msg Message) msgType {
 	}
 }
 
-// CreateSessionMsg is sent from client to server immediately after opening a connection.
-type CreateSessionMsg struct {
+// StartSessionMsg is sent from client to server immediately after opening a connection.
+type StartSessionMsg struct {
 	// DocumentPath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
 	DocumentPath string
@@ -40,16 +40,16 @@ type CreateSessionMsg struct {
 	// TerminalEnv is the environment variables for the client's terminal ($TERM, etc.)
 	// The server should use these when interacting with the client's delegated tty
 	// or when executing shell commands on behalf of a client.
-	TerminalEnv []string
+	TerminalEnv map[string]string
 
 	// Pts is a pseudoterminal delegated by the client to the server.
 	// This is sent as out-of-band data SCM_RIGHTS over the Unix socket.
 	Pts *os.File `json:"-"`
 }
 
-func (m *CreateSessionMsg) closed() {}
+func (m *StartSessionMsg) closed() {}
 
-var _ Message = (*CreateSessionMsg)(nil)
+var _ Message = (*StartSessionMsg)(nil)
 
 // ResizeTerminalMsg is sent from a client to the server to signal that the terminal has been resized.
 type ResizeTerminalMsg struct {

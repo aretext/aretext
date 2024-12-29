@@ -1,16 +1,18 @@
-package client
+package pty
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"syscall"
 	"unsafe"
 
+	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sys/unix"
 )
 
-func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
+func CreatePtyPair() (ptmx *os.File, pts *os.File, err error) {
 	// Create the pty pair.
 	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)
 	if err != nil {
@@ -48,7 +50,7 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 	return ptmx, pts, nil
 }
 
-func resizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err error) {
+func ResizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err error) {
 	// Update ptmx with the same size as client tty.
 	ws, err := unix.IoctlGetWinsize(int(tty.Fd()), unix.TIOCGWINSZ)
 	if err != nil {
@@ -63,7 +65,7 @@ func resizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err er
 	return int(ws.Col), int(ws.Row), nil
 }
 
-func proxyTtyUntilClosed(ptmx *os.File) {
+func ProxyTtyToPtmxUntilClosed(ptmx *os.File) {
 	doneCh := make(chan struct{})
 
 	// Copy pty -> tty
@@ -82,4 +84,10 @@ func proxyTtyUntilClosed(ptmx *os.File) {
 	select {
 	case <-doneCh:
 	}
+}
+
+// TODO: explain this
+func NewTtyFromPts(pts *os.File) (tcell.Tty, error) {
+	// TODO
+	return nil, errors.New("not implemented")
 }

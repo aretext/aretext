@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/term"
 
+	"github.com/aretext/aretext/pty"
 	"github.com/aretext/aretext/protocol"
 )
 
@@ -47,7 +48,7 @@ func (c *Client) Run(documentPath string) error {
 	defer term.Restore(ttyFd, oldTtyState)
 
 	// Create psuedoterminal (pty) pair.
-	ptmx, pts, err := createPtyPair()
+	ptmx, pts, err := pty.CreatePtyPair()
 	if err != nil {
 		return fmt.Errorf("failed to create pty: %w", err)
 	}
@@ -73,7 +74,7 @@ func (c *Client) Run(documentPath string) error {
 	pts.Close()
 
 	// Proxy ptmx <-> tty.
-	proxyTtyUntilClosed(ptmx)
+	pty.ProxyTtyToPtmxUntilClosed(ptmx)
 
 	return nil
 }
@@ -130,7 +131,7 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 			switch signal {
 			case syscall.SIGWINCH:
 				log.Printf("received SIGWINCH signal\n")
-				width, height, err := resizePtyToMatchTty(os.Stdin, ptmx)
+				width, height, err := pty.ResizePtyToMatchTty(os.Stdin, ptmx)
 				if err != nil {
 					log.Printf("could not resize pty to match tty: %s\n", err)
 					return

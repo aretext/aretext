@@ -16,7 +16,6 @@ func main() {
 		panic(err)
 	}
 
-	go pty.ProxyTtyToPtmxUntilClosed(ptmx)
 
 	tcellTty, err := pty.NewTtyFromPts(pts)
 	if err != nil {
@@ -42,17 +41,9 @@ func main() {
 
 	displayHelloWorld(s)
 
-	for {
-		switch ev := s.PollEvent().(type) {
-		case *tcell.EventResize:
-			s.Sync()
-			displayHelloWorld(s)
-		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape {
-				s.Fini()
-				os.Exit(0)
-			}
-		}
+	go runTcellEventLoop(s)
+	if err := pty.ProxyTtyToPtmxUntilClosed(ptmx); err != nil {
+		panic(err)
 	}
 }
 
@@ -79,3 +70,17 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
+func runTcellEventLoop(s tcell.Screen) {
+	for {
+		switch ev := s.PollEvent().(type) {
+		case *tcell.EventResize:
+			s.Sync()
+			displayHelloWorld(s)
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyEscape {
+				s.Fini()
+				os.Exit(0)
+			}
+		}
+	}
+}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -193,29 +192,16 @@ func (tty *ptsTty) Stop() error {
 }
 
 func (tty *ptsTty) WindowSize() (tcell.WindowSize, error) {
-	size := tcell.WindowSize{}
 	ws, err := unix.IoctlGetWinsize(int(tty.pts.Fd()), unix.TIOCGWINSZ)
 	if err != nil {
-		return size, err
+		return tcell.WindowSize{}, err
 	}
-	w := int(ws.Col)
-	h := int(ws.Row)
-	if w == 0 {
-		w, _ = strconv.Atoi(os.Getenv("COLUMNS"))
+	size := tcell.WindowSize{
+		Width:       int(ws.Col),
+		Height:      int(ws.Row),
+		PixelWidth:  int(ws.Xpixel),
+		PixelHeight: int(ws.Ypixel),
 	}
-	if w == 0 {
-		w = 80 // default
-	}
-	if h == 0 {
-		h, _ = strconv.Atoi(os.Getenv("LINES"))
-	}
-	if h == 0 {
-		h = 25 // default
-	}
-	size.Width = w
-	size.Height = h
-	size.PixelWidth = int(ws.Xpixel)
-	size.PixelHeight = int(ws.Ypixel)
 	return size, nil
 }
 

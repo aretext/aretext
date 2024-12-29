@@ -2,8 +2,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 
@@ -15,7 +13,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 
 	tcellTty, err := pty.NewTtyFromPts(pts)
 	if err != nil {
@@ -41,9 +38,13 @@ func main() {
 
 	displayHelloWorld(s)
 
-	go runTcellEventLoop(s)
-	if err := pty.ProxyTtyToPtmxUntilClosed(ptmx); err != nil {
-		panic(err)
+	quitChan := make(chan struct{})
+	go runTcellEventLoop(s, quitChan)
+	pty.ProxyTtyToPtmxUntilClosed(ptmx)
+
+	select {
+		case <-quitChan:
+		// wait until tcell finishes cleanup
 	}
 }
 
@@ -70,7 +71,7 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func runTcellEventLoop(s tcell.Screen) {
+func runTcellEventLoop(s tcell.Screen, quitChan chan struct{}) {
 	for {
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
@@ -79,7 +80,8 @@ func runTcellEventLoop(s tcell.Screen) {
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape {
 				s.Fini()
-				os.Exit(0)
+				quitChan <- struct{}{}
+				return
 			}
 		}
 	}

@@ -14,6 +14,8 @@ import (
 	"github.com/aretext/aretext/protocol"
 )
 
+type sessionId int
+
 // Server listens on a Unix Domain Socket (UDS) for clients to connect.
 // The client sends the server a pseudoterminal (pty), which the server uses
 // for input/output from/to the client's terminal.
@@ -71,7 +73,7 @@ func createListenSocket(socketPath string) (*net.UnixListener, error) {
 	return ul, nil
 }
 
-func (s *Server) listenForConnections(ul *net.UnixListener) {
+func (s *Server) listenForConnections(ul *net.UnixListener) error {
 	nextSessionId := sessionId(0)
 	for {
 		uc, err := ul.AcceptUnix()
@@ -80,8 +82,8 @@ func (s *Server) listenForConnections(ul *net.UnixListener) {
 			continue
 		}
 
-		go s.handleConnection(nextConnectionId, uc)
-		nextConnectionId++
+		go s.handleConnection(nextSessionId, uc)
+		nextSessionId++
 	}
 
 	return nil

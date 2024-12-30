@@ -87,8 +87,6 @@ func ProxyTtyToPtmxUntilClosed(ptmx *os.File) {
 	select {
 	case <-doneCh:
 	}
-
-	return nil
 }
 
 // TODO

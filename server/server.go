@@ -239,7 +239,14 @@ func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerm
 	log.Printf("received terminal resize msg for sessionId=%d, width=%d, height=%d\n", id, msg.Width, msg.Height)
 }
 
-func (s *Server) draw(id sessionId, s tcell.Screen) {
+func (s *Server) draw(id sessionId, screen tcell.Screen) {
+	ss := s.getSessionState(id)
+	if ss == 1 {
+		screen.SetStyle(tcell.StyleDefault.Background(tcell.ColorRed))
+	} else {
+		screen.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
+	}
+	screen.Clear()
 }
 
 func (s *Server) setSessionState(id sessionId, newState int) {

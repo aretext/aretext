@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+
+	"github.com/adrg/xdg"
 
 	"github.com/aretext/aretext/client"
 )
 
 func main() {
 	config := client.Config{
-		ServerSocketPath: "/var/run/aretext.socket",
+		ServerSocketPath: filepath.Join(xdg.RuntimeDir, "aretext.socket"),
 	}
 	err := client.NewClient(config).Run("test.txt")
 	if err != nil {

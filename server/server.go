@@ -112,7 +112,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 	defer clientTty.Close()
 
-	screen, err := tcell.NewTerminfoScreenFromTtyTerminfo(clientTty, terminInfo)
+	screen, err := tcell.NewTerminfoScreenFromTtyTerminfo(clientTty, termInfo)
 	if err != nil {
 		log.Printf("error constructing screen for client, sessionId=%d: %s\n", id, err)
 		return

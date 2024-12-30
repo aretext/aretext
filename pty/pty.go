@@ -68,14 +68,8 @@ func ResizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err er
 	return int(ws.Col), int(ws.Row), nil
 }
 
-func ProxyTtyToPtmxUntilClosed(ptmx *os.File) error {
+func ProxyTtyToPtmxUntilClosed(ptmx *os.File) {
 	doneCh := make(chan struct{})
-
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		return fmt.Errorf("failed to get terminal state: %w", err)
-	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	// Copy tty input -> pty
 	go func(ptyOut io.Writer, ttyIn io.Reader) {

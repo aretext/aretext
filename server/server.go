@@ -169,6 +169,9 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		}
 	}(uc)
 
+	// Initial draw, sync everything.
+	s.draw(id, screen, true)
+
 	// Main event loop.
 	log.Printf("starting main event loop for sessionId=%d\n", id)
 	for {
@@ -190,7 +193,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		}
 
 		// TODO: how to broadcast draw to other clients in the same document...?
-		s.draw(id, screen)
+		s.draw(id, screen, false)
 	}
 }
 
@@ -239,7 +242,7 @@ func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerm
 	log.Printf("received terminal resize msg for sessionId=%d, width=%d, height=%d\n", id, msg.Width, msg.Height)
 }
 
-func (s *Server) draw(id sessionId, screen tcell.Screen) {
+func (s *Server) draw(id sessionId, screen tcell.Screen, sync bool) {
 	log.Printf("drawing to screen for sessionId=%d\n", id)
 	ss := s.getSessionState(id)
 	log.Printf("setting bg color based on sessionId=%d state=%d\n", id, ss)
@@ -249,7 +252,12 @@ func (s *Server) draw(id sessionId, screen tcell.Screen) {
 		screen.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
 	}
 	screen.Clear()
-	screen.Sync()
+
+	if sync {
+		screen.Sync()
+	} else {
+		screen.Show()
+	}
 }
 
 func (s *Server) setSessionState(id sessionId, newState int) {

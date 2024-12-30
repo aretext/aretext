@@ -243,7 +243,7 @@ func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerm
 }
 
 func (s *Server) draw(id sessionId, screen tcell.Screen, sync bool) {
-	log.Printf("drawing to screen for sessionId=%d\n", id)
+	log.Printf("drawing to screen for sessionId=%d with sync=%t\n", id, sync)
 	ss := s.getSessionState(id)
 	log.Printf("setting bg color based on sessionId=%d state=%d\n", id, ss)
 	if ss == 1 {

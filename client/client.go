@@ -52,6 +52,12 @@ func (c *Client) Run(documentPath string) error {
 		return fmt.Errorf("failed to create pty: %w", err)
 	}
 
+	// Ensure ptmx matches tty terminal size.
+	_, _, err = resizePtyToMatchTty(os.Stdin, ptmx)
+	if err != nil {
+		return fmt.Errorf("resize ptmx: %w", err)
+	}
+
 	// Connect to the server over unix domain socket (UDS).
 	conn, err := connectToServer(c.config.ServerSocketPath)
 	if err != nil {

@@ -50,6 +50,8 @@ func (s *Server) Run() error {
 	}
 	defer releaseLock()
 
+	// TODO: optionally quit after N seconds if no clients connected.
+
 	// Start listening for clients to connect.
 	ul, err := createListenSocket(s.config.SocketPath)
 	if err != nil {
@@ -182,10 +184,13 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 			return
 		}
 
-		// TODO: check quit flag, exit client...
+		if s.getSessionState(id) == 0 {
+			log.Printf("sessionId=%d was terminated, exiting session event loop", id)
+			return
+		}
 
 		// TODO: how to broadcast draw to other clients in the same document...?
-		s.draw(id)
+		s.draw(id, screen)
 	}
 }
 
@@ -206,7 +211,7 @@ func receiveStartSessionMsg(uc *net.UnixConn) (*protocol.StartSessionMsg, error)
 func (s *Server) initializeEditorStateForSession(id sessionId) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.dummyState[id] = 0
+	s.dummyState[id] = 1
 }
 
 func (s *Server) deleteEditorStateForSession(id sessionId) {
@@ -216,10 +221,40 @@ func (s *Server) deleteEditorStateForSession(id sessionId) {
 }
 
 func (s *Server) processTermEvent(id sessionId, event tcell.Event) {
+	eventKey, ok := event.(*tcell.EventKey)
+	if !ok {
+		return
+	}
+
+	if eventKey.Key() == tcell.KeyEscape {
+		s.setSessionState(id, 0)
+	} else if eventKey.Rune() == 'a' {
+		s.setSessionState(id, 1)
+	} else if eventKey.Rune() == 'b' {
+		s.setSessionState(id, 2)
+	}
 }
 
 func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerminalMsg) {
+	log.Printf("received terminal resize msg for sessionId=%d, width=%d, height=%d\n", id, msg.Width, msg.Height)
 }
 
-func (s *Server) draw(id sessionId) {
+func (s *Server) draw(id sessionId, s tcell.Screen) {
+}
+
+func (s *Server) setSessionState(id sessionId, newState int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.dummyState[id]; ok {
+		log.Printf("Setting state for session %d to %d", id, newState)
+		s.dummyState[id] = newState
+	} else {
+		log.Printf("Error: cannot set state for session %d because it doesn't exist", id)
+	}
+}
+
+func (s *Server) getSessionState(id sessionId) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.dummyState[id]
 }

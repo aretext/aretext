@@ -136,7 +136,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}()
 
 	// Process ResizeTerminalMsg from the client.
-	resizeTermMsgChan := make(chan protocol.ResizeTerminalMsg, 1)
+	resizeTermMsgChan := make(chan *protocol.ResizeTerminalMsg, 1)
 	go func(uc *net.UnixConn) {
 		for {
 			msg, err := protocol.ReceiveMessage(uc)

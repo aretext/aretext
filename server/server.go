@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"syscall"
 
 	"github.com/gdamore/tcell/v2"
@@ -22,13 +23,18 @@ type sessionId int
 type Server struct {
 	config   Config
 	quitChan chan struct{}
+
+	// TODO: this is just POC of editor state.
+	mu         sync.Mutex
+	dummyState map[sessionId]int
 }
 
 // NewServer creates (but does not start) a new server with the given config.
 func NewServer(config Config) *Server {
 	return &Server{
-		config:   config,
-		quitChan: make(chan struct{}),
+		config:     config,
+		quitChan:   make(chan struct{}),
+		dummyState: make(map[sessionId]int),
 	}
 }
 
@@ -44,6 +50,7 @@ func (s *Server) Run() error {
 	}
 	defer releaseLock()
 
+	// Start listening for clients to connect.
 	ul, err := createListenSocket(s.config.SocketPath)
 	if err != nil {
 		return fmt.Errorf("could not create listen socket: %w", err)
@@ -125,7 +132,9 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}
 	defer screen.Fini()
 
-	// TODO: better acquire a lock and add the session to editor state
+	// Initialize editor state for this session.
+	s.initializeEditorStateForSession(id)
+	defer s.deleteEditorStateForSession(id)
 
 	// Process terminal events from client tty.
 	termEventChan := make(chan tcell.Event, 1024)
@@ -163,19 +172,20 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	for {
 		select {
 		case event := <-termEventChan:
-			// TODO: process term event
-			// process event -> input
-			// if action, acquire lock on editor state and apply
+			log.Printf("processing terminal event for sessionId=%d\n", id)
+			s.processTermEvent(id, event)
 		case msg := <-resizeTermMsgChan:
-			// TODO: process resize terminal msg
-			// if action, acquire lock on editor state and apply
+			log.Printf("processing resize terminal event for sessionId=%d\n", id)
+			s.processResizeTerminalMsg(id, msg)
 		case <-s.quitChan:
 			log.Printf("terminating sessionId=%d for server quit\n", id)
 			return
 		}
 
-		// TODO: check quit flag, exit
-		// TODO: redraw
+		// TODO: check quit flag, exit client...
+
+		// TODO: how to broadcast draw to other clients in the same document...?
+		s.draw(id)
 	}
 }
 
@@ -191,4 +201,25 @@ func receiveStartSessionMsg(uc *net.UnixConn) (*protocol.StartSessionMsg, error)
 	}
 
 	return startSessionMsg, nil
+}
+
+func (s *Server) initializeEditorStateForSession(id sessionId) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.dummyState[id] = 0
+}
+
+func (s *Server) deleteEditorStateForSession(id sessionId) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.dummyState, id)
+}
+
+func (s *Server) processTermEvent(id sessionId, event tcell.Event) {
+}
+
+func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerminalMsg) {
+}
+
+func (s *Server) draw(id sessionId) {
 }

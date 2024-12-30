@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -75,19 +74,8 @@ func (tty *ptsTty) Start() error {
 }
 
 func (tty *ptsTty) Drain() error {
-	_ = tty.pts.SetReadDeadline(time.Now())
-
-	_ = syscall.SetNonblock(int(tty.pts.Fd()), true)
-	tio, err := unix.IoctlGetTermios(int(tty.pts.Fd()), unix.TCGETS)
-	if err != nil {
-		return err
-	}
-	tio.Cc[unix.VMIN] = 0
-	tio.Cc[unix.VTIME] = 0
-	if err = unix.IoctlSetTermios(int(tty.pts.Fd()), unix.TCSETSW, tio); err != nil {
-		return err
-	}
-
+	// tcell comments say "Implementations may reasonably make this a no-op"
+	// so that's what we're doing.
 	return nil
 }
 

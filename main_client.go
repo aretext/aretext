@@ -14,7 +14,7 @@ import (
 func main() {
 	logFile, err := os.Create("client.log")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error creating log file: %s", err)
+		fmt.Fprintf(os.Stderr, "error creating log file: %s\n", err)
 		os.Exit(1)
 	}
 	defer logFile.Close()
@@ -25,7 +25,7 @@ func main() {
 	}
 	err = client.NewClient(config).Run("test.txt")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running client: %s", err)
+		fmt.Fprintf(os.Stderr, "error running client: %s\n", err)
 		os.Exit(1)
 	}
 }

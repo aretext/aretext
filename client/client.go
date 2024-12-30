@@ -38,6 +38,8 @@ func (c *Client) Run(documentPath string) error {
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, syscall.SIGWINCH)
 
+	// TODO: probably check if this is a tty
+
 	// Set tty to raw mode and restore on exit.
 	ttyFd := int(os.Stdin.Fd())
 	oldTtyState, err := term.MakeRaw(ttyFd)

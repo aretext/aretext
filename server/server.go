@@ -249,7 +249,7 @@ func (s *Server) draw(id sessionId, screen tcell.Screen) {
 		screen.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
 	}
 	screen.Clear()
-	screen.Show()
+	screen.Sync()
 }
 
 func (s *Server) setSessionState(id sessionId, newState int) {

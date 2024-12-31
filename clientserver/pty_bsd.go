@@ -1,6 +1,6 @@
 //go:build darwin || freebsd || netbsd || openbsd
 
-package client
+package clientserver
 
 import (
 	"fmt"
@@ -50,4 +50,12 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	}
 
 	return pts, nil
+}
+
+func drainTty(pts *os.File) error {
+	err = unix.IoctlSetInt(int(pts.Fd()), unix.TIOCDRAIN, 0)
+	if err != nil {
+		return fmt.Errorf("ioctl TIOCDRAIN failed: %w", err)
+	}
+	return nil
 }

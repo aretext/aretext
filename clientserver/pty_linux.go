@@ -1,6 +1,6 @@
 //go:build linux
 
-package client
+package clientserver
 
 import (
 	"fmt"
@@ -41,4 +41,17 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	}
 
 	return os.NewFile(ptsFd, ""), nil
+}
+
+func drainTty(pts *os.File) error {
+	// TCSETSW waits for all terminal events to drain, then updates attributes (no-op in this case).
+	tio, err := unix.IoctlGetTermios(int(pts.Fd()), unix.TCGETS)
+	if err != nil {
+		return err
+	}
+	if err = unix.IoctlSetTermios(int(pts.Fd()), unix.TCSETSW, tio); err != nil {
+		return err
+	}
+
+	return nil
 }

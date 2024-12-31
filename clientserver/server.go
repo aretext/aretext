@@ -1,4 +1,4 @@
-package server
+package clientserver
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/aretext/aretext/protocol"
+	"github.com/aretext/aretext/clientserver/protocol"
 )
 
 type sessionId int
@@ -44,7 +44,7 @@ func NewServer(config Config) *Server {
 // for input/output from/to the client's terminal.
 func (s *Server) Run() error {
 	// Acquire a filelock to ensure at most one server running at a time.
-	releaseLock, err := acquireLock(s.config.LockPath)
+	releaseLock, err := acquireLock(s.config.ServerLockPath)
 	if err != nil {
 		return fmt.Errorf("acquireLock: %w", err)
 	}
@@ -53,7 +53,7 @@ func (s *Server) Run() error {
 	// TODO: optionally quit after N seconds if no clients connected.
 
 	// Start listening for clients to connect.
-	ul, err := createListenSocket(s.config.SocketPath)
+	ul, err := createListenSocket(s.config.ServerSocketPath)
 	if err != nil {
 		return fmt.Errorf("could not create listen socket: %w", err)
 	}

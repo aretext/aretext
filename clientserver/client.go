@@ -1,4 +1,4 @@
-package client
+package clientserver
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/aretext/aretext/protocol"
+	"github.com/aretext/aretext/clientserver/protocol"
 )
 
 // Client connects to an aretext server over a Unix Domain Socket (UDS),

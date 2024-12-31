@@ -7,15 +7,15 @@ import (
 
 	"github.com/adrg/xdg"
 
-	"github.com/aretext/aretext/server"
+	"github.com/aretext/aretext/clientserver"
 )
 
 func main() {
-	config := server.Config{
-		SocketPath: filepath.Join(xdg.RuntimeDir, "aretext.socket"),
-		LockPath:   filepath.Join(xdg.RuntimeDir, "aretext.lock"),
+	config := clientserver.Config{
+		ServerSocketPath: filepath.Join(xdg.RuntimeDir, "aretext.socket"),
+		ServerLockPath:   filepath.Join(xdg.RuntimeDir, "aretext.lock"),
 	}
-	err := server.NewServer(config).Run()
+	err := clientserver.NewServer(config).Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error running server: %s", err)
 		os.Exit(1)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/adrg/xdg"
 
-	"github.com/aretext/aretext/client"
+	"github.com/aretext/aretext/clientserver"
 )
 
 func main() {
@@ -20,10 +20,10 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	config := client.Config{
+	config := clientserver.Config{
 		ServerSocketPath: filepath.Join(xdg.RuntimeDir, "aretext.socket"),
 	}
-	err = client.NewClient(config).Run("test.txt")
+	err = clientserver.NewClient(config).Run("test.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error running client: %s\n", err)
 		os.Exit(1)

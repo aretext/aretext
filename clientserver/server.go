@@ -1,12 +1,14 @@
 package clientserver
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"sync"
 	"syscall"
 
@@ -191,7 +193,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		select {
 		case event := <-termEventChan:
 			log.Printf("processing terminal event for sessionId=%d\n", id)
-			s.processTermEvent(id, event)
+			s.processTermEvent(id, event, screen, msg.Pts)
 		case msg := <-resizeTermMsgChan:
 			log.Printf("processing resize terminal event for sessionId=%d\n", id)
 			s.processResizeTerminalMsg(id, msg)
@@ -236,7 +238,7 @@ func (s *Server) deleteEditorStateForSession(id sessionId) {
 	delete(s.dummyState, id)
 }
 
-func (s *Server) processTermEvent(id sessionId, event tcell.Event) {
+func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen, pty *os.File) {
 	eventKey, ok := event.(*tcell.EventKey)
 	if !ok {
 		return
@@ -248,6 +250,38 @@ func (s *Server) processTermEvent(id sessionId, event tcell.Event) {
 		s.setSessionState(id, 1)
 	} else if eventKey.Rune() == 'b' {
 		s.setSessionState(id, 2)
+	} else if eventKey.Rune() == 's' {
+		// test running a subcommand
+		log.Printf("suspending screen for sessionId=%d\n", id)
+		if err := screen.Suspend(); err != nil {
+			log.Printf("could not suspend screen: %w\n", err)
+			return
+		}
+		defer func() {
+			log.Printf("resuming screen for sessionId=%d\n", id)
+			screen.Resume()
+		}()
+
+		log.Printf("running bash subcommand for sessionId=%d\n", id)
+		ctx := context.Background()
+		cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
+		// Need to use pts.Msg for this. If I try to use `screen.Tty()`
+		// then fork/exec fails with ENOTTY ("inappropriate ioctl for device")
+		cmd.Stdin = pty
+		cmd.Stdout = pty
+		cmd.Stderr = pty
+		// https://github.com/golang/go/issues/29458
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setsid:  true,
+			Setctty: true,
+			Ctty:    0, // this must be a valid FD in the child process, so choose stdin (fd=0)
+		}
+
+		if err := cmd.Run(); err != nil {
+			log.Printf("error running cmd: %s\n", err)
+		}
+		log.Printf("bash subcommand completed for sessionId=%d\n", id)
+		return
 	}
 }
 

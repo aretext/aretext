@@ -10,6 +10,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// TODO: is all of this necessary? don't think VMIN / VTIME needs to change,
+// and may not even need read deadline or nonblock...
 func drainPty(pts *os.File) error {
 	_ = pts.SetReadDeadline(time.Now())
 

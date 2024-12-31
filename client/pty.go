@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -22,27 +21,12 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 		return nil, nil, err
 	}
 
-	// Retrieve pts file descriptor.
-	ptsFd, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCGPTPEER, unix.O_RDWR|unix.O_NOCTTY)
-	if int(ptsFd) == -1 {
-		if errno, isErrno := err.(syscall.Errno); !isErrno || (errno != syscall.EINVAL && errno != syscall.ENOTTY) {
-			return nil, nil, fmt.Errorf("could not retrieve pts file descriptor: %w", err)
-		}
-		// On EINVAL or ENOTTY, fallback to TIOCGPTN.
-		ptyN, err := unix.IoctlGetInt(ptmxFd, unix.TIOCGPTN)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not find pty number: %w", err)
-		}
-		ptyName := fmt.Sprintf("/dev/pts/%d", ptyN)
-		fd, err := unix.Open(ptyName, unix.O_RDWR|unix.O_NOCTTY, 0o620)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not open pty %s: %w", ptyName, err)
-		}
-		ptsFd = uintptr(fd)
-	}
-
+	// File descriptors for both ptmx and pts.
 	ptmx = os.NewFile(uintptr(ptmxFd), "")
-	pts = os.NewFile(ptsFd, "")
+	pts, err = ptsFileFromPtmx(ptmx)
+	if err != nil {
+		return nil, nil, err
+	}
 	return ptmx, pts, nil
 }
 

@@ -53,6 +53,7 @@ func (c *Client) Run(documentPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create pty: %w", err)
 	}
+	defer ptmx.Close()
 
 	// Ensure ptmx matches tty terminal size.
 	_, _, err = resizePtyToMatchTty(os.Stdin, ptmx)

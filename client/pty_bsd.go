@@ -16,10 +16,10 @@ func unlockPts(ptmxFd int) error {
 		return fmt.Errorf("ioctl TIOCPTYGRANT failed: %w", errno)
 	}
 
-	_, _, errno = unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), uintptr(unix.TIOCPTYUNLK), 0)
-	if errno != 0 {
-		return fmt.Errorf("ioctl TIOCPTYUNLK failed: %w", errno)
-	}
+    _, _, errno = unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), uintptr(unix.TIOCPTYUNLK), 0)
+    if errno != 0 {
+        return fmt.Errorf("ioctl TIOCPTYUNLK failed: %w", errno)
+    }
 
 	return nil
 }

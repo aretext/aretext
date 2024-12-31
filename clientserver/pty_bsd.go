@@ -5,6 +5,7 @@ package clientserver
 import (
 	"fmt"
 	"os"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -52,10 +53,20 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	return pts, nil
 }
 
-func drainTty(ttyFd int) error {
-	err = unix.IoctlSetInt(ttyFd, unix.TIOCDRAIN, 0)
+func setTtyNonblockAndDrain(ttyFd int) error {
+	err := syscall.SetNonblock(ttyFd, true)
 	if err != nil {
-		return fmt.Errorf("ioctl TIOCDRAIN failed: %w", err)
+		return fmt.Errorf("syscall.SetNonblock failed: %w", err)
+	}
+
+	tio, err := unix.IoctlGetTermios(ttyFd, unix.TIOCGETA)
+	if err != nil {
+		return fmt.Errorf("ioctl TIOCGETA failed: %w", err)
+	}
+	tio.Cc[unix.VMIN] = 0
+	tio.Cc[unix.VTIME] = 0
+	if err = unix.IoctlSetTermios(ttyFd, unix.TIOCSETAW, tio); err != nil {
+		return fmt.Errorf("ioctl TIOCSETAW failed: %w", err)
 	}
 	return nil
 }

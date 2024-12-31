@@ -46,10 +46,7 @@ func (c *Client) Run(documentPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to set tty state: %w", err)
 	}
-	defer func() {
-		term.Restore(ttyFd, oldTtyState)
-		drainTty(ttyFd) // necessary on macOS
-	}()
+	defer term.Restore(ttyFd, oldTtyState)
 
 	// Create psuedoterminal (pty) pair.
 	ptmx, pts, err := createPtyPair()

@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -126,18 +125,7 @@ func (tty *ptsTty) Start() error {
 func (tty *ptsTty) Drain() error {
 	// tcell won't exit its input loop until tty.Read returns.
 	// To avoid waiting for input that will never arrive, set the pts to non-blocking.
-	err := syscall.SetNonblock(int(tty.pts.Fd()), true)
-	if err != nil {
-		return fmt.Errorf("failed to set pts to non-blocking: %w", err)
-	}
-
-	// Platform-specific for Linux and BSD.
-	err = drainTty(int(tty.pts.Fd()))
-	if err != nil {
-		return fmt.Errorf("failed to drain pts: %w", err)
-	}
-
-	return nil
+	return setTtyNonblockAndDrain(int(tty.pts.Fd()))
 }
 
 func (tty *ptsTty) Stop() error {

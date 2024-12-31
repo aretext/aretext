@@ -54,7 +54,4 @@ func proxyTtyToPtmxUntilClosed(ptmx *os.File) {
 	// Copy pty output -> tty
 	// This blocks until the server closes the pts.
 	_, _ = io.Copy(os.Stdout, ptmx)
-
-	// Ensure tty output drained.
-	_ = drainPty(ptmx)
 }

@@ -100,7 +100,10 @@ func (s *Server) listenForConnections(ul *net.UnixListener) error {
 
 func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	log.Printf("client connected, sessionId=%d\n", id)
-	defer uc.Close()
+	defer func() {
+		uc.Close()
+		log.Printf("closing socket for sessionId=%d\n", id)
+	}()
 
 	msg, err := receiveStartSessionMsg(uc)
 	if err != nil {
@@ -119,7 +122,11 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		log.Printf("error constructing tty from pts, sessionId=%d: %s\n", id, err)
 		return
 	}
-	defer clientTty.Close()
+	defer func() {
+		log.Printf("closing client tty for sessionId=%d\n", id)
+		clientTty.Close()
+		log.Printf("closed client tty for sessionId=%d\n", id)
+	}()
 
 	screen, err := tcell.NewTerminfoScreenFromTtyTerminfo(clientTty, termInfo)
 	if err != nil {
@@ -132,7 +139,11 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		log.Printf("error initializing screen for client, sessionId=%d: %s\n", id, err)
 		return
 	}
-	defer screen.Fini()
+	defer func() {
+		log.Printf("finalizing screen for sessionId=%d\n", id)
+		screen.Fini()
+		log.Printf("finalized screen for sessionId=%d\n", id)
+	}()
 
 	// Initialize editor state for this session.
 	s.initializeEditorStateForSession(id)
@@ -143,7 +154,9 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	screenQuitChan := make(chan struct{}, 1)
 	go screen.ChannelEvents(termEventChan, screenQuitChan)
 	defer func() {
+		log.Printf("sending screenQuitChan for sessionId=%d\n", id)
 		screenQuitChan <- struct{}{}
+		log.Printf("sent screenQuitChan for sessionId=%d\n", id)
 	}()
 
 	// Process ResizeTerminalMsg from the client.

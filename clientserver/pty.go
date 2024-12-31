@@ -13,6 +13,32 @@ import (
 	"golang.org/x/term"
 )
 
+func setTtyRaw(tty *os.File) (restoreTty func(), err error) {
+	// Lookup terminfo so we can clear the tty on restore.
+	termEnv := os.Getenv("TERM")
+	ti, err := tcell.LookupTerminfo(termEnv)
+	if err != nil {
+		return nil, fmt.Errorf("failed looking up term info with TERM=%q: %w", termEnv, err)
+	}
+
+	// Set tty to raw mode.
+	ttyFd := int(tty.Fd())
+	oldTtyState, err := term.MakeRaw(ttyFd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set tty state: %w", err)
+	}
+
+	// Restore clears the the tty then restores original state.
+	restoreTty = func() {
+		ti.TPuts(tty, ti.AttrOff)
+		ti.TPuts(tty, ti.ResetFgBg)
+		ti.TPuts(tty, ti.Clear)
+		term.Restore(ttyFd, oldTtyState)
+	}
+
+	return restoreTty, nil
+}
+
 func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 	// Create the pty pair.
 	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)

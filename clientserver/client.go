@@ -8,8 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"golang.org/x/term"
-
 	"github.com/aretext/aretext/clientserver/protocol"
 )
 
@@ -41,12 +39,11 @@ func (c *Client) Run(documentPath string) error {
 	// TODO: probably check if this is a tty
 
 	// Set tty to raw mode and restore on exit.
-	ttyFd := int(os.Stdin.Fd())
-	oldTtyState, err := term.MakeRaw(ttyFd)
+	restoreTty, err := setTtyRaw(os.Stdin)
 	if err != nil {
-		return fmt.Errorf("failed to set tty state: %w", err)
+		fmt.Errorf("failed to set client tty raw: %w", err)
 	}
-	defer term.Restore(ttyFd, oldTtyState)
+	defer restoreTty()
 
 	// Create psuedoterminal (pty) pair.
 	ptmx, pts, err := createPtyPair()

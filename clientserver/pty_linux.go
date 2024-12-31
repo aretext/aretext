@@ -63,3 +63,8 @@ func setTtyNonblockAndDrain(ttyFd int) error {
 
 	return nil
 }
+
+func flushPts(pts *os.File) error {
+	// no-op on Linux
+	return nil
+}

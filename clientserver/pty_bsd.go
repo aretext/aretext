@@ -70,3 +70,10 @@ func setTtyNonblockAndDrain(ttyFd int) error {
 	}
 	return nil
 }
+
+func flushPts(pts *os.File) error {
+	if err := unix.IoctlSetInt(int(pts.Fd()), unix.TIOCFLUSH, 0); err != nil {
+		return fmt.Errorf("failed to flush pty: %w", err)
+	}
+	return nil
+}

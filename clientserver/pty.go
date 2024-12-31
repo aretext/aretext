@@ -15,11 +15,13 @@ import (
 
 func setTtyRaw(tty *os.File) (restoreTty func(), err error) {
 	// Lookup terminfo so we can clear the tty on restore.
-	termEnv := os.Getenv("TERM")
-	ti, err := tcell.LookupTerminfo(termEnv)
-	if err != nil {
-		return nil, fmt.Errorf("failed looking up term info with TERM=%q: %w", termEnv, err)
-	}
+	/*
+		termEnv := os.Getenv("TERM")
+		ti, err := tcell.LookupTerminfo(termEnv)
+		if err != nil {
+			return nil, fmt.Errorf("failed looking up term info with TERM=%q: %w", termEnv, err)
+		}
+	*/
 
 	// Set tty to raw mode.
 	ttyFd := int(tty.Fd())
@@ -30,9 +32,10 @@ func setTtyRaw(tty *os.File) (restoreTty func(), err error) {
 
 	// Restore clears the the tty then restores original state.
 	restoreTty = func() {
-		ti.TPuts(tty, ti.AttrOff)
-		ti.TPuts(tty, ti.ResetFgBg)
-		ti.TPuts(tty, ti.Clear)
+		//ti.TPuts(tty, ti.ResetFgBg)
+		//ti.TPuts(tty, ti.AttrOff)
+		//ti.TPuts(tty, ti.Clear)
+		//t.TPuts(ti.ExitCA)
 		term.Restore(ttyFd, oldTtyState)
 	}
 
@@ -118,6 +121,10 @@ func (tty *ptsTty) Write(b []byte) (int, error) {
 }
 
 func (tty *ptsTty) Close() error {
+	err := flushPts(tty.pts)
+	if err != nil {
+		return err
+	}
 	return tty.pts.Close()
 }
 

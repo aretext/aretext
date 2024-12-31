@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -41,4 +42,22 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	}
 
 	return os.NewFile(ptsFd, ""), nil
+}
+
+// TODO: consolidate this with dup in client.
+func drainPty(pts *os.File) error {
+	_ = pts.SetReadDeadline(time.Now())
+
+	_ = syscall.SetNonblock(int(pts.Fd()), true)
+	tio, err := unix.IoctlGetTermios(int(pts.Fd()), unix.TCGETS)
+	if err != nil {
+		return err
+	}
+	tio.Cc[unix.VMIN] = 0
+	tio.Cc[unix.VTIME] = 0
+	if err = unix.IoctlSetTermios(int(pts.Fd()), unix.TCSETSW, tio); err != nil {
+		return err
+	}
+
+	return nil
 }

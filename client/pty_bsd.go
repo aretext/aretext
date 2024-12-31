@@ -11,7 +11,10 @@ import (
 )
 
 func unlockPts(ptmxFd int) error {
-	// BSD doesn't require unlocking pts.
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), uintptr(unix.TIOCPTYGRANT), 0)
+	if errno != 0 {
+		return fmt.Errorf("ioctl TIOCPTYGRANT failed: %w", errno)
+	}
 	return nil
 }
 

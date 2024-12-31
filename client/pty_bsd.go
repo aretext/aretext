@@ -66,8 +66,11 @@ func drainPty(pts *os.File) error {
 	}
 	tio.Cc[unix.VMIN] = 0
 	tio.Cc[unix.VTIME] = 0
-	if err = unix.IoctlSetTermios(int(pts.Fd()), unix.TIOCSETAW, tio); err != nil {
-		return err
+
+	err = unix.IoctlSetInt(int(pts.Fd()), unix.TIOCDRAIN, 0)
+	if err != nil {
+		return fmt.Errorf("ioctl TIOCDRAIN failed: %w", err)
 	}
+
 	return nil
 }

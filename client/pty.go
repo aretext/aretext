@@ -46,15 +46,22 @@ func resizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err er
 }
 
 func proxyTtyToPtmxUntilClosed(ptmx *os.File) {
-	// Copy tty input -> pty (async)
+	doneCh := make(chan struct{})
+
+	// Copy tty input -> pty
 	go func(ptyOut io.Writer, ttyIn io.Reader) {
 		_, _ = io.Copy(ptyOut, ttyIn)
+		doneCh <- struct{}{}
 	}(ptmx, os.Stdin)
 
 	// Copy pty output -> tty
-	// This blocks until the server closes the pts.
-	_, _ = io.Copy(os.Stdout, ptmx)
+	go func(ttyOut io.Writer, ptyIn io.Reader) {
+		_, _ = io.Copy(ttyOut, ptyIn)
+		doneCh <- struct{}{}
+	}(os.Stdout, ptmx)
 
-	// Ensure tty output drained.
-	_ = drainPty(ptmx)
+	// Block until pty closed (either by client or server).
+	select {
+	case <-doneCh:
+	}
 }

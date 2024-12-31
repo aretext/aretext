@@ -267,6 +267,8 @@ func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.
 		cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
 		// Need to use pts.Msg for this. If I try to use `screen.Tty()`
 		// then fork/exec fails with ENOTTY ("inappropriate ioctl for device")
+		// That's because os/exec specifically checks when stdin/stdout/stderr
+		// has type *os.File and if not it creates a pipe instead, which bash rejects.
 		cmd.Stdin = pty
 		cmd.Stdout = pty
 		cmd.Stderr = pty

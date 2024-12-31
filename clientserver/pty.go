@@ -132,7 +132,7 @@ func (tty *ptsTty) Drain() error {
 	}
 
 	// Platform-specific for Linux and BSD.
-	err = drainTty(tty.pts)
+	err = drainTty(int(tty.pts.Fd()))
 	if err != nil {
 		return fmt.Errorf("failed to drain pts: %w", err)
 	}

@@ -46,9 +46,10 @@ func (c *Client) Run(documentPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to set tty state: %w", err)
 	}
-	// TODO: after restore, need to flush the tty as well.
-	// otherwise macOS terminal will randomly fail to restore.
-	defer term.Restore(ttyFd, oldTtyState)
+	defer func() {
+		term.Restore(ttyFd, oldTtyState)
+		drainTty(ttyFd) // necessary on macOS
+	}()
 
 	// Create psuedoterminal (pty) pair.
 	ptmx, pts, err := createPtyPair()

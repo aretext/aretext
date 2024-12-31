@@ -43,13 +43,13 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	return os.NewFile(ptsFd, ""), nil
 }
 
-func drainTty(pts *os.File) error {
+func drainTty(ttyFd int) error {
 	// TCSETSW waits for all terminal events to drain, then updates attributes (no-op in this case).
-	tio, err := unix.IoctlGetTermios(int(pts.Fd()), unix.TCGETS)
+	tio, err := unix.IoctlGetTermios(ttyFd, unix.TCGETS)
 	if err != nil {
 		return err
 	}
-	if err = unix.IoctlSetTermios(int(pts.Fd()), unix.TCSETSW, tio); err != nil {
+	if err = unix.IoctlSetTermios(ttyFd, unix.TCSETSW, tio); err != nil {
 		return err
 	}
 

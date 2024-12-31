@@ -52,8 +52,8 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 	return pts, nil
 }
 
-func drainTty(pts *os.File) error {
-	err = unix.IoctlSetInt(int(pts.Fd()), unix.TIOCDRAIN, 0)
+func drainTty(ttyFd int) error {
+	err = unix.IoctlSetInt(ttyFd, unix.TIOCDRAIN, 0)
 	if err != nil {
 		return fmt.Errorf("ioctl TIOCDRAIN failed: %w", err)
 	}

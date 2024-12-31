@@ -71,9 +71,13 @@ func setTtyNonblockAndDrain(ttyFd int) error {
 	return nil
 }
 
-func flushPts(pts *os.File) error {
-	if err := unix.IoctlSetInt(int(pts.Fd()), unix.TIOCFLUSH, 0); err != nil {
-		return fmt.Errorf("failed to flush pty: %w", err)
+func drainTty(ttyFd int) error {
+	tio, err := unix.IoctlGetTermios(ttyFd, unix.TIOCGETA)
+	if err != nil {
+		return fmt.Errorf("ioctl TIOCGETA failed: %w", err)
+	}
+	if err = unix.IoctlSetTermios(ttyFd, unix.TIOCSETAW, tio); err != nil {
+		return fmt.Errorf("ioctl TIOCSETAW failed: %w", err)
 	}
 	return nil
 }

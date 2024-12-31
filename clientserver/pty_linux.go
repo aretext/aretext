@@ -64,7 +64,13 @@ func setTtyNonblockAndDrain(ttyFd int) error {
 	return nil
 }
 
-func flushPts(pts *os.File) error {
-	// no-op on Linux
+func drainTty(ttyFd int) error {
+	tio, err := unix.IoctlGetTermios(ttyFd, unix.TCGETS)
+	if err != nil {
+		return fmt.Errorf("ioctl TCGETS failed: %w", err)
+	}
+	if err = unix.IoctlSetTermios(ttyFd, unix.TCSETSW, tio); err != nil {
+		return fmt.Errorf("ioctl TCSETSW failed: %w", err)
+	}
 	return nil
 }

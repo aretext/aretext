@@ -77,12 +77,7 @@ func (tty *ptsTty) Start() error {
 func (tty *ptsTty) Drain() error {
 	// tcell won't exit its input loop until tty.Read returns.
 	// To avoid waiting for input that will never arrive, set the pts to non-blocking.
-	err := tty.pts.SetReadDeadline(time.Now())
-	if err != nil {
-		return fmt.Errorf("failed to set read deadline for pts: %w", err)
-	}
-
-	err = syscall.SetNonblock(int(tty.pts.Fd()), true)
+	err := syscall.SetNonblock(int(tty.pts.Fd()), true)
 	if err != nil {
 		return fmt.Errorf("failed to set pts to non-blocking: %w", err)
 	}

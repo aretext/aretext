@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"syscall"
-	"unsafe"
 
 	"golang.org/x/sys/unix"
 )
@@ -18,10 +17,9 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 	}
 
 	// Unlock pts.
-	locked := 0
-	result, _, err := unix.Syscall(unix.SYS_IOCTL, uintptr(ptmxFd), unix.TIOCSPTLCK, uintptr(unsafe.Pointer(&locked)))
-	if int(result) == -1 {
-		return nil, nil, fmt.Errorf("could not unlock pty: %w", err)
+	err = unlockPts(ptmxFd)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Retrieve pts file descriptor.

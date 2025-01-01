@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"os"
+	"syscall"
 )
 
 const maxMsgLen = 102400 // 100 KiB
@@ -36,7 +38,15 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 	binary.BigEndian.PutUint16(data[2:], uint16(len(encodedMsg)))
 	copy(data[4:], encodedMsg)
 
-	_, _, err = conn.WriteMsgUnix(data, nil, nil)
+	var oob []byte
+	if startSessionMsg, ok := msg.(*StartSessionMsg); ok {
+		if startSessionMsg.Pts == nil {
+			return errors.New("StartSessionMsg.Pts must not be nil")
+		}
+		oob = syscall.UnixRights(int(startSessionMsg.Pts.Fd()))
+	}
+
+	_, _, err = conn.WriteMsgUnix(data, oob, nil)
 	if err != nil {
 		return fmt.Errorf("net.WriteMsgUnix: %w", err)
 	}
@@ -46,9 +56,10 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 
 // ReceiveMessage receives a mesage over a Unix socket.
 func ReceiveMessage(conn *net.UnixConn) (Message, error) {
+	var oob [128]byte
 	var headerData [4]byte
 
-	n, _, _, _, err := conn.ReadMsgUnix(headerData[:], nil)
+	n, oobn, _, _, err := conn.ReadMsgUnix(headerData[:], oob[:])
 	if err != nil {
 		return nil, fmt.Errorf("net.ReadMsgUnix: %w", err)
 	} else if n != 4 {
@@ -76,6 +87,29 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 		if err := json.Unmarshal(msgData, &msg); err != nil {
 			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
+
+		if oobn == 0 {
+			return nil, errors.New("Missing expected OOB data in StartSessionMsg")
+		}
+
+		cmsgs, err := syscall.ParseSocketControlMessage(oob[0:oobn])
+		if err != nil {
+			return nil, fmt.Errorf("syscall.ParseSocketControlMessage: %w", err)
+		}
+
+		fds, err := syscall.ParseUnixRights(&cmsgs[0])
+		if err != nil {
+			return nil, fmt.Errorf("syscall.ParseUnixRights: %w", err)
+		} else if len(fds) != 1 {
+			return nil, errors.New("invalid number of file descriptors received for pty")
+		}
+
+		pts := os.NewFile(uintptr(fds[0]), "")
+		if pts == nil {
+			return nil, errors.New("invalid file descriptor for pty")
+		}
+
+		msg.Pts = pts
 		return &msg, nil
 
 	case resizeTerminalMsgType:

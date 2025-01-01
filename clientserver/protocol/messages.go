@@ -1,5 +1,7 @@
 package protocol
 
+import "os"
+
 // Message represents a serializable message sent between a client and a server.
 type Message interface {
 	closed() // Prevent other implementations.
@@ -40,8 +42,9 @@ type StartSessionMsg struct {
 	// or when executing shell commands on behalf of a client.
 	TerminalEnv map[string]string
 
-	// PtsPath is a file path to the pseudoterminal device delegated by the client to the server.
-	PtsPath string
+	// Pts is a pseudoterminal delegated by the client to the server.
+	// This is sent as out-of-band data SCM_RIGHTS over the Unix socket.
+	Pts *os.File `json:"-"`
 }
 
 func (m *StartSessionMsg) closed() {}

@@ -42,35 +42,3 @@ func ptsFileFromPtmx(ptmx *os.File) (*os.File, error) {
 
 	return os.NewFile(ptsFd, ""), nil
 }
-
-func setTtyNonblockAndDrain(ttyFd int) error {
-	err := syscall.SetNonblock(ttyFd, true)
-	if err != nil {
-		return fmt.Errorf("syscall.SetNonblock failed: %w", err)
-	}
-
-	// TCSETSW waits for all terminal events to drain, then updates attributes.
-	// Set VMIN and VTIME to 0 to avoid waiting for more characters.
-	tio, err := unix.IoctlGetTermios(ttyFd, unix.TCGETS)
-	if err != nil {
-		return fmt.Errorf("ioctl TCGETS failed: %w", err)
-	}
-	tio.Cc[unix.VMIN] = 0
-	tio.Cc[unix.VTIME] = 0
-	if err = unix.IoctlSetTermios(ttyFd, unix.TCSETSW, tio); err != nil {
-		return fmt.Errorf("ioctl TCSETSW failed: %w", err)
-	}
-
-	return nil
-}
-
-func drainTty(ttyFd int) error {
-	tio, err := unix.IoctlGetTermios(ttyFd, unix.TCGETS)
-	if err != nil {
-		return fmt.Errorf("ioctl TCGETS failed: %w", err)
-	}
-	if err = unix.IoctlSetTermios(ttyFd, unix.TCSETSW, tio); err != nil {
-		return fmt.Errorf("ioctl TCSETSW failed: %w", err)
-	}
-	return nil
-}

@@ -122,7 +122,7 @@ func (c *Client) Run(documentPath string) error {
 	defer func() {
 		// block until all tty drained to ensure we don't mess up the terminal
 		select {
-			case <-finishedTtyInputChan:
+		case <-finishedTtyInputChan:
 		}
 	}()
 

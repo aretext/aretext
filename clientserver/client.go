@@ -105,16 +105,24 @@ func (c *Client) Run(documentPath string) error {
 
 	// Close pipe file descriptors that are now owned by the server.
 	pipeInReader.Close()
-	pipeOutReader.Close()
+	pipeOutWriter.Close()
 
 	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, os.Stdin, conn)
 
 	// Copy tty input -> server pipe in
-	go func() { _, _ = io.Copy(pipeInWriter, os.Stdin) }()
+	go func() {
+		log.Printf("start copying tty input -> server pipe in\n")
+		_, _ = io.Copy(pipeInWriter, os.Stdin)
+		log.Printf("finished copying tty input -> server pipe in\n")
+	}()
 
 	// Copy server pipe out -> tty output
-	go func() { _, _ = io.Copy(os.Stdout, pipeOutReader) }()
+	go func() {
+		log.Printf("start copying server pipe out -> tty out\n")
+		_, _ = io.Copy(os.Stdout, pipeOutReader)
+		log.Printf("finish copying server pipe out -> tty out\n")
+	}()
 
 	// Block until the server closes the connection.
 	log.Printf("blocking until server closes conn\n")

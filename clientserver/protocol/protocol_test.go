@@ -24,13 +24,13 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	defer pipeOutReader.Close()
 
 	msg := &StartSessionMsg{
-		PipeIn:       pipeInReader,
-		PipeOut:      pipeOutWriter,
-		TerminalWidth: 128,
+		PipeIn:         pipeInReader,
+		PipeOut:        pipeOutWriter,
+		TerminalWidth:  128,
 		TerminalHeight: 129,
-		TerminalEnv:  map[string]string{"TERM": "tmux"},
-		DocumentPath: "/test/file",
-		WorkingDir:   "/test",
+		TerminalEnv:    map[string]string{"TERM": "tmux"},
+		DocumentPath:   "/test/file",
+		WorkingDir:     "/test",
 	}
 
 	receivedMsg := simulateSendAndReceive(t, msg)

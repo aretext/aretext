@@ -3,6 +3,7 @@ package clientserver
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -44,49 +45,80 @@ func (c *Client) Run(documentPath string) error {
 	signal.Notify(signalCh, syscall.SIGWINCH)
 
 	// Set tty to raw mode and restore on exit.
+	log.Printf("set tty to raw\n")
 	restoreTty, err := setTtyRaw(os.Stdin)
 	if err != nil {
-		fmt.Errorf("failed to set client tty raw: %w", err)
+		return fmt.Errorf("failed to set client tty raw: %w", err)
 	}
 	defer restoreTty()
 
-	// Create psuedoterminal (pty) pair.
-	ptmx, pts, err := createPtyPair()
+	// Create pipes connected to tty.
+	pipeInReader, pipeInWriter, err := os.Pipe()
 	if err != nil {
-		return fmt.Errorf("failed to create pty: %w", err)
+		return fmt.Errorf("os.Pipe: %w", err)
 	}
-	defer ptmx.Close()
+	defer pipeInWriter.Close()
+	defer pipeInReader.Close()
 
-	// Ensure ptmx matches tty terminal size.
-	_, _, err = resizePtyToMatchTty(os.Stdin, ptmx)
+	pipeOutReader, pipeOutWriter, err := os.Pipe()
 	if err != nil {
-		return fmt.Errorf("resize ptmx: %w", err)
+		return fmt.Errorf("os.Pipe: %w", err)
+	}
+	defer pipeOutWriter.Close()
+	defer pipeInReader.Close()
+
+	// Get terminal size.
+	termWidth, termHeight, err := getTtySize(os.Stdin)
+	if err != nil {
+		return err
 	}
 
 	// Connect to the server over unix domain socket (UDS).
+	log.Printf("connecting to server at %s\n", c.config.ServerSocketPath)
 	conn, err := connectToServer(c.config.ServerSocketPath)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
 	defer conn.Close()
 
-	// Handle signals (SIGWINCH) asynchronously.
-	go handleSignals(signalCh, ptmx, conn)
+	// Get working dir
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("os.Getwd: %w", err)
+	}
 
-	// Send StartSessionMsg to the server, along with pts to delegate
-	// the psuedoterminal to the server.
-	err = sendStartSessionMsg(conn, pts, documentPath)
+	// Send StartSessionMsg to the server.
+	msg := &protocol.StartSessionMsg{
+		PipeIn:         pipeInReader,
+		PipeOut:        pipeOutWriter,
+		TerminalWidth:  termWidth,
+		TerminalHeight: termHeight,
+		TerminalEnv:    getTerminalEnv(),
+		DocumentPath:   documentPath,
+		WorkingDir:     workingDir,
+	}
+	log.Printf("sending start msg to server: %v\n", msg)
+	err = protocol.SendMessage(conn, msg)
 	if err != nil {
 		return fmt.Errorf("failed to send StartSessionMsg: %w", err)
 	}
 
-	// Close pts as it's now owned by the server.
-	pts.Close()
+	// Close pipe file descriptors that are now owned by the server.
+	pipeInReader.Close()
+	pipeOutReader.Close()
 
-	// Proxy ptmx <-> tty.
-	proxyTtyToPtmxUntilClosed(ptmx)
+	// Handle signals (SIGWINCH) asynchronously.
+	go handleSignals(signalCh, os.Stdin, conn)
 
-	return nil
+	// Copy tty input -> server pipe in
+	go func() { _, _ = io.Copy(pipeInWriter, os.Stdin) }()
+
+	// Copy server pipe out -> tty output
+	go func() { _, _ = io.Copy(os.Stdout, pipeOutReader) }()
+
+	// Block until the server closes the connection.
+	log.Printf("blocking until server closes conn\n")
+	return blockUntilServerClosesConn(conn)
 }
 
 func connectToServer(socketPath string) (*net.UnixConn, error) {
@@ -105,45 +137,27 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
-func sendStartSessionMsg(conn *net.UnixConn, pts *os.File, documentPath string) error {
-	log.Printf("constructing StartSessionMsg\n")
-	log.Printf("StartSessionMsg documentPath=%q\n", documentPath)
-
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("os.Getwd: %w", err)
-	}
-	log.Printf("StartSessionMsg workingDir=%q\n", workingDir)
-
+func getTerminalEnv() map[string]string {
 	terminalEnv := make(map[string]string)
 	for _, key := range allTerminalEnvVars {
 		val, found := os.LookupEnv(key)
 		if found {
 			terminalEnv[key] = val
-			log.Printf("StartSessionMsg terminalEnv[%q]=%q\n", key, val)
 		}
 	}
-
-	msg := &protocol.StartSessionMsg{
-		DocumentPath: documentPath,
-		WorkingDir:   workingDir,
-		TerminalEnv:  terminalEnv,
-		Pts:          pts,
-	}
-
-	return protocol.SendMessage(conn, msg)
+	return terminalEnv
 }
 
-func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
+func handleSignals(signalCh chan os.Signal, tty *os.File, conn *net.UnixConn) {
 	for {
 		select {
 		case signal := <-signalCh:
 			switch signal {
 			case syscall.SIGWINCH:
 				log.Printf("received SIGWINCH signal\n")
-				width, height, err := resizePtyToMatchTty(os.Stdin, ptmx)
+				width, height, err := getTtySize(tty)
 				if err != nil {
-					log.Printf("could not resize pty to match tty: %s\n", err)
+					log.Printf("could not get tty size: %s\n", err)
 					return
 				}
 
@@ -157,6 +171,19 @@ func handleSignals(signalCh chan os.Signal, ptmx *os.File, conn *net.UnixConn) {
 					fmt.Printf("failed to send ResizeTerminalMsg: %s\n", err)
 				}
 			}
+		}
+	}
+}
+
+func blockUntilServerClosesConn(conn *net.UnixConn) error {
+	var buf [1]byte // at least one byte to block on read
+	for {
+		_, err := conn.Read(buf[:])
+		if err != nil && errors.Is(err, io.EOF) {
+			log.Printf("server closed connection\n")
+			return nil
+		} else if err != nil {
+			return fmt.Errorf("error reading conn: %w", err)
 		}
 	}
 }

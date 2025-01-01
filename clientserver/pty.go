@@ -79,6 +79,7 @@ type RemoteTty struct {
 	mu            sync.Mutex
 	f             *os.File // unix domain socket
 	width, height int
+	cb            func()
 }
 
 // TODO: explain this
@@ -167,8 +168,14 @@ func (tty *RemoteTty) Resize(width, height int) {
 	tty.width = width
 	tty.height = height
 	tty.mu.Unlock()
+
+	if tty.cb != nil {
+		tty.cb()
+	}
 }
 
-func (tty *RemoteTty) NotifyResize(_ func()) {
-	// Not implemented as pts won't receive SIGWINCH
+func (tty *RemoteTty) NotifyResize(cb func()) {
+	tty.mu.Lock()
+	tty.cb = cb
+	tty.mu.Unlock()
 }

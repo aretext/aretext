@@ -282,9 +282,31 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.Fi
 	}
 	defer ptmx.Close()
 
+	// ttyFile is somehow getting set to nonblock, so io.Copy is error'ing
+	// out with EAGAIN.
+	fd := int(ttyFile.Fd())
+	fd2, err := syscall.Dup(fd)
+	if err != nil {
+		return fmt.Errorf("syscall.Dup: %w", err)
+	}
+	f := os.NewFile(uintptr(fd2), "")
+	defer f.Close()
+
 	// Proxy ptmx <-> client tty
-	go func() { _, _ = io.Copy(ptmx, ttyFile) }()
-	go func() { _, _ = io.Copy(ttyFile, ptmx) }()
+	go func() {
+		log.Printf("starting to copy tty -> ptmx\n")
+		_, err = io.Copy(ptmx, f)
+		if err != nil {
+			log.Printf("err from io.Copy: %s\n", err)
+		}
+		log.Printf("finished copy tty -> ptmx\n")
+	}()
+	go func() {
+		log.Printf("starting to copy ptmx -> tty\n")
+		_, _ = io.Copy(f, ptmx)
+		log.Printf("finished copy ptmx -> tty\n")
+	}()
+
 	// TODO: need to resize terminal msg too? how?
 
 	log.Printf("running bash subcommand for sessionId=%d\n", id)

@@ -2,8 +2,11 @@ package clientserver
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sys/unix"
@@ -73,35 +76,53 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 
 // TODO
 type RemoteTty struct {
-	mu              sync.Mutex
-	pipeIn, pipeOut *os.File
-	width, height   int
+	mu            sync.Mutex
+	f             *os.File // unix domain socket
+	width, height int
 }
 
 // TODO: explain this
-func NewRemoteTty(pipeIn *os.File, pipeOut *os.File, width int, height int) *RemoteTty {
-	return &RemoteTty{
-		pipeIn:  pipeIn,
-		pipeOut: pipeOut,
-		width:   width,
-		height:  height,
+func NewRemoteTty(f *os.File, width int, height int) (*RemoteTty, error) {
+	// TODO explain this: https://go-review.googlesource.com/c/go/+/81636
+	fd := int(f.Fd())
+	fd2, err := syscall.Dup(fd)
+	if err != nil {
+		return nil, fmt.Errorf("syscall.Dup: %w", err)
 	}
+	err = syscall.SetNonblock(fd2, true)
+	if err != nil {
+		return nil, fmt.Errorf("syscall.SetNonblock: %w", err)
+	}
+
+	f2 := os.NewFile(uintptr(fd2), "")
+
+	return &RemoteTty{
+		f:      f2,
+		width:  width,
+		height: height,
+	}, nil
 }
 
 func (tty *RemoteTty) Read(b []byte) (int, error) {
-	return tty.pipeIn.Read(b)
+	return tty.f.Read(b)
 }
 
 func (tty *RemoteTty) Write(b []byte) (int, error) {
-	return tty.pipeOut.Write(b)
+	return tty.f.Write(b)
 }
 
 func (tty *RemoteTty) Close() error {
-	// no-op since we don't own the pipe FD.
-	return nil
+	return tty.f.Close()
 }
 
 func (tty *RemoteTty) Start() error {
+	// in case we set nonblocking in Drain().
+	var t time.Time
+	err := tty.f.SetReadDeadline(t)
+	if err != nil {
+		return fmt.Errorf("file.SetReadDeadline: %w", err)
+	}
+
 	// TODO: how to restore original terminal settings?
 	// Need to notify the server, wait for ack.
 	// This will give us new pipe fd to use...
@@ -109,6 +130,16 @@ func (tty *RemoteTty) Start() error {
 }
 
 func (tty *RemoteTty) Drain() error {
+	log.Printf("draining remote tty\n")
+
+	// Set a read deadline otherwise tcell will deadlock waiting on input.
+	err := tty.f.SetReadDeadline(time.Now())
+	if err != nil {
+		log.Printf("could not set read deadline: %s\n", err)
+		return fmt.Errorf("file.SetReadDeadline: %w", err)
+	}
+
+	log.Printf("finished draining remote tty\n")
 	// TODO: need to notify the server to close the write end of the pipe,
 	// otherwise tcell will block forever on read.
 	// Need to notify the server, wait for ack.

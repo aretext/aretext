@@ -119,7 +119,11 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		return
 	}
 
-	clientTty := NewRemoteTty(msg.PipeIn, msg.PipeOut, msg.TerminalWidth, msg.TerminalHeight)
+	clientTty, err := NewRemoteTty(msg.Tty, msg.TerminalWidth, msg.TerminalHeight)
+	if err != nil {
+		log.Printf("failed NewRemoteTty: %s\n", err)
+		return
+	}
 	defer func() {
 		log.Printf("closing client tty for sessionId=%d\n", id)
 		clientTty.Close()

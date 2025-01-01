@@ -10,22 +10,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sys/unix"
 )
 
 func TestSendAndReceiveStartSessionMsg(t *testing.T) {
-	pipeInReader, pipeInWriter, err := os.Pipe()
+	fds, err := unix.Socketpair(unix.AF_UNIX, unix.SOCK_STREAM, 0)
 	require.NoError(t, err)
-	defer pipeInWriter.Close()
-	defer pipeInReader.Close()
 
-	pipeOutReader, pipeOutWriter, err := os.Pipe()
-	require.NoError(t, err)
-	defer pipeOutWriter.Close()
-	defer pipeOutReader.Close()
+	clientTtySocket := os.NewFile(uintptr(fds[0]), "")
+	serverTtySocket := os.NewFile(uintptr(fds[1]), "")
+	defer clientTtySocket.Close()
+	defer serverTtySocket.Close()
 
 	msg := &StartSessionMsg{
-		PipeIn:         pipeInReader,
-		PipeOut:        pipeOutWriter,
+		Tty:            serverTtySocket,
 		TerminalWidth:  128,
 		TerminalHeight: 129,
 		TerminalEnv:    map[string]string{"TERM": "tmux"},
@@ -36,25 +34,17 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	receivedMsg := simulateSendAndReceive(t, msg)
 	receivedStartSessionMsg, ok := receivedMsg.(*StartSessionMsg)
 	require.True(t, ok)
-	assert.NotNil(t, receivedStartSessionMsg.PipeIn)
-	assert.NotNil(t, receivedStartSessionMsg.PipeOut)
+	assert.NotNil(t, receivedStartSessionMsg.Tty)
 	assert.Equal(t, msg.TerminalWidth, receivedStartSessionMsg.TerminalWidth)
 	assert.Equal(t, msg.TerminalHeight, receivedStartSessionMsg.TerminalHeight)
 	assert.Equal(t, msg.TerminalEnv, receivedStartSessionMsg.TerminalEnv)
 	assert.Equal(t, msg.DocumentPath, receivedStartSessionMsg.DocumentPath)
 	assert.Equal(t, msg.WorkingDir, receivedStartSessionMsg.WorkingDir)
 
-	sentPipeInInfo, err := pipeInReader.Stat()
+	sentTtyInfo, err := serverTtySocket.Stat()
 	require.NoError(t, err)
-	receivedPipeInInfo, err := receivedStartSessionMsg.PipeIn.Stat()
-	require.NoError(t, err)
-	assert.True(t, os.SameFile(sentPipeInInfo, receivedPipeInInfo))
-
-	sentPipeOutInfo, err := pipeOutWriter.Stat()
-	require.NoError(t, err)
-	receivedPipeOutInfo, err := receivedStartSessionMsg.PipeOut.Stat()
-	require.NoError(t, err)
-	assert.True(t, os.SameFile(sentPipeOutInfo, receivedPipeOutInfo))
+	receivedTtyInfo, err := receivedStartSessionMsg.Tty.Stat()
+	assert.True(t, os.SameFile(sentTtyInfo, receivedTtyInfo))
 }
 
 func TestSendAndReceiveResizeTerminalMsg(t *testing.T) {

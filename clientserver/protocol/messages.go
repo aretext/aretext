@@ -29,9 +29,9 @@ func msgTypeForMessage(msg Message) msgType {
 
 // StartSessionMsg is sent from client to server immediately after opening a connection.
 type StartSessionMsg struct {
-	// PipeIn and PipeOut are pipes connected to the client's tty.
-	// These are sent as out-of-band data SCM_RIGHTS over the Unix socket.
-	PipeIn, PipeOut *os.File `json:"-"`
+	// Tty is a file descriptor (one side of a socketpair) for reading/writing to the client's tty.
+	// It is sent as out-of-band data SCM_RIGHTS over the Unix socket.
+	Tty *os.File `json:"-"`
 
 	// Intial terminal size.
 	TerminalWidth, TerminalHeight int

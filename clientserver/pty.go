@@ -104,6 +104,7 @@ func (tty *RemoteTty) Close() error {
 func (tty *RemoteTty) Start() error {
 	// TODO: how to restore original terminal settings?
 	// Need to notify the server, wait for ack.
+	// This will give us new pipe fd to use...
 	return nil
 }
 

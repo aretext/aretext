@@ -46,7 +46,7 @@ func (c *Client) Run(documentPath string) error {
 	defer restoreTty()
 
 	// Create psuedoterminal (pty) pair.
-	ptmx, pts, err := createPtyPair()
+	ptmx, ptsPath, err := createPtyPair()
 	if err != nil {
 		return fmt.Errorf("failed to create pty: %w", err)
 	}
@@ -70,16 +70,18 @@ func (c *Client) Run(documentPath string) error {
 
 	// Send StartSessionMsg to the server, along with pts to delegate
 	// the psuedoterminal to the server.
-	err = sendStartSessionMsg(conn, pts, documentPath)
+	err = sendStartSessionMsg(conn, ptsPath, documentPath)
 	if err != nil {
 		return fmt.Errorf("failed to send StartSessionMsg: %w", err)
 	}
 
-	// Close pts as it's now owned by the server.
-	pts.Close()
-
 	// Proxy ptmx <-> tty.
 	proxyTtyToPtmxUntilClosed(ptmx)
+
+	// TODO: this doesn't work anymore b/c the server won't close pts
+	// with tcell's implementation.
+	// but we can fix it by reading from the unix socket and waiting for
+	// an explicit quit message from the server or connection closed.
 
 	return nil
 }
@@ -100,9 +102,10 @@ func connectToServer(socketPath string) (*net.UnixConn, error) {
 
 var allTerminalEnvVars = []string{"TERM", "TERMINFO", "TERMCAP", "COLORTERM", "LINES", "COLUMNS"}
 
-func sendStartSessionMsg(conn *net.UnixConn, pts *os.File, documentPath string) error {
+func sendStartSessionMsg(conn *net.UnixConn, ptsPath string, documentPath string) error {
 	log.Printf("constructing StartSessionMsg\n")
 	log.Printf("StartSessionMsg documentPath=%q\n", documentPath)
+	log.Printf("StartSessionMsg ptsPath=%q\n", ptsPath)
 
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -123,7 +126,7 @@ func sendStartSessionMsg(conn *net.UnixConn, pts *os.File, documentPath string) 
 		DocumentPath: documentPath,
 		WorkingDir:   workingDir,
 		TerminalEnv:  terminalEnv,
-		Pts:          pts,
+		PtsPath:      ptsPath,
 	}
 
 	return protocol.SendMessage(conn, msg)

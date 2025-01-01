@@ -19,25 +19,14 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	defer fakePts.Close()
 
 	msg := &StartSessionMsg{
+		PtsPath:      "/dev/pts9",
 		DocumentPath: "/test/file",
 		WorkingDir:   "/test",
 		TerminalEnv:  map[string]string{"TERM": "tmux"},
-		Pts:          fakePts,
 	}
 
 	receivedMsg := simulateSendAndReceive(t, msg)
-	receivedStartSessionMsg, ok := receivedMsg.(*StartSessionMsg)
-	require.True(t, ok)
-	assert.Equal(t, msg.DocumentPath, receivedStartSessionMsg.DocumentPath)
-	assert.Equal(t, msg.WorkingDir, receivedStartSessionMsg.WorkingDir)
-	assert.Equal(t, msg.TerminalEnv, receivedStartSessionMsg.TerminalEnv)
-	assert.NotNil(t, receivedStartSessionMsg.Pts)
-
-	sentPtsFileInfo, err := msg.Pts.Stat()
-	require.NoError(t, err)
-	receivedPtsFileInfo, err := receivedStartSessionMsg.Pts.Stat()
-	require.NoError(t, err)
-	assert.True(t, os.SameFile(sentPtsFileInfo, receivedPtsFileInfo))
+	assert.Equal(t, msg, receivedMsg)
 }
 
 func TestSendAndReceiveResizeTerminalMsg(t *testing.T) {

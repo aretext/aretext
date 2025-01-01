@@ -37,22 +37,7 @@ func getTtySize(tty *os.File) (width, height int, err error) {
 	return int(ws.Col), int(ws.Row), nil
 }
 
-func resizePtyToMatchTty(tty *os.File, ptmx *os.File) (width, height int, err error) {
-	// Update ptmx with the same size as client tty.
-	ws, err := unix.IoctlGetWinsize(int(tty.Fd()), unix.TIOCGWINSZ)
-	if err != nil {
-		return 0, 0, fmt.Errorf("unix.IoctlGetWinsize: %w", err)
-	}
-
-	err = unix.IoctlSetWinsize(int(ptmx.Fd()), unix.TIOCSWINSZ, ws)
-	if err != nil {
-		return 0, 0, fmt.Errorf("unix.IoctlSetWinsize: %w", err)
-	}
-
-	return int(ws.Col), int(ws.Row), nil
-}
-
-func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
+func createPtyPair(width int, height int) (ptmx *os.File, pts *os.File, err error) {
 	// Create the pty pair.
 	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)
 	if err != nil {
@@ -65,12 +50,23 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 		return nil, nil, err
 	}
 
+	// Set terminal size on ptmx
+	ws := unix.Winsize{
+		Col: uint16(width),
+		Row: uint16(height),
+	}
+	err = unix.IoctlSetWinsize(ptmxFd, unix.TIOCSWINSZ, &ws)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unix.IoctlSetWinsize: %w", err)
+	}
+
 	// File descriptors for both ptmx and pts.
 	ptmx = os.NewFile(uintptr(ptmxFd), "")
 	pts, err = ptsFileFromPtmx(ptmx)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return ptmx, pts, nil
 }
 

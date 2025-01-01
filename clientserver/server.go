@@ -119,11 +119,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		return
 	}
 
-	clientTty, err := NewTtyFromPts(msg.Pts)
-	if err != nil {
-		log.Printf("error constructing tty from pts, sessionId=%d: %s\n", id, err)
-		return
-	}
+	clientTty := NewRemoteTty(msg.PipeIn, msg.PipeOut, msg.TerminalWidth, msg.TerminalHeight)
 	defer func() {
 		log.Printf("closing client tty for sessionId=%d\n", id)
 		clientTty.Close()
@@ -193,10 +189,10 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		select {
 		case event := <-termEventChan:
 			log.Printf("processing terminal event for sessionId=%d\n", id)
-			s.processTermEvent(id, event, screen, msg.Pts)
+			s.processTermEvent(id, event, screen)
 		case msg := <-resizeTermMsgChan:
 			log.Printf("processing resize terminal event for sessionId=%d\n", id)
-			s.processResizeTerminalMsg(id, msg)
+			s.processResizeTerminalMsg(id, msg, clientTty)
 		case <-s.quitChan:
 			log.Printf("terminating sessionId=%d for server quit\n", id)
 			return
@@ -238,7 +234,7 @@ func (s *Server) deleteEditorStateForSession(id sessionId) {
 	delete(s.dummyState, id)
 }
 
-func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen, pty *os.File) {
+func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen) {
 	eventKey, ok := event.(*tcell.EventKey)
 	if !ok {
 		return
@@ -251,44 +247,54 @@ func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.
 	} else if eventKey.Rune() == 'b' {
 		s.setSessionState(id, 2)
 	} else if eventKey.Rune() == 's' {
-		// test running a subcommand
-		log.Printf("suspending screen for sessionId=%d\n", id)
-		if err := screen.Suspend(); err != nil {
-			log.Printf("could not suspend screen: %w\n", err)
+		if err := s.runSubcommand(id, screen); err != nil {
+			log.Printf("error running subcommand: %s\n", err)
 			return
 		}
-		defer func() {
-			log.Printf("resuming screen for sessionId=%d\n", id)
-			screen.Resume()
-		}()
-
-		log.Printf("running bash subcommand for sessionId=%d\n", id)
-		ctx := context.Background()
-		cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
-		// Need to use pts.Msg for this. If I try to use `screen.Tty()`
-		// then fork/exec fails with ENOTTY ("inappropriate ioctl for device")
-		// That's because os/exec specifically checks when stdin/stdout/stderr
-		// has type *os.File and if not it creates a pipe instead, which bash rejects.
-		cmd.Stdin = pty
-		cmd.Stdout = pty
-		cmd.Stderr = pty
-		// https://github.com/golang/go/issues/29458
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Setsid:  true,
-			Setctty: true,
-			Ctty:    0, // this must be a valid FD in the child process, so choose stdin (fd=0)
-		}
-
-		if err := cmd.Run(); err != nil {
-			log.Printf("error running cmd: %s\n", err)
-		}
-		log.Printf("bash subcommand completed for sessionId=%d\n", id)
-		return
 	}
 }
 
-func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerminalMsg) {
+func (s *Server) runSubcommand(id sessionId, screen tcell.Screen) error {
+	// test running a subcommand
+	log.Printf("suspending screen for sessionId=%d\n", id)
+	if err := screen.Suspend(); err != nil {
+		return fmt.Errorf("screen.Suspend: %w\n", err)
+	}
+	defer func() {
+		log.Printf("resuming screen for sessionId=%d\n", id)
+		screen.Resume()
+	}()
+
+	log.Printf("running bash subcommand for sessionId=%d\n", id)
+	ctx := context.Background()
+	cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
+
+	// TODO: create pty pair...
+
+	// Need to use pts.Msg for this. If I try to use `screen.Tty()`
+	// then fork/exec fails with ENOTTY ("inappropriate ioctl for device")
+	// That's because os/exec specifically checks when stdin/stdout/stderr
+	// has type *os.File and if not it creates a pipe instead, which bash rejects.
+	//cmd.Stdin = pty
+	//cmd.Stdout = pty
+	//cmd.Stderr = pty
+	// https://github.com/golang/go/issues/29458
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setsid:  true,
+		Setctty: true,
+		Ctty:    0, // this must be a valid FD in the child process, so choose stdin (fd=0)
+	}
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("cmd.Run: %w\n", err)
+	}
+	log.Printf("bash subcommand completed for sessionId=%d\n", id)
+	return nil
+}
+
+func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerminalMsg, clientTty *RemoteTty) {
 	log.Printf("received terminal resize msg for sessionId=%d, width=%d, height=%d\n", id, msg.Width, msg.Height)
+	clientTty.Resize(msg.Width, msg.Height)
 }
 
 func (s *Server) draw(id sessionId, screen tcell.Screen, sync bool) {

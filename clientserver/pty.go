@@ -1,11 +1,9 @@
 package clientserver
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"golang.org/x/sys/unix"
@@ -74,103 +72,66 @@ func createPtyPair() (ptmx *os.File, pts *os.File, err error) {
 }
 
 // TODO
-type ptsTty struct {
-	pts   *os.File
-	saved *term.State
-	stopQ chan struct{}
-	wg    sync.WaitGroup
-	l     sync.Mutex
+type RemoteTty struct {
+	mu              sync.Mutex
+	pipeIn, pipeOut *os.File
+	width, height   int
 }
 
 // TODO: explain this
-func NewTtyFromPts(pts *os.File) (tcell.Tty, error) {
-	var err error
-	tty := &ptsTty{pts: pts}
-	if !term.IsTerminal(int(pts.Fd())) {
-		return nil, errors.New("not a terminal")
+func NewRemoteTty(pipeIn *os.File, pipeOut *os.File, width int, height int) *RemoteTty {
+	return &RemoteTty{
+		pipeIn:  pipeIn,
+		pipeOut: pipeOut,
+		width:   width,
+		height:  height,
 	}
-	if tty.saved, err = term.GetState(int(pts.Fd())); err != nil {
-		return nil, fmt.Errorf("failed to get state: %w", err)
-	}
-	return tty, nil
 }
 
-func (tty *ptsTty) Read(b []byte) (int, error) {
-	return tty.pts.Read(b)
+func (tty *RemoteTty) Read(b []byte) (int, error) {
+	return tty.pipeIn.Read(b)
 }
 
-func (tty *ptsTty) Write(b []byte) (int, error) {
-	return tty.pts.Write(b)
+func (tty *RemoteTty) Write(b []byte) (int, error) {
+	return tty.pipeOut.Write(b)
 }
 
-func (tty *ptsTty) Close() error {
-	_ = drainTty(int(tty.pts.Fd())) // macOS loses output without this.
-	return tty.pts.Close()
-}
-
-func (tty *ptsTty) Start() error {
-	tty.l.Lock()
-	defer tty.l.Unlock()
-
-	var err error
-	_ = tty.pts.SetReadDeadline(time.Time{})
-	saved, err := term.MakeRaw(int(tty.pts.Fd())) // also sets vMin and vTime
-	if err != nil {
-		return err
-	}
-	tty.saved = saved
-
-	tty.stopQ = make(chan struct{})
-	tty.wg.Add(1)
-	go func(stopQ chan struct{}) {
-		defer tty.wg.Done()
-		for {
-			select {
-			case <-stopQ:
-				return
-			}
-		}
-	}(tty.stopQ)
-
+func (tty *RemoteTty) Close() error {
+	// no-op since we don't own the pipe FD.
 	return nil
 }
 
-func (tty *ptsTty) Drain() error {
-	// tcell won't exit its input loop until tty.Read returns.
-	// To avoid waiting for input that will never arrive, set the pts to non-blocking.
-	return setTtyNonblockAndDrain(int(tty.pts.Fd()))
-}
-
-func (tty *ptsTty) Stop() error {
-	tty.l.Lock()
-	if err := term.Restore(int(tty.pts.Fd()), tty.saved); err != nil {
-		tty.l.Unlock()
-		return err
-	}
-	_ = tty.pts.SetReadDeadline(time.Now())
-
-	close(tty.stopQ)
-	tty.l.Unlock()
-
-	tty.wg.Wait()
-
+func (tty *RemoteTty) Start() error {
+	// TODO: how to restore original terminal settings?
 	return nil
 }
 
-func (tty *ptsTty) WindowSize() (tcell.WindowSize, error) {
-	ws, err := unix.IoctlGetWinsize(int(tty.pts.Fd()), unix.TIOCGWINSZ)
-	if err != nil {
-		return tcell.WindowSize{}, err
-	}
-	size := tcell.WindowSize{
-		Width:       int(ws.Col),
-		Height:      int(ws.Row),
-		PixelWidth:  int(ws.Xpixel),
-		PixelHeight: int(ws.Ypixel),
-	}
-	return size, nil
+func (tty *RemoteTty) Drain() error {
+	return nil
 }
 
-func (tty *ptsTty) NotifyResize(_ func()) {
+func (tty *RemoteTty) Stop() error {
+	// TODO: how to restore original terminal settings?
+	return nil
+}
+
+func (tty *RemoteTty) WindowSize() (tcell.WindowSize, error) {
+	tty.mu.Lock()
+	ws := tcell.WindowSize{
+		Width:  tty.width,
+		Height: tty.height,
+	}
+	tty.mu.Unlock()
+	return ws, nil
+}
+
+func (tty *RemoteTty) Resize(width, height int) {
+	tty.mu.Lock()
+	tty.width = width
+	tty.height = height
+	tty.mu.Unlock()
+}
+
+func (tty *RemoteTty) NotifyResize(_ func()) {
 	// Not implemented as pts won't receive SIGWINCH
 }

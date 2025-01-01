@@ -50,7 +50,15 @@ func createPtyPair(width int, height int) (ptmx *os.File, pts *os.File, err erro
 		return nil, nil, err
 	}
 
-	// Set terminal size on ptmx
+	// File descriptors for both ptmx and pts.
+	ptmx = os.NewFile(uintptr(ptmxFd), "")
+	pts, err = ptsFileFromPtmx(ptmx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Set terminal size on ptmx. On macOS this needs to happen
+	// AFTER opening the pts or else we get "inappropriate ioctl for device" error.
 	ws := unix.Winsize{
 		Col: uint16(width),
 		Row: uint16(height),
@@ -58,13 +66,6 @@ func createPtyPair(width int, height int) (ptmx *os.File, pts *os.File, err erro
 	err = unix.IoctlSetWinsize(ptmxFd, unix.TIOCSWINSZ, &ws)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unix.IoctlSetWinsize: %w", err)
-	}
-
-	// File descriptors for both ptmx and pts.
-	ptmx = os.NewFile(uintptr(ptmxFd), "")
-	pts, err = ptsFileFromPtmx(ptmx)
-	if err != nil {
-		return nil, nil, err
 	}
 
 	return ptmx, pts, nil

@@ -1,12 +1,15 @@
 package clientserver
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/term"
 
 	"github.com/aretext/aretext/clientserver/protocol"
 )
@@ -32,11 +35,13 @@ func NewClient(config Config) *Client {
 // Run starts an aretext client and runs until the server terminates the connection.
 // The documentPath is the initial document to open for the client, can be empty for new document.
 func (c *Client) Run(documentPath string) error {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return errors.New("device is not a terminal")
+	}
+
 	// Register for SIGWINCH to detect when tty size changes.
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, syscall.SIGWINCH)
-
-	// TODO: probably check if this is a tty
 
 	// Set tty to raw mode and restore on exit.
 	restoreTty, err := setTtyRaw(os.Stdin)

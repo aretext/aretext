@@ -40,10 +40,16 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 
 	var oob []byte
 	if startSessionMsg, ok := msg.(*StartSessionMsg); ok {
-		if startSessionMsg.Pts == nil {
-			return errors.New("StartSessionMsg.Pts must not be nil")
+		if startSessionMsg.PipeIn == nil {
+			return errors.New("StartSessionMsg.PipeIn must not be nil")
 		}
-		oob = syscall.UnixRights(int(startSessionMsg.Pts.Fd()))
+		if startSessionMsg.PipeOut == nil {
+			return errors.New("StartSessionMsg.PipeOut must not be nil")
+		}
+		oob = syscall.UnixRights(
+			int(startSessionMsg.PipeIn.Fd()),
+			int(startSessionMsg.PipeOut.Fd()),
+		)
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -100,16 +106,23 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 		fds, err := syscall.ParseUnixRights(&cmsgs[0])
 		if err != nil {
 			return nil, fmt.Errorf("syscall.ParseUnixRights: %w", err)
-		} else if len(fds) != 1 {
-			return nil, errors.New("invalid number of file descriptors received for pty")
+		} else if len(fds) != 2 {
+			return nil, errors.New("invalid number of file descriptors received for PipeIn and PipeOut")
 		}
 
-		pts := os.NewFile(uintptr(fds[0]), "")
-		if pts == nil {
-			return nil, errors.New("invalid file descriptor for pty")
+		pipeIn := os.NewFile(uintptr(fds[0]), "")
+		if pipeIn == nil {
+			return nil, errors.New("invalid file descriptor for PipeIn")
 		}
 
-		msg.Pts = pts
+		pipeOut := os.NewFile(uintptr(fds[1]), "")
+		if pipeOut == nil {
+			return nil, errors.New("invalid file descriptor for PipeOut")
+		}
+
+		msg.PipeIn = pipeIn
+		msg.PipeOut = pipeOut
+
 		return &msg, nil
 
 	case resizeTerminalMsgType:

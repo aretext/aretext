@@ -29,6 +29,18 @@ func msgTypeForMessage(msg Message) msgType {
 
 // StartSessionMsg is sent from client to server immediately after opening a connection.
 type StartSessionMsg struct {
+	// PipeIn and PipeOut are pipes connected to the client's tty.
+	// These are sent as out-of-band data SCM_RIGHTS over the Unix socket.
+	PipeIn, PipeOut *os.File `json:"-"`
+
+	// Intial terminal size.
+	TerminalWidth, TerminalHeight int
+
+	// TerminalEnv is the environment variables for the client's terminal ($TERM, etc.)
+	// The server should use these when interacting with the client's delegated tty
+	// or when executing shell commands on behalf of a client.
+	TerminalEnv map[string]string
+
 	// DocumentPath is the path to the initial file to open in the editor.
 	// May be empty to create a new untitled document.
 	DocumentPath string
@@ -36,15 +48,6 @@ type StartSessionMsg struct {
 	// WorkingDir is the initial working directory of the client.
 	// The server uses this when searching for files or executing shell commands on behalf of a client.
 	WorkingDir string
-
-	// TerminalEnv is the environment variables for the client's terminal ($TERM, etc.)
-	// The server should use these when interacting with the client's delegated tty
-	// or when executing shell commands on behalf of a client.
-	TerminalEnv map[string]string
-
-	// Pts is a pseudoterminal delegated by the client to the server.
-	// This is sent as out-of-band data SCM_RIGHTS over the Unix socket.
-	Pts *os.File `json:"-"`
 }
 
 func (m *StartSessionMsg) closed() {}

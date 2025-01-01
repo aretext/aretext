@@ -112,6 +112,11 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		log.Printf("error receiving StartSesssionMsg, sessionId=%d: %s\n", id, err)
 		return
 	}
+	defer func() {
+		log.Printf("closing original tty for sessionId=%d\n", id)
+		msg.Tty.Close() // because clientTty dups the fd
+		log.Printf("closed original tty for sessionId=%d\n", id)
+	}()
 
 	termInfo, err := tcell.LookupTerminfo(msg.TerminalEnv["TERM"])
 	if err != nil {

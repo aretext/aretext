@@ -112,10 +112,18 @@ func (c *Client) Run(documentPath string) error {
 	}()
 
 	// Copy server pipe out -> tty output
+	finishedTtyInputChan := make(chan struct{}, 1)
 	go func() {
 		log.Printf("start copying server out -> tty out\n")
 		_, _ = io.Copy(os.Stdout, clientTtySocket)
 		log.Printf("finish copying server out -> tty out\n")
+		finishedTtyInputChan <- struct{}{}
+	}()
+	defer func() {
+		// block until all tty drained to ensure we don't mess up the terminal
+		select {
+			case <-finishedTtyInputChan:
+		}
 	}()
 
 	// Block until the server closes the connection.

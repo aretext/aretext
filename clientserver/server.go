@@ -198,7 +198,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		select {
 		case event := <-termEventChan:
 			log.Printf("processing terminal event for sessionId=%d\n", id)
-			s.processTermEvent(id, event, screen)
+			s.processTermEvent(id, event, screen, msg.Tty)
 		case msg := <-resizeTermMsgChan:
 			log.Printf("processing resize terminal event for sessionId=%d\n", id)
 			s.processResizeTerminalMsg(id, msg, clientTty)
@@ -243,7 +243,7 @@ func (s *Server) deleteEditorStateForSession(id sessionId) {
 	delete(s.dummyState, id)
 }
 
-func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen) {
+func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen, ttyFile *os.File) {
 	eventKey, ok := event.(*tcell.EventKey)
 	if !ok {
 		return
@@ -256,14 +256,14 @@ func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.
 	} else if eventKey.Rune() == 'b' {
 		s.setSessionState(id, 2)
 	} else if eventKey.Rune() == 's' {
-		if err := s.runSubcommand(id, screen); err != nil {
+		if err := s.runSubcommand(id, screen, ttyFile); err != nil {
 			log.Printf("error running subcommand: %s\n", err)
 			return
 		}
 	}
 }
 
-func (s *Server) runSubcommand(id sessionId, screen tcell.Screen) error {
+func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.File) error {
 	// test running a subcommand
 	log.Printf("suspending screen for sessionId=%d\n", id)
 	if err := screen.Suspend(); err != nil {
@@ -274,19 +274,28 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen) error {
 		screen.Resume()
 	}()
 
+	// Create pty pair for subcommand.
+	width, height := screen.Size()
+	ptmx, pts, err := createPtyPair(width, height)
+	if err != nil {
+		return fmt.Errorf("createPtyPair: %w", err)
+	}
+	defer ptmx.Close()
+
+	// Proxy ptmx <-> client tty
+	go func() { _, _ = io.Copy(ptmx, ttyFile) }()
+	go func() { _, _ = io.Copy(ttyFile, ptmx) }()
+	// TODO: need to resize terminal msg too? how?
+
 	log.Printf("running bash subcommand for sessionId=%d\n", id)
 	ctx := context.Background()
 	cmd := exec.CommandContext(ctx, "/bin/bash", "--noprofile", "--norc")
 
-	// TODO: create pty pair...
+	// subcommand gets the pts
+	cmd.Stdin = pts
+	cmd.Stdout = pts
+	cmd.Stderr = pts
 
-	// Need to use pts.Msg for this. If I try to use `screen.Tty()`
-	// then fork/exec fails with ENOTTY ("inappropriate ioctl for device")
-	// That's because os/exec specifically checks when stdin/stdout/stderr
-	// has type *os.File and if not it creates a pipe instead, which bash rejects.
-	//cmd.Stdin = pty
-	//cmd.Stdout = pty
-	//cmd.Stderr = pty
 	// https://github.com/golang/go/issues/29458
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid:  true,

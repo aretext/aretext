@@ -1,7 +1,9 @@
 package clientserver
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -76,12 +78,16 @@ func (c *Client) Run(documentPath string) error {
 	}
 
 	// Proxy ptmx <-> tty.
-	proxyTtyToPtmxUntilClosed(ptmx)
+	go proxyTtyToPtmxUntilClosed(ptmx)
 
-	// TODO: this doesn't work anymore b/c the server won't close pts
-	// with tcell's implementation.
-	// but we can fix it by reading from the unix socket and waiting for
-	// an explicit quit message from the server or connection closed.
+	// Block until the server closes the connection.
+	log.Printf("waiting for server to close connection...\n")
+	var buf [1]byte
+	_, err = conn.Read(buf[:])
+	if err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("failed read on unix socket: %w", err)
+	}
+	log.Printf("connection closed, exiting...\n")
 
 	return nil
 }

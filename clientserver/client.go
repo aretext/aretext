@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 
 	"github.com/aretext/aretext/clientserver/protocol"
@@ -52,20 +53,15 @@ func (c *Client) Run(documentPath string) error {
 	}
 	defer restoreTty()
 
-	// Create pipes connected to tty.
-	pipeInReader, pipeInWriter, err := os.Pipe()
+	// Create socketpair to proxy tty input/output.
+	fds, err := unix.Socketpair(unix.AF_UNIX, unix.SOCK_STREAM, 0)
 	if err != nil {
-		return fmt.Errorf("os.Pipe: %w", err)
+		return fmt.Errorf("unix.Socketpair: %w", err)
 	}
-	defer pipeInWriter.Close()
-	defer pipeInReader.Close()
-
-	pipeOutReader, pipeOutWriter, err := os.Pipe()
-	if err != nil {
-		return fmt.Errorf("os.Pipe: %w", err)
-	}
-	defer pipeOutWriter.Close()
-	defer pipeInReader.Close()
+	clientTtySocket := os.NewFile(uintptr(fds[0]), "")
+	serverTtySocket := os.NewFile(uintptr(fds[1]), "")
+	defer clientTtySocket.Close()
+	defer serverTtySocket.Close()
 
 	// Get terminal size.
 	termWidth, termHeight, err := getTtySize(os.Stdin)
@@ -89,8 +85,7 @@ func (c *Client) Run(documentPath string) error {
 
 	// Send StartSessionMsg to the server.
 	msg := &protocol.StartSessionMsg{
-		PipeIn:         pipeInReader,
-		PipeOut:        pipeOutWriter,
+		Tty:            serverTtySocket,
 		TerminalWidth:  termWidth,
 		TerminalHeight: termHeight,
 		TerminalEnv:    getTerminalEnv(),
@@ -103,25 +98,24 @@ func (c *Client) Run(documentPath string) error {
 		return fmt.Errorf("failed to send StartSessionMsg: %w", err)
 	}
 
-	// Close pipe file descriptors that are now owned by the server.
-	pipeInReader.Close()
-	pipeOutWriter.Close()
+	// Close server side of tty socket since it's now owned by the server.
+	serverTtySocket.Close()
 
 	// Handle signals (SIGWINCH) asynchronously.
 	go handleSignals(signalCh, os.Stdin, conn)
 
 	// Copy tty input -> server pipe in
 	go func() {
-		log.Printf("start copying tty input -> server pipe in\n")
-		_, _ = io.Copy(pipeInWriter, os.Stdin)
-		log.Printf("finished copying tty input -> server pipe in\n")
+		log.Printf("start copying tty input -> server in\n")
+		_, _ = io.Copy(clientTtySocket, os.Stdin)
+		log.Printf("finished copying tty input -> server in\n")
 	}()
 
 	// Copy server pipe out -> tty output
 	go func() {
-		log.Printf("start copying server pipe out -> tty out\n")
-		_, _ = io.Copy(os.Stdout, pipeOutReader)
-		log.Printf("finish copying server pipe out -> tty out\n")
+		log.Printf("start copying server out -> tty out\n")
+		_, _ = io.Copy(os.Stdout, clientTtySocket)
+		log.Printf("finish copying server out -> tty out\n")
 	}()
 
 	// Block until the server closes the connection.

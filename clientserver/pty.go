@@ -123,10 +123,6 @@ func (tty *RemoteTty) Start() error {
 	if err != nil {
 		return fmt.Errorf("file.SetReadDeadline: %w", err)
 	}
-
-	// TODO: how to restore original terminal settings?
-	// Need to notify the server, wait for ack.
-	// This will give us new pipe fd to use...
 	return nil
 }
 
@@ -141,15 +137,12 @@ func (tty *RemoteTty) Drain() error {
 	}
 
 	log.Printf("finished draining remote tty\n")
-	// TODO: need to notify the server to close the write end of the pipe,
-	// otherwise tcell will block forever on read.
-	// Need to notify the server, wait for ack.
 	return nil
 }
 
 func (tty *RemoteTty) Stop() error {
-	// TODO: how to restore original terminal settings?
-	// need to notify the server, wait for ack
+	// Nothing else to do here, as client tty can stay in raw mode
+	// and we use a pty for subcommand.
 	return nil
 }
 

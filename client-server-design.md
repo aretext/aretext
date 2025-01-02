@@ -209,3 +209,7 @@ Rejected since any custom protocol would either be tightly coupled with tcell or
 ### Send pty file descriptor over UDS (instead of using a socketpair)
 
 Rejected due to a subtle bug in macOS terminal driver: when the `pts` is closed by a subcommand, macOS closes the pty even if the server maintains an open FD for the `pts`. Using a socketpair to proxy tty input/output avoids any interactions with the OS terminal drivers.
+
+### LSP daemonization
+
+`gopls` has a "daemon" mode for vim that shares state across multiple LSP instances. However, other LSPs do not provide similar functionality, and there's no straightforward way to adapt them to this architecture.

@@ -88,12 +88,7 @@ This follows a procedure similar to tmux:
 
 To ensure at most one server instance at a time, the server attempts to acquires a file lock on startup. If it cannot acquire the lock, it exits with an error.
 
-The client and server can detect that the other side has terminated if writes to/from the pty fail. Under normal conditions, however, the client and server will attempt to send a "Goodbye" message to terminate gracefully.
-
--	If a client detects the server has terminated, the client should exit immediately.
--	If a server detects a client has terminated, the server should remove all per-client state for that client.
-
-When the user quits from the aretext menu, the server will remove all per-client state, then close the client's pty.
+The client and server detect that the other side has terminated when the UDS socket is closed.
 
 Editor state
 ------------
@@ -111,7 +106,6 @@ Shared data:
 
 Per-client data:
 
--	Pty file descriptor
 -	View (window size, text origin)
 -	Currently opened document
 -	Cursor position

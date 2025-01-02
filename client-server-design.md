@@ -62,6 +62,7 @@ Messages will be serialized as JSON, with a uint32 header indicating msg length.
 		-	current working directory
 		-	filepath to open
 		-	`$TERM` and other env vars used by tcell and other TUI programs
+		-	initial width and height of the terminal.
 	-	out-of-band data:
 		-	SCM_RIGHTS with a file descriptor for proxying the client tty.
 -	`TerminalResizeMsg`

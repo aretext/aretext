@@ -21,8 +21,8 @@ import (
 type sessionId int
 
 // Server listens on a Unix Domain Socket (UDS) for clients to connect.
-// The client sends the server a pseudoterminal (pty), which the server uses
-// for input/output from/to the client's terminal.
+// The client sends the server a file descriptor through which the server
+// can interact with the client's tty.
 type Server struct {
 	config   Config
 	quitChan chan struct{}

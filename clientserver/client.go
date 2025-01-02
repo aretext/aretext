@@ -17,11 +17,11 @@ import (
 )
 
 // Client connects to an aretext server over a Unix Domain Socket (UDS),
-// opens a pseudoterminal (pty), and sends the server one end of the pty over UDS.
+// providing a file descriptor the server can use to interact with the client's tty.
 //
 // The client is responsible only for:
-// 1. proxying input/output from pty to the client's tty.
-// 2. handling SIGWINCH signals when the tty resizes.
+// 1. proxying input/output to/from the server to the client's tty.
+// 2. notifying the server when the tty size changes (SIGWINCH)
 // 3. detecting if the server has terminated and, if so, exiting.
 //
 // The server handles everything else.

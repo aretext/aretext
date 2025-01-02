@@ -23,7 +23,7 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	defer serverTtySocket.Close()
 
 	msg := &StartSessionMsg{
-		TtyFd:            int(serverTtySocket.Fd()),
+		TtyFd:          int(serverTtySocket.Fd()),
 		TerminalWidth:  128,
 		TerminalHeight: 129,
 		TerminalEnv:    map[string]string{"TERM": "tmux"},

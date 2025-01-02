@@ -135,7 +135,7 @@ By default, the client and server processes run as the same user/group. The unix
 Configuration
 -------------
 
-The configuration format is unchanged. The YAML file will encode the rules based on file pattern match, and options for the client/server will be passed via CLI flags.
+The configuration format is unchanged. As today, the YAML file will encode the rules based on file pattern match, and options for the client/server will be passed via CLI flags.
 
 A new menu command will be added to reload the configuration. This allows the user to reload config without restarting the server. The new configuration is validated (show error if invalid) and applied to all subsequently loaded documents.
 

@@ -335,6 +335,14 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, sessionTty *os
 		_, _ = io.Copy(sessionTty, ptmx)
 		log.Printf("finished copy ptmx -> tty\n")
 	}()
+	// Make sure we stop proxying to pty before returning resuming tcell screen.
+	defer func() {
+		log.Printf("waiting for proxy io.Copy to complete for sessionId=%d\n", id)
+		_ = sessionTty.SetReadDeadline(time.Now())
+		_ = ptmx.SetReadDeadline(time.Now())
+		wg.Wait()
+		log.Printf("proxy io.Copy completed for sessionId=%d\n", id)
+	}()
 
 	log.Printf("running bash subcommand for sessionId=%d\n", id)
 	ctx := context.Background()
@@ -356,13 +364,6 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, sessionTty *os
 		return fmt.Errorf("cmd.Run: %w\n", err)
 	}
 	log.Printf("bash subcommand completed for sessionId=%d\n", id)
-
-	// Make sure we stop proxying to pty before returning resuming tcell screen.
-	log.Printf("waiting for proxy io.Copy to complete for sessionId=%d\n", id)
-	_ = sessionTty.SetReadDeadline(time.Now())
-	_ = ptmx.SetReadDeadline(time.Now())
-	wg.Wait()
-	log.Printf("proxy io.Copy completed for sessionId=%d\n", id)
 
 	return nil
 }

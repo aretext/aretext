@@ -32,7 +32,7 @@ The **clients** are responsible for:
 -	proxying terminal input/output to the server, using the tty delegation mechanism described below.
 -	(optionally) starting and daemonizing server process.
 
-To avoid conflict between different user accounts, the UDS path will be `$XDG_RUNTIME_DIR/aretext.socket`, with fallback to `/var/run/aretext.socket` for execution within an OCI container.
+To avoid conflict between different user accounts, the UDS path will be `$XDG_RUNTIME_DIR/aretext.socket`. Heuristics may be used to find an appropriate fallback if `XDG_RUNTIME_DIR` is not configured.
 
 Client TTY Delegation
 ---------------------

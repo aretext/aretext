@@ -32,27 +32,24 @@ The **clients** are responsible for:
 -	proxying terminal input/output to the server, using the tty delegation mechanism described below.
 -	(optionally) starting and daemonizing server process.
 
-To avoid conflict between different user accounts, the UDS path will be `$XDG_RUNTIME_DIR/aretext.socket`.
+To avoid conflict between different user accounts, the UDS path will be `$XDG_RUNTIME_DIR/aretext.socket`, with fallback to `/var/run/aretext.socket` for execution within an OCI container.
 
 Client TTY Delegation
 ---------------------
 
 The client delegates all interactions with its TTY to the server using the following procedure:
 
-1.	Create a pseudoterminal (pty) pair: ptmx (primary) and pts (secondary)
-2.	Send pts to the server over UDS using SCM_RIGHTS out-of-band data.
-3.	Send a "start session" message to the server encoding the arguments to the client (e.g. the filepath to open).
-4.	Copy stdin -> ptmx and ptmx -> stdout until the pty is closed.
+1.	Set client tty to raw mode.
+2.	Create a socketpair (call the file descriptors `s1` and `s2`\)
+3.	Send `s2` to the server over UDS using SCM_RIGHTS out-of-band data.
+4.	Send a "start session" message to the server encoding the arguments to the client (e.g. the filepath to open).
+5.	Copy stdin -> `s1` and `s1` -> stdout until `s2` is closed by the server.
 
-The server receives a file descriptor for pts over UDS and uses it to control the client's terminal:
+The server then controls the client tty by reading/writing `s2`. This is achieved through a custom `tcell.Tty` implementation that reads and writes `s2`.
 
-1.	Initialize a tcell `Screen` for the client using the pts file descriptor. This is used for all input/output to/from the editor.
-2.	When executing shell commands with `CmdModeTerminal`, use the pts file descriptor as stdin, stdout, stderr, and the controlling terminal for the subprocess.
+For executing shell with `CmdModeTerminal`, the server maintains a psuedoterminal pair (`ptmx` and `pts`). Before executing the command, the server suspends the `tcell.Screen`, then begins copying `ptmx` <-> `s2`. The `pts` side of the pty is used by the subcommand as stdin/stdout/stderr. When the command completes, the server interrupts the copy (by setting read deadline to now) and resumes the `tcell.Screen`.
 
-When tty dimensions change, the client will receive a SIGWINCH signal. To propagate the change, the client must:
-
-1.	Resize ptmx to match the client's tty. This causes the kernel to signal SIGWINCH to all server subprocesses whose controlling terminal is pts.
-2.	Send a `TerminalResizeMsg` to the server. This allows the server to update screen dimensions for the client's editor.
+When tty dimensions change, the client will receive a SIGWINCH signal. To propagate the change, the client sends a `TerminalResizeMsg` to the server. The server updates the `tcell.Tty` dimensions and the `ptmx` (which triggers SIGWINCH to any subcommands using `pts`).
 
 Client-Server Messages
 ----------------------
@@ -66,7 +63,7 @@ Messages will be serialized as JSON, with a uint32 header indicating msg length.
 		-	filepath to open
 		-	`$TERM` and other env vars used by tcell and other TUI programs
 	-	out-of-band data:
-		-	SCM_RIGHTS with the pty file descriptor.
+		-	SCM_RIGHTS with a file descriptor for proxying the client tty.
 -	`TerminalResizeMsg`
 	-	sent from client to server on receipt of SIGWINCH signal.
 	-	fields:

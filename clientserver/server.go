@@ -164,12 +164,19 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 
 	// Create pty pair for subcommand.
 	width, height := screen.Size()
-	ptmx, pts, err := createPtyPair(width, height)
+	ptmx, pts, resizePty, err := createPtyPair()
 	if err != nil {
-		log.Printf("failed creating pty pair, sessionId=%d: %s", id, err)
+		log.Printf("failed creating pty pair, sessionId=%d: %s\n", id, err)
 		return
 	}
 	defer ptmx.Close()
+
+	// Set pty initial size.
+	err = resizePty(width, height)
+	if err != nil {
+		log.Printf("failed to resize pty, sessionId=%d: %s\n", id, err)
+		return
+	}
 
 	// Initialize editor state for this session.
 	s.initializeEditorStateForSession(id)
@@ -186,11 +193,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}()
 
 	// Process ResizeTerminalMsg from the client.
-	// TODO: instead of putting this in a separate channel,
-	// why not just update the tty dimensions (thread-safe) and put another
-	// window resize msg in termEventChan. And also update ptmx for subcommands
-	// while we're at it.
-	resizeTermMsgChan := make(chan *protocol.ResizeTerminalMsg, 1)
+	// This is the equivalent of SIGWINCH, except explicitly sent by the client over UDS.
 	go func(uc *net.UnixConn) {
 		for {
 			msg, err := protocol.ReceiveMessage(uc)
@@ -205,7 +208,17 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 			switch msg := msg.(type) {
 			case *protocol.ResizeTerminalMsg:
 				log.Printf("received ResizeTerminalMsg from client, sessionId=%d\n", id)
-				resizeTermMsgChan <- msg
+				// Little subtle, but this will resize the tty dimensions (thread-safe) and notify
+				// tcell.Screen, which then generates a tcell event for the resize that will be received
+				// in termEventChan to update editor state.
+				clientTty.Resize(msg.Width, msg.Height)
+
+				// Keep the pty in sync so subcommands receive SIGWINCH.
+				err = resizePty(msg.Width, msg.Height)
+				if err != nil {
+					log.Printf("error resizing pty, sessionid=%d: %s\n", id, err)
+				}
+
 			default:
 				log.Printf("unexpected message received from client, sessionId=%d\n", id)
 			}
@@ -222,9 +235,6 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		case event := <-termEventChan:
 			log.Printf("processing terminal event for sessionId=%d\n", id)
 			s.processTermEvent(id, event, screen, sessionTty, ptmx, pts)
-		case msg := <-resizeTermMsgChan:
-			log.Printf("processing resize terminal event for sessionId=%d\n", id)
-			s.processResizeTerminalMsg(id, msg, clientTty)
 		case <-s.quitChan:
 			log.Printf("terminating sessionId=%d for server quit\n", id)
 			return
@@ -355,11 +365,6 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, sessionTty *os
 	log.Printf("proxy io.Copy completed for sessionId=%d\n", id)
 
 	return nil
-}
-
-func (s *Server) processResizeTerminalMsg(id sessionId, msg *protocol.ResizeTerminalMsg, clientTty *RemoteTty) {
-	log.Printf("received terminal resize msg for sessionId=%d, width=%d, height=%d\n", id, msg.Width, msg.Height)
-	clientTty.Resize(msg.Width, msg.Height)
 }
 
 func (s *Server) draw(id sessionId, screen tcell.Screen, sync bool) {

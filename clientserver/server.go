@@ -107,6 +107,10 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		log.Printf("closing socket for sessionId=%d\n", id)
 	}()
 
+	// TODO: it's silly that we're creating os.File only to dup it later
+	// for nonblock / read deadline stuff. Just return the FD and create
+	// as many os.File's as we need here, nonblocking. The tty can own one,
+	// keep a second one for subcommands.
 	msg, err := receiveStartSessionMsg(uc)
 	if err != nil {
 		log.Printf("error receiving StartSesssionMsg, sessionId=%d: %s\n", id, err)
@@ -167,6 +171,10 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 	}()
 
 	// Process ResizeTerminalMsg from the client.
+	// TODO: instead of putting this in a separate channel,
+	// why not just update the tty dimensions (thread-safe) and put another
+	// window resize msg in termEventChan. And also update ptmx for subcommands
+	// while we're at it.
 	resizeTermMsgChan := make(chan *protocol.ResizeTerminalMsg, 1)
 	go func(uc *net.UnixConn) {
 		for {
@@ -275,6 +283,8 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.Fi
 	}()
 
 	// Create pty pair for subcommand.
+	// TODO: do this once per session and reuse. That way the resize signal
+	// can just update it.
 	width, height := screen.Size()
 	ptmx, pts, err := createPtyPair(width, height)
 	if err != nil {
@@ -306,8 +316,6 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.Fi
 		_, _ = io.Copy(f, ptmx)
 		log.Printf("finished copy ptmx -> tty\n")
 	}()
-
-	// TODO: need to resize terminal msg too? how?
 
 	log.Printf("running bash subcommand for sessionId=%d\n", id)
 	ctx := context.Background()

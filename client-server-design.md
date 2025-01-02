@@ -135,29 +135,9 @@ By default, the client and server processes run as the same user/group. The unix
 Configuration
 -------------
 
-The current configuration format derives the effective configuration by matching rules to the filepath of the current document. The server will manage multiple documents, so the current format provides no way to specify global configuration.
+The configuration format is unchanged. The YAML file will encode the rules based on file pattern match, and options for the client/server will be passed via CLI flags.
 
-Since the server loads the configuration once, it is no longer necessary to store all configuration in a single YAML file. New configuration options will be added for client and server settings.
-
--	`config.yaml` for top-level client/server config.
-	-	config version (to allow future migrations)
-	-	server timeout after all clients disconnect
-	-	whether the client should try to start the server
-	-	debug logging
-	-	(later) LSP configuration
--	`rules/*.yaml` for document configuration rules
-	-	total order by filename
-
-The user can reload configuration using a menu command. On reload, the server will validate the config and display error status on failure. The new configuration applies immediately to all documents.
-
-As this is a breaking change, aretext will provide a built-in migration tool `aretext --migrate-config` that:
-
-1.	Detects old config.yaml format.
-2.	Prompts for confirmation.
-3.	Moves `config.yaml` to `rules/01-config.yaml`
-4.	Creates default global config.yaml.
-
-If the server detects an old configuration, it will exit with an error recommending that the user run `aretext --migrate-config`. The same process will be used moving forward to automate changes to the configuration format.
+A new menu command will be added to reload the configuration. This allows the user to reload config without restarting the server. The new configuration is validated (show error if invalid) and applied to all subsequently loaded documents.
 
 File Watching
 -------------
@@ -180,7 +160,7 @@ Workspace directories are inferred from the file path by traversing up directori
 Versioning
 ----------
 
-This is a significant and breaking change, necessitating a major version increment to `2.0`. Users will need to migrate their configuration to the new format.
+This is a significant change, necessitating a major version increment to `2.0`.
 
 Development Milestones
 ----------------------
@@ -191,8 +171,6 @@ Development Milestones
 4.	multi-client editor state and actions, with input coordination (without file watch).
 5.	file watch and reload.
 6.	shellcmd in client tty (run async).
-7.	config file refactor, hot reload.
-8.	configuration migration tool
 9.	LSP integration.
 
 Alternatives Considered

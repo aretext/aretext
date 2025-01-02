@@ -165,13 +165,21 @@ This is a significant change, necessitating a major version increment to `2.0`.
 Development Milestones
 ----------------------
 
-1.	client/server tty delegation, proving tcell integration and subprocess execution.
-2.	client daemonizes server and server exits when all clients disconnect.
-3.	multi-client input system -- process input for each client and output the command (without executing anything).
-4.	multi-client editor state and actions, with input coordination (without file watch).
-5.	file watch and reload.
-6.	shellcmd in client tty (run async).
-9.	LSP integration.
+1.	client/server architecture without shared state
+	-	client delegates tty to server.
+	-	server maintains separate editor state for each session.
+	-	server executes shell commands on behalf of client.
+	-	file search uses working directory of the session.
+	-	single file watcher goroutine for all open files.
+	-	client optionally autostarts server daemon, which exits when no active sessions (after optional linger duration).
+2.	shared state and input coordination
+	-	separate shared state from per-session state.
+	-	reset input mode of other sessions in same document on edit.
+3.	lsp integration
+	-	manage lsp lifecycle
+	-	root directory detection
+	-	go to definition
+	-	find references
 
 Alternatives Considered
 -----------------------

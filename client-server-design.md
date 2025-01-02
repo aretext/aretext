@@ -40,14 +40,14 @@ Client TTY Delegation
 The client delegates all interactions with its TTY to the server using the following procedure:
 
 1.	Set client tty to raw mode.
-2.	Create a socketpair (call the file descriptors `s1` and `s2`\)
+2.	Create a socketpair, `s1` and `s2`.
 3.	Send `s2` to the server over UDS using SCM_RIGHTS out-of-band data.
-4.	Send a "start session" message to the server encoding the arguments to the client (e.g. the filepath to open).
+4.	Send a "start session" message to the server encoding `$TERM`, the current working directory, and filepath to open.
 5.	Copy stdin -> `s1` and `s1` -> stdout until `s2` is closed by the server.
 
 The server then controls the client tty by reading/writing `s2`. This is achieved through a custom `tcell.Tty` implementation that reads and writes `s2`.
 
-For executing shell with `CmdModeTerminal`, the server maintains a psuedoterminal pair (`ptmx` and `pts`). Before executing the command, the server suspends the `tcell.Screen`, then begins copying `ptmx` <-> `s2`. The `pts` side of the pty is used by the subcommand as stdin/stdout/stderr. When the command completes, the server interrupts the copy (by setting read deadline to now) and resumes the `tcell.Screen`.
+For executing shell with `CmdModeTerminal`, the server maintains a psuedoterminal pair (`ptmx` and `pts`). Before executing the command, the server suspends the `tcell.Screen`, then begins copying `ptmx` <-> `s2`. The `pts` side of the pty is used by the subcommand as stdin/stdout/stderr. When the command completes, the server interrupts the copy (by setting read deadline to `time.Now()`) and resumes the `tcell.Screen`.
 
 When tty dimensions change, the client will receive a SIGWINCH signal. To propagate the change, the client sends a `TerminalResizeMsg` to the server. The server updates the `tcell.Tty` dimensions and the `ptmx` (which triggers SIGWINCH to any subcommands using `pts`).
 
@@ -76,7 +76,7 @@ The server will close the connection if it receives a message larger than some l
 Client-Server Lifecycle
 -----------------------
 
-The server process may be run by the init system. However, by default the server will be started by a client on-demand and terminate some time after all clients have disconnected.
+The server process may be run by the init system. However, by default the server will be started by a client on-demand and terminate after all clients have disconnected (optionally after some "linger" delay).
 
 This follows a procedure similar to tmux:
 
@@ -93,7 +93,7 @@ The client and server detect that the other side has terminated when the UDS soc
 Editor state
 ------------
 
-Editor state (owned by the server) must now represent both **shared** data (available to all clients) and **per-client** data. Per-client data is indexed by a unique client ID, which the server assigns on client connection and removes when the client disconnects. Additionally, editor state must include multiple documents loaded at the same time, with each document opened by one or more clients.
+Editor state (owned by the server) must now represent both **shared** data (available to all clients) and **per-session** data. Per-session data is indexed by a unique session ID, which the server assigns on client connection and removes when the client disconnects. Additionally, editor state must include multiple documents loaded at the same time, with each document opened in one or more sessions.
 
 Shared data:
 
@@ -104,7 +104,7 @@ Shared data:
 -	Clipboard
 -	Configuration
 
-Per-client data:
+Per-session data:
 
 -	View (window size, text origin)
 -	Currently opened document
@@ -118,9 +118,9 @@ Per-client data:
 Input Coordination
 ------------------
 
-When one client modifies a document, the server must update the per-client state of all other clients editing the same document:
+When one client modifies a document, the server must update the per-session state of all other sessions editing the same document:
 
-1.	All other clients must transition to normal mode (same as if the client pressed "escape"). This implicitly resets most per-client state, including committing any staged undo log operations, clearing selections, etc.
+1.	All other clients must transition to normal mode (same as if the client pressed "escape"). This implicitly resets most per-session state, including committing any staged undo log operations, clearing selections, etc.
 2.	The server then executes the client's action, possibly modifying the document. For each insertion/deletion that occurs before another client's cursor position, increment/decrement the cursor position accordingly.
 
 Shell commands

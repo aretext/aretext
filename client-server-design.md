@@ -194,3 +194,18 @@ Development Milestones
 7.	config file refactor, hot reload.
 8.	configuration migration tool
 9.	LSP integration.
+
+Alternatives Considered
+-----------------------
+
+### Synchronize editor state across multiple independent editor instances
+
+Rejected due to complexity.
+
+### Send input/display explicitly through UDS messages
+
+Rejected since any custom protocol would either be tightly coupled with tcell or introduce unnecessary translation to/from tcell types.
+
+### Send pty file descriptor over UDS (instead of using a socketpair)
+
+Rejected due to a subtle bug in macOS terminal driver: when the `pts` is closed by a subcommand, macOS closes the pty even if the server maintains an open FD for the `pts`. Using a socketpair to proxy tty input/output avoids any interactions with the OS terminal drivers.

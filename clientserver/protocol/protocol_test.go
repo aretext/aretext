@@ -23,7 +23,7 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	defer serverTtySocket.Close()
 
 	msg := &StartSessionMsg{
-		Tty:            serverTtySocket,
+		TtyFd:            int(serverTtySocket.Fd()),
 		TerminalWidth:  128,
 		TerminalHeight: 129,
 		TerminalEnv:    map[string]string{"TERM": "tmux"},
@@ -34,7 +34,6 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 	receivedMsg := simulateSendAndReceive(t, msg)
 	receivedStartSessionMsg, ok := receivedMsg.(*StartSessionMsg)
 	require.True(t, ok)
-	assert.NotNil(t, receivedStartSessionMsg.Tty)
 	assert.Equal(t, msg.TerminalWidth, receivedStartSessionMsg.TerminalWidth)
 	assert.Equal(t, msg.TerminalHeight, receivedStartSessionMsg.TerminalHeight)
 	assert.Equal(t, msg.TerminalEnv, receivedStartSessionMsg.TerminalEnv)
@@ -43,7 +42,8 @@ func TestSendAndReceiveStartSessionMsg(t *testing.T) {
 
 	sentTtyInfo, err := serverTtySocket.Stat()
 	require.NoError(t, err)
-	receivedTtyInfo, err := receivedStartSessionMsg.Tty.Stat()
+	receivedTtyFile := os.NewFile(uintptr(receivedStartSessionMsg.TtyFd), "")
+	receivedTtyInfo, err := receivedTtyFile.Stat()
 	assert.True(t, os.SameFile(sentTtyInfo, receivedTtyInfo))
 }
 

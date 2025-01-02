@@ -3,6 +3,7 @@ package clientserver
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -12,6 +13,11 @@ func createPtyPair(width int, height int) (ptmx *os.File, pts *os.File, err erro
 	ptmxFd, err := unix.Open("/dev/ptmx", os.O_RDWR, 0o600)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not open /dev/ptmx: %w", err)
+	}
+
+	err = syscall.SetNonblock(ptmxFd, true)
+	if err != nil {
+		return nil, nil, fmt.Errorf("syscall.SetNonblock: %w", err)
 	}
 
 	// Unlock pts.

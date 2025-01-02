@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -107,20 +108,25 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		log.Printf("closing socket for sessionId=%d\n", id)
 	}()
 
-	// TODO: it's silly that we're creating os.File only to dup it later
-	// for nonblock / read deadline stuff. Just return the FD and create
-	// as many os.File's as we need here, nonblocking. The tty can own one,
-	// keep a second one for subcommands.
 	msg, err := receiveStartSessionMsg(uc)
 	if err != nil {
 		log.Printf("error receiving StartSesssionMsg, sessionId=%d: %s\n", id, err)
 		return
 	}
-	defer func() {
-		log.Printf("closing original tty for sessionId=%d\n", id)
-		msg.Tty.Close() // because clientTty dups the fd
-		log.Printf("closed original tty for sessionId=%d\n", id)
-	}()
+	defer syscall.Close(msg.TtyFd)
+
+	// Careful! Any call to Fd() will set the file to nonblocking.
+	// https://go-review.googlesource.com/c/go/+/81636
+	// So set the file descriptor to nonblocking first before any `os.NewFile`
+	// otherwise we can't set read deadlines to interrupt blocking `Read()`.
+	err = syscall.SetNonblock(msg.TtyFd, true)
+	if err != nil {
+		log.Printf("error syscall.SetNonblock, sessionId=%d: %s\n", id, err)
+		return
+	}
+
+	sessionTty := os.NewFile(uintptr(msg.TtyFd), "")
+	defer sessionTty.Close()
 
 	termInfo, err := tcell.LookupTerminfo(msg.TerminalEnv["TERM"])
 	if err != nil {
@@ -128,7 +134,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		return
 	}
 
-	clientTty, err := NewRemoteTty(msg.Tty, msg.TerminalWidth, msg.TerminalHeight)
+	clientTty, err := NewRemoteTty(sessionTty, msg.TerminalWidth, msg.TerminalHeight)
 	if err != nil {
 		log.Printf("failed NewRemoteTty: %s\n", err)
 		return
@@ -155,6 +161,15 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		screen.Fini()
 		log.Printf("finalized screen for sessionId=%d\n", id)
 	}()
+
+	// Create pty pair for subcommand.
+	width, height := screen.Size()
+	ptmx, pts, err := createPtyPair(width, height)
+	if err != nil {
+		log.Printf("failed creating pty pair, sessionId=%d: %s", id, err)
+		return
+	}
+	defer ptmx.Close()
 
 	// Initialize editor state for this session.
 	s.initializeEditorStateForSession(id)
@@ -206,7 +221,7 @@ func (s *Server) handleConnection(id sessionId, uc *net.UnixConn) {
 		select {
 		case event := <-termEventChan:
 			log.Printf("processing terminal event for sessionId=%d\n", id)
-			s.processTermEvent(id, event, screen, msg.Tty)
+			s.processTermEvent(id, event, screen, sessionTty, ptmx, pts)
 		case msg := <-resizeTermMsgChan:
 			log.Printf("processing resize terminal event for sessionId=%d\n", id)
 			s.processResizeTerminalMsg(id, msg, clientTty)
@@ -251,7 +266,7 @@ func (s *Server) deleteEditorStateForSession(id sessionId) {
 	delete(s.dummyState, id)
 }
 
-func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen, ttyFile *os.File) {
+func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.Screen, sessionTty *os.File, ptmx *os.File, pts *os.File) {
 	eventKey, ok := event.(*tcell.EventKey)
 	if !ok {
 		return
@@ -264,14 +279,14 @@ func (s *Server) processTermEvent(id sessionId, event tcell.Event, screen tcell.
 	} else if eventKey.Rune() == 'b' {
 		s.setSessionState(id, 2)
 	} else if eventKey.Rune() == 's' {
-		if err := s.runSubcommand(id, screen, ttyFile); err != nil {
+		if err := s.runSubcommand(id, screen, sessionTty, ptmx, pts); err != nil {
 			log.Printf("error running subcommand: %s\n", err)
 			return
 		}
 	}
 }
 
-func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.File) error {
+func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, sessionTty *os.File, ptmx *os.File, pts *os.File) error {
 	// test running a subcommand
 	log.Printf("suspending screen for sessionId=%d\n", id)
 	if err := screen.Suspend(); err != nil {
@@ -282,38 +297,32 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.Fi
 		screen.Resume()
 	}()
 
-	// Create pty pair for subcommand.
-	// TODO: do this once per session and reuse. That way the resize signal
-	// can just update it.
-	width, height := screen.Size()
-	ptmx, pts, err := createPtyPair(width, height)
+	var t time.Time
+	err := sessionTty.SetReadDeadline(t) // ensure blocking in io.Copy
 	if err != nil {
-		return fmt.Errorf("createPtyPair: %w", err)
+		return fmt.Errorf("sessionTty.SetReadDeadline: %w", err)
 	}
-	defer ptmx.Close()
-
-	// ttyFile is somehow getting set to nonblock, so io.Copy is error'ing
-	// out with EAGAIN.
-	fd := int(ttyFile.Fd())
-	fd2, err := syscall.Dup(fd)
+	err = ptmx.SetReadDeadline(t)
 	if err != nil {
-		return fmt.Errorf("syscall.Dup: %w", err)
+		return fmt.Errorf("ptmx.SetReadDeadline: %w", err)
 	}
-	f := os.NewFile(uintptr(fd2), "")
-	defer f.Close()
 
 	// Proxy ptmx <-> client tty
+	var wg sync.WaitGroup
+	wg.Add(2)
 	go func() {
+		defer wg.Done()
 		log.Printf("starting to copy tty -> ptmx\n")
-		_, err = io.Copy(ptmx, f)
+		_, err = io.Copy(ptmx, sessionTty)
 		if err != nil {
 			log.Printf("err from io.Copy: %s\n", err)
 		}
 		log.Printf("finished copy tty -> ptmx\n")
 	}()
 	go func() {
+		defer wg.Done()
 		log.Printf("starting to copy ptmx -> tty\n")
-		_, _ = io.Copy(f, ptmx)
+		_, _ = io.Copy(sessionTty, ptmx)
 		log.Printf("finished copy ptmx -> tty\n")
 	}()
 
@@ -337,6 +346,14 @@ func (s *Server) runSubcommand(id sessionId, screen tcell.Screen, ttyFile *os.Fi
 		return fmt.Errorf("cmd.Run: %w\n", err)
 	}
 	log.Printf("bash subcommand completed for sessionId=%d\n", id)
+
+	// Make sure we stop proxying to pty before returning resuming tcell screen.
+	log.Printf("waiting for proxy io.Copy to complete for sessionId=%d\n", id)
+	_ = sessionTty.SetReadDeadline(time.Now())
+	_ = ptmx.SetReadDeadline(time.Now())
+	wg.Wait()
+	log.Printf("proxy io.Copy completed for sessionId=%d\n", id)
+
 	return nil
 }
 

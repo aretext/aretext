@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -47,21 +46,8 @@ type RemoteTty struct {
 
 // TODO: explain this
 func NewRemoteTty(f *os.File, width int, height int) (*RemoteTty, error) {
-	// TODO explain this: https://go-review.googlesource.com/c/go/+/81636
-	fd := int(f.Fd())
-	fd2, err := syscall.Dup(fd)
-	if err != nil {
-		return nil, fmt.Errorf("syscall.Dup: %w", err)
-	}
-	err = syscall.SetNonblock(fd2, true)
-	if err != nil {
-		return nil, fmt.Errorf("syscall.SetNonblock: %w", err)
-	}
-
-	f2 := os.NewFile(uintptr(fd2), "")
-
 	return &RemoteTty{
-		f:      f2,
+		f:      f,
 		width:  width,
 		height: height,
 	}, nil
@@ -76,7 +62,8 @@ func (tty *RemoteTty) Write(b []byte) (int, error) {
 }
 
 func (tty *RemoteTty) Close() error {
-	return tty.f.Close()
+	// no-op since we don't own the file
+	return nil
 }
 
 func (tty *RemoteTty) Start() error {

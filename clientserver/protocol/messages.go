@@ -1,7 +1,5 @@
 package protocol
 
-import "os"
-
 // Message represents a serializable message sent between a client and a server.
 type Message interface {
 	closed() // Prevent other implementations.
@@ -29,9 +27,9 @@ func msgTypeForMessage(msg Message) msgType {
 
 // StartSessionMsg is sent from client to server immediately after opening a connection.
 type StartSessionMsg struct {
-	// Tty is a file descriptor (one side of a socketpair) for reading/writing to the client's tty.
+	// TtyFd is a file descriptor (one side of a socketpair) for reading/writing to the client's tty.
 	// It is sent as out-of-band data SCM_RIGHTS over the Unix socket.
-	Tty *os.File `json:"-"`
+	TtyFd int `json:"-"`
 
 	// Intial terminal size.
 	TerminalWidth, TerminalHeight int

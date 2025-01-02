@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"os"
 	"syscall"
 )
 
@@ -40,10 +39,7 @@ func SendMessage(conn *net.UnixConn, msg Message) error {
 
 	var oob []byte
 	if startSessionMsg, ok := msg.(*StartSessionMsg); ok {
-		if startSessionMsg.Tty == nil {
-			return errors.New("StartSessionMsg.Tty must not be nil")
-		}
-		oob = syscall.UnixRights(int(startSessionMsg.Tty.Fd()))
+		oob = syscall.UnixRights(startSessionMsg.TtyFd)
 	}
 
 	_, _, err = conn.WriteMsgUnix(data, oob, nil)
@@ -104,12 +100,7 @@ func ReceiveMessage(conn *net.UnixConn) (Message, error) {
 			return nil, errors.New("invalid number of file descriptors received for Tty")
 		}
 
-		ttyFile := os.NewFile(uintptr(fds[0]), "")
-		if ttyFile == nil {
-			return nil, errors.New("invalid file descriptor for Tty")
-		}
-
-		msg.Tty = ttyFile
+		msg.TtyFd = fds[0]
 
 		return &msg, nil
 

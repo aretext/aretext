@@ -85,7 +85,7 @@ func (c *Client) Run(documentPath string) error {
 
 	// Send StartSessionMsg to the server.
 	msg := &protocol.StartSessionMsg{
-		Tty:            serverTtySocket,
+		TtyFd:          int(serverTtySocket.Fd()),
 		TerminalWidth:  termWidth,
 		TerminalHeight: termHeight,
 		TerminalEnv:    getTerminalEnv(),

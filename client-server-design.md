@@ -179,7 +179,7 @@ Development Milestones
 	-	manage lsp lifecycle
 	-	root directory detection
 	-	go to definition
-	-	find references
+	-	find references/implementations
 
 Alternatives Considered
 -----------------------

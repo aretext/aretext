@@ -21,8 +21,8 @@ Architecture
 The **server** is responsible for:
 
 -	listening on a unix domain socket (UDS) and accepting client connections.
--	receiving and processing input from clients.
--	rendering to the client terminal, using the tty delegation mechanism described below.
+-	input/output to client's terminal via tty delegation mechanism described below.
+-	managing editor state across all connected clients.
 -	loading documents from disk, including watching and reloading on changes.
 -	executing shell commands.
 -	managing LSP lifecycle and communication.

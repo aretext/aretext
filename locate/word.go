@@ -12,7 +12,7 @@ import (
 //  1. at the first non-whitespace after a whitespace
 //  2. at the start of an empty line
 //  3. between punctuation and non-punctuation (unless withPunctuation=true)
-func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunctuation, stopAtEndOfLastLine bool) uint64 {
+func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunctuation, stopAtEndOfLastLine bool, stayWithinDocument bool) uint64 {
 	if targetCount == 0 {
 		return pos
 	}
@@ -35,6 +35,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunc
 		return pos
 	}
 
+	prevPos := pos
 	pos += gc.NumRunes()
 
 	// Read subsequent runes to find the next word boundary.
@@ -42,6 +43,13 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunc
 	for {
 		err = gcIter.NextSegment(gc)
 		if err != nil {
+			// For cursor movement, reaching io.EOF should stop on, not after,
+			// the last character. The only exception is if the file ends with a newline,
+			// in which case stop after the newline so the cursor displays on the last
+			// (empty) line rather than the end of the second-to-last line.
+			if stayWithinDocument && !prevHasNewline {
+				return prevPos
+			}
 			break
 		}
 
@@ -64,6 +72,7 @@ func NextWordStart(textTree *text.Tree, pos uint64, targetCount uint64, withPunc
 			break
 		}
 
+		prevPos = pos
 		pos += gc.NumRunes()
 		prevHasNewline = hasNewline
 		prevWasWhitespace = isWhitespace

@@ -235,6 +235,24 @@ func TestInterpreterStateIntegration(t *testing.T) {
 			expectedText:      "Lorem ipsum,dolor;sit amet consectetur",
 		},
 		{
+			name:        "cursor next word end of file",
+			initialText: "abc",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 2,
+			expectedText:      "abc",
+		},
+		{
+			name:        "cursor next word end of file at newline",
+			initialText: "abc\n",
+			events: []tcell.Event{
+				tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModNone),
+			},
+			expectedCursorPos: 4,
+			expectedText:      "abc\n",
+		},
+		{
 			name:        "cursor prev word start",
 			initialText: "Lorem ipsum dolor\nsit amet consectetur\nadipiscing elit",
 			events: []tcell.Event{

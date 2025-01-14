@@ -19,6 +19,7 @@ func TestNextWordStart(t *testing.T) {
 		count               uint64
 		withPunct           bool
 		stopAtEndOfLastLine bool
+		stayWithinDocument  bool
 		expectedPos         uint64
 	}{
 		{
@@ -205,13 +206,29 @@ func TestNextWordStart(t *testing.T) {
 			stopAtEndOfLastLine: true,
 			expectedPos:         15,
 		},
+		{
+			name:               "stay within document, ends with char",
+			inputString:        "abc",
+			pos:                0,
+			count:              1,
+			stayWithinDocument: true,
+			expectedPos:        2,
+		},
+		{
+			name:               "stay within document, ends with newline",
+			inputString:        "abc\n",
+			pos:                0,
+			count:              1,
+			stayWithinDocument: true,
+			expectedPos:        4,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.withPunct, tc.stopAtEndOfLastLine)
+			actualPos := NextWordStart(textTree, tc.pos, tc.count, tc.withPunct, tc.stopAtEndOfLastLine, tc.stayWithinDocument)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

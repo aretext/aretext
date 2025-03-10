@@ -1,13 +1,14 @@
 module github.com/aretext/aretext
 
 go 1.22
+toolchain go1.23.7
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/google/renameio/v2 v2.0.0
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.22.0
+	golang.org/x/text v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

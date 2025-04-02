@@ -239,7 +239,7 @@ func yamlSingleWordUnquotedScalarParseFunc(scalarRunePredicate func(r rune) bool
 	}
 
 	return consumeRunesLike(yamlScalarRune).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }
 
 func yamlBlockScalarParseFunc() parser.Func {

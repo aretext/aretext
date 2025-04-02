@@ -262,7 +262,7 @@ func consumeLongestMatchingOption(options []string) parser.Func {
 
 // recognizeKeywordOrConsume recognizes a keyword from the list of `keywords`.
 // If no keywords match, the result is returned unmodified.
-func recognizeKeywordOrConsume(keywords []string) parser.MapWithInputFn {
+func recognizeKeywordOrConsume(keywords []string, caseSensitive bool) parser.MapWithInputFn {
 	// Calculate the length of the longest keyword to limit how much
 	// of the input needs to be reprocessed.
 	maxLength := maxStrLen(keywords)
@@ -273,7 +273,7 @@ func recognizeKeywordOrConsume(keywords []string) parser.MapWithInputFn {
 
 		s := readInputString(iter, result.NumConsumed)
 		for _, kw := range keywords {
-			if kw == s {
+			if (caseSensitive && kw == s) || (!caseSensitive && strings.EqualFold(kw, s)) {
 				token := parser.ComputedToken{
 					Role:   parser.TokenRoleKeyword,
 					Length: result.NumConsumed,

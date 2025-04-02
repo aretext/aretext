@@ -19,7 +19,7 @@ func GitRebaseParseFunc() parser.Func {
 	}
 
 	return consumeRunesLike(isAlphaNumPunct).
-		MapWithInput(recognizeKeywordOrConsume(keywords)).
+		MapWithInput(recognizeKeywordOrConsume(keywords, true)).
 		Map(func(result parser.Result) parser.Result {
 			if len(result.ComputedTokens) == 0 {
 				// Fail if we didn't recognize a token so the parser

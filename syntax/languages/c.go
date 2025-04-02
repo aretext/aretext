@@ -74,7 +74,7 @@ func cIdentifierOrKeywordParseFunc() parser.Func {
 
 	return consumeSingleRuneLike(isIdStart).
 		ThenMaybe(consumeRunesLike(isIdContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }
 
 func cOperatorParseFunc() parser.Func {

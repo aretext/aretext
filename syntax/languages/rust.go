@@ -242,5 +242,5 @@ func rustIdentifierOrKeywordParseFunc() parser.Func {
 		MapWithInput(failIfMatchTerm([]string{"r#crate", "r#self", "r#super", "r#Self"}))
 
 	return consumeRawIdentifier.Or(consumeIdentifierOrKeyword).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }

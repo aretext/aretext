@@ -163,7 +163,7 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 
 	return consumeSingleRuneLike(isLetter).
 		ThenMaybe(consumeRunesLike(isLetterOrDigit)).
-		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...)))
+		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...), false))
 }
 
 func sqlOperatorParseFunc() parser.Func {

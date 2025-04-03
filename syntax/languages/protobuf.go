@@ -150,8 +150,8 @@ func protobufKeywordParseFunc() parser.Func {
 		allLevelKeywords...,
 	)
 
-	recognizeTopLevelKeywordOrConsume := recognizeKeywordOrConsume(topLevelKeywords)
-	recognizeNestedLevelKeywordOrConsume := recognizeKeywordOrConsume(nestedLevelKeywords)
+	recognizeTopLevelKeywordOrConsume := recognizeKeywordOrConsume(topLevelKeywords, true)
+	recognizeNestedLevelKeywordOrConsume := recognizeKeywordOrConsume(nestedLevelKeywords, true)
 
 	// Consume an identifier, then check whether it's a keyword.
 	// The parser recognizes different keywords at the top-level than within a block (nested in open/close parens).

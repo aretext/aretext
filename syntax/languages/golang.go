@@ -52,7 +52,7 @@ func golangIdentifierOrKeywordParseFunc() parser.Func {
 	}
 	return consumeSingleRuneLike(isLetter).
 		ThenMaybe(consumeRunesLike(isLetterOrDigit)).
-		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...)))
+		MapWithInput(recognizeKeywordOrConsume(append(keywords, predeclaredIdentifiers...), true))
 }
 
 func golangOperatorParseFunc() parser.Func {

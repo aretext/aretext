@@ -81,7 +81,7 @@ func goTemplateActionContentsParseFunc() parser.Func {
 	}
 	parseKeywordOrIdentifier := consumeSingleRuneLike(isLetterOrPunct).
 		ThenMaybe(consumeRunesLike(isLetterPunctOrDigit)).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 
 	return parseString.
 		Or(parseComment).

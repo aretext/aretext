@@ -53,7 +53,7 @@ func BashParseFunc() parser.Func {
 	}
 	parseKeyword := consumeSingleRuneLike(isWordStart).
 		ThenMaybe(consumeRunesLike(isWordContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 
 	isVariableNameRune := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' }
 	parseVariable := consumeString("$").

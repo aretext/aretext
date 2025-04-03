@@ -72,7 +72,7 @@ func p4IdentifierOrKeywordParseFunc() parser.Func {
 
 	return consumeSingleRuneLike(isIdStart).
 		ThenMaybe(consumeRunesLike(isIdContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }
 
 func p4OperatorParseFunc() parser.Func {

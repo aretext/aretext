@@ -39,7 +39,7 @@ Syntax Languages
 | protobuf     | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3) |
 | python       | [Python](https://docs.python.org/3/reference/)                                           |
 | rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                      |
-| sql          | SQL based on PL/PgSQL(https://www.postgresql.org/docs/current/sql-keywords-appendix.html)|
+| sql          | [SQL based on PL/PgSQL](https://www.postgresql.org/docs/current/sql-keywords-appendix.html)|
 | todotxt      | [todo.txt](https://github.com/todotxt/todo.txt)                                          |
 | xml          | [xml](https://www.w3.org/TR/2006/REC-xml11-20060816/)                                    |
 | yaml         | [YAML](https://yaml.org/spec/)                                                           |

@@ -22,26 +22,27 @@ This document lists every configuration option in aretext.
 Syntax Languages
 ----------------
 
-| Value        | Description                                                                              |
-|--------------|------------------------------------------------------------------------------------------|
-| bash         | [bash](https://www.gnu.org/software/bash/manual/bash.html)                               |
-| c            | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                          |
-| criticmarkup | [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)                     |
-| gitcommit    | Format for editing a git commit                                                          |
-| gitrebase    | Format for git interactive rebase                                                        |
-| go           | [Go](https://golang.org/ref/spec)                                                        |
-| gotemplate   | [Go template](https://pkg.go.dev/text/template)                                          |
-| json         | [JSON](https://www.json.org/json-en.html)                                                |
-| makefile     | [Makefile](https://www.gnu.org/software/make/manual/make.html)                           |
-| markdown     | [Markdown](https://commonmark.org/)                                                      |
-| p4           | [p4](https://p4.org)                                                                     |
-| plaintext    | Do not apply any syntax highlighting.                                                    |
-| protobuf     | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3) |
-| python       | [Python](https://docs.python.org/3/reference/)                                           |
-| rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                      |
-| todotxt      | [todo.txt](https://github.com/todotxt/todo.txt)                                          |
-| xml          | [xml](https://www.w3.org/TR/2006/REC-xml11-20060816/)                                    |
-| yaml         | [YAML](https://yaml.org/spec/)                                                           |
+| Value        | Description                                                                                 |
+|--------------|---------------------------------------------------------------------------------------------|
+| bash         | [bash](https://www.gnu.org/software/bash/manual/bash.html)                                  |
+| c            | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                             |
+| criticmarkup | [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)                        |
+| gitcommit    | Format for editing a git commit                                                             |
+| gitrebase    | Format for git interactive rebase                                                           |
+| go           | [Go](https://golang.org/ref/spec)                                                           |
+| gotemplate   | [Go template](https://pkg.go.dev/text/template)                                             |
+| json         | [JSON](https://www.json.org/json-en.html)                                                   |
+| makefile     | [Makefile](https://www.gnu.org/software/make/manual/make.html)                              |
+| markdown     | [Markdown](https://commonmark.org/)                                                         |
+| p4           | [p4](https://p4.org)                                                                        |
+| plaintext    | Do not apply any syntax highlighting.                                                       |
+| protobuf     | [Protocol Buffers Version 3](https://developers.google.com/protocol-buffers/docs/proto3)    |
+| python       | [Python](https://docs.python.org/3/reference/)                                              |
+| rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                         |
+| sql          | [SQL based on PL/PgSQL](https://www.postgresql.org/docs/current/sql-keywords-appendix.html) |
+| todotxt      | [todo.txt](https://github.com/todotxt/todo.txt)                                             |
+| xml          | [xml](https://www.w3.org/TR/2006/REC-xml11-20060816/)                                       |
+| yaml         | [YAML](https://yaml.org/spec/)                                                              |
 
 Menu Command Object
 -------------------

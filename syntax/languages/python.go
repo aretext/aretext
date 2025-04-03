@@ -126,7 +126,7 @@ func pythonIdentifierOrKeywordParseFunc() parser.Func {
 
 	return consumeSingleRuneLike(isIdentifierStart).
 		ThenMaybe(consumeRunesLike(isIdentifierContinue)).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }
 
 func pythonOperatorParseFunc() parser.Func {

@@ -76,5 +76,5 @@ func jsonStringOrKeyParseFunc() parser.Func {
 func jsonKeywordParseFunc() parser.Func {
 	keywords := []string{"true", "false", "null"}
 	return consumeRunesLike(jsonIdentifierRune).
-		MapWithInput(recognizeKeywordOrConsume(keywords))
+		MapWithInput(recognizeKeywordOrConsume(keywords, true))
 }

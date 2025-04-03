@@ -30,6 +30,7 @@ const (
 	LanguageCriticMarkup = Language("criticmarkup")
 	LanguageMakefile     = Language("makefile")
 	LanguageP4           = Language("p4")
+	LanguageSQL          = Language("sql")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -55,6 +56,7 @@ func init() {
 		LanguageCriticMarkup: languages.CriticMarkupParseFunc(),
 		LanguageMakefile:     languages.MakefileParseFunc(),
 		LanguageP4:           languages.P4ParseFunc(),
+		LanguageSQL:          languages.SQLParseFunc(),
 	}
 
 	for language := range languageToParseFunc {

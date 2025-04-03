@@ -10,10 +10,10 @@ import (
 func SQLParseFunc() parser.Func {
 	return sqlLineCommentParseFunc().
 		Or(sqlBlockCommentParseFunc()).
-		Or(sqlStringLiteralParseFunc()).
-		Or(sqlStringNameParseFunc()).
 		Or(sqlIdentifierOrKeywordParseFunc()).
 		Or(sqlOperatorParseFunc()).
+		Or(sqlStringLiteralParseFunc()).
+		Or(sqlStringObjectParseFunc()).
 		Or(sqlNumberLiteralParseFunc())
 }
 
@@ -35,13 +35,12 @@ func sqlStringLiteralParseFunc() parser.Func {
 		Map(recognizeToken(parser.TokenRoleString))
 }
 
-func sqlStringNameParseFunc() parser.Func {
+func sqlStringObjectParseFunc() parser.Func {
 	return consumeString("\"").
 		Then(consumeToString("\"")).
 		Map(recognizeToken(parser.TokenRoleCustom1))
 }
 
-// TODO: Case insensitive keywords
 func sqlIdentifierOrKeywordParseFunc() parser.Func {
 	isLetter := func(r rune) bool { return unicode.IsLetter(r) || r == '_' }
 	isLetterOrDigit := func(r rune) bool { return isLetter(r) || unicode.IsDigit(r) }
@@ -53,7 +52,7 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"ASSIGNMENT", "ASYMMETRIC", "AT", "ATAN", "ATOMIC", "ATTACH", "ATTRIBUTE", "ATTRIBUTES",
 		"AUTHORIZATION", "AVG", "BACKWARD", "BASE64", "BEFORE", "BEGIN", "BEGIN_FRAME", "BEGIN_PARTITION",
 		"BERNOULLI", "BETWEEN", "BIGINT", "BINARY", "BIT", "BIT_LENGTH", "BLOB", "BLOCKED",
-		"BOM", "BOOLEAN", "BOTH", "BREADTH", "BTRIM", "BY", "C", "CACHE",
+		"BOM", "BOOLEAN", "BOTH", "BREADTH", "BTRIM", "BY", "CACHE",
 		"CALL", "CALLED", "CARDINALITY", "CASCADE", "CASCADED", "CASE", "CAST", "CATALOG",
 		"CATALOG_NAME", "CEIL", "CEILING", "CHAIN", "CHAINING", "CHAR", "CHARACTER", "CHARACTERISTICS",
 		"CHARACTERS", "CHARACTER_LENGTH", "CHARACTER_SET_NAME", "CHARACTER_SET_SCHEMA", "CHAR_LENGTH", "CHECK", "CHECKPOINT", "CLASS",
@@ -80,7 +79,7 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"FALSE", "FAMILY", "FETCH", "FILE", "FILTER", "FINAL", "FINALIZE", "FINISH",
 		"FIRST", "FIRST_VALUE", "FLAG", "FLOAT", "FLOOR", "FOLLOWING", "FOR", "FORCE",
 		"FOREIGN", "FORMAT", "FORTRAN", "FORWARD", "FOUND", "FRAME_ROW", "FREE", "FREEZE",
-		"FROM", "FS", "FULFILL", "FULL", "FUNCTION", "FUNCTIONS", "FUSION", "G",
+		"FROM", "FS", "FULFILL", "FULL", "FUNCTION", "FUNCTIONS", "FUSION",
 		"GENERAL", "GENERATED", "GET", "GLOBAL", "GO", "GOTO", "GRANT", "GRANTED",
 		"GREATEST", "GROUP", "GROUPING", "GROUPS", "HANDLER", "HAVING", "HEADER", "HEX",
 		"HIERARCHY", "HOLD", "HOUR", "ID", "IDENTITY", "IF", "IGNORE", "ILIKE",
@@ -90,12 +89,12 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"INSTANCE", "INSTANTIABLE", "INSTEAD", "INT", "INTEGER", "INTEGRITY", "INTERSECT", "INTERSECTION",
 		"INTERVAL", "INTO", "INVOKER", "IS", "ISNULL", "ISOLATION", "JOIN", "JSON",
 		"JSON_ARRAY", "JSON_ARRAYAGG", "JSON_EXISTS", "JSON_OBJECT", "JSON_OBJECTAGG", "JSON_QUERY", "JSON_SCALAR", "JSON_SERIALIZE",
-		"JSON_TABLE", "JSON_TABLE_PRIMITIVE", "JSON_VALUE", "K", "KEEP", "KEY", "KEYS", "KEY_MEMBER",
+		"JSON_TABLE", "JSON_TABLE_PRIMITIVE", "JSON_VALUE", "KEEP", "KEY", "KEYS", "KEY_MEMBER",
 		"KEY_TYPE", "LABEL", "LAG", "LANGUAGE", "LARGE", "LAST", "LAST_VALUE", "LATERAL",
 		"LEAD", "LEADING", "LEAKPROOF", "LEAST", "LEFT", "LENGTH", "LEVEL", "LIBRARY",
 		"LIKE", "LIKE_REGEX", "LIMIT", "LINK", "LISTAGG", "LISTEN", "LN", "LOAD",
 		"LOCAL", "LOCALTIME", "LOCALTIMESTAMP", "LOCATION", "LOCATOR", "LOCK", "LOCKED", "LOG",
-		"LOG10", "LOGGED", "LOWER", "LPAD", "LTRIM", "M", "MAP", "MAPPING",
+		"LOG10", "LOGGED", "LOWER", "LPAD", "LTRIM", "MAP", "MAPPING",
 		"MATCH", "MATCHED", "MATCHES", "MATCH_NUMBER", "MATCH_RECOGNIZE", "MATERIALIZED", "MAX", "MAXVALUE",
 		"MEASURES", "MEMBER", "MERGE", "MERGE_ACTION", "MESSAGE_LENGTH", "MESSAGE_OCTET_LENGTH", "MESSAGE_TEXT", "METHOD",
 		"MIN", "MINUTE", "MINVALUE", "MOD", "MODE", "MODIFIES", "MODULE", "MONTH",
@@ -107,7 +106,7 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"OCCURRENCES_REGEX", "OCTETS", "OCTET_LENGTH", "OF", "OFF", "OFFSET", "OIDS", "OLD",
 		"OMIT", "ON", "ONE", "ONLY", "OPEN", "OPERATOR", "OPTION", "OPTIONS",
 		"OR", "ORDER", "ORDERING", "ORDINALITY", "OTHERS", "OUT", "OUTER", "OUTPUT",
-		"OVER", "OVERFLOW", "OVERLAPS", "OVERLAY", "OVERRIDING", "OWNED", "OWNER", "P",
+		"OVER", "OVERFLOW", "OVERLAPS", "OVERLAY", "OVERRIDING", "OWNED", "OWNER",
 		"PAD", "PARALLEL", "PARAMETER", "PARAMETER_MODE", "PARAMETER_NAME", "PARSER", "PARTIAL", "PARTITION",
 		"PASCAL", "PASS", "PASSING", "PASSTHROUGH", "PASSWORD", "PAST", "PATH", "PATTERN",
 		"PER", "PERCENT", "PERCENTILE_CONT", "PERCENTILE_DISC", "PERCENT_RANK", "PERIOD", "PERMISSION", "PERMUTE",
@@ -133,7 +132,7 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"STATISTICS", "STDDEV_POP", "STDDEV_SAMP", "STDIN", "STDOUT", "STORAGE", "STORED", "STRICT",
 		"STRING", "STRIP", "STRUCTURE", "STYLE", "SUBCLASS_ORIGIN", "SUBMULTISET", "SUBSCRIPTION", "SUBSET",
 		"SUBSTRING", "SUBSTRING_REGEX", "SUCCEEDS", "SUM", "SUPPORT", "SYMMETRIC", "SYSID", "SYSTEM",
-		"SYSTEM_TIME", "SYSTEM_USER", "T", "TABLE", "TABLES", "TABLESAMPLE", "TABLESPACE", "TABLE_NAME",
+		"SYSTEM_TIME", "SYSTEM_USER", "TABLE", "TABLES", "TABLESAMPLE", "TABLESPACE", "TABLE_NAME",
 		"TAN", "TANH", "TARGET", "TEMP", "TEMPLATE", "TEMPORARY", "TEXT", "THEN",
 		"THROUGH", "TIES", "TIME", "TIMESTAMP", "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TOKEN",
 		"TOP_LEVEL_COUNT", "TRAILING", "TRANSACTION", "TRANSACTION_ACTIVE", "TRANSFORM", "TRANSFORMS", "TRANSLATE", "TRANSLATE_REGEX",
@@ -168,9 +167,8 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 
 func sqlOperatorParseFunc() parser.Func {
 	return consumeLongestMatchingOption([]string{
-		"+", "-", "*", "/", "%",
-		"=", "!=",
-		"<", "<=", ">", ">=",
+		"=", "+", "-", "*", "/", "%",
+		"!=", "<", "<=", ">", ">=",
 	}).Map(recognizeToken(parser.TokenRoleOperator))
 }
 
@@ -186,18 +184,12 @@ func sqlNumberLiteralParseFunc() parser.Func {
 
 	consumeDecimalLiteral := consumeDecimalZero.Or(consumeDecimalNonZero)
 
-	consumeBinaryLiteral := (consumeString("0b").Or(consumeString("0B"))).
-		Then(consumeDigitsAndSeparators(true, func(r rune) bool {
-			return r == '0' || r == '1'
-		}))
-
 	consumeHexLiteral := (consumeString("0x").Or(consumeString("0X"))).
 		Then(consumeDigitsAndSeparators(true, func(r rune) bool {
 			return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
 		}))
 
-	consumeIntLiteral := consumeBinaryLiteral.
-		Or(consumeHexLiteral).
+	consumeIntLiteral := consumeHexLiteral.
 		Or(consumeDecimalLiteral)
 
 	consumeDigitPart := consumeDigitsAndSeparators(false, func(r rune) bool {

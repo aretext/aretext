@@ -44,6 +44,8 @@ func sqlStringObjectParseFunc() parser.Func {
 func sqlIdentifierOrKeywordParseFunc() parser.Func {
 	isLetter := func(r rune) bool { return unicode.IsLetter(r) || r == '_' }
 	isLetterOrDigit := func(r rune) bool { return isLetter(r) || unicode.IsDigit(r) }
+
+	// https://www.postgresql.org/docs/current/sql-keywords-appendix.html
 	keywords := []string{
 		"ABORT", "ABS", "ABSENT", "ABSOLUTE", "ACCESS", "ACCORDING", "ACOS",
 		"ACTION", "ADA", "ADD", "ADMIN", "AFTER", "AGGREGATE", "ALL", "ALLOCATE",
@@ -150,14 +152,13 @@ func sqlIdentifierOrKeywordParseFunc() parser.Func {
 		"XMLSCHEMA", "XMLSERIALIZE", "XMLTABLE", "XMLTEXT", "XMLVALIDATE", "YEAR", "YES", "ZONE",
 	}
 
+	// https://www.postgresql.org/docs/current/datatype.html
 	predeclaredIdentifiers := []string{
-		"INT", "TINYINT", "BIGINT", "FLOAT", "REAL",
-		"DATE", "TIME", "DATETIME",
-		"CHAR", "VARCHAR", "TEXT",
-		"NCHAR", "NVARCHAR", "NTEXT",
-		"BINARY", "VARBINARY",
-		"CLOB", "BLOB", "XML", "JSON",
-		"CURSOR", "TABLE",
+		"BIGINT", "BIGSERIAL", "BIT", "BOOLEAN", "BOX", "BYTEA", "CHARACTER", "CHARACTER VARYING",
+		"CIDR", "CIRCLE", "DATE", "DOUBLE PRECISION", "INET", "INTEGER", "INTERVAL", "JSON",
+		"JSONB", "LINE", "LSEG", "MACADDR", "MACADDR8", "MONEY", "NUMERIC", "PATH",
+		"POINT", "POLYGON", "REAL", "SMALLINT", "SMALLSERIAL", "SERIAL", "TEXT", "TIME",
+		"TIME WITHOUT TIME ZONE", "TIME WITH TIME ZONE", "TIMESTAMP", "TIMESTAMP WITHOUT TIME ZONE", "TIMESTAMP WITH TIME ZONE", "UUID", "XML",
 	}
 
 	return consumeSingleRuneLike(isLetter).

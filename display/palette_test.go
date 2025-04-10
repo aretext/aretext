@@ -10,7 +10,7 @@ import (
 	"github.com/aretext/aretext/syntax/parser"
 )
 
-func TestPaletteFromConfigStyles(t *testing.T) {
+func TestPaletteConfigOverrides(t *testing.T) {
 	configStyles := map[string]config.StyleConfig{
 		config.StyleTokenCustom1: {
 			Color: "black",
@@ -30,7 +30,7 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 		},
 	}
 
-	palette := NewPaletteFromConfigStyles(configStyles)
+	palette := NewPalette().ApplyConfigOverrides(configStyles)
 
 	s := tcell.StyleDefault
 	expected := &Palette{

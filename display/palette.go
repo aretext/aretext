@@ -88,8 +88,7 @@ func NewPalette() *Palette {
 	}
 }
 
-func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
-	p := NewPalette()
+func (p *Palette) ApplyConfigOverrides(styles map[string]config.StyleConfig) *Palette {
 	for k, v := range styles {
 		s := styleFromConfig(v)
 		switch k {
@@ -142,6 +141,34 @@ func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
 		}
 	}
 	return p
+}
+
+func styleFromConfig(s config.StyleConfig) tcell.Style {
+	c := tcell.GetColor(s.Color)
+	style := tcell.StyleDefault.Foreground(c)
+
+	if s.BackgroundColor != "" {
+		bg := tcell.GetColor(s.BackgroundColor)
+		style = style.Background(bg)
+	}
+
+	if s.Bold {
+		style = style.Bold(true)
+	}
+
+	if s.Italic {
+		style = style.Italic(true)
+	}
+
+	if s.Underline {
+		style = style.Underline(true)
+	}
+
+	if s.StrikeThrough {
+		style = style.StrikeThrough(true)
+	}
+
+	return style
 }
 
 func (p *Palette) StyleForLineNum() tcell.Style {
@@ -238,32 +265,4 @@ func (p *Palette) StyleForSearchQuery() tcell.Style {
 func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {
 	// If key is not set, returns tcell.StyleDefault (the zero value).
 	return p.tokenRoleStyle[tokenRole]
-}
-
-func styleFromConfig(s config.StyleConfig) tcell.Style {
-	c := tcell.GetColor(s.Color)
-	style := tcell.StyleDefault.Foreground(c)
-
-	if s.BackgroundColor != "" {
-		bg := tcell.GetColor(s.BackgroundColor)
-		style = style.Background(bg)
-	}
-
-	if s.Bold {
-		style = style.Bold(true)
-	}
-
-	if s.Italic {
-		style = style.Italic(true)
-	}
-
-	if s.Underline {
-		style = style.Underline(true)
-	}
-
-	if s.StrikeThrough {
-		style = style.StrikeThrough(true)
-	}
-
-	return style
 }

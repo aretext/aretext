@@ -145,7 +145,7 @@ func (e *Editor) handleIfDocumentLoaded() {
 
 		// Update palette, since the configuration might have changed.
 		styles := e.editorState.Styles()
-		e.palette = display.NewPaletteFromConfigStyles(styles)
+		e.palette = display.NewPalette().ApplyConfigOverrides(styles)
 
 		// Store the new document load count so we know when the next document loads.
 		e.documentLoadCount = documentLoadCount

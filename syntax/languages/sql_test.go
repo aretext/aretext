@@ -131,5 +131,5 @@ func TestSQLParseFunc(t *testing.T) {
 }
 
 func BenchmarkSQLParser(b *testing.B) {
-	BenchmarkParser(b, PythonParseFunc(), "testdata/sql/example.sql")
+	BenchmarkParser(b, SQLParseFunc(), "testdata/sql/example.sql")
 }

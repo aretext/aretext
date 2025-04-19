@@ -78,7 +78,7 @@ If a package is not yet available for your platform, please consider creating on
 
 ### Arch Linux
 
-aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext-bin/). If you use [yay](https://github.com/Jguer/yay), run this to install it:
+aretext is available as an [AUR Package](https://aur.archlinux.org/packages/aretext). If you use [yay](https://github.com/Jguer/yay), run this to install it:
 
 ```shell
 yay -S aretext

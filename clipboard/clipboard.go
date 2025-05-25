@@ -14,6 +14,9 @@ const (
 	// Output of the last shell command inserted into the document.
 	PageShellCmdOutput
 
+	// System clipboard.
+	PageSystemClipboard
+
 	// Named pages "a" through "z".
 	PageLetterA
 	PageLetterB
@@ -46,6 +49,12 @@ const (
 // PageIdForLetter returns the page named by a letter "a" to "z".
 // If the rune is non-alphabetical, this returns the null page.
 func PageIdForLetter(r rune) PageId {
+	// vim uses "+" and "*" registers for the system clipboard.
+	// The reason there are two registers is that historically X11 had multiple clipboards.
+	// Since we don't integrate with X11, we just map both registers to the same clipboard page.
+	if r == '+' || r == '*' {
+		return PageSystemClipboard
+	}
 	if r < 'a' || r > 'z' {
 		return PageNull
 	}

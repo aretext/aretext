@@ -51,6 +51,16 @@ func TestPageIdForLetter(t *testing.T) {
 			letter:       '!',
 			expectedPage: PageNull,
 		},
+		{
+			name: "system clipboard (*)",
+			letter: '*',
+			expectedPage: PageSystem,
+		},
+		{
+			name: "system clipboard (+)",
+			letter: '+',
+			expectedPage: PageSystem,
+		},
 	}
 
 	for _, tc := range testCases {

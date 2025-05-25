@@ -15,7 +15,7 @@ const (
 	PageShellCmdOutput
 
 	// System clipboard.
-	PageSystemClipboard
+	PageSystem
 
 	// Named pages "a" through "z".
 	PageLetterA
@@ -53,7 +53,7 @@ func PageIdForLetter(r rune) PageId {
 	// The reason there are two registers is that historically X11 had multiple clipboards.
 	// Since we don't integrate with X11, we just map both registers to the same clipboard page.
 	if r == '+' || r == '*' {
-		return PageSystemClipboard
+		return PageSystem
 	}
 	if r < 'a' || r > 'z' {
 		return PageNull

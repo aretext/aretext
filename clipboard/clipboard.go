@@ -81,14 +81,36 @@ func New() *C {
 }
 
 // Set stores a string in a page, replacing the prior contents.
-func (c *C) Set(p PageId, pc PageContent) {
+func (c *C) Set(p PageId, pc PageContent) error {
 	if p == PageNull {
-		return
+		return nil
 	}
+
+	if p == PageSystem {
+		if err := setInSystemClipboard(pc.Text); err != nil {
+			return err
+		}
+		c.pages[p] = PageContent{Linewise: pc.Linewise}
+		return nil
+	}
+
 	c.pages[p] = pc
+	return nil
 }
 
 // Get retrieves the contents of a page.
-func (c *C) Get(p PageId) PageContent {
-	return c.pages[p]
+func (c *C) Get(p PageId) (PageContent, error) {
+	if p == PageSystem {
+		text, err := getFromSystemClipboard()
+		if err != nil {
+			return PageContent{}, err
+		}
+		pc := PageContent{
+			Text:     text,
+			Linewise: c.pages[p].Linewise,
+		}
+		return pc, nil
+	}
+
+	return c.pages[p], nil
 }

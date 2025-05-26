@@ -11,9 +11,6 @@ const (
 	// The default page stores the contents of the most recent delete or yank operation.
 	PageDefault
 
-	// Output of the last shell command inserted into the document.
-	PageShellCmdOutput
-
 	// Named pages "a" through "z".
 	PageLetterA
 	PageLetterB

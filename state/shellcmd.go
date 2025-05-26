@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
@@ -173,16 +174,40 @@ func countBytesBetweenPositions(textTree *text.Tree, startPos, endPos uint64) ui
 }
 
 func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
-	page := clipboard.PageContent{Text: shellCmdOutput}
-	state.clipboard.Set(clipboard.PageShellCmdOutput, page)
-
 	BeginUndoEntry(state)
+
+	tree := state.documentBuffer.textTree
+	pos := state.documentBuffer.cursor.position
 	if state.documentBuffer.selector.Mode() == selection.ModeNone {
-		PasteAfterCursor(state, clipboard.PageShellCmdOutput)
+		// If there isn't any selection, then the text should be inserted
+		// immediately *after* the cursor position.
+		//
+		// This is more intuitive when inserting text at the end of a line,
+		// Escape to normal mode will place the cursor on the last
+		// character of the line. Executing a shell cmd to insert text
+		// should insert after the last character in the line, not before.
+		pos = locate.NextCharInLine(tree, 1, true, pos)
 	} else {
+		// If there is a selection, delete it before inserting.
+		// Deleting the selection moves the cursor, so insert text at the updated
+		// cursor position.
 		deleteCurrentSelection(state)
-		PasteBeforeCursor(state, clipboard.PageShellCmdOutput)
+		pos = state.documentBuffer.cursor.position
 	}
+
+	err := insertTextAtPosition(state, shellCmdOutput, pos, true)
+	if err != nil {
+		// This shouldn't happen because shellCmdOutput should already
+		// have been validated as utf-8.
+		panic(err)
+	}
+
+	posAfterInsert := pos + uint64(utf8.RuneCountInString(shellCmdOutput))
+	MoveCursor(state, func(params LocatorParams) uint64 {
+		newPos := locate.PrevChar(params.TextTree, 1, posAfterInsert)
+		return locate.ClosestCharOnLine(params.TextTree, newPos)
+	})
+
 	CommitUndoEntry(state)
 
 	setInputMode(state, InputModeNormal)

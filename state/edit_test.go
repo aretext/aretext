@@ -94,6 +94,15 @@ func TestInsertText(t *testing.T) {
 			expectedCursor: cursorState{position: 11},
 			expectedText:   "a丂丄丅丆丏 ¢ह€한bc",
 		},
+		{
+			name:          "invalid UTF-8",
+			initialCursor: cursorState{position: 0},
+			inputString:   "",
+			// 0xff is invalid UTF-8
+			insertText:     string([]byte{'H', 'i', 0xff, '!'}),
+			expectedCursor: cursorState{position: 4},
+			expectedText:   "Hi�!",
+		},
 	}
 
 	for _, tc := range testCases {

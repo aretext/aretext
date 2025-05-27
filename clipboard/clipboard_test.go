@@ -20,7 +20,7 @@ func TestClipboardPageDefault(t *testing.T) {
 	assert.Equal(t, PageContent{Text: "abcd"}, c.Get(PageDefault))
 }
 
-func TestPageIdForLetter(t *testing.T) {
+func TestPageIdForInputRune(t *testing.T) {
 	testCases := []struct {
 		name         string
 		letter       rune
@@ -55,7 +55,7 @@ func TestPageIdForLetter(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			page := PageIdForLetter(tc.letter)
+			page := PageIdForInputRune(tc.letter)
 			assert.Equal(t, tc.expectedPage, page)
 		})
 	}

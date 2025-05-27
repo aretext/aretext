@@ -250,7 +250,7 @@ func eventsToClipboardPage(events []engine.Event) clipboard.PageId {
 	if len(events) != 1 {
 		return clipboard.PageNull
 	}
-	return clipboard.PageIdForLetter(engineEventToRune(events[0]))
+	return clipboard.PageIdForInputRune(engineEventToRune(events[0]))
 }
 
 func eventsToChar(events []engine.Event) rune {

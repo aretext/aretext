@@ -40,9 +40,10 @@ const (
 	PageLetterZ
 )
 
-// PageIdForLetter returns the page named by a letter "a" to "z".
-// If the rune is non-alphabetical, this returns the null page.
-func PageIdForLetter(r rune) PageId {
+// PageIdForInputRune returns the page named by a rune typed after '"'
+// (e.g. `"ay" to yank from page "a").
+// If the input rune does not match any clipboard page, return PageNull.
+func PageIdForInputRune(r rune) PageId {
 	if r < 'a' || r > 'z' {
 		return PageNull
 	}

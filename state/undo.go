@@ -41,10 +41,7 @@ func Undo(state *EditorState) {
 
 	for _, op := range undoOps {
 		log.Printf("Undo operation: %#v\n", op)
-		if err := applyOpFromUndoLog(state, op); err != nil {
-			log.Printf("Could not apply undo op %v: %v\n", op, err)
-			continue
-		}
+		applyOpFromUndoLog(state, op)
 	}
 
 	MoveCursor(state, func(LocatorParams) uint64 {
@@ -61,10 +58,7 @@ func Redo(state *EditorState) {
 
 	for _, op := range redoOps {
 		log.Printf("Redo operation: %#v\n", op)
-		if err := applyOpFromUndoLog(state, op); err != nil {
-			log.Printf("Could not apply redo op %v: %v\n", op, err)
-			continue
-		}
+		applyOpFromUndoLog(state, op)
 	}
 
 	MoveCursor(state, func(LocatorParams) uint64 {
@@ -72,12 +66,11 @@ func Redo(state *EditorState) {
 	})
 }
 
-func applyOpFromUndoLog(state *EditorState, op undo.Op) error {
+func applyOpFromUndoLog(state *EditorState, op undo.Op) {
 	pos := op.Position()
 	if s := op.TextToInsert(); len(s) > 0 {
-		return insertTextAtPosition(state, s, pos, false)
+		insertTextAtPosition(state, s, pos, false)
 	} else if n := op.NumRunesToDelete(); n > 0 {
 		deleteRunes(state, pos, uint64(n), false)
 	}
-	return nil
 }

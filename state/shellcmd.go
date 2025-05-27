@@ -195,12 +195,7 @@ func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 		pos = state.documentBuffer.cursor.position
 	}
 
-	err := insertTextAtPosition(state, shellCmdOutput, pos, true)
-	if err != nil {
-		// This shouldn't happen because shellCmdOutput should already
-		// have been validated as utf-8.
-		panic(err)
-	}
+	insertTextAtPosition(state, shellCmdOutput, pos, true)
 
 	posAfterInsert := pos + uint64(utf8.RuneCountInString(shellCmdOutput))
 	MoveCursor(state, func(params LocatorParams) uint64 {

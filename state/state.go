@@ -21,7 +21,7 @@ type EditorState struct {
 	documentLoadCount         int
 	inputMode                 InputMode
 	documentBuffer            *BufferState
-	clipboard                 *clipboard.C
+	clipboard                 *clipboard.Clipboard
 	fileWatcher               *file.Watcher
 	fileTimeline              *file.Timeline
 	menu                      *MenuState

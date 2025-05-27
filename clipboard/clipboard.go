@@ -56,20 +56,20 @@ type PageContent struct {
 	Linewise bool
 }
 
-// C represents a clipboard.
+// Clipboard represents a clipboard.
 // The clipboard consists of distinct pages, each of which can store string content.
-type C struct {
+type Clipboard struct {
 	pages map[PageId]PageContent
 }
 
 // New constructs a new, empty clipboard.
-func New() *C {
+func New() *Clipboard {
 	pages := make(map[PageId]PageContent, 0)
-	return &C{pages}
+	return &Clipboard{pages}
 }
 
 // Set stores a string in a page, replacing the prior contents.
-func (c *C) Set(p PageId, pc PageContent) {
+func (c *Clipboard) Set(p PageId, pc PageContent) {
 	if p == PageNull {
 		return
 	}
@@ -77,6 +77,6 @@ func (c *C) Set(p PageId, pc PageContent) {
 }
 
 // Get retrieves the contents of a page.
-func (c *C) Get(p PageId) PageContent {
+func (c *Clipboard) Get(p PageId) PageContent {
 	return c.pages[p]
 }

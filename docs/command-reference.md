@@ -147,7 +147,8 @@ Commands that interact with the clipboard accept a *clipboard page* prefix of th
 | redo                                                            | ctrl-r                    |                       |
 | visual mode charwise                                            | v                         |                       |
 | visual mode linewise                                            | V                         |                       |
-| repeat last action                                              | .                         |                       |
+| repeat last action                                              | .                         | count                 |
+| replay macro                                                    | @                         | count                 |
 
 Visual Mode Commands
 --------------------

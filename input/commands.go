@@ -1506,6 +1506,15 @@ func NormalModeCommands() []Command {
 					addToMacro{})
 			},
 		},
+		{
+			Name: "replay macro (@)",
+			BuildExpr: func() engine.Expr {
+				return cmdExpr("@", "", captureOpts{count: true})
+			},
+			BuildAction: func(ctx Context, p CommandParams) Action {
+				return ReplayRecordedUserMacro(p.Count)
+			},
+		},
 	}...)
 }
 

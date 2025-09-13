@@ -84,7 +84,7 @@ func TestRecordAndReplayUserMacro(t *testing.T) {
 	}, state.StatusMsg())
 
 	assert.Equal(t, 0, len(logger.logEntries))
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 	assert.Equal(t, StatusMsg{
 		Style: StatusMsgStyleSuccess,
 		Text:  "Replayed macro",
@@ -96,6 +96,50 @@ func TestRecordAndReplayUserMacro(t *testing.T) {
 	assert.Equal(t, expected, logger.logEntries)
 }
 
+func TestRecordAndReplayUserMacroWithCount(t *testing.T) {
+	var logger actionLogger
+	state := NewEditorState(100, 100, nil, nil)
+
+	ToggleUserMacroRecording(state)
+	assert.Equal(t, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  "Started recording macro",
+	}, state.StatusMsg())
+
+	AddToRecordingUserMacro(state, logger.buildAction("a"))
+	AddToRecordingUserMacro(state, logger.buildAction("b"))
+
+	ToggleUserMacroRecording(state)
+	assert.Equal(t, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  "Recorded macro",
+	}, state.StatusMsg())
+
+	assert.Equal(t, 0, len(logger.logEntries))
+	ReplayRecordedUserMacro(state, 3) // Replay three times.
+	assert.Equal(t, StatusMsg{
+		Style: StatusMsgStyleSuccess,
+		Text:  "Replayed macro",
+	}, state.StatusMsg())
+	expected := []actionLogEntry{
+		// First time.
+		{name: "a", isReplayingUserMacro: true},
+		{name: "b", isReplayingUserMacro: true},
+		// Second time.
+		{name: "a", isReplayingUserMacro: true},
+		{name: "b", isReplayingUserMacro: true},
+		// Third time.
+		{name: "a", isReplayingUserMacro: true},
+		{name: "b", isReplayingUserMacro: true},
+	}
+	assert.Equal(t, expected, logger.logEntries)
+
+	// Replay last action should repeat it three more times.
+	ReplayLastActionMacro(state, 1)
+	expected = append(expected, expected...)
+	assert.Equal(t, expected, logger.logEntries)
+}
+
 func TestLastActionIsUserMacro(t *testing.T) {
 	var logger actionLogger
 	state := NewEditorState(100, 100, nil, nil)
@@ -103,7 +147,7 @@ func TestLastActionIsUserMacro(t *testing.T) {
 	AddToRecordingUserMacro(state, logger.buildAction("a"))
 	AddToRecordingUserMacro(state, logger.buildAction("b"))
 	ToggleUserMacroRecording(state)
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 	ReplayLastActionMacro(state, 1)
 	expected := []actionLogEntry{
 		{name: "a", isReplayingUserMacro: true},
@@ -135,7 +179,7 @@ func TestCancelUserMacro(t *testing.T) {
 	}, state.StatusMsg())
 
 	// Original macro should be preserved.
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 	expected := []actionLogEntry{
 		{name: "a", isReplayingUserMacro: true},
 		{name: "b", isReplayingUserMacro: true},
@@ -146,7 +190,7 @@ func TestCancelUserMacro(t *testing.T) {
 func TestReplayWithNoUserMacroRecorded(t *testing.T) {
 	var logger actionLogger
 	state := NewEditorState(100, 100, nil, nil)
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 	assert.Equal(t, 0, len(logger.logEntries))
 	assert.Equal(t, StatusMsg{
 		Style: StatusMsgStyleError,
@@ -165,7 +209,7 @@ func TestReplayUserMacroWhileRecordingUserMacro(t *testing.T) {
 
 	// Record a second macro, try to replay while recording.
 	ToggleUserMacroRecording(state)
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 
 	// Expect an error status.
 	assert.Equal(t, StatusMsg{
@@ -216,7 +260,7 @@ func TestReplayCheckpointUndo(t *testing.T) {
 	ToggleUserMacroRecording(state)
 
 	// Replay the macro.
-	ReplayRecordedUserMacro(state)
+	ReplayRecordedUserMacro(state, 1)
 	assert.Equal(t, "ab", state.documentBuffer.textTree.String())
 
 	// Undo to the last checkpoint, which should be at the start of the macro.

@@ -102,7 +102,7 @@ func AddToRecordingUserMacro(s *EditorState, action MacroAction) {
 
 // ReplayRecordedUserMacro replays the recorded user-defined macro.
 // If no macro has been recorded, this shows an error status msg.
-func ReplayRecordedUserMacro(s *EditorState) {
+func ReplayRecordedUserMacro(s *EditorState, count uint64) {
 	m := &s.macroState
 
 	if m.isRecordingUserMacro {
@@ -138,9 +138,11 @@ func ReplayRecordedUserMacro(s *EditorState) {
 		BeginUndoEntry(s)
 		s.macroState.isReplayingUserMacro = true
 
-		log.Printf("Replaying actions from user macro...\n")
-		for _, action := range m.userMacroActions {
-			action(s)
+		log.Printf("Replaying actions from user macro %d times...\n", count)
+		for range count {
+			for _, action := range m.userMacroActions {
+				action(s)
+			}
 		}
 		log.Printf("Finished replaying actions from user macro\n")
 

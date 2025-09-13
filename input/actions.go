@@ -1057,3 +1057,9 @@ func ReplayLastActionMacro(count uint64) Action {
 		state.ReplayLastActionMacro(s, count)
 	}
 }
+
+func ReplayRecordedUserMacro(count uint64) Action {
+	return func(s *state.EditorState) {
+		state.ReplayRecordedUserMacro(s, count)
+	}
+}

@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/gdamore/tcell/v2 v2.9.0
 	github.com/google/renameio/v2 v2.0.0
-	github.com/mattn/go-runewidth v0.0.16
+	github.com/mattn/go-runewidth v0.0.17
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v3 v3.0.1

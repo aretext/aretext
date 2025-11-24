@@ -56,6 +56,7 @@ func (r *ScreenRegion) GetContent(x, y int) (mainc rune, combc []rune, style tce
 		return 0, nil, tcell.StyleDefault
 	}
 
+	//lint:ignore SA1019 Will be replaced soon
 	mainc, combc, style, _ = r.screen.GetContent(x+r.x, y+r.y)
 	return mainc, combc, style
 }

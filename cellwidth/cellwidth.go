@@ -1,28 +1,8 @@
 package cellwidth
 
 import (
-	"unicode"
-
-	runewidth "github.com/mattn/go-runewidth"
-
-	"github.com/aretext/aretext/text/segment"
+	"github.com/rivo/uniseg"
 )
-
-// RuneWidth returns the width in cells of an individual rune.
-// Non-displayable characters and non-spacing marks are assigned a width of zero.
-// Full-width East Asian characters are assigned a width of one.
-func RuneWidth(r rune) uint64 {
-	// Skip non-spacing marks.
-	if unicode.Is(unicode.Mn, r) {
-		return 0
-	}
-
-	// The go-runewidth library handles East Asian characters.
-	// tcell also uses this library internally to calculate the cell width,
-	// and it's important that we are consistent with tcell (otherwise strange
-	// display artifacts can occur).
-	return uint64(runewidth.RuneWidth(r))
-}
 
 // GraphemeClusterWidth returns the width in cells of a grapheme cluster.
 // It attempts to handle combining characters, emoji, and regional indicators reasonably,
@@ -43,30 +23,11 @@ func GraphemeClusterWidth(gc []rune, offsetInLine uint64, tabSize uint64) uint64
 		return nextTabPosition - offsetInLine
 	}
 
-	if isEmojiVariationSequence(gc) {
-		// Most terminals render a character followed by
-		// the emoji presentation selector as an icon occupying two cells.
-		return 2
-	}
-
-	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
-		return RuneWidth(gc[0])
-	}
-
-	w := uint64(0)
-	for _, r := range gc {
-		w += RuneWidth(r)
-	}
-	return w
-}
-
-// Emoji variation selectors modify the appearance of emojis.
-// http://www.unicode.org/reports/tr51/#Emoji_Variation_Sequences
-const emojiPresentationSelector = 0xFE0F // U+FE0F VARIATION SELECTOR-16 (VS16)
-
-func isEmojiVariationSequence(gc []rune) bool {
-	if len(gc) <= 1 {
-		return false
-	}
-	return gc[len(gc)-1] == emojiPresentationSelector
+	// It is very important that the cell width matches what tcell expects.
+	// Since version 2.11, tcell uses rivo/uniseg to determine cell width,
+	// so we do the same. Unfortunately, this requires converting the
+	// grapheme cluster []rune to string (which uniseg then decodes back to
+	// runes internally), but there's currently no other mechanism available.
+	width := uniseg.StringWidth(string(gc))
+	return uint64(width)
 }

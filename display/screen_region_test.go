@@ -12,6 +12,12 @@ func withSimScreen(t *testing.T, f func(tcell.SimulationScreen)) {
 	s := tcell.NewSimulationScreen("")
 	require.NotNil(t, s)
 	err := s.Init()
+
+	// Sometime between tcell v2.9 and 2.12 tcell simulation screen went from
+	// " " to "X" as the default value of each cell. Restore the old behavior
+	// by explicitly clearning the screen before each test.
+	s.Clear()
+
 	require.NoError(t, err)
 	defer s.Fini()
 	f(s)

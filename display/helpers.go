@@ -73,34 +73,9 @@ func drawGraphemeCluster(
 		if gc[0] == ' ' && showSpaces {
 			sr.SetContent(startCol, row, tcell.RuneBullet, nil, style.Dim(true))
 		}
-
-		return
-	}
-
-	// Emoji and regional indicator sequences are usually rendered using the
-	// width of the first rune.  This won't support every terminal, but it's probably
-	// the best we can do without knowing how the terminal will render the glyphs.
-	if segment.GraphemeClusterIsEmoji(gc) || segment.GraphemeClusterIsRegionalIndicator(gc) {
+	} else {
+		// For everything else, tcell expects the grapheme cluster contents to be
+		// written into the first of the cell(s) occupied by the gc.
 		sr.SetContent(col, row, gc[0], gc[1:], style)
-		return
-	}
-
-	// For other sequences, we break the grapheme cluster into cells.
-	// Each cell starts with a main rune, followed by zero or more combining runes.
-	// In most cases, the entire grapheme cluster will fit in a single cell,
-	// but there are exceptions (for example, some Thai sequences).
-	i := 0
-	for i < len(gc) {
-		j := i + 1
-		for j < len(gc) {
-			r := gc[j]
-			if cellwidth.RuneWidth(r) > 0 {
-				break
-			}
-			j++
-		}
-		sr.SetContent(col, row, gc[i], gc[i+1:j], style)
-		col += int(cellwidth.RuneWidth(gc[i]))
-		i = j
 	}
 }

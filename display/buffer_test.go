@@ -177,7 +177,8 @@ func TestDrawBuffer(t *testing.T) {
 			name:        "emoji presentation selector",
 			inputString: "ℹ️ abc",
 			expectedContents: [][]rune{
-				{'\u2139', ' ', ' ', 'a', 'b', 'c', ' ', ' ', ' ', ' '},
+				// 'X' after the emoji is the tcell simulation screen "fill" character.
+				{'\u2139', 'X', ' ', 'a', 'b', 'c', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -246,7 +247,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 			name:        "thai",
 			inputString: "\u0E04\u0E49\u0E33",
 			expectedCellRunes: [][]rune{
-				{'\u0E04', '\u0E49'}, {'\u0E33'},
+				{'\u0E04', '\u0E49', '\u0E33'},
 			},
 		},
 		{
@@ -263,7 +264,8 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 			name:        "regional indicator",
 			inputString: "\U0001f1fa\U0001f1f8 (usa!)",
 			expectedCellRunes: [][]rune{
-				{'\U0001f1fa', '\U0001f1f8'},
+				// 'X' after the RI is the tcell simulation screen "fill" character.
+				{'\U0001f1fa', '\U0001f1f8'}, {'X'},
 				{' '}, {'('}, {'u'}, {'s'}, {'a'}, {'!'}, {')'},
 			},
 		},

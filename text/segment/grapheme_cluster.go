@@ -292,13 +292,3 @@ func (g *ReverseGraphemeClusterIter) lookaheadEvenRI() bool {
 
 	return riCount%2 == 0
 }
-
-// GraphemeClusterIsEmoji checks whether the grapheme cluster represents an emoji.
-func GraphemeClusterIsEmoji(gc []rune) bool {
-	return len(gc) > 0 && gbPropForRune(gc[0]) == gbPropExtended_Pictographic
-}
-
-// GraphemeClusterIsRegionalIndicator checks whether the grapheme cluster represents a regional indicator (usually rendered as a flag).
-func GraphemeClusterIsRegionalIndicator(gc []rune) bool {
-	return len(gc) > 0 && gbPropForRune(gc[0]) == gbPropRegional_Indicator
-}

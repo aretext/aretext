@@ -128,7 +128,7 @@ func TestGraphemeClusterWidth(t *testing.T) {
 		{
 			name:          "region (usa)",
 			gc:            []rune{'\U0001f1fa', '\U0001f1f8'},
-			expectedWidth: 1,
+			expectedWidth: 2,
 		},
 		{
 			name:          "emoji presentation selector",

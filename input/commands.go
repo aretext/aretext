@@ -98,7 +98,7 @@ func cursorCommands() []Command {
 		{
 			Name: "cursor back (backspace)",
 			BuildExpr: func() engine.Expr {
-				return verbCountThenExpr(altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2)))
+				return verbCountThenExpr(keyExpr(tcell.KeyBackspace))
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(CursorBack(p.Count))
@@ -1860,7 +1860,7 @@ func InsertModeCommands() []Command {
 		{
 			Name: "delete prev char",
 			BuildExpr: func() engine.Expr {
-				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+				return keyExpr(tcell.KeyBackspace)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return decorate(DeletePrevChar(clipboard.PageNull))
@@ -1991,7 +1991,7 @@ func MenuModeCommands() []Command {
 		{
 			Name: "delete char from menu query",
 			BuildExpr: func() engine.Expr {
-				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+				return keyExpr(tcell.KeyBackspace)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return DeleteRuneFromMenuSearch
@@ -2039,7 +2039,7 @@ func SearchModeCommands() []Command {
 		{
 			Name: "delete char from search query",
 			BuildExpr: func() engine.Expr {
-				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+				return keyExpr(tcell.KeyBackspace)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				// This returns the input mode to normal if the search query is empty.
@@ -2104,7 +2104,7 @@ func TextFieldCommands() []Command {
 		{
 			Name: "delete char from textfield",
 			BuildExpr: func() engine.Expr {
-				return altExpr(keyExpr(tcell.KeyBackspace), keyExpr(tcell.KeyBackspace2))
+				return keyExpr(tcell.KeyBackspace)
 			},
 			BuildAction: func(ctx Context, p CommandParams) Action {
 				return state.DeleteRuneFromTextField

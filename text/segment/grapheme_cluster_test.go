@@ -44,15 +44,15 @@ func TestGraphemeClusterIterPastEOF(t *testing.T) {
 	seg := Empty()
 	err := iter.NextSegment(seg)
 	require.NoError(t, err)
-	assert.Equal(t, []rune{'a'}, seg.Runes())
+	assert.Equal(t, []byte("a"), seg.Bytes())
 
 	err = iter.NextSegment(seg)
 	require.NoError(t, err)
-	assert.Equal(t, []rune{'b'}, seg.Runes())
+	assert.Equal(t, []byte("b"), seg.Bytes())
 
 	err = iter.NextSegment(seg)
 	require.NoError(t, err)
-	assert.Equal(t, []rune{'c'}, seg.Runes())
+	assert.Equal(t, []byte("c"), seg.Bytes())
 
 	err = iter.NextSegment(seg)
 	assert.Equal(t, io.EOF, err)
@@ -72,7 +72,7 @@ func TestGraphemeClusterIterUnicodeTestCases(t *testing.T) {
 					require.NoError(t, err, tc.description)
 				}
 				segRunes := make([]rune, seg.NumRunes())
-				copy(segRunes, seg.Runes())
+				copy(segRunes, []rune(string(seg.Bytes())))
 				segments = append(segments, segRunes)
 			}
 			assert.Equal(t, tc.segments, segments, tc.description)
@@ -107,7 +107,7 @@ func TestReverseGraphemeClusterIterUnicodeTestCases(t *testing.T) {
 					require.NoError(t, err, tc.description)
 				}
 				segRunes := make([]rune, seg.NumRunes())
-				copy(segRunes, seg.Runes())
+				copy(segRunes, []rune(string(seg.Bytes())))
 				segments = append(segments, segRunes)
 			}
 			assert.Equal(t, tc.segments, reverseSegments(segments), tc.description)

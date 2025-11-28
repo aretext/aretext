@@ -294,7 +294,7 @@ func TestWrappedLineIter(t *testing.T) {
 					break
 				}
 				require.NoError(t, err)
-				lines = append(lines, string(seg.Runes()))
+				lines = append(lines, string(seg.Bytes()))
 			}
 			assert.Equal(t, tc.expectedLines, lines)
 		})

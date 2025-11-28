@@ -41,7 +41,7 @@ func (seg *Segment) ReverseRunes() *Segment {
 	i := 0
 	for i < len(seg.bytes) {
 		r, n := utf8.DecodeRune(seg.bytes[i:])
-		utf8.EncodeRune(reversed[len(reversed)-i:], r)
+		utf8.EncodeRune(reversed[len(reversed)-i-n:], r)
 		i += n
 	}
 	seg.bytes = reversed
@@ -51,6 +51,12 @@ func (seg *Segment) ReverseRunes() *Segment {
 // NumRunes returns the number of runes in the segment.
 func (seg *Segment) NumRunes() uint64 {
 	return uint64(utf8.RuneCount(seg.bytes))
+}
+
+// Bytes returns the UTF-8 encoded bytes of the segment.
+// Callers should not modify the returned slice.
+func (seg *Segment) Bytes() []byte {
+	return seg.bytes
 }
 
 // HasNewline checks whether a segment contains a line feed rune.

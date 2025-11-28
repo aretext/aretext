@@ -29,9 +29,9 @@ func (seg *Segment) Clear() *Segment {
 func (seg *Segment) Append(r rune) *Segment {
 	var b [utf8.UTFMax]byte
 	n := utf8.EncodeRune(b[:], r)
-	seg.bytes = append(seg.bytes, b[:n]...)
 	seg.hasNewline = seg.hasNewline || bool(r == '\n')
 	seg.isWhitespace = unicode.IsSpace(r) && (len(seg.bytes) == 0 || seg.isWhitespace)
+	seg.bytes = append(seg.bytes, b[:n]...)
 	return seg
 }
 

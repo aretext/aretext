@@ -31,13 +31,14 @@ func (seg *Segment) Append(r rune) *Segment {
 
 // ReverseRunes reverses the order of the runes in the segment.
 func (seg *Segment) ReverseRunes() *Segment {
+	reversed := make([]byte, len(seg.bytes))
 	i := 0
-	j := len(seg.runes) - 1
-	for i < j {
-		seg.runes[i], seg.runes[j] = seg.runes[j], seg.runes[i]
-		i++
-		j--
+	for i < len(seg.bytes) {
+		r, n := utf8.DecodeRune(seg.bytes[i:])
+		utf8.EncodeRune(reversed[len(reversed)-i:], r)
+		i += n
 	}
+	seg.bytes = reversed
 	return seg
 }
 

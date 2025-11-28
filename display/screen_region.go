@@ -22,10 +22,11 @@ func (r *ScreenRegion) Clear() {
 
 // Fill fills a rectangular region of the screen with a character.
 func (r *ScreenRegion) Fill(c rune, style tcell.Style) {
+	str := string(c)
 	x, y := 0, 0
 	for {
-		r.SetContent(x, y, c, nil, style)
-		x++
+		_, width := r.Put(x, y, str, style)
+		x += width
 		if x >= r.width {
 			x = 0
 			y++
@@ -37,28 +38,29 @@ func (r *ScreenRegion) Fill(c rune, style tcell.Style) {
 	}
 }
 
-// SetContent sets the content of a cell in the screen region.
+// Put outputs a single grapheme cluster to the screen.
 // The x and y coordinates are relative to the origin of the region.
 // Attempts to set content outside the region or screen are ignored.
-func (r *ScreenRegion) SetContent(x int, y int, mainc rune, combc []rune, style tcell.Style) {
+func (r *ScreenRegion) Put(x int, y int, str string, style tcell.Style) (remain string, width int) {
 	if x < 0 || y < 0 || x >= r.width || y >= r.height {
 		return
 	}
 
-	r.screen.SetContent(x+r.x, y+r.y, mainc, combc, style)
+	return r.screen.Put(x+r.x, y+r.y, str, style)
 }
 
-// GetContent returns the content of a cell in the screen region.
-// The x and y coordinates are relative to the origin of the region.
-// If the coordinates are out of range, zero values will be returned.
-func (r *ScreenRegion) GetContent(x, y int) (mainc rune, combc []rune, style tcell.Style) {
-	if x < 0 || y < 0 || x >= r.width || y >= r.height {
-		return 0, nil, tcell.StyleDefault
+// PutStrStyled prints the string clipped to the screen region without wrapping.
+func (r *ScreenRegion) PutStrStyled(x int, y int, str string, style tcell.Style) int {
+	width := 0
+	for str != "" && x < r.width && y < r.height {
+		str, width = r.Put(x, y, str, style)
+		if width == 0 {
+			break
+		}
+		x += width
 	}
 
-	//lint:ignore SA1019 Will be replaced soon
-	mainc, combc, style, _ = r.screen.GetContent(x+r.x, y+r.y)
-	return mainc, combc, style
+	return x
 }
 
 // SetStyle sets the style of a cell without changing its content.
@@ -68,8 +70,8 @@ func (r *ScreenRegion) SetStyleInCell(x, y int, style tcell.Style) {
 		return
 	}
 
-	mainc, combc, _ := r.GetContent(x, y)
-	r.SetContent(x, y, mainc, combc, style)
+	str, _, _ := r.screen.Get(r.x+x, r.y+y)
+	r.screen.Put(r.x+x, r.y+y, str, style)
 }
 
 // HideCursor prevents the cursor from being displayed.

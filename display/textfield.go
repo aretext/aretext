@@ -23,13 +23,13 @@ func DrawTextField(screen tcell.Screen, palette *Palette, textfield *state.TextF
 
 	// Draw the prompt in the first row.
 	promptText := textfield.PromptText()
-	drawStringNoWrap(sr, promptText, 0, 0, palette.StyleForTextFieldPrompt())
+	sr.PutStrStyled(0, 0, promptText, palette.StyleForTextFieldPrompt())
 
 	// Draw the user input on the second row, with the cursor at the end.
-	col := drawStringNoWrap(sr, textfield.InputText(), 0, 1, palette.StyleForTextFieldInputText())
+	col := sr.PutStrStyled(0, 1, textfield.InputText(), palette.StyleForTextFieldInputText())
 
 	// Append autocomplete suffix (could be empty).
-	col = drawStringNoWrap(sr, textfield.AutocompleteSuffix(), col, 1, palette.StyleForTextFieldInputText())
+	col = sr.PutStrStyled(col, 1, textfield.AutocompleteSuffix(), palette.StyleForTextFieldInputText())
 
 	// Cursor the end of user input + autocomplete suffix.
 	sr.ShowCursor(col, 1)

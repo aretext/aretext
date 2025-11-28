@@ -32,7 +32,7 @@ func DrawStatusBar(
 		inputBufferString,
 		isRecordingUserMacro,
 		filePath)
-	drawStringNoWrap(sr, text, 0, 0, style)
+	sr.PutStrStyled(0, 0, text, style)
 }
 
 func statusBarContent(

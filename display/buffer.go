@@ -195,10 +195,7 @@ func drawLineNumIfNecessary(sr *ScreenRegion, palette *Palette, row int, lineNum
 
 	// Right-aligned in the margin, with one space of padding on the right.
 	col := int(lineNumMargin) - 1 - len(lineNumStr)
-	for _, r := range lineNumStr {
-		sr.SetContent(col, row, r, nil, style)
-		col++
-	}
+	sr.PutStrStyled(col, row, lineNumStr, style)
 }
 
 func showCursorInBuffer(sr *ScreenRegion, col int, row int, palette *Palette, inputMode state.InputMode) {

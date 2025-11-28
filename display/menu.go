@@ -68,14 +68,14 @@ func maxNumVisibleItems(numItems int, height int) int {
 
 func drawSearchInput(sr *ScreenRegion, palette *Palette, style state.MenuStyle, query string) {
 	sr.Clear()
-	col := drawStringNoWrap(sr, menuIconForStyle(style), 0, 0, palette.StyleForMenuIcon())
+	col := sr.PutStrStyled(0, 0, menuIconForStyle(style), palette.StyleForMenuIcon())
 	if len(query) == 0 {
 		sr.ShowCursor(col, 0)
-		drawStringNoWrap(sr, menuPromptForStyle(style), col, 0, palette.StyleForMenuPrompt())
+		sr.PutStrStyled(col, 0, menuPromptForStyle(style), palette.StyleForMenuPrompt())
 		return
 	}
 
-	col = drawStringNoWrap(sr, query, col, 0, palette.StyleForMenuQuery())
+	col = sr.PutStrStyled(col, 0, query, palette.StyleForMenuQuery())
 	sr.ShowCursor(col, 0)
 }
 
@@ -118,10 +118,10 @@ func drawMenuItem(sr *ScreenRegion, palette *Palette, item menu.Item, selected b
 
 	col := 2
 	if selected {
-		sr.SetContent(col, 0, '>', nil, palette.StyleForMenuCursor())
+		sr.Put(col, 0, ">", palette.StyleForMenuCursor())
 	}
 	col += 2
 
 	style := palette.StyleForMenuItem(selected)
-	drawStringNoWrap(sr, item.Name, col, 0, style)
+	sr.PutStrStyled(col, 0, item.Name, style)
 }

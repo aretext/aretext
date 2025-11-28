@@ -28,10 +28,10 @@ func (seg *Segment) Clear() *Segment {
 // Append appends a single rune to the end of the segment.
 func (seg *Segment) Append(r rune) *Segment {
 	var b [utf8.UTFMax]byte
-	n := utf8.EncodeRune(b, r)
-	seg.bytes = append(seg.bytes, b[:n])
+	n := utf8.EncodeRune(b[:], r)
+	seg.bytes = append(seg.bytes, b[:n]...)
 	seg.hasNewline = bool(r == '\n')
-	seg.isWhitespace = unicode.IsSpace(r) && (len(seg.bytes) == 0 || seg.isWhitespcae)
+	seg.isWhitespace = unicode.IsSpace(r) && (len(seg.bytes) == 0 || seg.isWhitespace)
 	return seg
 }
 

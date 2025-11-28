@@ -2,27 +2,30 @@ package segment
 
 import (
 	"unicode"
+	"unicode/utf8"
 )
 
 // Segment represents a sequence of runes from a larger text (for example a grapheme cluster).
 type Segment struct {
-	runes []rune
+	bytes []byte
 }
 
 // Empty returns a new, empty segment.
 func Empty() *Segment {
-	return &Segment{runes: make([]rune, 0, 1)}
+	return &Segment{bytes: make([]byte, 0, 1)}
 }
 
 // Clear removes all runes from the segment.
 func (seg *Segment) Clear() *Segment {
-	seg.runes = seg.runes[:0]
+	seg.bytes = seg.bytes[:0]
 	return seg
 }
 
 // Append appends a single rune to the end of the segment.
 func (seg *Segment) Append(r rune) *Segment {
-	seg.runes = append(seg.runes, r)
+	var b [utf8.UTFMax]byte
+	n := utf8.EncodeRune(b, r)
+	seg.bytes = append(seg.bytes, b[:n])
 	return seg
 }
 

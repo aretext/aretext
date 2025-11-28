@@ -3,6 +3,7 @@ package segment
 import (
 	"unicode"
 	"unicode/utf8"
+	"iter"
 )
 
 // Segment represents a sequence of runes from a larger text (for example a grapheme cluster).
@@ -57,6 +58,21 @@ func (seg *Segment) NumRunes() uint64 {
 // Callers should not modify the returned slice.
 func (seg *Segment) Bytes() []byte {
 	return seg.bytes
+}
+
+// IterRunes iterates over the runes in the segment.
+// This can be used in a for loop with range.
+func (s *Segment) IterRunes() iter.Seq[rune] {
+	return func(yield func(rune) bool) {
+		i := 0
+		for i < len(s.bytes) {
+			r, n := utf8.DecodeRune(s.bytes[i:])
+			i += n
+			if !yield(r) {
+				return
+			}
+		}
+	}
 }
 
 // HasNewline checks whether a segment contains a line feed rune.

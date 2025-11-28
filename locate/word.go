@@ -2,6 +2,7 @@ package locate
 
 import (
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
@@ -445,7 +446,7 @@ func isPunct(seg *segment.Segment) bool {
 		return false
 	}
 
-	r := seg.Runes()[0]
+	r, _ := utf8.DecodeRune(seg.Bytes())
 
 	// These ranges are the same as the unicode punctuation class for ASCII characters, except that:
 	// * underscores ('_') are NOT treated as punctuation

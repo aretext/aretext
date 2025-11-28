@@ -2,6 +2,7 @@ package locate
 
 import (
 	"io"
+	"unicode/utf8"
 
 	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/text"
@@ -98,7 +99,7 @@ func NextMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeCha
 		}
 
 		if offset > 0 {
-			for _, r := range seg.Runes() {
+			for r := range seg.IterRunes() {
 				if r == char {
 					matchCount++
 					if matchCount == count {
@@ -136,7 +137,7 @@ func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeCha
 		prevOffset = offset
 		offset += seg.NumRunes()
 
-		for _, r := range seg.Runes() {
+		for r := range seg.IterRunes() {
 			if r == char {
 				matchCount++
 				if matchCount == count {
@@ -202,7 +203,7 @@ func findPrevWhitespaceStartPos(tree *text.Tree, tabSize uint64, pos uint64) uin
 			panic(err)
 		}
 
-		r := seg.Runes()[0]
+		r, _ := utf8.DecodeRune(seg.Bytes())
 		if r != ' ' && r != '\t' {
 			break
 		}

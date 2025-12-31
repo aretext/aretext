@@ -266,14 +266,11 @@ func drawGraphemeCluster(
 // is a unicode space. It's important to check every rune because the unicode
 // grapheme cluster segmentation algorithm allows "extend" runes to follow
 // space characters (for example, to display a combining mark by itself).
+//
+// Tabs or newlines will always be their own grapheme cluster without modifiers
+// because unicode grapheme cluster segmentation rules GB4 and GB5 say
+// you MUST break before and after a control character (tab) or CR/LF (newline).
 func isGraphemeClusterWhitespace(gc []rune) bool {
-	// Always treat tabs as whitespace to ensure the indentation is correct.
-	// This implicitly hides any combining marks following the tab, which isn't quite
-	// correct but simplifies the implementation.
-	if gc[0] == '\t' {
-		return true
-	}
-
 	for _, r := range gc {
 		if !unicode.IsSpace(r) {
 			return false

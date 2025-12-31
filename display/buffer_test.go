@@ -231,8 +231,9 @@ func TestDrawBuffer(t *testing.T) {
 		},
 		{
 			name: "tab with combining mark modifier",
-			// This is a tab with a combining mark macron.
-			// We don't currently support combining marks with tabs, so the macron is hidden.
+			// This is a bit of an edge case, because the combining mark will be put in its
+			// own grapheme cluster following the tab cells, which then gets assigned width=0
+			// and isn't displayed.
 			inputString: "\t\u0304abc",
 			expectedContents: [][]string{
 				{" ", " ", " ", " ", "a", "b", "c", " ", " ", " "},

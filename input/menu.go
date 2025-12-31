@@ -108,6 +108,11 @@ func menuItems(ctx Context) []menu.Item {
 			Action:  state.ToggleShowSpaces,
 		},
 		{
+			Name:    "toggle show unicode",
+			Aliases: []string{"tu"},
+			Action:  state.ToggleShowUnicode,
+		},
+		{
 			Name:    "toggle tab expand",
 			Aliases: []string{"te"},
 			Action:  state.ToggleTabExpand,

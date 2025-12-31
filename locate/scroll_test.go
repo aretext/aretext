@@ -189,10 +189,8 @@ func TestViewOriginAfterScroll(t *testing.T) {
 			tree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
 			wrapConfig := segment.LineWrapConfig{
-				MaxLineWidth: tc.viewWidth,
-				WidthFunc: func(gc []rune, offsetInLine uint64) uint64 {
-					return cellwidth.GraphemeClusterWidth(gc, offsetInLine, 4)
-				},
+				MaxLineWidth:   tc.viewWidth,
+				CellWidthSizer: cellwidth.New(4, false),
 			}
 			updatedViewStartPos := ViewOriginAfterScroll(tc.cursorPos, tree, wrapConfig, tc.viewStartPos, tc.viewHeight)
 			assert.Equal(t, tc.expectedPos, updatedViewStartPos)

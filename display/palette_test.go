@@ -12,6 +12,10 @@ import (
 
 func TestPaletteFromConfigStyles(t *testing.T) {
 	configStyles := map[string]config.StyleConfig{
+		config.StyleEscapedUnicode: {
+			Color: "blue",
+			Bold:  true,
+		},
 		config.StyleTokenCustom1: {
 			Color: "black",
 			Bold:  true,
@@ -56,6 +60,7 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 		textFieldBorderStyle:      s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
+		escapedUnicodeStyle:       s.Foreground(tcell.ColorBlue).Bold(true),
 		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
 			parser.TokenRoleOperator: s.Foreground(tcell.ColorPurple),
 			parser.TokenRoleKeyword:  s.Foreground(tcell.ColorOlive),

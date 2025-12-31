@@ -34,6 +34,7 @@ type Palette struct {
 	textFieldBorderStyle      tcell.Style
 	searchPrefixStyle         tcell.Style
 	searchQueryStyle          tcell.Style
+	escapedUnicodeStyle       tcell.Style
 	tokenRoleStyle            map[parser.TokenRole]tcell.Style
 }
 
@@ -62,6 +63,7 @@ func NewPalette() *Palette {
 		textFieldBorderStyle:      s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
+		escapedUnicodeStyle:       s.Foreground(tcell.ColorBlue),
 		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
 			parser.TokenRoleOperator: s.Foreground(tcell.ColorPurple),
 			parser.TokenRoleKeyword:  s.Foreground(tcell.ColorOlive),
@@ -95,6 +97,8 @@ func NewPaletteFromConfigStyles(styles map[string]config.StyleConfig) *Palette {
 		switch k {
 		case config.StyleLineNum:
 			p.lineNumStyle = s
+		case config.StyleEscapedUnicode:
+			p.escapedUnicodeStyle = s
 		case config.StyleTokenOperator:
 			p.tokenRoleStyle[parser.TokenRoleOperator] = s
 		case config.StyleTokenKeyword:
@@ -233,6 +237,10 @@ func (p *Palette) StyleForSearchPrefix() tcell.Style {
 
 func (p *Palette) StyleForSearchQuery() tcell.Style {
 	return p.searchQueryStyle
+}
+
+func (p *Palette) StyleForEscapedUnicode() tcell.Style {
+	return p.escapedUnicodeStyle
 }
 
 func (p *Palette) StyleForTokenRole(tokenRole parser.TokenRole) tcell.Style {

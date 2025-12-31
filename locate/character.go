@@ -153,12 +153,12 @@ func PrevMatchingCharInLine(tree *text.Tree, char rune, count uint64, includeCha
 
 // PrevAutoIndent locates the previous tab stop if autoIndent is enabled.
 // If autoIndent is disabled or the characters before the cursor are not spaces/tabs, it returns the original position.
-func PrevAutoIndent(tree *text.Tree, autoIndentEnabled bool, tabSize uint64, pos uint64) uint64 {
+func PrevAutoIndent(tree *text.Tree, autoIndentEnabled bool, showUnicode bool, tabSize uint64, pos uint64) uint64 {
 	if !autoIndentEnabled {
 		return pos
 	}
 
-	prevTabAlignedPos := findPrevTabAlignedPos(tree, tabSize, pos)
+	prevTabAlignedPos := findPrevTabAlignedPos(tree, tabSize, showUnicode, pos)
 	prevWhitespaceStartPos := findPrevWhitespaceStartPos(tree, tabSize, pos)
 	if prevTabAlignedPos < prevWhitespaceStartPos {
 		return prevWhitespaceStartPos
@@ -167,7 +167,8 @@ func PrevAutoIndent(tree *text.Tree, autoIndentEnabled bool, tabSize uint64, pos
 	}
 }
 
-func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, startPos uint64) uint64 {
+func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, showUnicode bool, startPos uint64) uint64 {
+	sizer := cellwidth.New(tabSize, showUnicode)
 	pos := StartOfLineAtPos(tree, startPos)
 	reader := tree.ReaderAtPosition(pos)
 	iter := segment.NewGraphemeClusterIter(reader)
@@ -184,7 +185,7 @@ func findPrevTabAlignedPos(tree *text.Tree, tabSize uint64, startPos uint64) uin
 		} else if err != nil {
 			panic(err)
 		}
-		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, tabSize)
+		offset += sizer.GraphemeClusterWidth(seg.Runes(), offset)
 		pos += seg.NumRunes()
 	}
 	return lastAlignedPos

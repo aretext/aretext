@@ -1160,3 +1160,55 @@ func TestShowSpaces(t *testing.T) {
 		})
 	}
 }
+
+func TestShowUnicode(t *testing.T) {
+	testCases := []struct {
+		name             string
+		width, height    int
+		showUnicode      bool
+		inputString      string
+		expectedContents [][]string
+	}{
+		{
+			name:        "render unicode",
+			width:       10,
+			height:      2,
+			showUnicode: false,
+			// emoji "frowning face"
+			inputString: "\u2639",
+			expectedContents: [][]string{
+				{"\u2639", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+			},
+		},
+		{
+			name:        "escape unicode",
+			width:       10,
+			height:      2,
+			showUnicode: true,
+			// emoji "frowning face"
+			inputString: "\u2639",
+			expectedContents: [][]string{
+				{"<", "U", "+", "2", "6", "3", "9", ">", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			withSimScreen(t, func(s tcell.SimulationScreen) {
+				s.SetSize(tc.width, tc.height)
+				drawBuffer(t, s, func(editorState *state.EditorState) {
+					for _, r := range tc.inputString {
+						state.InsertRune(editorState, r)
+					}
+					if tc.showUnicode {
+						state.ToggleShowUnicode(editorState)
+					}
+				})
+				assertCellContents(t, s, tc.expectedContents)
+			})
+		})
+	}
+}

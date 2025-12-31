@@ -11,6 +11,7 @@ const DefaultTabSize = 4
 const DefaultTabExpand = false
 const DefaultShowTabs = false
 const DefaultShowSpaces = false
+const DefaultShowUnicode = false
 const DefaultAutoIndent = false
 const DefaultShowLineNumbers = false
 const DefaultLineWrap = LineWrapCharacter
@@ -32,6 +33,9 @@ type Config struct {
 
 	// If enabled, display space characters in the document.
 	ShowSpaces bool
+
+	// If enabled, show codepoints for non-ascii unicode.
+	ShowUnicode bool
 
 	// If enabled, indent a new line to match indentation of the previous line.
 	AutoIndent bool
@@ -96,28 +100,29 @@ type MenuCommandConfig struct {
 
 // Names of styles that can be overridden by configuration.
 const (
-	StyleLineNum       = "lineNum"
-	StyleTokenOperator = "tokenOperator"
-	StyleTokenKeyword  = "tokenKeyword"
-	StyleTokenNumber   = "tokenNumber"
-	StyleTokenString   = "tokenString"
-	StyleTokenComment  = "tokenComment"
-	StyleTokenCustom1  = "tokenCustom1"
-	StyleTokenCustom2  = "tokenCustom2"
-	StyleTokenCustom3  = "tokenCustom3"
-	StyleTokenCustom4  = "tokenCustom4"
-	StyleTokenCustom5  = "tokenCustom5"
-	StyleTokenCustom6  = "tokenCustom6"
-	StyleTokenCustom7  = "tokenCustom7"
-	StyleTokenCustom8  = "tokenCustom8"
-	StyleTokenCustom9  = "tokenCustom9"
-	StyleTokenCustom10 = "tokenCustom10"
-	StyleTokenCustom11 = "tokenCustom11"
-	StyleTokenCustom12 = "tokenCustom12"
-	StyleTokenCustom13 = "tokenCustom13"
-	StyleTokenCustom14 = "tokenCustom14"
-	StyleTokenCustom15 = "tokenCustom15"
-	StyleTokenCustom16 = "tokenCustom16"
+	StyleLineNum        = "lineNum"
+	StyleEscapedUnicode = "escapedUnicode"
+	StyleTokenOperator  = "tokenOperator"
+	StyleTokenKeyword   = "tokenKeyword"
+	StyleTokenNumber    = "tokenNumber"
+	StyleTokenString    = "tokenString"
+	StyleTokenComment   = "tokenComment"
+	StyleTokenCustom1   = "tokenCustom1"
+	StyleTokenCustom2   = "tokenCustom2"
+	StyleTokenCustom3   = "tokenCustom3"
+	StyleTokenCustom4   = "tokenCustom4"
+	StyleTokenCustom5   = "tokenCustom5"
+	StyleTokenCustom6   = "tokenCustom6"
+	StyleTokenCustom7   = "tokenCustom7"
+	StyleTokenCustom8   = "tokenCustom8"
+	StyleTokenCustom9   = "tokenCustom9"
+	StyleTokenCustom10  = "tokenCustom10"
+	StyleTokenCustom11  = "tokenCustom11"
+	StyleTokenCustom12  = "tokenCustom12"
+	StyleTokenCustom13  = "tokenCustom13"
+	StyleTokenCustom14  = "tokenCustom14"
+	StyleTokenCustom15  = "tokenCustom15"
+	StyleTokenCustom16  = "tokenCustom16"
 )
 
 // StyleConfig is a configuration for how text should be displayed.
@@ -155,6 +160,7 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		TabExpand:       boolOrDefault(m, "tabExpand", DefaultTabExpand),
 		ShowTabs:        boolOrDefault(m, "showTabs", DefaultShowTabs),
 		ShowSpaces:      boolOrDefault(m, "showSpaces", DefaultShowSpaces),
+		ShowUnicode:     boolOrDefault(m, "showUnicode", DefaultShowUnicode),
 		AutoIndent:      boolOrDefault(m, "autoIndent", DefaultAutoIndent),
 		ShowLineNumbers: boolOrDefault(m, "showLineNumbers", DefaultShowLineNumbers),
 		LineNumberMode:  stringOrDefault(m, "lineNumberMode", string(DefaultLineNumberMode)),

@@ -108,6 +108,7 @@ func ReloadDocument(state *EditorState) {
 	oldAutoIndent := state.documentBuffer.autoIndent
 	oldShowTabs := state.documentBuffer.showTabs
 	oldShowSpaces := state.documentBuffer.showSpaces
+	oldShowUnicode := state.documentBuffer.showUnicode
 	oldShowLineNum := state.documentBuffer.showLineNum
 	oldLineNumberMode := state.documentBuffer.lineNumberMode
 
@@ -147,6 +148,7 @@ func ReloadDocument(state *EditorState) {
 	state.documentBuffer.autoIndent = oldAutoIndent
 	state.documentBuffer.showTabs = oldShowTabs
 	state.documentBuffer.showSpaces = oldShowSpaces
+	state.documentBuffer.showUnicode = oldShowUnicode
 	state.documentBuffer.showLineNum = oldShowLineNum
 	state.documentBuffer.lineNumberMode = oldLineNumberMode
 
@@ -258,6 +260,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.tabExpand = cfg.TabExpand
 	state.documentBuffer.showTabs = cfg.ShowTabs
 	state.documentBuffer.showSpaces = cfg.ShowSpaces
+	state.documentBuffer.showUnicode = cfg.ShowUnicode
 	state.documentBuffer.autoIndent = cfg.AutoIndent
 	state.documentBuffer.showLineNum = cfg.ShowLineNumbers
 	state.documentBuffer.lineNumberMode = config.LineNumberMode(cfg.LineNumberMode)

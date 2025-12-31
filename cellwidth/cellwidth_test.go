@@ -139,8 +139,26 @@ func TestGraphemeClusterWidth(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			width := GraphemeClusterWidth(tc.gc, tc.offset, 4)
+			sizer := New(4, false)
+			width := sizer.GraphemeClusterWidth(tc.gc, tc.offset)
 			assert.Equal(t, tc.expectedWidth, width)
 		})
 	}
+}
+
+func TestShowUnicode(t *testing.T) {
+	sizer := New(4, false)
+	sizerWithShowUnicode := New(4, true)
+
+	// emoji "woman technologist with light skin tone"
+	gc := []rune{'\U0001f469', '\U0001f3fb', '\u200d', '\U0001f4bb'}
+
+	// Without escaping, this is an emoji with width=2
+	originalWidth := sizer.GraphemeClusterWidth(gc, 0)
+	assert.Equal(t, originalWidth, uint64(2))
+
+	// With escaping, expect the width of "<U+1F469,U+1F3FB,U+200D,U+1F4BB>"
+	escapedWidth := sizerWithShowUnicode.GraphemeClusterWidth(gc, 0)
+	expected := uint64(len("<U+1F469,U+1F3FB,U+200D,U+1F4BB>"))
+	assert.Equal(t, escapedWidth, expected)
 }

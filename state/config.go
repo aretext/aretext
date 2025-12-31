@@ -12,6 +12,11 @@ func ToggleShowSpaces(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.showSpaces, "Showing spaces", "Hiding spaces")
 }
 
+// ToggleShowUnicode shows or hides escaped unicode codepoints in the document.
+func ToggleShowUnicode(s *EditorState) {
+	toggleFlagAndSetStatus(s, &s.documentBuffer.showUnicode, "Showing unicode", "Hiding unicode")
+}
+
 // ToggleTabExpand toggles whether tabs should be expanded to spaces.
 func ToggleTabExpand(s *EditorState) {
 	toggleFlagAndSetStatus(s, &s.documentBuffer.tabExpand, "Enabled tab expand", "Disabled tab expand")

@@ -10,6 +10,7 @@ This document lists every configuration option in aretext.
 | tabExpand       | boolean          | If true, replace inserted tabs with the equivalent number of spaces.                                                                                                 |
 | showTabs        | boolean          | If true, display tabs in the document.                                                                                                                               |
 | showSpaces      | boolean          | If true, display spaces in the document.                                                                                                                             |
+| showUnicode     | boolean          | If true, display Unicode codepoints for all non-ASCII characters.                                                                                                    |
 | autoIndent      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                                                 |
 | showLineNumbers | boolean          | If true, display line numbers.                                                                                                                                       |
 | lineNumberMode  | enum             | Control how line numbers are displayed. Either "absolute" or "relative" to the cursor.                                                                               |
@@ -66,6 +67,7 @@ The `styles` configuration is an object with keys:
 -	`tokenString`: a string token recognized by the syntax language.
 -	`tokenComment`: a comment token recognized by the syntax language.
 -	`tokenCustom1` through `tokenCustom16`: language-specific tokens recognized by the syntax language.
+-	`escapedUnicode`: escaped Unicode codepoints when `showUnicode` is enabled.
 
 Each style object supports the following (optional) attributes:
 

@@ -634,7 +634,7 @@ func TestPrevAutoIndent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			textTree, err := text.NewTreeFromString(tc.inputString)
 			require.NoError(t, err)
-			actualPos := PrevAutoIndent(textTree, tc.autoIndentEnabled, 4, tc.pos)
+			actualPos := PrevAutoIndent(textTree, tc.autoIndentEnabled, false, 4, tc.pos)
 			assert.Equal(t, tc.expectedPos, actualPos)
 		})
 	}

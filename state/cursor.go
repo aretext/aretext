@@ -90,13 +90,13 @@ func moveCursorToLine(buffer *BufferState, targetLineStartPos uint64) {
 		buffer.textTree,
 		lineStartPos,
 		buffer.cursor,
-		buffer.tabSize)
+		cellwidth.New(buffer.tabSize, buffer.showUnicode))
 
 	newPos, actualOffset := advanceToOffset(
 		buffer.textTree,
 		targetLineStartPos,
 		targetOffset,
-		buffer.tabSize)
+		cellwidth.New(buffer.tabSize, buffer.showUnicode))
 
 	buffer.cursor = cursorState{
 		position:      newPos,
@@ -104,7 +104,7 @@ func moveCursorToLine(buffer *BufferState, targetLineStartPos uint64) {
 	}
 }
 
-func findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cursorState, tabSize uint64) uint64 {
+func findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cursorState, sizer cellwidth.Sizer) uint64 {
 	reader := textTree.ReaderAtPosition(lineStartPos)
 	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
@@ -118,14 +118,14 @@ func findOffsetFromLineStart(textTree *text.Tree, lineStartPos uint64, cursor cu
 			panic(err)
 		}
 
-		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, tabSize)
+		offset += sizer.GraphemeClusterWidth(seg.Runes(), offset)
 		pos += seg.NumRunes()
 	}
 
 	return offset + cursor.logicalOffset
 }
 
-func advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint64, tabSize uint64) (uint64, uint64) {
+func advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint64, sizer cellwidth.Sizer) (uint64, uint64) {
 	reader := textTree.ReaderAtPosition(lineStartPos)
 	segmentIter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
@@ -146,7 +146,7 @@ func advanceToOffset(textTree *text.Tree, lineStartPos uint64, targetOffset uint
 			break
 		}
 
-		gcWidth := cellwidth.GraphemeClusterWidth(seg.Runes(), cellOffset, tabSize)
+		gcWidth := sizer.GraphemeClusterWidth(seg.Runes(), cellOffset)
 		if cellOffset+gcWidth > targetOffset {
 			break
 		}

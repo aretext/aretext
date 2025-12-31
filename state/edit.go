@@ -77,7 +77,7 @@ func deleteToNextNonWhitespace(state *EditorState, startPos uint64) {
 }
 
 func numColsIndentedPrevLine(buffer *BufferState, cursorPos uint64) uint64 {
-	tabSize := buffer.tabSize
+	sizer := cellwidth.New(buffer.tabSize, buffer.showUnicode)
 	lineNum := buffer.textTree.LineNumForPosition(cursorPos)
 	if lineNum == 0 {
 		return 0
@@ -101,7 +101,7 @@ func numColsIndentedPrevLine(buffer *BufferState, cursorPos uint64) uint64 {
 			break
 		}
 
-		numCols += cellwidth.GraphemeClusterWidth(gc, numCols, tabSize)
+		numCols += sizer.GraphemeClusterWidth(gc, numCols)
 	}
 
 	return numCols
@@ -193,6 +193,7 @@ func insertTabsAtPos(state *EditorState, pos uint64, tabs string) uint64 {
 func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 	var offset uint64
 	textTree := buffer.textTree
+	sizer := cellwidth.New(buffer.tabSize, buffer.showUnicode)
 	pos := locate.StartOfLineAtPos(textTree, startPos)
 	reader := textTree.ReaderAtPosition(pos)
 	iter := segment.NewGraphemeClusterIter(reader)
@@ -204,7 +205,7 @@ func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 		} else if err != nil {
 			panic(err)
 		}
-		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
+		offset += sizer.GraphemeClusterWidth(seg.Runes(), offset)
 		pos += seg.NumRunes()
 	}
 	return offset
@@ -546,6 +547,7 @@ func numRunesInIndent(buffer *BufferState, startOfLinePos uint64, count uint64) 
 	var offset uint64
 	pos := startOfLinePos
 	endOfIndentPos := locate.NextNonWhitespaceOrNewline(buffer.textTree, startOfLinePos)
+	sizer := cellwidth.New(buffer.tabSize, buffer.showUnicode)
 	reader := buffer.textTree.ReaderAtPosition(pos)
 	iter := segment.NewGraphemeClusterIter(reader)
 	seg := segment.Empty()
@@ -556,7 +558,7 @@ func numRunesInIndent(buffer *BufferState, startOfLinePos uint64, count uint64) 
 		} else if err != nil {
 			panic(err)
 		}
-		offset += cellwidth.GraphemeClusterWidth(seg.Runes(), offset, buffer.tabSize)
+		offset += sizer.GraphemeClusterWidth(seg.Runes(), offset)
 		pos += seg.NumRunes()
 	}
 

@@ -16,6 +16,7 @@
     tabSize: 4
     showTabs: false
     showSpaces: false
+    showUnicode: false
     showLineNumbers: false
     lineNumberMode: "absolute"
     lineWrap: "character"

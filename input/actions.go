@@ -398,6 +398,7 @@ func DeletePrevChar(clipboardPage clipboard.PageId) Action {
 			prevAutoIndentPos := locate.PrevAutoIndent(
 				params.TextTree,
 				params.AutoIndentEnabled,
+				params.ShowUnicode,
 				params.TabSize,
 				params.CursorPos)
 			if prevInLinePos < prevAutoIndentPos {

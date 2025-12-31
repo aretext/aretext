@@ -14,6 +14,7 @@ type LocatorParams struct {
 	CursorPos         uint64
 	AutoIndentEnabled bool
 	TabSize           uint64
+	ShowUnicode       bool
 }
 
 func locatorParamsForBuffer(buffer *BufferState) LocatorParams {
@@ -23,6 +24,7 @@ func locatorParamsForBuffer(buffer *BufferState) LocatorParams {
 		CursorPos:         buffer.cursor.position,
 		AutoIndentEnabled: buffer.autoIndent,
 		TabSize:           buffer.tabSize,
+		ShowUnicode:       buffer.showUnicode,
 	}
 }
 

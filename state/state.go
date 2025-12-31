@@ -157,6 +157,7 @@ type BufferState struct {
 	tabExpand               bool
 	showTabs                bool
 	showSpaces              bool
+	showUnicode             bool
 	autoIndent              bool
 	showLineNum             bool
 	lineWrapAllowCharBreaks bool
@@ -222,6 +223,10 @@ func (s *BufferState) ShowSpaces() bool {
 	return s.showSpaces
 }
 
+func (s *BufferState) ShowUnicode() bool {
+	return s.showUnicode
+}
+
 func (s *BufferState) LineNumberMode() config.LineNumberMode {
 	return s.lineNumberMode
 }
@@ -254,13 +259,9 @@ func (s *BufferState) LineNumMarginWidth() uint64 {
 
 func (s *BufferState) LineWrapConfig() segment.LineWrapConfig {
 	width := s.view.width - s.LineNumMarginWidth()
-	tabSize := s.tabSize
-	gcWidthFunc := func(gc []rune, offsetInLine uint64) uint64 {
-		return cellwidth.GraphemeClusterWidth(gc, offsetInLine, tabSize)
-	}
 	return segment.LineWrapConfig{
 		MaxLineWidth:    width,
-		WidthFunc:       gcWidthFunc,
+		CellWidthSizer:  cellwidth.New(s.tabSize, s.showUnicode),
 		AllowCharBreaks: s.lineWrapAllowCharBreaks,
 	}
 }

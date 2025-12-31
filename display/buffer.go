@@ -8,10 +8,12 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/state"
 	"github.com/aretext/aretext/syntax/parser"
+	"github.com/aretext/aretext/text"
 	"github.com/aretext/aretext/text/segment"
 )
 
@@ -26,6 +28,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	pos := viewTextOrigin
 	showTabs := buffer.ShowTabs()
 	showSpaces := buffer.ShowSpaces()
+	showUnicode := buffer.ShowUnicode()
 	lineNumMargin := buffer.LineNumMarginWidth() // Zero if line numbers disabled.
 	lineNumberMode := buffer.LineNumberMode()
 	cursorLine := textTree.LineNumForPosition(cursorPos)
@@ -33,6 +36,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 	wrappedLineIter := segment.NewWrappedLineIter(wrapConfig, textTree, pos)
 	wrappedLine := segment.Empty()
 	searchMatch := buffer.SearchMatch()
+	textEscaper := &text.Escaper{}
 
 	sr.HideCursor()
 
@@ -65,9 +69,11 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 			cursorPos,
 			selectedRegion,
 			searchMatch,
-			wrapConfig.WidthFunc,
+			wrapConfig.CellWidthSizer,
 			showTabs,
 			showSpaces,
+			showUnicode,
+			textEscaper,
 		)
 		pos += wrappedLine.NumRunes()
 	}
@@ -101,9 +107,11 @@ func drawLineAndSetCursor(
 	cursorPos uint64,
 	selectedRegion selection.Region,
 	searchMatch *state.SearchMatch,
-	gcWidthFunc segment.GraphemeClusterWidthFunc,
+	cellWidthSizer cellwidth.Sizer,
 	showTabs bool,
 	showSpaces bool,
+	showUnicode bool,
+	textEscaper *text.Escaper,
 ) {
 	startPos := pos
 	gcRunes := []rune{'\x00', '\x00', '\x00', '\x00'}[:0] // Stack-allocate runes for the last grapheme cluster.
@@ -127,7 +135,7 @@ func drawLineAndSetCursor(
 			lastGcWasNewline = (r == '\n')
 			gcRunes = append(gcRunes, r)
 		}
-		gcWidth := gcWidthFunc(gcRunes, totalWidth)
+		gcWidth := cellWidthSizer.GraphemeClusterWidth(gcRunes, totalWidth)
 		totalWidth += gcWidth
 
 		if totalWidth > uint64(maxLineWidth) {
@@ -135,25 +143,13 @@ func drawLineAndSetCursor(
 			return
 		}
 
-		style := tcell.StyleDefault
-		if selectedRegion.ContainsPosition(pos) {
-			style = palette.StyleForSelection()
-		} else if searchMatch.ContainsPosition(pos) {
-			style = palette.StyleForSearchMatch()
-		} else {
-			for len(syntaxTokens) > 0 {
-				token := syntaxTokens[0]
-				if token.StartPos <= pos && token.EndPos > pos {
-					style = palette.StyleForTokenRole(token.Role)
-					break
-				} else if token.StartPos > pos {
-					break
-				}
-				syntaxTokens = syntaxTokens[1:]
-			}
-		}
+		// If "show unicode" enabled and grapheme cluster is non-ASCII unicode,
+		// then escape unicode in this grapheme cluster.
+		// This MUST match the same criteria in cellwidth.
+		escapeUnicode := showUnicode && !(len(gcRunes) == 1 && gcRunes[0] <= 127)
 
-		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs, showSpaces)
+		style := styleForGraphemeCluster(pos, palette, selectedRegion, searchMatch, syntaxTokens, escapeUnicode)
+		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs, showSpaces, escapeUnicode, textEscaper)
 
 		if pos-startPos == uint64(maxLineWidth) {
 			// This occurs when there are maxLineWidth characters followed by a line feed.
@@ -224,6 +220,38 @@ func displayLineNum(lineNumberMode config.LineNumberMode, lineNum uint64, cursor
 	}
 }
 
+func styleForGraphemeCluster(
+	pos uint64,
+	palette *Palette,
+	selectedRegion selection.Region,
+	searchMatch *state.SearchMatch,
+	syntaxTokens []parser.Token,
+	escapeUnicode bool,
+) tcell.Style {
+	if selectedRegion.ContainsPosition(pos) {
+		return palette.StyleForSelection()
+	}
+
+	if searchMatch.ContainsPosition(pos) {
+		return palette.StyleForSearchMatch()
+	}
+
+	if escapeUnicode {
+		return palette.StyleForEscapedUnicode()
+	}
+
+	for len(syntaxTokens) > 0 {
+		token := syntaxTokens[0]
+		if token.StartPos <= pos && token.EndPos > pos {
+			return palette.StyleForTokenRole(token.Role)
+		} else if token.StartPos > pos {
+			break
+		}
+		syntaxTokens = syntaxTokens[1:]
+	}
+	return tcell.StyleDefault
+}
+
 func drawGraphemeCluster(
 	sr *ScreenRegion,
 	col, row int,
@@ -232,6 +260,8 @@ func drawGraphemeCluster(
 	style tcell.Style,
 	showTabs bool,
 	showSpaces bool,
+	escapeUnicode bool,
+	textEscaper *text.Escaper,
 ) {
 	startCol := col
 
@@ -255,6 +285,8 @@ func drawGraphemeCluster(
 		if gc[0] == ' ' && showSpaces {
 			sr.Put(startCol, row, string(tcell.RuneBullet), style.Dim(true))
 		}
+	} else if escapeUnicode {
+		sr.PutStrStyled(col, row, textEscaper.RunesToStr(gc), style)
 	} else {
 		// For everything else, tcell expects the grapheme cluster contents to be
 		// written into the first of the cell(s) occupied by the gc.

@@ -202,6 +202,8 @@ Menu Commands
 | child directory              | cd        |
 | parent directory             | pd        |
 | toggle show tabs             | ta        |
+| toggle show spaces           | ta        |
+| toggle show unicode          | tu        |
 | toggle tab expand            | te        |
 | toggle line numbers          | nu        |
 | toggle auto-indent           | ai        |

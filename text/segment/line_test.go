@@ -14,18 +14,15 @@ import (
 
 //go:generate go run gen_test_cases.go --prefix lineBreak --dataPath data/LineBreakTest.txt --outputPath line_break_test_cases.go
 
-func gcWidthFunc(defaultWidth uint64) GraphemeClusterWidthFunc {
-	return func(gc []rune, offsetInLine uint64) uint64 {
-		if len(gc) == 0 {
-			return 0
-		}
+type fakeCellWidthSizer struct {
+	size uint64
+}
 
-		if gc[0] == '\n' {
-			return 0
-		}
-
-		return defaultWidth
+func (s *fakeCellWidthSizer) GraphemeClusterWidth(gc []rune, offsetInLine uint64) uint64 {
+	if len(gc) == 0 || gc[0] == '\n' {
+		return 0
 	}
+	return s.size
 }
 
 func TestLineBreaker(t *testing.T) {
@@ -129,8 +126,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "empty",
 			inputString: "",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 10,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   10,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{},
 		},
@@ -138,8 +135,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "single rune, less than max line width",
 			inputString: "a",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 2,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   2,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"a"},
 		},
@@ -147,8 +144,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "single rune, equal to max line width",
 			inputString: "a",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 1,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   1,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"a"},
 		},
@@ -156,8 +153,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "single rune, greater than max line width",
 			inputString: "a",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 1,
-				WidthFunc:    gcWidthFunc(2),
+				MaxLineWidth:   1,
+				CellWidthSizer: &fakeCellWidthSizer{2},
 			},
 			expectedLines: []string{"a"},
 		},
@@ -165,8 +162,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "multiple runes, less than max line width",
 			inputString: "abcd",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"abcd"},
 		},
@@ -174,8 +171,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "multiple runes, equal to max line width",
 			inputString: "abcde",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"abcde"},
 		},
@@ -183,8 +180,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "multiple runes, greater than max line width",
 			inputString: "abcdef",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"abcde", "f"},
 		},
@@ -192,8 +189,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "multiple runes, each greater than max line width",
 			inputString: "abcdef",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 1,
-				WidthFunc:    gcWidthFunc(2),
+				MaxLineWidth:   1,
+				CellWidthSizer: &fakeCellWidthSizer{2},
 			},
 			expectedLines: []string{"a", "b", "c", "d", "e", "f"},
 		},
@@ -201,8 +198,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "single newline",
 			inputString: "\n",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"\n"},
 		},
@@ -210,8 +207,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "multiple newlines",
 			inputString: "\n\n\n",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"\n", "\n", "\n"},
 		},
@@ -219,8 +216,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "runes with newlines, no soft wrapping",
 			inputString: "abcd\nef\ngh\n",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"abcd\n", "ef\n", "gh\n"},
 		},
@@ -228,8 +225,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "runes with newlines and soft wrapping",
 			inputString: "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 5,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   5,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"abcd\n", "efghi", "jkl\n", "mnopq", "rstuv", "wxyz\n", "0123"},
 		},
@@ -237,8 +234,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "runes with newlines and soft wrapping, each rune width greater than max line width",
 			inputString: "abcd\nefghijkl\nmnopqrstuvwxyz\n0123",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 1,
-				WidthFunc:    gcWidthFunc(2),
+				MaxLineWidth:   1,
+				CellWidthSizer: &fakeCellWidthSizer{2},
 			},
 			expectedLines: []string{"a", "b", "c", "d\n", "e", "f", "g", "h", "i", "j", "k", "l\n", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z\n", "0", "1", "2", "3"},
 		},
@@ -246,8 +243,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "line break at word boundaries",
 			inputString: "Lorem ipsum dolor sit amet",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 13,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   13,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"Lorem ipsum ", "dolor sit ", "amet"},
 		},
@@ -257,7 +254,7 @@ func TestWrappedLineIter(t *testing.T) {
 			wrapConfig: LineWrapConfig{
 				MaxLineWidth:    13,
 				AllowCharBreaks: true,
-				WidthFunc:       gcWidthFunc(1),
+				CellWidthSizer:  &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"Lorem ipsum d", "olor sit amet"},
 		},
@@ -265,8 +262,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "hard line break at CR",
 			inputString: "Lorem\ripsum dolor sit amet",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 13,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   13,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"Lorem\r", "ipsum dolor ", "sit amet"},
 		},
@@ -274,8 +271,8 @@ func TestWrappedLineIter(t *testing.T) {
 			name:        "hard line break at CR LF",
 			inputString: "Lorem\r\nipsum dolor sit amet",
 			wrapConfig: LineWrapConfig{
-				MaxLineWidth: 13,
-				WidthFunc:    gcWidthFunc(1),
+				MaxLineWidth:   13,
+				CellWidthSizer: &fakeCellWidthSizer{1},
 			},
 			expectedLines: []string{"Lorem\r\n", "ipsum dolor ", "sit amet"},
 		},

@@ -19,6 +19,7 @@ User Guide
 -	[Edit](edit.md): how to edit a document.
 -	[Configuration](configuration.md): how to configure settings.
 -	[Custom Menu Commands](custom-menu-commands.md): how to extend the editor with custom menu commands.
+-	[Unicode](unicode.md): how to configure the display of non-ASCII Unicode.
 
 Reference
 ---------

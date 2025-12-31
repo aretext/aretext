@@ -4,6 +4,7 @@ import (
 	"io"
 	"unicode"
 
+	"github.com/aretext/aretext/cellwidth"
 	"github.com/aretext/aretext/text"
 )
 
@@ -309,14 +310,11 @@ done:
 	return decision
 }
 
-// GraphemeClusterWidthFunc returns the width in cells for a given grapheme cluster.
-type GraphemeClusterWidthFunc func(gc []rune, offsetInLine uint64) uint64
-
 // LineWrapConfig controls how lines should be soft-wrapped.
 type LineWrapConfig struct {
 	MaxLineWidth    uint64 // Maximum number of cells per line, which must be at least one.
 	AllowCharBreaks bool   // Allow breaks at grapheme cluster boundaries.
-	WidthFunc       GraphemeClusterWidthFunc
+	CellWidthSizer  cellwidth.Sizer
 }
 
 // WrappedLineIter iterates through soft- and hard-wrapped lines.
@@ -386,7 +384,7 @@ func (iter *WrappedLineIter) lookaheadLineBreakPos() (uint64, error) {
 
 		canBreakBeforeGc := gcBreaker.ProcessRune(r)
 		if canBreakBeforeGc {
-			lineWidth += iter.wrapConfig.WidthFunc(iter.gc, lineWidth)
+			lineWidth += iter.wrapConfig.CellWidthSizer.GraphemeClusterWidth(iter.gc, lineWidth)
 			// Check if we've exceeded the max line width. If so, exit the loop and return
 			// the last breakpoint.
 			// If the rune is '\r' or '\n', continue so LineBreaker can hard-wrap on the next loop iteration.

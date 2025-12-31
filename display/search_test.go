@@ -14,7 +14,7 @@ func TestDrawSearchQuery(t *testing.T) {
 		name                string
 		query               string
 		direction           state.SearchDirection
-		expectContents      [][]rune
+		expectContents      [][]string
 		expectCursorVisible bool
 		expectCursorCol     int
 		expectCursorRow     int
@@ -23,9 +23,9 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "empty query",
 			query:     "",
 			direction: state.SearchDirectionForward,
-			expectContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' '},
-				{'/', ' ', ' ', ' ', ' ', ' '},
+			expectContents: [][]string{
+				{" ", " ", " ", " ", " ", " "},
+				{"/", " ", " ", " ", " ", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     1,
@@ -35,9 +35,9 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "non-empty query",
 			query:     "abcd",
 			direction: state.SearchDirectionForward,
-			expectContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' '},
-				{'/', 'a', 'b', 'c', 'd', ' '},
+			expectContents: [][]string{
+				{" ", " ", " ", " ", " ", " "},
+				{"/", "a", "b", "c", "d", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     5,
@@ -47,18 +47,18 @@ func TestDrawSearchQuery(t *testing.T) {
 			name:      "clipped query",
 			query:     "abcd1234",
 			direction: state.SearchDirectionForward,
-			expectContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' '},
-				{'/', 'a', 'b', 'c', 'd', '1'},
+			expectContents: [][]string{
+				{" ", " ", " ", " ", " ", " "},
+				{"/", "a", "b", "c", "d", "1"},
 			},
 		},
 		{
 			name:      "backward search",
 			query:     "abcd",
 			direction: state.SearchDirectionBackward,
-			expectContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' '},
-				{'?', 'a', 'b', 'c', 'd', ' '},
+			expectContents: [][]string{
+				{" ", " ", " ", " ", " ", " "},
+				{"?", "a", "b", "c", "d", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     5,

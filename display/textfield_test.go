@@ -31,7 +31,7 @@ func TestDrawTextField(t *testing.T) {
 		inputText           string
 		screenWidth         int
 		screenHeight        int
-		expectContents      [][]rune
+		expectContents      [][]string
 		expectCursorVisible bool
 		expectCursorCol     int
 		expectCursorRow     int
@@ -42,11 +42,11 @@ func TestDrawTextField(t *testing.T) {
 			screenHeight: 4,
 			promptText:   "Test prompt:",
 			inputText:    "",
-			expectContents: [][]rune{
-				{'T', 'e', 's', 't', ' ', 'p', 'r', 'o', 'm', 'p', 't', ':', ' ', ' ', ' '},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─'},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectContents: [][]string{
+				{"T", "e", "s", "t", " ", "p", "r", "o", "m", "p", "t", ":", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─"},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     0,
@@ -58,11 +58,11 @@ func TestDrawTextField(t *testing.T) {
 			screenHeight: 4,
 			promptText:   "Test prompt:",
 			inputText:    "foo.txt",
-			expectContents: [][]rune{
-				{'T', 'e', 's', 't', ' ', 'p', 'r', 'o', 'm', 'p', 't', ':', ' ', ' ', ' '},
-				{'f', 'o', 'o', '.', 't', 'x', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─', '─'},
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectContents: [][]string{
+				{"T", "e", "s", "t", " ", "p", "r", "o", "m", "p", "t", ":", " ", " ", " "},
+				{"f", "o", "o", ".", "t", "x", "t", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─", "─"},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     7,
@@ -74,9 +74,9 @@ func TestDrawTextField(t *testing.T) {
 			screenHeight: 2,
 			promptText:   "Test prompt:",
 			inputText:    "foo.txt",
-			expectContents: [][]rune{
-				{'T', 'e', 's', 't', ' ', 'p', 'r', 'o', 'm', 'p', 't', ':', ' ', ' ', ' '},
-				{'f', 'o', 'o', '.', 't', 'x', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectContents: [][]string{
+				{"T", "e", "s", "t", " ", "p", "r", "o", "m", "p", "t", ":", " ", " ", " "},
+				{"f", "o", "o", ".", "t", "x", "t", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 			expectCursorVisible: true,
 			expectCursorCol:     7,
@@ -88,8 +88,8 @@ func TestDrawTextField(t *testing.T) {
 			screenHeight: 1,
 			promptText:   "Test prompt:",
 			inputText:    "foo.txt",
-			expectContents: [][]rune{
-				{'T', 'e', 's', 't', ' ', 'p', 'r', 'o', 'm', 'p', 't', ':', ' ', ' ', ' '},
+			expectContents: [][]string{
+				{"T", "e", "s", "t", " ", "p", "r", "o", "m", "p", "t", ":", " ", " ", " "},
 			},
 			expectCursorVisible: false,
 		},

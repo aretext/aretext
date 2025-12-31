@@ -18,42 +18,42 @@ func TestDrawStatusBar(t *testing.T) {
 		inputBufferString    string
 		isRecordingUserMacro bool
 		filePath             string
-		expectedContents     [][]rune
+		expectedContents     [][]string
 	}{
 		{
 			name:      "normal mode shows file path",
 			inputMode: state.InputModeNormal,
 			filePath:  "./foo/bar",
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"f", "o", "o", "/", "b", "a", "r", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
 		{
 			name:      "insert mode shows INSERT",
 			inputMode: state.InputModeInsert,
 			filePath:  "./foo/bar",
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'-', '-', ' ', 'I', 'N', 'S', 'E', 'R', 'T', ' ', '-', '-', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"-", "-", " ", "I", "N", "S", "E", "R", "T", " ", "-", "-", " ", " ", " ", " "},
 			},
 		},
 		{
 			name:      "visual mode shows VISUAL",
 			inputMode: state.InputModeVisual,
 			filePath:  "./foo/bar",
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'-', '-', ' ', 'V', 'I', 'S', 'U', 'A', 'L', ' ', '-', '-', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"-", "-", " ", "V", "I", "S", "U", "A", "L", " ", "-", "-", " ", " ", " ", " "},
 			},
 		},
 		{
 			name:      "menu mode shows file path",
 			inputMode: state.InputModeMenu,
 			filePath:  "./foo/bar",
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'f', 'o', 'o', '/', 'b', 'a', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"f", "o", "o", "/", "b", "a", "r", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
 		{
@@ -62,9 +62,9 @@ func TestDrawStatusBar(t *testing.T) {
 				Text:  "success",
 				Style: state.StatusMsgStyleSuccess,
 			},
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'s', 'u', 'c', 'c', 'e', 's', 's', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"s", "u", "c", "c", "e", "s", "s", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
 		{
@@ -73,26 +73,26 @@ func TestDrawStatusBar(t *testing.T) {
 				Text:  "error",
 				Style: state.StatusMsgStyleError,
 			},
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'e', 'r', 'r', 'o', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"e", "r", "r", "o", "r", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
 		{
 			name:              "input buffer",
 			inputBufferString: `"aya`,
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'"', 'a', 'y', 'a', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"\"", "a", "y", "a", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
 		{
 			name:                 "recording user macro",
 			inputMode:            state.InputModeNormal,
 			isRecordingUserMacro: true,
-			expectedContents: [][]rune{
-				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-				{'R', 'e', 'c', 'o', 'r', 'd', 'i', 'n', 'g', ' ', 'm', 'a', 'c', 'r', 'o', '.'},
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"R", "e", "c", "o", "r", "d", "i", "n", "g", " ", "m", "a", "c", "r", "o", "."},
 			},
 		},
 	}

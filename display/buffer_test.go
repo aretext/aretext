@@ -211,6 +211,42 @@ func TestDrawBuffer(t *testing.T) {
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
+		{
+			name: "space with combining mark modifier",
+			// This is a space with a combining mark macron.
+			// The space and the combining mark should be part of the same grapheme cluster.
+			inputString: " \u0304",
+			expectedContents: [][]string{
+				{" \u0304", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+			},
+		},
+		{
+			name: "tab with combining mark modifier",
+			// This is a tab with a combining mark macron.
+			// We don't currently support combining marks with tabs, so the macron is hidden.
+			inputString: "\t\u0304abc",
+			expectedContents: [][]string{
+				{" ", " ", " ", " ", "a", "b", "c", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

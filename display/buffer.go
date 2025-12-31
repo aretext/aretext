@@ -238,7 +238,7 @@ func drawGraphemeCluster(
 	// Style whitespace (newlines, tabs, etc.) but don't set any runes.
 	// This prevents drawing artifacts with '\r\n' where tcell
 	// sends the combining character ('\n') to the terminal.
-	if unicode.IsSpace(gc[0]) {
+	if isGraphemeClusterWhitespace(gc) {
 		// Always style at least one cell, even when the gcWidth is zero (carriage returns).
 		// Tabs will usually style multiple cells.
 		for col == startCol || col < startCol+gcWidth {
@@ -260,4 +260,24 @@ func drawGraphemeCluster(
 		// written into the first of the cell(s) occupied by the gc.
 		sr.Put(col, row, string(gc), style)
 	}
+}
+
+// isGraphemeClusterWhitespace returns true if EVERY rune in the grapheme cluster
+// is a unicode space. It's important to check every rune because the unicode
+// grapheme cluster segmentation algorithm allows "extend" runes to follow
+// space characters (for example, to display a combining mark by itself).
+func isGraphemeClusterWhitespace(gc []rune) bool {
+	// Always treat tabs as whitespace to ensure the indentation is correct.
+	// This implicitly hides any combining marks following the tab, which isn't quite
+	// correct but simplifies the implementation.
+	if gc[0] == '\t' {
+		return true
+	}
+
+	for _, r := range gc {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return true
 }

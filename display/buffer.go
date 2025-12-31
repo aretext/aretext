@@ -108,7 +108,6 @@ func drawLineAndSetCursor(
 	gcRunes := []rune{'\x00', '\x00', '\x00', '\x00'}[:0] // Stack-allocate runes for the last grapheme cluster.
 	totalWidth := uint64(0)
 	col := 0
-	var gcBreaker segment.GraphemeClusterBreaker
 	var lastGcWasNewline bool
 
 	if startPos == lineStartPos {
@@ -118,6 +117,7 @@ func drawLineAndSetCursor(
 
 	var i int
 	for i < len(wrappedLineRunes) || len(gcRunes) > 0 {
+		var gcBreaker segment.GraphemeClusterBreaker
 		for _, r := range wrappedLineRunes[i:] {
 			canBreakBefore := gcBreaker.ProcessRune(r)
 			if canBreakBefore && len(gcRunes) > 0 {

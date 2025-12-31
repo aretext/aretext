@@ -190,6 +190,29 @@ func TestDrawBuffer(t *testing.T) {
 				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
 			},
 		},
+		{
+			name: "space then country-flag",
+			// This reproduces a bug where the grapheme cluster breaker
+			// wasn't reset correctly in the display loop, causing an incorrect
+			// gc break between the two codepoints of the country-flag emoji.
+			inputString: " \U0001F1FA\U0001F1F8",
+			expectedContents: [][]rune{
+				// The cell at (1, 0) actually contains both runes for the flag emoji,
+				// but the test helper only checks the first rune.
+				// The bug caused the grapheme cluster to split and write the
+				// second rune into the cell at (3,0)
+				{' ', '\U0001F1FA', 'X', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+				{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

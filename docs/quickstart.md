@@ -17,7 +17,7 @@ The first step is to [install aretext](install.md). You can check whether aretex
 aretext -version
 ```
 
-If you see a version string like "1.2.3 @ 9955832c3e2036b762e59238fe39f648a3cb1199" then aretext is installed!
+If you see a version string like "1.2.3" then aretext is installed!
 
 Starting the editor
 -------------------

@@ -29,11 +29,7 @@ build() {
     dir=${RELEASE_DIR}/aretext_${RELEASE_VERSION}_${goos}_${goarch}
     echo "$dir"
     mkdir -p "$dir"
-    GOOS=$1 GOARCH=$2 go build \
-        -trimpath \
-        -ldflags="-X 'main.version=${RELEASE_VERSION}'" \
-        -o "$dir/aretext" \
-        github.com/aretext/aretext
+    make build GO_OS="$1" GO_ARCH="$2" GO_BUILD_FLAGS="-trimpath" GO_OUTPUT="$dir/aretext"
 
     cp LICENSE "$dir/"
     cp -r docs "$dir/"

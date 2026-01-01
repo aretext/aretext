@@ -37,8 +37,9 @@ build() {
     archive_cwd=$(dirname "$dir")
     archive_src=$(basename "$dir")
     archive_dst=$RELEASE_DIR/${archive_src}.tar.gz
+    archive_ts=$(git log -1 --format=%ct)
     echo "$archive_dst"
-    tar -czf "$archive_dst" -C "$archive_cwd" "$archive_src"
+    tar --mtime "@${archive_ts}" -czf "$archive_dst" -C "$archive_cwd" "$archive_src"
 }
 
 build linux amd64

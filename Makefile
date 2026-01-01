@@ -21,7 +21,7 @@ build:
 	GOOS=$(GO_OS) GOARCH=$(GO_ARCH) go build $(GO_BUILD_FLAGS) $(GO_LDFLAGS) -o $(GO_OUTPUT) github.com/aretext/aretext
 
 build-debug:
-	GOOS=$(GO_OS) GOARCH=$(GO_ARCH) go build $(GO_BUILD_FLAGS) $(GO_LDFLAGS) -o $(GO_OUTPUT) -gcflags "all=-N -l" github.com/aretext/aretext
+	$(MAKE) build --no-print-directory GO_BUILD_FLAGS="-gcflags \"all=-N -l\""
 
 test:
 	go test ./...

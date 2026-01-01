@@ -1,5 +1,8 @@
 .PHONY: all fmt generate build build-debug test install install-devtools vet staticcheck bench clean
 
+VERSION := $(shell git describe --tags --always --dirty)
+LDFLAGS := -ldflags="-X 'main.version=$(VERSION)'"
+
 all: generate fmt build vet staticcheck test
 
 fmt:
@@ -11,10 +14,10 @@ generate:
 	go generate ./...
 
 build:
-	go build -o aretext github.com/aretext/aretext
+	go build $(LDFLAGS) -o aretext github.com/aretext/aretext
 
 build-debug:
-	go build -o aretext -gcflags "all=-N -l" github.com/aretext/aretext
+	go build $(LDFLAGS) -o aretext -gcflags "all=-N -l" github.com/aretext/aretext
 
 test:
 	go test ./...

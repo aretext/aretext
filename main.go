@@ -16,9 +16,9 @@ import (
 	"github.com/aretext/aretext/app"
 )
 
-// This variable is set automatically as part of the release process.
+// This variable is set automatically as part of the build process.
 // Please do NOT modify the following line.
-var version = "dev"
+var version = ""
 
 // These variables are initialized from runtime/debug.BuildInfo.
 var (
@@ -60,7 +60,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("%s @ %s\n", version, vcsRevision)
+		fmt.Printf("%s\n", version)
 		return
 	}
 

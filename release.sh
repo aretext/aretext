@@ -51,12 +51,8 @@ checksums=aretext_${RELEASE_VERSION}_checksums.txt
 echo "$RELEASE_DIR/$checksums"
 (cd "$RELEASE_DIR" && shasum -a 256 ./*.tar.gz > "$checksums")
 
-signatures=$checksums.sig
-echo "$RELEASE_DIR/$signatures"
-(cd "$RELEASE_DIR" && gpg --output "$signatures" --detach-sig "$checksums")
-
-echo "verifying signature and checksums"
-(cd "$RELEASE_DIR" && gpg --verify "$signatures" "$checksums" && shasum -c "$checksums")
+echo "verifying checksums"
+(cd "$RELEASE_DIR" && shasum -c "$checksums")
 
 echo "publishing git tag"
 git push origin "$release_tag"

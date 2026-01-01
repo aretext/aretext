@@ -43,8 +43,6 @@ build() {
 
 build linux amd64
 build linux arm64
-build linux 386
-build darwin amd64
 build darwin arm64
 build freebsd amd64
 build freebsd arm64

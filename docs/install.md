@@ -17,7 +17,7 @@ You can download the official binaries for Linux, macOS, and FreeBSD from [the a
 
 ```
 VERSION=1.5.0
-RELEASE=aretext_${VERSION}_linux_amd64
+RELEASE=aretext_v${VERSION}_linux_amd64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
 sudo cp $RELEASE/aretext /usr/local/bin/
@@ -27,7 +27,7 @@ sudo cp $RELEASE/aretext /usr/local/bin/
 
 ```
 VERSION=1.5.0
-RELEASE=aretext_${VERSION}_linux_arm64
+RELEASE=aretext_v${VERSION}_linux_arm64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
 sudo cp $RELEASE/aretext /usr/local/bin/
@@ -37,7 +37,7 @@ sudo cp $RELEASE/aretext /usr/local/bin/
 
 ```
 VERSION=1.5.0
-RELEASE=aretext_${VERSION}_darwin_amd64
+RELEASE=aretext_v${VERSION}_darwin_amd64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
 sudo cp $RELEASE/aretext /usr/local/bin/
@@ -47,7 +47,7 @@ sudo cp $RELEASE/aretext /usr/local/bin/
 
 ```
 VERSION=1.5.0
-RELEASE=aretext_${VERSION}_darwin_arm64
+RELEASE=aretext_v${VERSION}_darwin_arm64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
 sudo cp $RELEASE/aretext /usr/local/bin/

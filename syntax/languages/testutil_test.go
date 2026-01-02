@@ -56,8 +56,8 @@ func ParseTokensWithText(f parser.Func, s string) []TokenWithText {
 	return tokensWithText
 }
 
-// BenchmarkParser benchmarks a parser with the input file located at `path`.
-func BenchmarkParser(b *testing.B, f parser.Func, path string) {
+// ParserBenchmark benchmarks a parser with the input file located at `path`.
+func ParserBenchmark(b *testing.B, f parser.Func, path string) {
 	data, err := os.ReadFile(path)
 	require.NoError(b, err)
 	tree, err := text.NewTreeFromString(string(data))
@@ -69,8 +69,8 @@ func BenchmarkParser(b *testing.B, f parser.Func, path string) {
 	}
 }
 
-// FuzzParser runs a fuzz test on a parser.
-func FuzzParser(f *testing.F, parseFunc parser.Func, seeds []string) {
+// ParserFuzzTest runs a fuzz test on a parser.
+func ParserFuzzTest(f *testing.F, parseFunc parser.Func, seeds []string) {
 	for _, seed := range seeds {
 		f.Add(seed)
 	}

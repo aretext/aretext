@@ -240,5 +240,5 @@ func TestJsonParseFunc(t *testing.T) {
 }
 
 func BenchmarkJsonParser(b *testing.B) {
-	BenchmarkParser(b, JsonParseFunc(), "testdata/json/test.json")
+	ParserBenchmark(b, JsonParseFunc(), "testdata/json/test.json")
 }

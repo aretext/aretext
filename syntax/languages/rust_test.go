@@ -503,5 +503,5 @@ pub enum TEST{}
 }
 
 func BenchmarkRustParser(b *testing.B) {
-	BenchmarkParser(b, RustParseFunc(), "testdata/rust/hello.rs")
+	ParserBenchmark(b, RustParseFunc(), "testdata/rust/hello.rs")
 }

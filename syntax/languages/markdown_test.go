@@ -99,7 +99,7 @@ func FuzzMarkdownParseFunc(f *testing.F) {
 		seeds = append(seeds, tc.text)
 	}
 
-	FuzzParser(f, MarkdownParseFunc(), seeds)
+	ParserFuzzTest(f, MarkdownParseFunc(), seeds)
 }
 
 func loadCommonmarkTests() ([]markdownTest, error) {

@@ -319,5 +319,5 @@ if __name__ == "__main__":
 }
 
 func BenchmarkPythonParser(b *testing.B) {
-	BenchmarkParser(b, PythonParseFunc(), "testdata/python/hello.py")
+	ParserBenchmark(b, PythonParseFunc(), "testdata/python/hello.py")
 }

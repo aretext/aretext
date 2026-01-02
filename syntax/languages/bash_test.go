@@ -498,5 +498,5 @@ heredoc text
 
 func FuzzBashParseFunc(f *testing.F) {
 	seeds := LoadFuzzTestSeeds(f, "./testdata/bash/*")
-	FuzzParser(f, BashParseFunc(), seeds)
+	ParserFuzzTest(f, BashParseFunc(), seeds)
 }

@@ -131,10 +131,10 @@ func TestSQLParseFunc(t *testing.T) {
 }
 
 func BenchmarkSQLParser(b *testing.B) {
-	BenchmarkParser(b, SQLParseFunc(), "testdata/sql/example.sql")
+	ParserBenchmark(b, SQLParseFunc(), "testdata/sql/example.sql")
 }
 
 func FuzzSQLParseFunc(f *testing.F) {
 	seeds := LoadFuzzTestSeeds(f, "./testdata/sql/*")
-	FuzzParser(f, SQLParseFunc(), seeds)
+	ParserFuzzTest(f, SQLParseFunc(), seeds)
 }

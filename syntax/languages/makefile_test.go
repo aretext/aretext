@@ -278,5 +278,5 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) # asdf
 
 func FuzzMakefileParseFunc(f *testing.F) {
 	seeds := LoadFuzzTestSeeds(f, "./testdata/makefile/*")
-	FuzzParser(f, MakefileParseFunc(), seeds)
+	ParserFuzzTest(f, MakefileParseFunc(), seeds)
 }

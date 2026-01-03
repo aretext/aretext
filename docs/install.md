@@ -33,16 +33,6 @@ tar -zxvf $RELEASE.tar.gz
 sudo cp $RELEASE/aretext /usr/local/bin/
 ```
 
-### macOS x86 64-bit
-
-```
-VERSION=1.6.0
-RELEASE=aretext_v${VERSION}_darwin_amd64
-curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
-tar -zxvf $RELEASE.tar.gz
-sudo cp $RELEASE/aretext /usr/local/bin/
-```
-
 ### macOS ARM 64-bit
 
 ```

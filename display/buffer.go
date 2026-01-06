@@ -118,6 +118,7 @@ func drawLineAndSetCursor(
 	totalWidth := uint64(0)
 	col := 0
 	var lastGcWasNewline bool
+	var tokenForPos *parser.Token
 
 	if startPos == lineStartPos {
 		drawLineNumIfNecessary(sr, palette, row, lineNum, lineNumMargin, lineNumberMode, cursorLine)
@@ -148,7 +149,8 @@ func drawLineAndSetCursor(
 		// This MUST match the same criteria in cellwidth.
 		escapeUnicode := showUnicode && !(len(gcRunes) == 1 && gcRunes[0] <= 127)
 
-		style := styleForGraphemeCluster(pos, palette, selectedRegion, searchMatch, syntaxTokens, escapeUnicode)
+		tokenForPos, syntaxTokens = consumeSyntaxTokensUntilPos(syntaxTokens, pos)
+		style := styleForGraphemeCluster(pos, palette, selectedRegion, searchMatch, tokenForPos, escapeUnicode)
 		drawGraphemeCluster(sr, col, row, gcRunes, int(gcWidth), style, showTabs, showSpaces, escapeUnicode, textEscaper)
 
 		if pos-startPos == uint64(maxLineWidth) {
@@ -220,12 +222,23 @@ func displayLineNum(lineNumberMode config.LineNumberMode, lineNum uint64, cursor
 	}
 }
 
+func consumeSyntaxTokensUntilPos(syntaxTokens []parser.Token, pos uint64) (*parser.Token, []parser.Token) {
+	for i, token := range syntaxTokens {
+		if token.StartPos <= pos && token.EndPos > pos {
+			return &token, syntaxTokens[i:]
+		} else if token.StartPos > pos {
+			return nil, syntaxTokens[i:]
+		}
+	}
+	return nil, nil
+}
+
 func styleForGraphemeCluster(
 	pos uint64,
 	palette *Palette,
 	selectedRegion selection.Region,
 	searchMatch *state.SearchMatch,
-	syntaxTokens []parser.Token,
+	syntaxToken *parser.Token,
 	escapeUnicode bool,
 ) tcell.Style {
 	if selectedRegion.ContainsPosition(pos) {
@@ -240,15 +253,10 @@ func styleForGraphemeCluster(
 		return palette.StyleForEscapedUnicode()
 	}
 
-	for len(syntaxTokens) > 0 {
-		token := syntaxTokens[0]
-		if token.StartPos <= pos && token.EndPos > pos {
-			return palette.StyleForTokenRole(token.Role)
-		} else if token.StartPos > pos {
-			break
-		}
-		syntaxTokens = syntaxTokens[1:]
+	if syntaxToken != nil {
+		return palette.StyleForTokenRole(syntaxToken.Role)
 	}
+
 	return tcell.StyleDefault
 }
 

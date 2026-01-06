@@ -56,7 +56,7 @@ test:
 	go test ./...
 
 install:
-	go install
+	go install $(GO_BUILD_FLAGS) $(GO_LDFLAGS)
 
 install-devtools:
 	go install golang.org/x/tools/cmd/goimports@latest

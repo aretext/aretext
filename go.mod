@@ -19,3 +19,5 @@ require (
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
 )
+
+replace github.com/gdamore/tcell/v2 => github.com/aretext/tcell/v2 v2.13.7-1

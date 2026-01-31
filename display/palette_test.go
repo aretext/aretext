@@ -3,7 +3,8 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/config"
@@ -38,12 +39,12 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 
 	s := tcell.StyleDefault
 	expected := &Palette{
-		lineNumStyle:              s.Foreground(tcell.ColorOlive),
+		lineNumStyle:              s.Foreground(color.Olive),
 		selectionStyle:            s.Reverse(true).Dim(true),
 		searchCursorStyle:         s.Reverse(true).Dim(true),
 		searchMatchStyle:          s.Reverse(true),
-		statusMsgSuccessStyle:     s.Foreground(tcell.ColorGreen).Bold(true),
-		statusMsgErrorStyle:       s.Background(tcell.ColorMaroon).Foreground(tcell.ColorWhite).Bold(true),
+		statusMsgSuccessStyle:     s.Foreground(color.Green).Bold(true),
+		statusMsgErrorStyle:       s.Background(color.Maroon).Foreground(color.White).Bold(true),
 		statusInputModeStyle:      s.Bold(true),
 		statusInputBufferStyle:    s.Bold(true),
 		statusRecordingMacroStyle: s.Bold(true),
@@ -60,29 +61,29 @@ func TestPaletteFromConfigStyles(t *testing.T) {
 		textFieldBorderStyle:      s,
 		searchPrefixStyle:         s,
 		searchQueryStyle:          s,
-		escapedUnicodeStyle:       s.Foreground(tcell.ColorBlue).Bold(true),
+		escapedUnicodeStyle:       s.Foreground(color.Blue).Bold(true),
 		tokenRoleStyle: map[parser.TokenRole]tcell.Style{
-			parser.TokenRoleOperator: s.Foreground(tcell.ColorPurple),
-			parser.TokenRoleKeyword:  s.Foreground(tcell.ColorOlive),
-			parser.TokenRoleNumber:   s.Foreground(tcell.ColorGreen),
-			parser.TokenRoleString:   s.Foreground(tcell.ColorMaroon),
-			parser.TokenRoleComment:  s.Foreground(tcell.ColorNavy),
-			parser.TokenRoleCustom1:  s.Foreground(tcell.ColorBlack).Bold(true),
-			parser.TokenRoleCustom2:  s.Foreground(tcell.ColorRed).Italic(true).Underline(true),
-			parser.TokenRoleCustom3:  s.Foreground(tcell.ColorGreen).StrikeThrough(true),
-			parser.TokenRoleCustom4:  s.Background(tcell.ColorYellow),
-			parser.TokenRoleCustom5:  s.Foreground(tcell.ColorFuchsia),
-			parser.TokenRoleCustom6:  s.Foreground(tcell.ColorAqua),
-			parser.TokenRoleCustom7:  s.Foreground(tcell.ColorDarkGreen),
-			parser.TokenRoleCustom8:  s.Foreground(tcell.ColorDarkCyan),
-			parser.TokenRoleCustom9:  s.Foreground(tcell.ColorTeal),
-			parser.TokenRoleCustom10: s.Foreground(tcell.ColorDarkBlue),
-			parser.TokenRoleCustom11: s.Foreground(tcell.ColorRed),
-			parser.TokenRoleCustom12: s.Foreground(tcell.ColorLime),
-			parser.TokenRoleCustom13: s.Foreground(tcell.ColorFuchsia),
-			parser.TokenRoleCustom14: s.Foreground(tcell.ColorAqua),
-			parser.TokenRoleCustom15: s.Foreground(tcell.ColorDarkGreen),
-			parser.TokenRoleCustom16: s.Foreground(tcell.ColorDarkCyan),
+			parser.TokenRoleOperator: s.Foreground(color.Purple),
+			parser.TokenRoleKeyword:  s.Foreground(color.Olive),
+			parser.TokenRoleNumber:   s.Foreground(color.Green),
+			parser.TokenRoleString:   s.Foreground(color.Maroon),
+			parser.TokenRoleComment:  s.Foreground(color.Navy),
+			parser.TokenRoleCustom1:  s.Foreground(color.Black).Bold(true),
+			parser.TokenRoleCustom2:  s.Foreground(color.Red).Italic(true).Underline(true),
+			parser.TokenRoleCustom3:  s.Foreground(color.Green).StrikeThrough(true),
+			parser.TokenRoleCustom4:  s.Background(color.Yellow),
+			parser.TokenRoleCustom5:  s.Foreground(color.Fuchsia),
+			parser.TokenRoleCustom6:  s.Foreground(color.Aqua),
+			parser.TokenRoleCustom7:  s.Foreground(color.DarkGreen),
+			parser.TokenRoleCustom8:  s.Foreground(color.DarkCyan),
+			parser.TokenRoleCustom9:  s.Foreground(color.Teal),
+			parser.TokenRoleCustom10: s.Foreground(color.DarkBlue),
+			parser.TokenRoleCustom11: s.Foreground(color.Red),
+			parser.TokenRoleCustom12: s.Foreground(color.Lime),
+			parser.TokenRoleCustom13: s.Foreground(color.Fuchsia),
+			parser.TokenRoleCustom14: s.Foreground(color.Aqua),
+			parser.TokenRoleCustom15: s.Foreground(color.DarkGreen),
+			parser.TokenRoleCustom16: s.Foreground(color.DarkCyan),
 		},
 	}
 

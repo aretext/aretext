@@ -3,8 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
@@ -97,19 +95,13 @@ func TestDrawTextField(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.screenWidth, tc.screenHeight)
+			WithMockScreen(t, tc.screenWidth, tc.screenHeight, func(s *MockScreen) {
 				palette := NewPalette()
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)
 				DrawTextField(s, palette, textFieldState)
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
-				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
-				}
+				s.AssertCellContents(t, tc.expectContents)
+				s.AssertCursor(t, tc.expectCursorVisible, tc.expectCursorCol, tc.expectCursorRow)
 			})
 		})
 	}

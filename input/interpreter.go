@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 
 	"github.com/aretext/aretext/input/engine"
 	"github.com/aretext/aretext/state"
@@ -118,7 +118,7 @@ func (inp *Interpreter) processPasteKey(event *tcell.EventKey) Action {
 	case tcell.KeyTab:
 		inp.pasteBuffer.WriteRune('\t')
 	case tcell.KeyRune:
-		inp.pasteBuffer.WriteRune(event.Rune())
+		inp.pasteBuffer.WriteString(event.Str())
 	}
 	return EmptyAction
 }
@@ -202,39 +202,52 @@ type mode struct {
 }
 
 func (m *mode) ProcessKeyEvent(event *tcell.EventKey, ctx Context) Action {
-	engineEvent := eventKeyToEngineEvent(event)
-	if event.Key() == tcell.KeyRune {
-		m.inputBuffer.WriteRune(event.Rune())
-	}
+	var actions []Action
+	for _, engineEvent := range eventKeyToEngineEvents(event) {
+		if event.Key() == tcell.KeyRune {
+			m.inputBuffer.WriteString(event.Str())
+		}
 
-	action := EmptyAction
-	result := m.runtime.ProcessEvent(engineEvent)
-	if result.Decision == engine.DecisionAccept {
-		command := m.commands[result.CmdId]
-		params := capturesToCommandParams(result.Captures)
-		log.Printf(
-			"%s mode accepted input for command %q with params %+v and ctx %+v\n",
-			m.name, command.Name,
-			params, ctx,
-		)
+		result := m.runtime.ProcessEvent(engineEvent)
+		if result.Decision == engine.DecisionAccept {
+			command := m.commands[result.CmdId]
+			params := capturesToCommandParams(result.Captures)
+			log.Printf(
+				"%s mode accepted input for command %q with params %+v and ctx %+v\n",
+				m.name, command.Name,
+				params, ctx,
+			)
 
-		if err := m.validateParams(command, params); err != nil {
-			action = func(s *state.EditorState) {
-				state.SetStatusMsg(s, state.StatusMsg{
-					Style: state.StatusMsgStyleError,
-					Text:  err.Error(),
+			if err := m.validateParams(command, params); err != nil {
+				actions = append(actions, func(s *state.EditorState) {
+					state.SetStatusMsg(s, state.StatusMsg{
+						Style: state.StatusMsgStyleError,
+						Text:  err.Error(),
+					})
 				})
+			} else {
+				actions = append(actions, command.BuildAction(ctx, params))
 			}
-		} else {
-			action = command.BuildAction(ctx, params)
+		}
+
+		if result.Decision != engine.DecisionWait {
+			m.inputBuffer.Reset()
 		}
 	}
 
-	if result.Decision != engine.DecisionWait {
-		m.inputBuffer.Reset()
+	if len(actions) == 0 {
+		return EmptyAction
+	} else if len(actions) == 1 {
+		// Fast path for a single action (common case).
+		return actions[0]
+	} else {
+		// Execute multiple actions in sequence.
+		return func(s *state.EditorState) {
+			for _, a := range actions {
+				a(s)
+			}
+		}
 	}
-
-	return action
 }
 
 func (m *mode) validateParams(command Command, params CommandParams) error {

@@ -3,8 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-
 	"github.com/aretext/aretext/menu"
 	"github.com/aretext/aretext/state"
 )
@@ -105,13 +103,12 @@ func TestDrawMenu(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(10, 6)
+			WithMockScreen(t, 10, 6, func(s *MockScreen) {
 				palette := NewPalette()
 				menu := tc.buildMenu()
 				DrawMenu(s, palette, menu)
 				s.Sync()
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}

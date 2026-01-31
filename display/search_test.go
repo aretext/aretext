@@ -3,9 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aretext/aretext/state"
 )
 
@@ -68,18 +65,12 @@ func TestDrawSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(6, 2)
+			WithMockScreen(t, 6, 2, func(s *MockScreen) {
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
-				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
-				}
+				s.AssertCellContents(t, tc.expectContents)
+				s.AssertCursor(t, tc.expectCursorVisible, tc.expectCursorCol, tc.expectCursorRow)
 			})
 		})
 	}

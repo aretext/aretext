@@ -5,17 +5,23 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 
 	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/input/engine"
 )
 
-func eventKeyToEngineEvent(eventKey *tcell.EventKey) engine.Event {
+func eventKeyToEngineEvents(eventKey *tcell.EventKey) []engine.Event {
 	if eventKey.Key() == tcell.KeyRune {
-		return runeToEngineEvent(eventKey.Rune())
+		var events []engine.Event
+		for _, r := range eventKey.Str() {
+			events = append(events, runeToEngineEvent(r))
+		}
+		return events
 	} else {
-		return keyToEngineEvent(eventKey.Key())
+		return []engine.Event{
+			keyToEngineEvent(eventKey.Key()),
+		}
 	}
 }
 

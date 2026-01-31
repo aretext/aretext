@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/display"
@@ -22,8 +22,6 @@ type Editor struct {
 	screen            tcell.Screen
 	palette           *display.Palette
 	documentLoadCount int
-	termEventChan     chan tcell.Event
-	quitChan          chan struct{}
 }
 
 // NewEditor instantiates a new editor that uses the provided screen.
@@ -38,16 +36,12 @@ func NewEditor(screen tcell.Screen, path string, lineNum uint64, configRuleSet c
 	inputInterpreter := input.NewInterpreter()
 	palette := display.NewPalette()
 	documentLoadCount := editorState.DocumentLoadCount()
-	termEventChan := make(chan tcell.Event, 1)
-	quitChan := make(chan struct{}, 1)
 	editor := &Editor{
 		inputInterpreter,
 		editorState,
 		screen,
 		palette,
 		documentLoadCount,
-		termEventChan,
-		quitChan,
 	}
 
 	// Attempt to load the file.
@@ -84,7 +78,6 @@ func effectivePath(path string) string {
 // RunEventLoop processes events and draws to the screen, blocking until the user exits the program.
 func (e *Editor) RunEventLoop() {
 	e.redraw(true)
-	go e.screen.ChannelEvents(e.termEventChan, e.quitChan)
 	e.runMainEventLoop()
 	e.shutdown()
 }
@@ -93,7 +86,7 @@ func (e *Editor) runMainEventLoop() {
 	var inBracketedPaste bool
 	for {
 		select {
-		case event := <-e.termEventChan:
+		case event := <-e.screen.EventQ():
 			e.handleTermEvent(event)
 			if pasteEvent, ok := event.(*tcell.EventPaste); ok {
 				inBracketedPaste = pasteEvent.Start()
@@ -118,7 +111,7 @@ func (e *Editor) runMainEventLoop() {
 		// or we're in the middle of a bracketed paste.
 		// This helps avoid the overhead of redrawing after every keypress
 		// if the user pastes a lot of text into the terminal emulator.
-		if len(e.termEventChan) == 0 && !inBracketedPaste {
+		if len(e.screen.EventQ()) == 0 && !inBracketedPaste {
 			e.redraw(false)
 		}
 	}
@@ -154,7 +147,6 @@ func (e *Editor) handleIfDocumentLoaded() {
 
 func (e *Editor) shutdown() {
 	e.editorState.FileWatcher().Stop()
-	e.quitChan <- struct{}{}
 }
 
 func (e *Editor) redraw(sync bool) {

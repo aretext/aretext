@@ -3,7 +3,7 @@ package display
 import (
 	"log"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/state"

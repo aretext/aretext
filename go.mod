@@ -3,7 +3,7 @@ module github.com/aretext/aretext
 go 1.25
 
 require (
-	github.com/gdamore/tcell/v2 v2.13.5
+	github.com/gdamore/tcell/v2 v2.13.8
 	github.com/google/renameio/v2 v2.0.2
 	github.com/rivo/uniseg v0.4.7
 	github.com/stretchr/testify v1.11.1

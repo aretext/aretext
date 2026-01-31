@@ -16,7 +16,7 @@ You can download the official binaries for Linux, macOS, and FreeBSD from [the a
 ### Linux x86 64-bit
 
 ```
-VERSION=1.6.1
+VERSION=1.6.2
 RELEASE=aretext_v${VERSION}_linux_amd64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
@@ -26,7 +26,7 @@ sudo cp $RELEASE/aretext /usr/local/bin/
 ### Linux ARM 64-bit
 
 ```
-VERSION=1.6.1
+VERSION=1.6.2
 RELEASE=aretext_v${VERSION}_linux_arm64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz
@@ -36,7 +36,7 @@ sudo cp $RELEASE/aretext /usr/local/bin/
 ### macOS ARM 64-bit
 
 ```
-VERSION=1.6.1
+VERSION=1.6.2
 RELEASE=aretext_v${VERSION}_darwin_arm64
 curl -LO https://github.com/aretext/aretext/releases/download/v$VERSION/$RELEASE.tar.gz
 tar -zxvf $RELEASE.tar.gz

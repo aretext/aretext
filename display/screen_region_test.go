@@ -23,8 +23,8 @@ func withMockScreen(t *testing.T, size vt.MockOptSize, f func(tcell.Screen, vt.M
 
 func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]string) {
 	size := s.GetSize()
-	require.Equal(t, len(expectedContents), size.Y)
-	require.Equal(t, len(expectedContents[0]), size.X)
+	require.Equal(t, len(expectedContents), int(size.Y))
+	require.Equal(t, len(expectedContents[0]), int(size.X))
 	for y := vt.Row(0); y <  size.Y; y++ {
 		for x := vt.Col(0); x <  size.X; x++ {
 			actual := s.GetCell(vt.Coord{X:x, Y:y}).C
@@ -36,8 +36,8 @@ func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]str
 
 func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.Style) {
 	size := s.GetSize()
-	require.Equal(t, len(expectedStyles), size.Y)
-	require.Equal(t, len(expectedStyles[0]), size.X)
+	require.Equal(t, len(expectedStyles), int(size.Y))
+	require.Equal(t, len(expectedStyles[0]), int(size.X))
 	for y := vt.Row(0); y < size.Y; y++ {
 		for x := vt.Col(0); x < size.X; x++ {
 			actualStyle := s.GetCell(vt.Coord{X:x, Y:y}).S

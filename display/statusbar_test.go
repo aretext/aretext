@@ -26,7 +26,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputMode: state.InputModeNormal,
 			filePath:  "./foo/bar",
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"f", "o", "o", "/", "b", "a", "r", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
@@ -35,7 +35,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputMode: state.InputModeInsert,
 			filePath:  "./foo/bar",
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"-", "-", " ", "I", "N", "S", "E", "R", "T", " ", "-", "-", " ", " ", " ", " "},
 			},
 		},
@@ -44,7 +44,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputMode: state.InputModeVisual,
 			filePath:  "./foo/bar",
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"-", "-", " ", "V", "I", "S", "U", "A", "L", " ", "-", "-", " ", " ", " ", " "},
 			},
 		},
@@ -53,7 +53,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputMode: state.InputModeMenu,
 			filePath:  "./foo/bar",
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"f", "o", "o", "/", "b", "a", "r", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
@@ -64,7 +64,7 @@ func TestDrawStatusBar(t *testing.T) {
 				Style: state.StatusMsgStyleSuccess,
 			},
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"s", "u", "c", "c", "e", "s", "s", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
@@ -75,7 +75,7 @@ func TestDrawStatusBar(t *testing.T) {
 				Style: state.StatusMsgStyleError,
 			},
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"e", "r", "r", "o", "r", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
@@ -83,7 +83,7 @@ func TestDrawStatusBar(t *testing.T) {
 			name:              "input buffer",
 			inputBufferString: `"aya`,
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"\"", "a", "y", "a", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			},
 		},
@@ -92,7 +92,7 @@ func TestDrawStatusBar(t *testing.T) {
 			inputMode:            state.InputModeNormal,
 			isRecordingUserMacro: true,
 			expectedContents: [][]string{
-				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
 				{"R", "e", "c", "o", "r", "d", "i", "n", "g", " ", "m", "a", "c", "r", "o", "."},
 			},
 		},

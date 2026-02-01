@@ -69,7 +69,7 @@ func TestDrawSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:6, Y:2}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: 6, Y: 2}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)
 

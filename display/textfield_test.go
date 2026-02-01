@@ -98,7 +98,7 @@ func TestDrawTextField(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.screenWidth), Y: vt.Row(tc.screenHeight)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.screenWidth), Y: vt.Row(tc.screenHeight)}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)
 				DrawTextField(s, palette, textFieldState)

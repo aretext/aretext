@@ -311,21 +311,21 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 			name:        "thai",
 			inputString: "\u0E04\u0E49\u0E33",
 			expectedContents: [][]string{
-				pad([]string{"\u0E04\u0E49\u0E33"}, 100),
+				pad([]string{"\u0E04", "\u0E33", ""}, 100),
 			},
 		},
 		{
 			name:        "emoji with zero-width joiner",
 			inputString: "\U0001f9db\u200d\u2640\U0001f469\u200d\U0001f467\u200d\U0001f467",
 			expectedContents: [][]string{
-				pad([]string{"\U0001f9db\u200d\u2640", "", "\U0001f469\u200d\U0001f467\u200d\U0001f467", ""}, 100),
+				pad([]string{"\U0001f9db", "", "\U0001f469", "", "\U0001f467", "", "\U0001f467", ""}, 100),
 			},
 		},
 		{
 			name:        "regional indicator",
 			inputString: "\U0001f1fa\U0001f1f8 (usa!)",
 			expectedContents: [][]string{
-				pad([]string{"\U0001f1fa\U0001f1f8", "", " ", "(", "u", "s", "a", "!", ")"}, 100),
+				pad([]string{"\U0001f1fa", "", " ", "(", "u", "s", "a", "!", ")"}, 100),
 			},
 		},
 	}
@@ -512,8 +512,8 @@ func TestDrawBufferCursor(t *testing.T) {
 				assert.Equal(t, tc.expectedCursorVisible, cursorStyle.IsVisible())
 				if tc.expectedCursorVisible {
 					cursorPos := b.GetPosition()
-					assert.Equal(t, tc.expectedCursorCol, cursorPos.X)
-					assert.Equal(t, tc.expectedCursorRow, cursorPos.Y)
+					assert.Equal(t, tc.expectedCursorCol, int(cursorPos.X))
+					assert.Equal(t, tc.expectedCursorRow, int(cursorPos.Y))
 				}
 			})
 		})
@@ -521,7 +521,7 @@ func TestDrawBufferCursor(t *testing.T) {
 }
 
 func TestSyntaxHighlighting(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:18,Y:1}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 18, Y: 1}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.SetSyntax(editorState, syntax.LanguageGo)
 			for _, r := range `const foo = "test"` {
@@ -531,39 +531,39 @@ func TestSyntaxHighlighting(t *testing.T) {
 		assertCellStyles(t, b, [][]tcell.Style{
 			{
 				// `const` highlighted as keyword.
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorOlive).Background(tcell.PaletteColor(0)),
 
 				// ` foo ` has no highlighting.
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 
 				// `=` highlighted as an operator.
-				tcell.StyleDefault.Foreground(tcell.ColorPurple),
+				tcell.StyleDefault.Foreground(tcell.ColorPurple).Background(tcell.PaletteColor(0)),
 
 				// ` ` has no highlighting.
-				tcell.StyleDefault,
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 
 				// `"test"` highlighted as a string.
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.ColorMaroon).Background(tcell.PaletteColor(0)),
 			},
 		})
 	})
 }
 
 func TestSearchMatch(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:12,Y:1}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 12, Y: 1}, func(s tcell.Screen, b vt.MockBackend) {
 		query := "d1"
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range `abcd1234` {
@@ -577,18 +577,18 @@ func TestSearchMatch(t *testing.T) {
 		})
 		assertCellStyles(t, b, [][]tcell.Style{
 			{
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault.Reverse(true),
-				tcell.StyleDefault.Reverse(true),
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
-				tcell.StyleDefault,
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 			},
 		})
 	})
@@ -612,11 +612,11 @@ func TestSelection(t *testing.T) {
 			selectionEndPos:   2,
 			expectedStyles: [][]tcell.Style{
 				{
-					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 			},
 		},
@@ -629,18 +629,18 @@ func TestSelection(t *testing.T) {
 			selectionEndPos:   5,
 			expectedStyles: [][]tcell.Style{
 				{
-					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 				{
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault,
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 			},
 		},
@@ -653,19 +653,19 @@ func TestSelection(t *testing.T) {
 			selectionEndPos:   2,
 			expectedStyles: [][]tcell.Style{
 				{
-					tcell.StyleDefault,
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 				{
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 				{
-					tcell.StyleDefault,
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 			},
 		},
@@ -678,14 +678,14 @@ func TestSelection(t *testing.T) {
 			selectionEndPos:   3,
 			expectedStyles: [][]tcell.Style{
 				{
-					tcell.StyleDefault,
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault.Reverse(true).Dim(true),
-					tcell.StyleDefault,
-					tcell.StyleDefault,
-					tcell.StyleDefault,
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+					tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 				},
 			},
 		},
@@ -693,7 +693,7 @@ func TestSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width),Y:vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -765,7 +765,7 @@ func TestShowLineNumbers(t *testing.T) {
 			inputString: "ab\nc\nde",
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "2", "", "c", ""},
+				{"", "2", "", "c", " "},
 				{"", "3", "", "d", "e"},
 				{"", "", "", "", ""},
 				{"", "", "", "", ""},
@@ -778,8 +778,8 @@ func TestShowLineNumbers(t *testing.T) {
 			inputString: "ab\nc\nd\n",
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "2", "", "c", ""},
-				{"", "3", "", "d", ""},
+				{"", "2", "", "c", " "},
+				{"", "3", "", "d", " "},
 				{"", "4", "", "", ""},
 				{"", "", "", "", ""},
 			},
@@ -791,7 +791,7 @@ func TestShowLineNumbers(t *testing.T) {
 			inputString: "ab\nc\nde\n",
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "2", "", "c", ""},
+				{"", "2", "", "c", " "},
 				{"", "3", "", "d", "e"},
 				{"", "4", "", "", ""},
 				{"", "", "", "", ""},
@@ -803,7 +803,7 @@ func TestShowLineNumbers(t *testing.T) {
 			height:      5,
 			inputString: "ab\ncd",
 			expectedContents: [][]string{
-				{"a", "b", ""},
+				{"a", "b", " "},
 				{"c", "d", ""},
 				{"", "", ""},
 				{"", "", ""},
@@ -814,7 +814,7 @@ func TestShowLineNumbers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y:vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -846,7 +846,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "2", "", "c", ""},
+				{"", "2", "", "c", " "},
 				{"", "3", "", "d", "e"},
 				{"", "", "", "", ""},
 				{"", "", "", "", ""},
@@ -861,7 +861,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "2", "", "c", ""},
+				{"", "2", "", "c", " "},
 				{"", "3", "", "d", "e"},
 				{"", "", "", "", ""},
 				{"", "", "", "", ""},
@@ -875,10 +875,10 @@ func TestLineNumberMode(t *testing.T) {
 			lineNumMode:    config.LineNumberModeAbsolute,
 			showLineNum:    false,
 			expectedContents: [][]string{
-				{"a", "b", "", "", ""},
-				{"c", "", "", "", ""},
-				{"d", "e", "", "", ""},
-				{"f", "g", "", "", ""},
+				{"a", "b", " ", "", ""},
+				{"c", " ", "", "", ""},
+				{"d", "e", " ", "", ""},
+				{"f", "g", " ", "", ""},
 				{"h", "i", "", "", ""},
 			},
 		},
@@ -906,7 +906,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]string{
 				{"", "0", "", "a", "b"},
-				{"", "1", "", "c", ""},
+				{"", "1", "", "c", " "},
 				{"", "2", "", "d", "e"},
 				{"", "", "", "", ""},
 				{"", "", "", "", ""},
@@ -921,7 +921,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]string{
 				{"", "1", "", "a", "b"},
-				{"", "0", "", "c", ""},
+				{"", "0", "", "c", " "},
 				{"", "1", "", "d", "e"},
 				{"", "2", "", "f", "g"},
 				{"", "3", "", "h", "i"},
@@ -936,7 +936,7 @@ func TestLineNumberMode(t *testing.T) {
 			showLineNum:    true,
 			expectedContents: [][]string{
 				{"", "2", "", "a", "b"},
-				{"", "1", "", "c", ""},
+				{"", "1", "", "c", " "},
 				{"", "0", "", "d", "e"},
 				{"", "1", "", "f", "g"},
 				{"", "2", "", "h", "i"},
@@ -950,10 +950,10 @@ func TestLineNumberMode(t *testing.T) {
 			lineNumMode:    config.LineNumberModeRelative,
 			showLineNum:    false,
 			expectedContents: [][]string{
-				{"a", "b", "", "", ""},
-				{"c", "", "", "", ""},
-				{"d", "e", "", "", ""},
-				{"f", "g", "", "", ""},
+				{"a", "b", " ", "", ""},
+				{"c", " ", "", "", ""},
+				{"d", "e", " ", "", ""},
+				{"f", "g", " ", "", ""},
 				{"h", "i", "", "", ""},
 			},
 		},
@@ -966,28 +966,28 @@ func TestLineNumberMode(t *testing.T) {
 			inputString:    "ab\nc\nde\nfg\nhi\n\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n",
 			expectedContents: [][]string{
 				{"1", "1", "", "a", "b"},
-				{"1", "0", "", "c", ""},
+				{"1", "0", "", "c", " "},
 				{"", "9", "", "d", "e"},
 				{"", "8", "", "f", "g"},
 				{"", "7", "", "h", "i"},
-				{"", "6", "", "", ""},
-				{"", "5", "", "j", ""},
-				{"", "4", "", "k", ""},
-				{"", "3", "", "l", ""},
-				{"", "2", "", "m", ""},
-				{"", "1", "", "n", ""},
-				{"", "0", "", "o", ""},
-				{"", "1", "", "p", ""},
-				{"", "2", "", "q", ""},
-				{"", "3", "", "r", ""},
-				{"", "4", "", "s", ""},
-				{"", "5", "", "t", ""},
-				{"", "6", "", "u", ""},
-				{"", "7", "", "v", ""},
-				{"", "8", "", "w", ""},
-				{"", "9", "", "x", ""},
-				{"1", "0", "", "y", ""},
-				{"1", "1", "", "z", ""},
+				{"", "6", "", " ", ""},
+				{"", "5", "", "j", " "},
+				{"", "4", "", "k", " "},
+				{"", "3", "", "l", " "},
+				{"", "2", "", "m", " "},
+				{"", "1", "", "n", " "},
+				{"", "0", "", "o", " "},
+				{"", "1", "", "p", " "},
+				{"", "2", "", "q", " "},
+				{"", "3", "", "r", " "},
+				{"", "4", "", "s", " "},
+				{"", "5", "", "t", " "},
+				{"", "6", "", "u", " "},
+				{"", "7", "", "v", " "},
+				{"", "8", "", "w", " "},
+				{"", "9", "", "x", " "},
+				{"1", "0", "", "y", " "},
+				{"1", "1", "", "z", " "},
 				{"1", "2", "", "", ""},
 				{"", "", "", "", ""},
 			},
@@ -996,7 +996,7 @@ func TestLineNumberMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1032,8 +1032,8 @@ func TestShowTabs(t *testing.T) {
 			showTabs:    false,
 			inputString: "\ta\t\nb\t",
 			expectedContents: [][]string{
-				{"", "", "", "", "a", "", "", ""},
-				{"b", "", "", "", "", "", "", ""},
+				{" ", " ", " ", " ", "a", " ", " ", " "},
+				{"b", " ", " ", " ", "", "", "", ""},
 			},
 		},
 		{
@@ -1043,15 +1043,15 @@ func TestShowTabs(t *testing.T) {
 			showTabs:    true,
 			inputString: "\ta\t\nb\t",
 			expectedContents: [][]string{
-				{string([]rune{tcell.RuneRArrow}), "", "", "", "a", string([]rune{tcell.RuneRArrow}), "", ""},
-				{"b", string([]rune{tcell.RuneRArrow}), "", "", "", "", "", ""},
+				{string([]rune{tcell.RuneRArrow}), " ", " ", " ", "a", string([]rune{tcell.RuneRArrow}), " ", " "},
+				{"b", string([]rune{tcell.RuneRArrow}), " ", " ", "", "", "", ""},
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1067,7 +1067,7 @@ func TestShowTabs(t *testing.T) {
 }
 
 func TestShowTabsWithSelectionStyle(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:8, Y: 1}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 8, Y: 1}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\t')
 			state.InsertRune(editorState, 'a')
@@ -1083,18 +1083,18 @@ func TestShowTabsWithSelectionStyle(t *testing.T) {
 			})
 		})
 		assertCellContents(t, b, [][]string{
-			{string([]rune{tcell.RuneRArrow}), "", "", "", "a", "b", "c", ""},
+			{string([]rune{tcell.RuneRArrow}), " ", " ", " ", "a", "b", "c", ""},
 		})
 		assertCellStyles(t, b, [][]tcell.Style{
 			{
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault.Reverse(true).Dim(true),
-				tcell.StyleDefault,
-				tcell.StyleDefault,
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Reverse(true).Dim(true).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
+				tcell.StyleDefault.Foreground(tcell.PaletteColor(7)).Background(tcell.PaletteColor(0)),
 			},
 		})
 	})
@@ -1115,8 +1115,8 @@ func TestShowSpaces(t *testing.T) {
 			showSpaces:  false,
 			inputString: " a \nb ",
 			expectedContents: [][]string{
-				{"", "a", "", "", "", "", "", ""},
-				{"b", "", "", "", "", "", "", ""},
+				{" ", "a", " ", " ", "", "", "", ""},
+				{"b", " ", "", "", "", "", "", ""},
 			},
 		},
 		{
@@ -1126,7 +1126,7 @@ func TestShowSpaces(t *testing.T) {
 			showSpaces:  true,
 			inputString: " a \nb ",
 			expectedContents: [][]string{
-				{string([]rune{tcell.RuneBullet}), "a", string([]rune{tcell.RuneBullet}), "", "", "", "", ""},
+				{string([]rune{tcell.RuneBullet}), "a", string([]rune{tcell.RuneBullet}), " ", "", "", "", ""},
 				{"b", string([]rune{tcell.RuneBullet}), "", "", "", "", "", ""},
 			},
 		},
@@ -1134,7 +1134,7 @@ func TestShowSpaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1185,7 +1185,7 @@ func TestShowUnicode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1199,4 +1199,3 @@ func TestShowUnicode(t *testing.T) {
 		})
 	}
 }
-

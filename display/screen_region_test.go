@@ -25,9 +25,9 @@ func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]str
 	size := s.GetSize()
 	require.Equal(t, len(expectedContents), int(size.Y))
 	require.Equal(t, len(expectedContents[0]), int(size.X))
-	for y := vt.Row(0); y <  size.Y; y++ {
-		for x := vt.Col(0); x <  size.X; x++ {
-			actual := s.GetCell(vt.Coord{X:x, Y:y}).C
+	for y := vt.Row(0); y < size.Y; y++ {
+		for x := vt.Col(0); x < size.X; x++ {
+			actual := s.GetCell(vt.Coord{X: x, Y: y}).C
 			expected := expectedContents[y][x]
 			assert.Equal(t, expected, actual, "Wrong contents at (%d, %d), expected %q but got %q", x, y, expected, actual)
 		}
@@ -40,15 +40,18 @@ func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.S
 	require.Equal(t, len(expectedStyles[0]), int(size.X))
 	for y := vt.Row(0); y < size.Y; y++ {
 		for x := vt.Col(0); x < size.X; x++ {
-			actualStyle := s.GetCell(vt.Coord{X:x, Y:y}).S
+			actualStyle := s.GetCell(vt.Coord{X: x, Y: y}).S
 			expectedStyle := expectedStyles[y][x]
-			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
+			// Compare style components individually since vt.Style and tcell.Style are different types
+			assert.Equal(t, expectedStyle.GetForeground(), actualStyle.Fg(), "Wrong foreground at (%d, %d)", x, y)
+			assert.Equal(t, expectedStyle.GetBackground(), actualStyle.Bg(), "Wrong background at (%d, %d)", x, y)
+			assert.Equal(t, uint(expectedStyle.GetAttributes()), uint(actualStyle.Attr()), "Wrong attributes at (%d, %d)", x, y)
 		}
 	}
 }
 
 func TestScreenRegionPut(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:10, Y:10}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
 		// Inside the region, at each corner
@@ -81,7 +84,7 @@ func TestScreenRegionPut(t *testing.T) {
 }
 
 func TestScreenRegionPutStrStyled(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
 		// Top of region, clipped
@@ -110,7 +113,7 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 }
 
 func TestScreenRegionClear(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		s.Fill('~', tcell.StyleDefault.Bold(true))
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Clear()
@@ -132,7 +135,7 @@ func TestScreenRegionClear(t *testing.T) {
 }
 
 func TestScreenRegionFill(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:10, Y:10}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Fill('^', tcell.StyleDefault.Bold(true))
 		s.Sync()
@@ -151,4 +154,3 @@ func TestScreenRegionFill(t *testing.T) {
 		})
 	})
 }
-

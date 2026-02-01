@@ -513,15 +513,14 @@ func TestDrawBufferCursor(t *testing.T) {
 }
 
 func TestSyntaxHighlighting(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(18, 1)
+	withMockScreen(t, vt.MockOptSize{X:18,Y:1}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.SetSyntax(editorState, syntax.LanguageGo)
 			for _, r := range `const foo = "test"` {
 				state.InsertRune(editorState, r)
 			}
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		assertCellStyles(t, b, [][]tcell.Style{
 			{
 				// `const` highlighted as keyword.
 				tcell.StyleDefault.Foreground(tcell.ColorOlive),

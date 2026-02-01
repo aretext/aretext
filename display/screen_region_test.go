@@ -42,9 +42,10 @@ func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.S
 	for y := 0; y < int(size.Y); y++ {
 		for x := 0; x < int(size.X); x++ {
 			cell := s.GetCell(vt.Coord{X: vt.Col(x), Y: vt.Row(y)})
-			actualStyle := tcell.Style(cell.S)
 			expectedStyle := expectedStyles[y][x]
-			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
+			// Compare styles by converting both to attributes and colors
+			// since cell.S is vt.Style interface and expectedStyle is tcell.Style
+			assert.Equal(t, expectedStyle, cell.S, "Wrong style at (%d, %d)", x, y)
 		}
 	}
 }

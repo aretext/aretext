@@ -74,11 +74,11 @@ func TestDrawSearchQuery(t *testing.T) {
 				DrawSearchQuery(s, palette, tc.query, tc.direction)
 				s.Sync()
 				assertCellContents(t, b, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
+				cursorPos := b.GetPosition(); cursorStyle := b.GetCursor(); cursorVisible := cursorStyle.IsVisible()
 				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
 				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
+					assert.Equal(t, tc.expectCursorCol, int(cursorPos.X))
+					assert.Equal(t, tc.expectCursorRow, int(cursorPos.Y))
 				}
 			})
 		})

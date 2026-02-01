@@ -98,17 +98,17 @@ func TestDrawTextField(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, vt.MockOptSize{X: tc.screenWidth, Y: tc.screenHeight}, func(s tcell.Screen, b vt.MockBackend) {
+			withMockScreen(t, vt.MockOptSize{X: vt.Col(tc.screenWidth), Y: vt.Row(tc.screenHeight)}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)
 				DrawTextField(s, palette, textFieldState)
 				s.Sync()
 				assertCellContents(t, b, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
+				cursorPos := b.GetPosition(); cursorStyle := b.GetCursor(); cursorVisible := cursorStyle.IsVisible()
 				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
 				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
+					assert.Equal(t, tc.expectCursorCol, int(cursorPos.X))
+					assert.Equal(t, tc.expectCursorRow, int(cursorPos.Y))
 				}
 			})
 		})

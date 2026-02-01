@@ -114,7 +114,7 @@ func TestDrawBuffer(t *testing.T) {
 			name:        "full-width characters, no wrapping",
 			inputString: "abc界xyz",
 			expectedContents: [][]string{
-				{"a", "b", "c", "界", " ", "x", "y", "z", " ", " "},
+				{"a", "b", "c", "界", "", "x", "y", "z", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
@@ -131,7 +131,7 @@ func TestDrawBuffer(t *testing.T) {
 			inputString: "abcdefghi界jklmn",
 			expectedContents: [][]string{
 				{"a", "b", "c", "d", "e", "f", "g", "h", "i", " "},
-				{"界", " ", "j", "k", "l", "m", "n", " ", " ", " "},
+				{"界", "", "j", "k", "l", "m", "n", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
@@ -178,7 +178,7 @@ func TestDrawBuffer(t *testing.T) {
 			name:        "emoji presentation selector",
 			inputString: "\u2139\ufe0f abc",
 			expectedContents: [][]string{
-				{"\u2139\ufe0f", " ", " ", "a", "b", "c", " ", " ", " ", " "},
+				{"\u2139\ufe0f", "", " ", "a", "b", "c", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
@@ -197,7 +197,7 @@ func TestDrawBuffer(t *testing.T) {
 			// gc break between the two codepoints of the country-flag emoji.
 			inputString: " \U0001F1FA\U0001F1F8",
 			expectedContents: [][]string{
-				{" ", "\U0001F1FA\U0001F1F8", " ", " ", " ", " ", " ", " ", " ", " "},
+				{" ", "\U0001F1FA\U0001F1F8", "", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},

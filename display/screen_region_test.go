@@ -18,6 +18,9 @@ func withMockScreen(t *testing.T, size vt.MockOptSize, f func(tcell.Screen, vt.M
 	require.NoError(t, err)
 	defer s.Fini()
 
+	s.Clear()
+	s.Sync()
+
 	f(s, mt.Backend())
 }
 

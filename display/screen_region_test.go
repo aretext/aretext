@@ -36,12 +36,11 @@ func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]str
 
 func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.Style) {
 	size := s.GetSize()
-	require.Equal(t, len(expectedContents), size.Y)
-	require.Equal(t, len(expectedContents[0]), size.X)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			cell := s.GetCell(vt.Coord{X:x, Y:y})
-			actualStyle := cell.Style
+	require.Equal(t, len(expectedStyles), size.Y)
+	require.Equal(t, len(expectedStyles[0]), size.X)
+	for y := vt.Row(0); y < size.Y; y++ {
+		for x := vt.Col(0); x < size.X; x++ {
+			actualStyle := s.GetCell(vt.Coord{X:x, Y:y}).S
 			expectedStyle := expectedStyles[y][x]
 			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
 		}

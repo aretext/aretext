@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
@@ -100,14 +101,13 @@ func TestDrawEditor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				state := tc.buildState()
-				screenWidth, screenHeight := state.ScreenSize()
-				s.SetSize(int(screenWidth), int(screenHeight))
+			state := tc.buildState()
+			screenWidth, screenHeight := state.ScreenSize()
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(screenWidth), Y: vt.Row(screenHeight)}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				DrawEditor(s, palette, state, "")
 				s.Sync()
-				assertCellContents(t, s, tc.expectedContents)
+				assertCellContents(t, b, tc.expectedContents)
 			})
 		})
 	}

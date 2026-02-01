@@ -34,8 +34,8 @@ func TestDrawTextField(t *testing.T) {
 		screenHeight        int
 		expectContents      [][]string
 		expectCursorVisible bool
-		expectCursorCol     int
-		expectCursorRow     int
+		expectCursorCol     vt.Col
+		expectCursorRow     vt.Row
 	}{
 		{
 			name:         "prompt with no input",

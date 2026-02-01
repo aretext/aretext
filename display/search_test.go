@@ -17,8 +17,8 @@ func TestDrawSearchQuery(t *testing.T) {
 		direction           state.SearchDirection
 		expectContents      [][]string
 		expectCursorVisible bool
-		expectCursorCol     int
-		expectCursorRow     int
+		expectCursorCol     vt.Col
+		expectCursorRow     vt.Row
 	}{
 		{
 			name:      "empty query",

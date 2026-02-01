@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -97,18 +98,20 @@ func TestDrawTextField(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.screenWidth, tc.screenHeight)
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.screenWidth), Y: vt.Row(tc.screenHeight)}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)
 				DrawTextField(s, palette, textFieldState)
+
 				s.Sync()
 				assertCellContents(t, s, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
+
+				cursorStyle := b.GetCursor()
+				assert.Equal(t, tc.expectCursorVisible, cursorStyle.IsVisible())
 				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
+					cursorPos := b.GetPosition()
+					assert.Equal(t, tc.expectCursorCol, cursorPos.X)
+					assert.Equal(t, tc.expectCursorRow, cursorPos.Y)
 				}
 			})
 		})

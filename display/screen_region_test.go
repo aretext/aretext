@@ -14,7 +14,7 @@ func withMockScreen(t *testing.T, size vt.MockOptSize, f func(tcell.Screen, vt.M
 	s, err := tcell.NewTerminfoScreenFromTty(mt)
 	require.NoError(t, err)
 
-	err := s.Init()
+	err = s.Init()
 	require.NoError(t, err)
 	defer s.Fini()
 
@@ -25,10 +25,9 @@ func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]str
 	size := s.GetSize()
 	require.Equal(t, len(expectedContents), size.Y)
 	require.Equal(t, len(expectedContents[0]), size.X)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			cell := s.GetCell(vt.Coord{X:x, Y:y})
-			actual := string(cell.Runes)
+	for y := vt.Row(0); y <  size.Y; y++ {
+		for x := vt.Col(0); x <  size.X; x++ {
+			actual := s.GetCell(vt.Coord{X:x, Y:y}).C
 			expected := expectedContents[y][x]
 			assert.Equal(t, expected, actual, "Wrong contents at (%d, %d), expected %q but got %q", x, y, expected, actual)
 		}

@@ -48,8 +48,7 @@ func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.S
 }
 
 func TestScreenRegionPut(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(10, 10)
+	withMockScreen(t, vt.MockOptSize{X:10, Y:10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
 		// Inside the region, at each corner
@@ -66,7 +65,7 @@ func TestScreenRegionPut(t *testing.T) {
 		s.Sync()
 
 		// Check that only the contents in the region are displayed
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "a", " ", " ", " ", "b", " ", " ", " ", " "},
@@ -82,8 +81,7 @@ func TestScreenRegionPut(t *testing.T) {
 }
 
 func TestScreenRegionPutStrStyled(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(10, 10)
+	withMockScreen(t, vt.MockOptSize{X:10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
 		// Top of region, clipped
@@ -96,7 +94,7 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 		s.Sync()
 
 		// Check that only the contents in the region are displayed
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "h", "e", "l", "l", "o", " ", " ", " ", " "},

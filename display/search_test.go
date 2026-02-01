@@ -25,7 +25,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			query:     "",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]string{
-				{" ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", ""},
 				{"/", " ", " ", " ", " ", " "},
 			},
 			expectCursorVisible: true,
@@ -37,7 +37,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			query:     "abcd",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]string{
-				{" ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", ""},
 				{"/", "a", "b", "c", "d", " "},
 			},
 			expectCursorVisible: true,
@@ -49,7 +49,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			query:     "abcd1234",
 			direction: state.SearchDirectionForward,
 			expectContents: [][]string{
-				{" ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", ""},
 				{"/", "a", "b", "c", "d", "1"},
 			},
 		},
@@ -58,7 +58,7 @@ func TestDrawSearchQuery(t *testing.T) {
 			query:     "abcd",
 			direction: state.SearchDirectionBackward,
 			expectContents: [][]string{
-				{" ", " ", " ", " ", " ", " "},
+				{"", "", "", "", "", ""},
 				{"?", "a", "b", "c", "d", " "},
 			},
 			expectCursorVisible: true,

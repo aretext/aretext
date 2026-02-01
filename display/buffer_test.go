@@ -337,7 +337,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 }
 
 func TestDrawBufferSizeTooSmall(t *testing.T) {
-	withMockScreen(t, vt.MockOptSize{X:1, Y:4}, func(s tcell.Screen, b vt.MockBackend) {
+	withMockScreen(t, vt.MockOptSize{X: 1, Y: 4}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range "ab界cd" {
 				state.InsertRune(editorState, r)
@@ -491,8 +491,7 @@ func TestDrawBufferCursor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(5, 5)
+			withMockScreen(t, vt.MockOptSize{X: 5, Y: 5}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -501,11 +500,12 @@ func TestDrawBufferCursor(t *testing.T) {
 						return tc.cursorPosition
 					})
 				})
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
+				cursorStyle := b.GetCursor()
+				assert.Equal(t, tc.expectedCursorVisible, cursorStyle.IsVisible())
 				if tc.expectedCursorVisible {
-					assert.Equal(t, tc.expectedCursorCol, cursorCol)
-					assert.Equal(t, tc.expectedCursorRow, cursorRow)
+					cursorPos := b.GetPosition()
+					assert.Equal(t, tc.expectedCursorCol, cursorPos.X)
+					assert.Equal(t, tc.expectedCursorRow, cursorPos.Y)
 				}
 			})
 		})

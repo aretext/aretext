@@ -1126,8 +1126,7 @@ func TestShowSpaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.width, tc.height)
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1136,7 +1135,7 @@ func TestShowSpaces(t *testing.T) {
 						state.ToggleShowSpaces(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				assertCellContents(t, b, tc.expectedContents)
 			})
 		})
 	}
@@ -1178,8 +1177,7 @@ func TestShowUnicode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.width, tc.height)
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1188,7 +1186,7 @@ func TestShowUnicode(t *testing.T) {
 						state.ToggleShowUnicode(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				assertCellContents(t, b, tc.expectedContents)
 			})
 		})
 	}

@@ -151,4 +151,3 @@ func TestScreenRegionFill(t *testing.T) {
 		})
 	})
 }
-

@@ -100,7 +100,7 @@ func TestDrawEditor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				state := tc.buildState()
 				screenWidth, screenHeight := state.ScreenSize()
 				s.SetSize(int(screenWidth), int(screenHeight))

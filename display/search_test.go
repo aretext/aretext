@@ -68,7 +68,7 @@ func TestDrawSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(6, 2)
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)

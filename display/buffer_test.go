@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/config"
@@ -252,22 +253,20 @@ func TestDrawBuffer(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(10, 10)
+			withMockScreen(t, vt.MockOptSize{X:10, Y:10}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				assertCellContents(t, b, tc.expectedContents)
 			})
 		})
 	}
 }
 
 func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(5, 2)
+	withMockScreen(t, vt.MockOptSize{X:5, Y:2}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\r')
 			state.InsertRune(editorState, '\n')
@@ -277,12 +276,11 @@ func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
 		// This detects a bug where tcell would write the combining
 		// char ('\n') to the terminal, which caused
 		// strange display artifacts.
-		cells, width, height := s.GetContents()
-		for y := 0; y < height; y++ {
-			for x := 0; x < width; x++ {
-				for _, r := range cells[x+y*width].Runes {
-					assert.Equal(t, ' ', r)
-				}
+		size := b.GetSize()
+		for y := vt.Row(0); y < size.Y; y++ {
+			for x := vt.Col(0); x < size.X; x++ {
+				cell := b.GetCell(vt.Coord{X:x, Y:y})
+				assert.Equal(t, " ", cell.C)
 			}
 		}
 	})
@@ -331,7 +329,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(100, 1)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -348,7 +346,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 }
 
 func TestDrawBufferSizeTooSmall(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(1, 4)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range "ab界cd" {
@@ -503,7 +501,7 @@ func TestDrawBufferCursor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(5, 5)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -525,7 +523,7 @@ func TestDrawBufferCursor(t *testing.T) {
 }
 
 func TestSyntaxHighlighting(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(18, 1)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.SetSyntax(editorState, syntax.LanguageGo)
@@ -568,7 +566,7 @@ func TestSyntaxHighlighting(t *testing.T) {
 }
 
 func TestSearchMatch(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(12, 1)
 		query := "d1"
 		drawBuffer(t, s, func(editorState *state.EditorState) {
@@ -699,7 +697,7 @@ func TestSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -821,7 +819,7 @@ func TestShowLineNumbers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1004,7 +1002,7 @@ func TestLineNumberMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1060,7 +1058,7 @@ func TestShowTabs(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1077,7 +1075,7 @@ func TestShowTabs(t *testing.T) {
 }
 
 func TestShowTabsWithSelectionStyle(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(8, 1)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\t')
@@ -1145,7 +1143,7 @@ func TestShowSpaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1197,7 +1195,7 @@ func TestShowUnicode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			withMockScreen(t, func(s tcell.SimulationScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {

@@ -4,45 +4,45 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func withSimScreen(t *testing.T, f func(tcell.SimulationScreen)) {
-	s := tcell.NewSimulationScreen("")
-	require.NotNil(t, s)
+func withMockScreen(t *testing.T, size vt.MockOptSize, f func(tcell.Screen, vt.MockBackend)) {
+	mt := vt.NewMockTerm(size)
+	s, err := tcell.NewTerminfoScreenFromTty(mt)
+	require.NoError(t, err)
+
 	err := s.Init()
-
-	// Sometime between tcell v2.9 and 2.12 tcell simulation screen went from
-	// " " to "X" as the default value of each cell. Restore the old behavior
-	// by explicitly clearning the screen before each test.
-	s.Clear()
-
 	require.NoError(t, err)
 	defer s.Fini()
-	f(s)
+
+	f(s, mt.Backend())
 }
 
-func assertCellContents(t *testing.T, s tcell.SimulationScreen, expectedContents [][]string) {
-	cells, width, height := s.GetContents()
-	require.Equal(t, len(expectedContents), height)
-	require.Equal(t, len(expectedContents[0]), width)
+func assertCellContents(t *testing.T, s vt.MockBackend, expectedContents [][]string) {
+	size := s.GetSize()
+	require.Equal(t, len(expectedContents), size.Y)
+	require.Equal(t, len(expectedContents[0]), size.X)
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			actual := string(cells[x+y*width].Runes)
+			cell := s.GetCell(vt.Coord{X:x, Y:y})
+			actual := string(cell.Runes)
 			expected := expectedContents[y][x]
 			assert.Equal(t, expected, actual, "Wrong contents at (%d, %d), expected %q but got %q", x, y, expected, actual)
 		}
 	}
 }
 
-func assertCellStyles(t *testing.T, s tcell.SimulationScreen, expectedStyles [][]tcell.Style) {
-	cells, width, height := s.GetContents()
-	require.Equal(t, height, len(expectedStyles))
-	require.Equal(t, width, len(expectedStyles[0]))
+func assertCellStyles(t *testing.T, s vt.MockBackend, expectedStyles [][]tcell.Style) {
+	size := s.GetSize()
+	require.Equal(t, len(expectedContents), size.Y)
+	require.Equal(t, len(expectedContents[0]), size.X)
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			actualStyle := cells[x+y*width].Style
+			cell := s.GetCell(vt.Coord{X:x, Y:y})
+			actualStyle := cell.Style
 			expectedStyle := expectedStyles[y][x]
 			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
 		}
@@ -50,7 +50,7 @@ func assertCellStyles(t *testing.T, s tcell.SimulationScreen, expectedStyles [][
 }
 
 func TestScreenRegionPut(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
@@ -84,7 +84,7 @@ func TestScreenRegionPut(t *testing.T) {
 }
 
 func TestScreenRegionPutStrStyled(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
@@ -114,7 +114,7 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 }
 
 func TestScreenRegionClear(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(10, 10)
 		s.Fill('~', tcell.StyleDefault.Bold(true))
 		r := NewScreenRegion(s, 1, 2, 5, 5)
@@ -137,7 +137,7 @@ func TestScreenRegionClear(t *testing.T) {
 }
 
 func TestScreenRegionFill(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	withMockScreen(t, func(s tcell.SimulationScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Fill('^', tcell.StyleDefault.Bold(true))

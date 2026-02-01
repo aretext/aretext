@@ -337,14 +337,13 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 }
 
 func TestDrawBufferSizeTooSmall(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(1, 4)
+	withMockScreen(t, vt.MockOptSize{X:1, Y:4}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range "ab界cd" {
 				state.InsertRune(editorState, r)
 			}
 		})
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{"a"},
 			{"b"},
 			{" "},

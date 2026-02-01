@@ -104,7 +104,7 @@ func TestDrawTextField(t *testing.T) {
 				DrawTextField(s, palette, textFieldState)
 
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
+				assertCellContents(t, b, tc.expectContents)
 
 				cursorStyle := b.GetCursor()
 				assert.Equal(t, tc.expectCursorVisible, cursorStyle.IsVisible())

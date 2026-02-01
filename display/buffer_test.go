@@ -555,8 +555,7 @@ func TestSyntaxHighlighting(t *testing.T) {
 }
 
 func TestSearchMatch(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(12, 1)
+	withMockScreen(t, vt.MockOptSize{X:12,Y:1}, func(s tcell.Screen, b vt.MockBackend) {
 		query := "d1"
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range `abcd1234` {
@@ -568,7 +567,7 @@ func TestSearchMatch(t *testing.T) {
 				state.AppendRuneToSearchQuery(editorState, r)
 			}
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		assertCellStyles(t, b, [][]tcell.Style{
 			{
 				tcell.StyleDefault.Reverse(true).Dim(true),
 				tcell.StyleDefault,

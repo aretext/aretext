@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/vt"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/state"
@@ -68,12 +69,11 @@ func TestDrawSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(6, 2)
+			withMockScreen(t, vt.MockOptSize{X: 6, Y: 2}, func(s tcell.Screen, b vt.MockBackend) {
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
+				assertCellContents(t, b, tc.expectContents)
 				cursorCol, cursorRow, cursorVisible := s.GetCursor()
 				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
 				if tc.expectCursorVisible {

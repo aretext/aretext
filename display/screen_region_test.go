@@ -110,14 +110,13 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 }
 
 func TestScreenRegionClear(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(10, 10)
+	withMockScreen(t, vt.MockOptSize{X:10, Y: 10}, func(s tcell.Screen, b vt.MockBackend) {
 		s.Fill('~', tcell.StyleDefault.Bold(true))
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Clear()
 		s.Sync()
 
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{"~", "~", "~", "~", "~", "~", "~", "~", "~", "~"},
 			{"~", "~", "~", "~", "~", "~", "~", "~", "~", "~"},
 			{"~", " ", " ", " ", " ", " ", "~", "~", "~", "~"},
@@ -133,13 +132,12 @@ func TestScreenRegionClear(t *testing.T) {
 }
 
 func TestScreenRegionFill(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(10, 10)
+	withMockScreen(t, vt.MockOptSize{X:10, Y:10}, func(s tcell.Screen, b vt.MockBackend) {
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Fill('^', tcell.StyleDefault.Bold(true))
 		s.Sync()
 
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "^", "^", "^", "^", "^", " ", " ", " ", " "},

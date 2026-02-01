@@ -1043,8 +1043,7 @@ func TestShowTabs(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.width, tc.height)
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width), Y: vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1053,15 +1052,14 @@ func TestShowTabs(t *testing.T) {
 						state.ToggleShowTabs(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				assertCellContents(t, b, tc.expectedContents)
 			})
 		})
 	}
 }
 
 func TestShowTabsWithSelectionStyle(t *testing.T) {
-	withMockScreen(t, func(s tcell.SimulationScreen) {
-		s.SetSize(8, 1)
+	withMockScreen(t, vt.MockOptSize{X:8, Y: 1}, func(s tcell.Screen, b vt.MockBackend) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\t')
 			state.InsertRune(editorState, 'a')
@@ -1076,10 +1074,10 @@ func TestShowTabsWithSelectionStyle(t *testing.T) {
 				return 2
 			})
 		})
-		assertCellContents(t, s, [][]string{
+		assertCellContents(t, b, [][]string{
 			{string([]rune{tcell.RuneRArrow}), " ", " ", " ", "a", "b", "c", " "},
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		assertCellStyles(t, b, [][]tcell.Style{
 			{
 				tcell.StyleDefault.Reverse(true).Dim(true),
 				tcell.StyleDefault.Reverse(true).Dim(true),

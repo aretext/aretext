@@ -685,8 +685,7 @@ func TestSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withMockScreen(t, func(s tcell.SimulationScreen) {
-				s.SetSize(tc.width, tc.height)
+			withMockScreen(t, vt.MockOptSize{X:vt.Col(tc.width),Y:vt.Row(tc.height)}, func(s tcell.Screen, b vt.MockBackend) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -699,7 +698,7 @@ func TestSelection(t *testing.T) {
 						return tc.selectionEndPos
 					})
 				})
-				assertCellStyles(t, s, tc.expectedStyles)
+				assertCellStyles(t, b, tc.expectedStyles)
 			})
 		})
 	}

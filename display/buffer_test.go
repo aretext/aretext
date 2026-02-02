@@ -298,7 +298,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 			name:        "thai",
 			inputString: "\u0E04\u0E49\u0E33",
 			expectedContents: [][]string{
-				{"\u0E04\u0E49\u0E33"},
+				{"\u0E04\u0E49\u0E33", " "},
 			},
 		},
 		{

@@ -252,21 +252,21 @@ func TestDrawBuffer(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(10, 10)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}
 }
 
 func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(5, 2)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\r')
@@ -331,7 +331,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(100, 1)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -348,7 +348,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 }
 
 func TestDrawBufferSizeTooSmall(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(1, 4)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range "ab界cd" {
@@ -503,7 +503,7 @@ func TestDrawBufferCursor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(5, 5)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -525,7 +525,7 @@ func TestDrawBufferCursor(t *testing.T) {
 }
 
 func TestSyntaxHighlighting(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(18, 1)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.SetSyntax(editorState, syntax.LanguageGo)
@@ -568,7 +568,7 @@ func TestSyntaxHighlighting(t *testing.T) {
 }
 
 func TestSearchMatch(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(12, 1)
 		query := "d1"
 		drawBuffer(t, s, func(editorState *state.EditorState) {
@@ -699,7 +699,7 @@ func TestSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -821,7 +821,7 @@ func TestShowLineNumbers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -829,7 +829,7 @@ func TestShowLineNumbers(t *testing.T) {
 					}
 					state.ToggleShowLineNumbers(editorState)
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}
@@ -1004,7 +1004,7 @@ func TestLineNumberMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1020,7 +1020,7 @@ func TestLineNumberMode(t *testing.T) {
 					state.SetLineNumberMode(editorState, tc.lineNumMode)
 				})
 
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}
@@ -1060,7 +1060,7 @@ func TestShowTabs(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1070,14 +1070,14 @@ func TestShowTabs(t *testing.T) {
 						state.ToggleShowTabs(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}
 }
 
 func TestShowTabsWithSelectionStyle(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(8, 1)
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\t')
@@ -1145,7 +1145,7 @@ func TestShowSpaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1155,7 +1155,7 @@ func TestShowSpaces(t *testing.T) {
 						state.ToggleShowSpaces(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}
@@ -1197,7 +1197,7 @@ func TestShowUnicode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.width, tc.height)
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
@@ -1207,7 +1207,7 @@ func TestShowUnicode(t *testing.T) {
 						state.ToggleShowUnicode(editorState)
 					}
 				})
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}

@@ -3,7 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v3"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/state"
@@ -68,7 +67,7 @@ func TestDrawSearchQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(6, 2)
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)

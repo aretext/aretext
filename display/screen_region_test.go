@@ -7,7 +7,7 @@ import (
 )
 
 func TestScreenRegionPut(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
@@ -41,7 +41,7 @@ func TestScreenRegionPut(t *testing.T) {
 }
 
 func TestScreenRegionPutStrStyled(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 
@@ -71,7 +71,7 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 }
 
 func TestScreenRegionClear(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(10, 10)
 		s.Fill('~', tcell.StyleDefault.Bold(true))
 		r := NewScreenRegion(s, 1, 2, 5, 5)
@@ -94,7 +94,7 @@ func TestScreenRegionClear(t *testing.T) {
 }
 
 func TestScreenRegionFill(t *testing.T) {
-	withSimScreen(t, func(s tcell.SimulationScreen) {
+	WithMockScreen(t, func(s *MockScreen) {
 		s.SetSize(10, 10)
 		r := NewScreenRegion(s, 1, 2, 5, 5)
 		r.Fill('^', tcell.StyleDefault.Bold(true))

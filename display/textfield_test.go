@@ -3,7 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -97,7 +96,7 @@ func TestDrawTextField(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(tc.screenWidth, tc.screenHeight)
 				palette := NewPalette()
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)

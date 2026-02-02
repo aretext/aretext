@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gdamore/tcell/v3"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
@@ -102,7 +101,7 @@ func TestDrawStatusBar(t *testing.T) {
 			absFilePath, err := filepath.Abs(tc.filePath)
 			require.NoError(t, err)
 
-			withSimScreen(t, func(s tcell.SimulationScreen) {
+			WithMockScreen(t, func(s *MockScreen) {
 				s.SetSize(16, 2)
 				palette := NewPalette()
 				DrawStatusBar(
@@ -115,7 +114,7 @@ func TestDrawStatusBar(t *testing.T) {
 					absFilePath,
 				)
 				s.Sync()
-				assertCellContents(t, s, tc.expectedContents)
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}

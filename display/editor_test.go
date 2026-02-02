@@ -101,7 +101,7 @@ func TestDrawEditor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			state := tc.buildState()
 			screenWidth, screenHeight := state.ScreenSize()
-			WithMockScreen(t, screenWidth, screenHeight, func(s *MockScreen) {
+			WithMockScreen(t, int(screenWidth), int(screenHeight), func(s *MockScreen) {
 				palette := NewPalette()
 				DrawEditor(s, palette, state, "")
 				s.Sync()

@@ -101,8 +101,7 @@ func TestDrawStatusBar(t *testing.T) {
 			absFilePath, err := filepath.Abs(tc.filePath)
 			require.NoError(t, err)
 
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(16, 2)
+			WithMockScreen(t, 16, 2, func(s *MockScreen) {
 				palette := NewPalette()
 				DrawStatusBar(
 					s,

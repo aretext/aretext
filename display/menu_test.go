@@ -103,8 +103,7 @@ func TestDrawMenu(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(10, 6)
+			WithMockScreen(t, 10, 6, func(s *MockScreen) {
 				palette := NewPalette()
 				menu := tc.buildMenu()
 				DrawMenu(s, palette, menu)

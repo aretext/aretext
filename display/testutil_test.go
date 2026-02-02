@@ -16,7 +16,7 @@ type MockScreen struct {
 }
 
 func WithMockScreen(t *testing.T, width int, height int, f func(*MockScreen)) {
-	mt := vt.NewMockTerm(vt.MockOptSize{X: width, Y: height})
+	mt := vt.NewMockTerm(vt.MockOptSize{X: vt.Col(width), Y: vt.Row(height)})
 	s, err := tcell.NewTerminfoScreenFromTty(mt)
 	require.NoError(t, err)
 

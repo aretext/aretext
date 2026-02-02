@@ -264,8 +264,7 @@ func TestDrawBuffer(t *testing.T) {
 }
 
 func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
-	WithMockScreen(t, func(s *MockScreen) {
-		s.SetSize(5, 2)
+	WithMockScreen(t, 5, 2, func(s *MockScreen) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\r')
 			state.InsertRune(editorState, '\n')
@@ -320,8 +319,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(100, 1)
+			WithMockScreen(t, 100, 1, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -334,8 +332,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 }
 
 func TestDrawBufferSizeTooSmall(t *testing.T) {
-	WithMockScreen(t, func(s *MockScreen) {
-		s.SetSize(1, 4)
+	WithMockScreen(t, 1, 4, func(s *MockScreen) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range "ab界cd" {
 				state.InsertRune(editorState, r)
@@ -489,8 +486,7 @@ func TestDrawBufferCursor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(5, 5)
+			WithMockScreen(t, 5, 5, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -506,8 +502,7 @@ func TestDrawBufferCursor(t *testing.T) {
 }
 
 func TestSyntaxHighlighting(t *testing.T) {
-	WithMockScreen(t, func(s *MockScreen) {
-		s.SetSize(18, 1)
+	WithMockScreen(t, 18, 1, func(s *MockScreen) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.SetSyntax(editorState, syntax.LanguageGo)
 			for _, r := range `const foo = "test"` {
@@ -549,8 +544,7 @@ func TestSyntaxHighlighting(t *testing.T) {
 }
 
 func TestSearchMatch(t *testing.T) {
-	WithMockScreen(t, func(s *MockScreen) {
-		s.SetSize(12, 1)
+	WithMockScreen(t, 12, 1, func(s *MockScreen) {
 		query := "d1"
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			for _, r := range `abcd1234` {
@@ -680,8 +674,7 @@ func TestSelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -802,8 +795,7 @@ func TestShowLineNumbers(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -985,8 +977,7 @@ func TestLineNumberMode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1041,8 +1032,7 @@ func TestShowTabs(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)

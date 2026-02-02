@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"
@@ -513,11 +514,11 @@ func TestSyntaxHighlighting(t *testing.T) {
 		s.AssertCellStyles(t, [][]tcell.Style{
 			{
 				// `const` highlighted as keyword.
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
-				tcell.StyleDefault.Foreground(tcell.ColorOlive),
+				tcell.StyleDefault.Foreground(color.Olive),
+				tcell.StyleDefault.Foreground(color.Olive),
+				tcell.StyleDefault.Foreground(color.Olive),
+				tcell.StyleDefault.Foreground(color.Olive),
+				tcell.StyleDefault.Foreground(color.Olive),
 
 				// ` foo ` has no highlighting.
 				tcell.StyleDefault,
@@ -527,18 +528,18 @@ func TestSyntaxHighlighting(t *testing.T) {
 				tcell.StyleDefault,
 
 				// `=` highlighted as an operator.
-				tcell.StyleDefault.Foreground(tcell.ColorPurple),
+				tcell.StyleDefault.Foreground(color.Purple),
 
 				// ` ` has no highlighting.
 				tcell.StyleDefault,
 
 				// `"test"` highlighted as a string.
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
-				tcell.StyleDefault.Foreground(tcell.ColorMaroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
+				tcell.StyleDefault.Foreground(color.Maroon),
 			},
 		})
 	})

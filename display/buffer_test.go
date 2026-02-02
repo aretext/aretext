@@ -251,8 +251,7 @@ func TestDrawBuffer(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(10, 10)
+			WithMockScreen(t, 10, 10, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)

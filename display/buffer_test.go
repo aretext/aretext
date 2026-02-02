@@ -112,7 +112,7 @@ func TestDrawBuffer(t *testing.T) {
 			name:        "full-width characters, no wrapping",
 			inputString: "abc界xyz",
 			expectedContents: [][]string{
-				{"a", "b", "c", "界", "X", "x", "y", "z", " ", " "},
+				{"a", "b", "c", "界", " ", "x", "y", "z", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
@@ -129,7 +129,7 @@ func TestDrawBuffer(t *testing.T) {
 			inputString: "abcdefghi界jklmn",
 			expectedContents: [][]string{
 				{"a", "b", "c", "d", "e", "f", "g", "h", "i", " "},
-				{"界", "X", "j", "k", "l", "m", "n", " ", " ", " "},
+				{"界", " ", "j", "k", "l", "m", "n", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},

@@ -3,7 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aretext/aretext/state"
@@ -102,13 +101,8 @@ func TestDrawTextField(t *testing.T) {
 				textFieldState := buildTextFieldState(t, tc.promptText, tc.inputText)
 				DrawTextField(s, palette, textFieldState)
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
-				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
-				}
+				s.AssertCellContents(t, tc.expectContents)
+				s.AssertCursor(t, tc.expectCursorVisible, tc.expectCursorCol, tc.expectCursorRow)
 			})
 		})
 	}

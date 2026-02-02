@@ -3,8 +3,6 @@ package display
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aretext/aretext/state"
 )
 

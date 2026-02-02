@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/selection"

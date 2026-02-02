@@ -177,7 +177,7 @@ func TestDrawBuffer(t *testing.T) {
 			inputString: "\u2139\ufe0f abc",
 			expectedContents: [][]string{
 				// 'X' after the emoji is the tcell simulation screen "fill" character.
-				{"\u2139\ufe0f", "X", " ", "a", "b", "c", " ", " ", " ", " "},
+				{"\u2139\ufe0f", " ", " ", "a", "b", "c", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
@@ -198,7 +198,7 @@ func TestDrawBuffer(t *testing.T) {
 			expectedContents: [][]string{
 				// The bug caused the grapheme cluster to split and write the
 				// second rune into the cell at (3,0)
-				{" ", "\U0001F1FA\U0001F1F8", "X", " ", " ", " ", " ", " ", " ", " "},
+				{" ", "\U0001F1FA\U0001F1F8", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 				{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},

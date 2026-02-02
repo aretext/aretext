@@ -72,13 +72,8 @@ func TestDrawSearchQuery(t *testing.T) {
 				palette := NewPalette()
 				DrawSearchQuery(s, palette, tc.query, tc.direction)
 				s.Sync()
-				assertCellContents(t, s, tc.expectContents)
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectCursorVisible, cursorVisible)
-				if tc.expectCursorVisible {
-					assert.Equal(t, tc.expectCursorCol, cursorCol)
-					assert.Equal(t, tc.expectCursorRow, cursorRow)
-				}
+				s.AssertCellContents(t, tc.expectContents)
+				s.AssertCursor(t, tc.expectCursorVisible, tc.expectCursorCol, tc.expectCursorRow)
 			})
 		})
 	}

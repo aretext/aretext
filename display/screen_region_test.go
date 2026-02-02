@@ -25,7 +25,7 @@ func TestScreenRegionPut(t *testing.T) {
 		s.Sync()
 
 		// Check that only the contents in the region are displayed
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "a", " ", " ", " ", "b", " ", " ", " ", " "},
@@ -55,7 +55,7 @@ func TestScreenRegionPutStrStyled(t *testing.T) {
 		s.Sync()
 
 		// Check that only the contents in the region are displayed
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "h", "e", "l", "l", "o", " ", " ", " ", " "},
@@ -78,7 +78,7 @@ func TestScreenRegionClear(t *testing.T) {
 		r.Clear()
 		s.Sync()
 
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{"~", "~", "~", "~", "~", "~", "~", "~", "~", "~"},
 			{"~", "~", "~", "~", "~", "~", "~", "~", "~", "~"},
 			{"~", " ", " ", " ", " ", " ", "~", "~", "~", "~"},
@@ -100,7 +100,7 @@ func TestScreenRegionFill(t *testing.T) {
 		r.Fill('^', tcell.StyleDefault.Bold(true))
 		s.Sync()
 
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", " ", " ", " ", " ", " ", " ", " ", " ", " "},
 			{" ", "^", "^", "^", "^", "^", " ", " ", " ", " "},

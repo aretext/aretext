@@ -501,12 +501,7 @@ func TestDrawBufferCursor(t *testing.T) {
 						return tc.cursorPosition
 					})
 				})
-				cursorCol, cursorRow, cursorVisible := s.GetCursor()
-				assert.Equal(t, tc.expectedCursorVisible, cursorVisible)
-				if tc.expectedCursorVisible {
-					assert.Equal(t, tc.expectedCursorCol, cursorCol)
-					assert.Equal(t, tc.expectedCursorRow, cursorRow)
-				}
+				s.AssertCursor(t, tc.expectedCursorVisible, tc.expectedCursorCol, tc.expectedCursorRow)
 			})
 		})
 	}

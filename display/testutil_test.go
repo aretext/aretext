@@ -68,3 +68,14 @@ func (ms *MockScreen) AssertCellStyles(t *testing.T, expectedStyles [][]tcell.St
 		}
 	}
 }
+
+func (ms *MockScreen) AssertCursor(t *testing.T, expectVisible bool, expectCol int, expectRow int) {
+	visible := ms.mt.Backend().GetCursor().IsVisible()
+	assert.Equal(t, visible, expectVisible)
+
+	if expectVisible {
+		cursorPos := ms.mt.Pos()
+		assert.Equal(t, cursorPos.X, vt.Col(expectCol))
+		assert.Equal(t, cursorPos.Y, vt.Row(expectRow))
+	}
+}

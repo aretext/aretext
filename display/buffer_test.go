@@ -1048,8 +1048,7 @@ func TestShowTabs(t *testing.T) {
 }
 
 func TestShowTabsWithSelectionStyle(t *testing.T) {
-	WithMockScreen(t, func(s *MockScreen) {
-		s.SetSize(8, 1)
+	WithMockScreen(t, 8, 1, func(s *MockScreen) {
 		drawBuffer(t, s, func(editorState *state.EditorState) {
 			state.InsertRune(editorState, '\t')
 			state.InsertRune(editorState, 'a')
@@ -1116,8 +1115,7 @@ func TestShowSpaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)
@@ -1168,8 +1166,7 @@ func TestShowUnicode(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, func(s *MockScreen) {
-				s.SetSize(tc.width, tc.height)
+			WithMockScreen(t, tc.width, tc.height, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)

@@ -319,7 +319,8 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			WithMockScreen(t, 100, 1, func(s *MockScreen) {
+			screenWidth := len(tc.expectedContents[0])
+			WithMockScreen(t, screenWidth, 1, func(s *MockScreen) {
 				drawBuffer(t, s, func(editorState *state.EditorState) {
 					for _, r := range tc.inputString {
 						state.InsertRune(editorState, r)

@@ -516,7 +516,7 @@ func TestSyntaxHighlighting(t *testing.T) {
 				state.InsertRune(editorState, r)
 			}
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		s.AssertCellStyles(t, [][]tcell.Style{
 			{
 				// `const` highlighted as keyword.
 				tcell.StyleDefault.Foreground(tcell.ColorOlive),
@@ -564,7 +564,7 @@ func TestSearchMatch(t *testing.T) {
 				state.AppendRuneToSearchQuery(editorState, r)
 			}
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		s.AssertCellStyles(t, [][]tcell.Style{
 			{
 				tcell.StyleDefault.Reverse(true).Dim(true),
 				tcell.StyleDefault,
@@ -696,7 +696,7 @@ func TestSelection(t *testing.T) {
 						return tc.selectionEndPos
 					})
 				})
-				assertCellStyles(t, s, tc.expectedStyles)
+				s.AssertCellStyles(t, tc.expectedStyles)
 			})
 		})
 	}
@@ -1076,10 +1076,10 @@ func TestShowTabsWithSelectionStyle(t *testing.T) {
 				return 2
 			})
 		})
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{string([]rune{tcell.RuneRArrow}), " ", " ", " ", "a", "b", "c", " "},
 		})
-		assertCellStyles(t, s, [][]tcell.Style{
+		s.AssertCellStyles(t, [][]tcell.Style{
 			{
 				tcell.StyleDefault.Reverse(true).Dim(true),
 				tcell.StyleDefault.Reverse(true).Dim(true),

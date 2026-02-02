@@ -277,54 +277,45 @@ func TestDrawBufferCarriageReturnAndLineFeedNotRendered(t *testing.T) {
 		// This detects a bug where tcell would write the combining
 		// char ('\n') to the terminal, which caused
 		// strange display artifacts.
-		cells, width, height := s.GetContents()
-		for y := 0; y < height; y++ {
-			for x := 0; x < width; x++ {
-				for _, r := range cells[x+y*width].Runes {
-					assert.Equal(t, ' ', r)
-				}
-			}
-		}
+		s.AssertCellContents(t, [][]string{
+			{" ", " ", " ", " ", " "},
+			{" ", " ", " ", " ", " "},
+		})
 	})
 }
 
 func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 	testCases := []struct {
-		name              string
-		inputString       string
-		expectedCellRunes [][]rune
+		name             string
+		inputString      string
+		expectedContents [][]string
 	}{
 		{
 			name:        "ascii",
 			inputString: "abcd1234",
-			expectedCellRunes: [][]rune{
-				{'a'}, {'b'}, {'c'}, {'d'}, {'1'}, {'2'}, {'3'}, {'4'},
+			expectedContents: [][]string{
+				{"a", "b", "c", "d", "1", "2", "3", "4"},
 			},
 		},
 		{
 			name:        "thai",
 			inputString: "\u0E04\u0E49\u0E33",
-			expectedCellRunes: [][]rune{
-				{'\u0E04', '\u0E49', '\u0E33'},
+			expectedContents: [][]string{
+				{"\u0E04\u0E49\u0E33"},
 			},
 		},
 		{
 			name:        "emoji with zero-width joiner",
 			inputString: "\U0001f9db\u200d\u2640\U0001f469\u200d\U0001f467\u200d\U0001f467",
-			expectedCellRunes: [][]rune{
-				{'\U0001f9db', '\u200d', '\u2640'},
-				{'X'},
-				{'\U0001f469', '\u200d', '\U0001f467', '\u200d', '\U0001f467'},
-				{'X'},
+			expectedContents: [][]string{
+				{"\U0001f9db\u200d\u2640", " ", "\U0001f469\u200d\U0001f467\u200d\U0001f467", " "},
 			},
 		},
 		{
 			name:        "regional indicator",
 			inputString: "\U0001f1fa\U0001f1f8 (usa!)",
-			expectedCellRunes: [][]rune{
-				// 'X' after the RI is the tcell simulation screen "fill" character.
-				{'\U0001f1fa', '\U0001f1f8'}, {'X'},
-				{' '}, {'('}, {'u'}, {'s'}, {'a'}, {'!'}, {')'},
+			expectedContents: [][]string{
+				{"\U0001f1fa\U0001f1f8", " ", " ", "(", "u", "s", "a", "!", ")"},
 			},
 		},
 	}
@@ -338,10 +329,7 @@ func TestGraphemeClustersWithMultipleRunes(t *testing.T) {
 						state.InsertRune(editorState, r)
 					}
 				})
-				contents, _, _ := s.GetContents()
-				for i, expectedRunes := range tc.expectedCellRunes {
-					assert.Equal(t, expectedRunes, contents[i].Runes)
-				}
+				s.AssertCellContents(t, tc.expectedContents)
 			})
 		})
 	}

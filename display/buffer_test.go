@@ -343,7 +343,7 @@ func TestDrawBufferSizeTooSmall(t *testing.T) {
 				state.InsertRune(editorState, r)
 			}
 		})
-		assertCellContents(t, s, [][]string{
+		s.AssertCellContents(t, [][]string{
 			{"a"},
 			{"b"},
 			{" "},

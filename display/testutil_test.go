@@ -18,10 +18,10 @@ type MockScreen struct {
 func WithMockScreen(t *testing.T, f func(*MockScreen)) {
 	mt := vt.NewMockTerm()
 	s, err := tcell.NewTerminfoScreenFromTty(mt)
-	require.NoError(err)
+	require.NoError(t, err)
 
 	err = s.Init()
-	require.NoError(err)
+	require.NoError(t, err)
 	defer s.Fini()
 
 	ms := MockScreen{s, mt}
@@ -62,8 +62,8 @@ func (ms *MockScreen) AssertCellStyles(t *testing.T, expectedStyles [][]tcell.St
 	// Assert every cell has the expected contents.
 	for y := 0; y < ws.Height; y++ {
 		for x := 0; x < ws.Width; x++ {
-			_, actual, _ := ms.Get(x, y)
-			expected := expectedStyles[y][x]
+			_, actualStyle, _ := ms.Get(x, y)
+			expectedStyle := expectedStyles[y][x]
 			assert.Equal(t, expectedStyle, actualStyle, "Wrong style at (%d, %d)", x, y)
 		}
 	}

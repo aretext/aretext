@@ -220,17 +220,13 @@ func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 	startPos := buffer.cursor.position
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
 
-	var deletedText string
+	w := state.clipboard.Set(clipboardPage, false)
 	if startPos < deleteToPos {
-		deletedText = deleteRunes(state, startPos, deleteToPos-startPos, true)
+		deleteRunesAndWriteTo(state, startPos, deleteToPos-startPos, true, w)
 		buffer.cursor = cursorState{position: startPos}
 	} else if startPos > deleteToPos {
-		deletedText = deleteRunes(state, deleteToPos, startPos-deleteToPos, true)
+		deleteRunesAndWriteTo(state, deleteToPos, startPos-deleteToPos, true, w)
 		buffer.cursor = cursorState{position: deleteToPos}
-	}
-
-	if deletedText != "" {
-		io.WriteString(state.clipboard.Set(clipboardPage, false), deletedText)
 	}
 }
 
@@ -315,6 +311,10 @@ func stripStartingAndTrailingNewlines(s string) string {
 // It also updates the syntax token and undo log.
 // It does NOT move the cursor.
 func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog bool) string {
+	return deleteRunesAndWriteTo(state, pos, count, updateUndoLog, nil)
+}
+
+func deleteRunesAndWriteTo(state *EditorState, pos uint64, count uint64, updateUndoLog bool, w io.Writer) string {
 	deletedRunes := make([]rune, 0, count)
 	buffer := state.documentBuffer
 	for i := uint64(0); i < count; i++ {
@@ -331,6 +331,10 @@ func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog boo
 	if updateUndoLog && deletedText != "" {
 		op := undo.DeleteOp(pos, deletedText)
 		buffer.undoLog.TrackOp(op)
+	}
+
+	if w != nil && deletedText != "" {
+		io.WriteString(w, deletedText)
 	}
 
 	return deletedText
@@ -565,8 +569,7 @@ func CopyRange(state *EditorState, page clipboard.PageId, loc RangeLocator) {
 	if startPos >= endPos {
 		return
 	}
-	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
-	io.WriteString(state.clipboard.Set(page, false), text)
+	copyTextToWriter(state.documentBuffer.textTree, startPos, endPos-startPos, state.clipboard.Set(page, false))
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.
@@ -574,25 +577,32 @@ func CopyLine(state *EditorState, page clipboard.PageId) {
 	buffer := state.documentBuffer
 	startPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
 	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
-	line := copyText(buffer.textTree, startPos, endPos-startPos)
-	io.WriteString(state.clipboard.Set(page, true), line)
+	copyTextToWriter(buffer.textTree, startPos, endPos-startPos, state.clipboard.Set(page, true))
 }
 
 // CopySelection copies the current selection to the clipboard.
 func CopySelection(state *EditorState, page clipboard.PageId) {
 	buffer := state.documentBuffer
-	text, r := copySelectionText(buffer)
-	linewise := buffer.selector.Mode() == selection.ModeLine
-	io.WriteString(state.clipboard.Set(page, linewise), text)
-
+	r := copySelectionToWriter(buffer, state.clipboard, page)
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
 }
 
-// copyText copies part of the document text to a string.
-func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
-	var sb strings.Builder
+// copySelectionToWriter copies the currently selected text to the clipboard.
+func copySelectionToWriter(buffer *BufferState, c *clipboard.Clipboard, page clipboard.PageId) selection.Region {
+	if buffer.selector.Mode() == selection.ModeNone {
+		return selection.EmptyRegion
+	}
+	r := buffer.SelectedRegion()
+	linewise := buffer.selector.Mode() == selection.ModeLine
+	copyTextToWriter(buffer.textTree, r.StartPos, r.EndPos-r.StartPos, c.Set(page, linewise))
+	return r
+}
+
+// copyTextToWriter copies part of the document text directly to an io.Writer.
+func copyTextToWriter(tree *text.Tree, pos uint64, numRunes uint64, w io.Writer) {
 	var offset uint64
 	reader := tree.ReaderAtPosition(pos)
+	buf := make([]byte, 4) // max UTF-8 encoding length
 	for offset < numRunes {
 		r, _, err := reader.ReadRune()
 		if err == io.EOF {
@@ -600,9 +610,16 @@ func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
 		} else if err != nil {
 			panic(err) // should never happen because text should be valid UTF-8
 		}
-		sb.WriteRune(r)
+		n := utf8.EncodeRune(buf, r)
+		w.Write(buf[:n])
 		offset++
 	}
+}
+
+// copyText copies part of the document text to a string.
+func copyText(tree *text.Tree, pos uint64, numRunes uint64) string {
+	var sb strings.Builder
+	copyTextToWriter(tree, pos, numRunes, &sb)
 	return sb.String()
 }
 

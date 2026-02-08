@@ -56,8 +56,8 @@ func PageIdForInputRune(r rune) PageId {
 	return PageId(rune(PageLetterA) + offset)
 }
 
-// pageData holds the internal content of a clipboard page.
-type pageData struct {
+// internalPageData holds the internal content of a clipboard page.
+type internalPageData struct {
 	buf      bytes.Buffer
 	linewise bool
 }
@@ -65,12 +65,12 @@ type pageData struct {
 // Clipboard represents a clipboard.
 // The clipboard consists of distinct pages, each of which can store string content.
 type Clipboard struct {
-	pages map[PageId]*pageData
+	pages map[PageId]*internalPageData
 }
 
 // New constructs a new, empty clipboard.
 func New() *Clipboard {
-	pages := make(map[PageId]*pageData, 0)
+	pages := make(map[PageId]*internalPageData, 0)
 	return &Clipboard{pages}
 }
 
@@ -81,7 +81,7 @@ func (c *Clipboard) Set(p PageId, linewise bool) io.Writer {
 	if p == PageNull {
 		return io.Discard
 	}
-	pd := &pageData{linewise: linewise}
+	pd := &internalPageData{linewise: linewise}
 	c.pages[p] = pd
 	return &pd.buf
 }

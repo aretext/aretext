@@ -13,7 +13,6 @@ import (
 	"github.com/aretext/aretext/text"
 )
 
-// clipboardContent is a test helper that mirrors the old clipboard.PageContent struct.
 type clipboardContent struct {
 	Text     string
 	Linewise bool

@@ -600,19 +600,39 @@ func copySelectionToWriter(buffer *BufferState, c *clipboard.Clipboard, page cli
 
 // copyTextToWriter copies part of the document text directly to an io.Writer.
 func copyTextToWriter(tree *text.Tree, pos uint64, numRunes uint64, w io.Writer) {
-	var offset uint64
 	reader := tree.ReaderAtPosition(pos)
-	buf := make([]byte, 4) // max UTF-8 encoding length
-	for offset < numRunes {
-		r, _, err := reader.ReadRune()
+	remaining := numRunes
+	var buf [4096]byte
+	carry := 0
+
+	for remaining > 0 {
+		n, err := reader.Read(buf[carry:])
+		total := carry + n
+		carry = 0
+
+		byteOffset := 0
+		for byteOffset < total && remaining > 0 {
+			if !utf8.FullRune(buf[byteOffset:total]) {
+				break
+			}
+			_, size := utf8.DecodeRune(buf[byteOffset:total])
+			byteOffset += size
+			remaining--
+		}
+
+		if byteOffset > 0 {
+			w.Write(buf[:byteOffset])
+		}
+
+		if byteOffset < total {
+			carry = copy(buf[:], buf[byteOffset:total])
+		}
+
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			panic(err) // should never happen because text should be valid UTF-8
 		}
-		n := utf8.EncodeRune(buf, r)
-		w.Write(buf[:n])
-		offset++
 	}
 }
 

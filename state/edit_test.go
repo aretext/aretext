@@ -19,9 +19,11 @@ type clipboardContent struct {
 	Linewise bool
 }
 
-func getClipboardContent(c *clipboard.Clipboard, page clipboard.PageId) clipboardContent {
+func getClipboardContent(t *testing.T, c *clipboard.Clipboard, page clipboard.PageId) clipboardContent {
+	t.Helper()
 	r, linewise := c.Get(page)
-	data, _ := io.ReadAll(r)
+	data, err := io.ReadAll(r)
+	require.NoError(t, err)
 	return clipboardContent{Text: string(data), Linewise: linewise}
 }
 
@@ -197,7 +199,7 @@ func TestDeleteToPos(t *testing.T) {
 			DeleteToPos(state, tc.locator, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, getClipboardContent(state.clipboard, clipboard.PageDefault))
+			assert.Equal(t, tc.expectedClipboard, getClipboardContent(t, state.clipboard, clipboard.PageDefault))
 		})
 	}
 }
@@ -679,7 +681,7 @@ func TestDeleteLines(t *testing.T) {
 			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, getClipboardContent(state.clipboard, clipboard.PageDefault))
+			assert.Equal(t, tc.expectedClipboard, getClipboardContent(t, state.clipboard, clipboard.PageDefault))
 		})
 	}
 }
@@ -1465,7 +1467,7 @@ func TestCopyRange(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			CopyRange(state, clipboard.PageDefault, tc.loc)
-			assert.Equal(t, tc.expectedClipboard, getClipboardContent(state.clipboard, clipboard.PageDefault))
+			assert.Equal(t, tc.expectedClipboard, getClipboardContent(t, state.clipboard, clipboard.PageDefault))
 		})
 	}
 }
@@ -1568,7 +1570,7 @@ func TestCopyLine(t *testing.T) {
 			state.documentBuffer.cursor = tc.initialCursor
 			CopyLine(state, clipboard.PageDefault)
 			assert.Equal(t, tc.initialCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedClipboard, getClipboardContent(state.clipboard, clipboard.PageDefault))
+			assert.Equal(t, tc.expectedClipboard, getClipboardContent(t, state.clipboard, clipboard.PageDefault))
 		})
 	}
 }
@@ -1666,7 +1668,7 @@ func TestCopySelection(t *testing.T) {
 			CopySelection(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, getClipboardContent(state.clipboard, clipboard.PageDefault))
+			assert.Equal(t, tc.expectedClipboard, getClipboardContent(t, state.clipboard, clipboard.PageDefault))
 			assert.Equal(t, false, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}

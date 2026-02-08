@@ -1,6 +1,7 @@
 package state
 
 import (
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -726,9 +727,11 @@ func TestSearchForCopy(t *testing.T) {
 			assert.Equal(t, tc.inputText, textTree.String())
 
 			// Check clipboard state.
-			page := state.clipboard.Get(clipboard.PageDefault)
-			assert.False(t, page.Linewise)
-			assert.Equal(t, tc.expectedClipboardText, page.Text)
+			r, linewise := state.clipboard.Get(clipboard.PageDefault)
+			data, err := io.ReadAll(r)
+			require.NoError(t, err)
+			assert.False(t, linewise)
+			assert.Equal(t, tc.expectedClipboardText, string(data))
 		})
 	}
 }

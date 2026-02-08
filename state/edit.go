@@ -230,10 +230,7 @@ func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 	}
 
 	if deletedText != "" {
-		state.clipboard.Set(clipboardPage, clipboard.PageContent{
-			Text:     deletedText,
-			Linewise: false,
-		})
+		io.WriteString(state.clipboard.Set(clipboardPage, false), deletedText)
 	}
 }
 
@@ -298,10 +295,7 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 	}
 
 	if len(deletedText) > 0 {
-		state.clipboard.Set(clipboardPage, clipboard.PageContent{
-			Text:     stripStartingAndTrailingNewlines(deletedText),
-			Linewise: true,
-		})
+		io.WriteString(state.clipboard.Set(clipboardPage, true), stripStartingAndTrailingNewlines(deletedText))
 	}
 }
 
@@ -572,7 +566,7 @@ func CopyRange(state *EditorState, page clipboard.PageId, loc RangeLocator) {
 		return
 	}
 	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
-	state.clipboard.Set(page, clipboard.PageContent{Text: text})
+	io.WriteString(state.clipboard.Set(page, false), text)
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.
@@ -581,22 +575,15 @@ func CopyLine(state *EditorState, page clipboard.PageId) {
 	startPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
 	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
 	line := copyText(buffer.textTree, startPos, endPos-startPos)
-	content := clipboard.PageContent{
-		Text:     line,
-		Linewise: true,
-	}
-	state.clipboard.Set(page, content)
+	io.WriteString(state.clipboard.Set(page, true), line)
 }
 
 // CopySelection copies the current selection to the clipboard.
 func CopySelection(state *EditorState, page clipboard.PageId) {
 	buffer := state.documentBuffer
 	text, r := copySelectionText(buffer)
-	content := clipboard.PageContent{Text: text}
-	if buffer.selector.Mode() == selection.ModeLine {
-		content.Linewise = true
-	}
-	state.clipboard.Set(page, content)
+	linewise := buffer.selector.Mode() == selection.ModeLine
+	io.WriteString(state.clipboard.Set(page, linewise), text)
 
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
 }
@@ -632,9 +619,12 @@ func copySelectionText(buffer *BufferState) (string, selection.Region) {
 
 // PasteAfterCursor inserts the text from the clipboard after the cursor position.
 func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
-	content := state.clipboard.Get(page)
+	r, linewise := state.clipboard.Get(page)
+	textBytes, _ := io.ReadAll(r)
+	text := string(textBytes)
+
 	pos := state.documentBuffer.cursor.position
-	if content.Linewise {
+	if linewise {
 		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)
 		insertTextAtPosition(state, "\n", pos, true)
 		pos++
@@ -642,13 +632,13 @@ func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
 		pos = locate.NextCharInLine(state.documentBuffer.textTree, 1, true, pos)
 	}
 
-	insertTextAtPosition(state, content.Text, pos, true)
+	insertTextAtPosition(state, text, pos, true)
 
-	if content.Linewise {
+	if linewise {
 		MoveCursor(state, func(LocatorParams) uint64 { return pos })
 	} else {
 		MoveCursor(state, func(params LocatorParams) uint64 {
-			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(text))
 			return locate.PrevCharInLine(params.TextTree, 1, false, posAfterInsert)
 		})
 	}
@@ -656,20 +646,23 @@ func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
 
 // PasteBeforeCursor inserts the text from the clipboard before the cursor position.
 func PasteBeforeCursor(state *EditorState, page clipboard.PageId) {
-	content := state.clipboard.Get(page)
+	r, linewise := state.clipboard.Get(page)
+	textBytes, _ := io.ReadAll(r)
+	text := string(textBytes)
+
 	pos := state.documentBuffer.cursor.position
-	if content.Linewise {
+	if linewise {
 		pos = locate.StartOfLineAtPos(state.documentBuffer.textTree, pos)
 		insertTextAtPosition(state, "\n", pos, true)
 	}
 
-	insertTextAtPosition(state, content.Text, pos, true)
+	insertTextAtPosition(state, text, pos, true)
 
-	if content.Linewise {
+	if linewise {
 		MoveCursor(state, func(LocatorParams) uint64 { return pos })
 	} else {
 		MoveCursor(state, func(params LocatorParams) uint64 {
-			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(text))
 			newPos := locate.PrevChar(params.TextTree, 1, posAfterInsert)
 			return locate.ClosestCharOnLine(params.TextTree, newPos)
 		})

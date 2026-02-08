@@ -1,5 +1,10 @@
 package clipboard
 
+import (
+	"bytes"
+	"io"
+)
+
 // PageId represents a page in the clipboard.
 // This is equivalent to what vim calls a "register".
 type PageId int
@@ -51,33 +56,43 @@ func PageIdForInputRune(r rune) PageId {
 	return PageId(rune(PageLetterA) + offset)
 }
 
-// PageContent represents the content of a page in the clipboard.
-type PageContent struct {
-	Text     string
-	Linewise bool
+// pageData holds the internal content of a clipboard page.
+type pageData struct {
+	buf      bytes.Buffer
+	linewise bool
 }
 
 // Clipboard represents a clipboard.
 // The clipboard consists of distinct pages, each of which can store string content.
 type Clipboard struct {
-	pages map[PageId]PageContent
+	pages map[PageId]*pageData
 }
 
 // New constructs a new, empty clipboard.
 func New() *Clipboard {
-	pages := make(map[PageId]PageContent, 0)
+	pages := make(map[PageId]*pageData, 0)
 	return &Clipboard{pages}
 }
 
-// Set stores a string in a page, replacing the prior contents.
-func (c *Clipboard) Set(p PageId, pc PageContent) {
+// Set clears a page and returns an io.Writer for writing new content.
+// The linewise parameter indicates whether the content represents whole lines.
+// Writing to the null page discards data.
+func (c *Clipboard) Set(p PageId, linewise bool) io.Writer {
 	if p == PageNull {
-		return
+		return io.Discard
 	}
-	c.pages[p] = pc
+	pd := &pageData{linewise: linewise}
+	c.pages[p] = pd
+	return &pd.buf
 }
 
-// Get retrieves the contents of a page.
-func (c *Clipboard) Get(p PageId) PageContent {
-	return c.pages[p]
+// Get returns an io.Reader for reading the contents of a page
+// and a boolean indicating whether the content is linewise.
+// If the page has not been set, the reader will be empty and linewise will be false.
+func (c *Clipboard) Get(p PageId) (io.Reader, bool) {
+	pd, ok := c.pages[p]
+	if !ok {
+		return bytes.NewReader(nil), false
+	}
+	return bytes.NewReader(pd.buf.Bytes()), pd.linewise
 }

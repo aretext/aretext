@@ -333,7 +333,7 @@ func TestRuntimeMaxInputLen(t *testing.T) {
 	runtime := NewRuntime(sm, maxInputLen)
 
 	// Events before max input length should continue.
-	for i := 0; i < maxInputLen; i++ {
+	for i := range maxInputLen {
 		result := runtime.ProcessEvent(1)
 		assert.Equal(t, DecisionWait, result.Decision, "Should wait at iteration %d", i)
 	}

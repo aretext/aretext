@@ -4,7 +4,7 @@ package utf8
 var CharWidth [256]byte
 
 func init() {
-	for b := 0; b < 256; b++ {
+	for b := range 256 {
 		if b>>7 == 0 {
 			CharWidth[b] = 1
 		} else if b>>5 == 0b110 {
@@ -21,7 +21,7 @@ func init() {
 var StartByteIndicator [256]byte
 
 func init() {
-	for b := 0; b < 256; b++ {
+	for b := range 256 {
 		if b>>7 == 0 ||
 			b>>5 == 0b110 ||
 			b>>4 == 0b1110 ||

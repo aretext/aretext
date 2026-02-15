@@ -90,7 +90,7 @@ func TestRuneStackRepeatedlyRetrieveString(t *testing.T) {
 	rs.Push('a')
 	rs.Push('b')
 	rs.Push('c')
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		assert.Equal(t, "abc", rs.String())
 	}
 }

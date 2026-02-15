@@ -86,7 +86,7 @@ func reverseSegments(segments [][]rune) [][]rune {
 	}
 
 	reversed := make([][]rune, len(segments))
-	for i := 0; i < len(segments); i++ {
+	for i := range segments {
 		reversed[i] = segments[len(segments)-i-1]
 	}
 

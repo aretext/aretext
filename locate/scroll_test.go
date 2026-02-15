@@ -13,7 +13,7 @@ import (
 
 func stringWithLen(n int) string {
 	s := make([]rune, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		s[i] = 'x'
 	}
 	return string(s)

@@ -40,7 +40,7 @@ func DrawBuffer(screen tcell.Screen, palette *Palette, buffer *state.BufferState
 
 	sr.HideCursor()
 
-	for row := 0; row < height; row++ {
+	for row := range height {
 		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {
 			break

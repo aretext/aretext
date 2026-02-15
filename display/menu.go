@@ -56,10 +56,8 @@ func filterForVisibleItems(items []menu.Item, selectedIdx int, height int) ([]me
 }
 
 func maxNumVisibleItems(numItems int, height int) int {
-	maxVisible := height - 1 // Leave one line above for the search bar.
-	if maxVisible < 0 {
-		maxVisible = 0
-	}
+	// Leave one line above for the search bar.
+	maxVisible := max(height-1, 0)
 	if numItems > maxVisible {
 		numItems = maxVisible
 	}

@@ -290,7 +290,7 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 			name: "append many computations in sequence, all tokens intersect range",
 			builder: func() *computation {
 				var c *computation
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					c = c.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}))
@@ -316,7 +316,7 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 			name: "prepend many computations in sequence, all tokens intersect range",
 			builder: func() *computation {
 				var c *computation
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					c = newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}).Append(c)
@@ -342,7 +342,7 @@ func TestComputationTokensIntersectingRange(t *testing.T) {
 			name: "append two computations each with many sub-computations, all tokens intersect range",
 			builder: func() *computation {
 				var c1, c2 *computation
-				for i := 0; i < 5; i++ {
+				for range 5 {
 					c1 = c1.Append(newComputation(1, 1, EmptyState{}, EmptyState{}, []ComputedToken{
 						{Offset: 0, Length: 1},
 					}))

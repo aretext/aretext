@@ -49,7 +49,7 @@ func ReplayLastActionMacro(s *EditorState, count uint64) {
 		return
 	}
 
-	for i := uint64(0); i < count; i++ {
+	for range count {
 		for _, action := range s.macroState.lastActions {
 			action(s)
 		}

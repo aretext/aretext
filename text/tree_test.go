@@ -14,7 +14,7 @@ func lines(numLines int, charsPerLine int) string {
 	lines := make([]string, 0, numLines)
 	currentChar := byte(65)
 
-	for i := 0; i < numLines; i++ {
+	for range numLines {
 		l := Repeat(rune(currentChar), charsPerLine)
 		lines = append(lines, l)
 		currentChar++
@@ -223,7 +223,7 @@ func TestLineStartPosition(t *testing.T) {
 
 	linePositionsFromTree := func(tree *Tree, numLines int) []uint64 {
 		linePositions := make([]uint64, 0, numLines)
-		for i := 0; i < numLines; i++ {
+		for i := range numLines {
 			linePositions = append(linePositions, tree.LineStartPosition(uint64(i)))
 		}
 		return linePositions
@@ -232,7 +232,7 @@ func TestLineStartPosition(t *testing.T) {
 	linePositionsFromString := func(s string) []uint64 {
 		var pos uint64
 		linePositions := make([]uint64, 0)
-		for _, line := range strings.Split(s, "\n") {
+		for line := range strings.SplitSeq(s, "\n") {
 			linePositions = append(linePositions, pos)
 			pos += uint64(utf8.RuneCountInString(line)) + 1
 		}

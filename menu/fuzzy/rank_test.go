@@ -250,13 +250,13 @@ func BenchmarkRankRecords(b *testing.B) {
 
 func buildCandidates(n int, recordLen int) []candidateRecord {
 	recordRunes := make([]rune, recordLen)
-	for i := 0; i < recordLen; i++ {
+	for i := range recordLen {
 		recordRunes[i] = 'a'
 	}
 	record := string(recordRunes)
 
 	candidates := make([]candidateRecord, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		candidates[i] = candidateRecord{recordId: i, record: record}
 	}
 	return candidates

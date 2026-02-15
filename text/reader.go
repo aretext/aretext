@@ -179,7 +179,7 @@ func (r *ReverseReader) lookaheadToRuneStartByte() (int, error) {
 		return 0, io.EOF
 	}
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if textUtf8.StartByteIndicator[buf[i]] > 0 {
 			// Found the start byte.
 			return i + 1, nil

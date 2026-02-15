@@ -14,10 +14,7 @@ func DrawTextField(screen tcell.Screen, palette *Palette, textfield *state.TextF
 	}
 
 	// Textfield prompt and input drawn in the first two rows.
-	height := screenHeight
-	if height > 2 {
-		height = 2
-	}
+	height := min(screenHeight, 2)
 	sr := NewScreenRegion(screen, 0, 0, screenWidth, height)
 	sr.Clear()
 

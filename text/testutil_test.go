@@ -5,7 +5,7 @@ package text
 func Reverse(s string) string {
 	bytes := []byte(s)
 	reversedBytes := make([]byte, len(bytes))
-	for i := 0; i < len(reversedBytes); i++ {
+	for i := range reversedBytes {
 		reversedBytes[i] = bytes[len(bytes)-1-i]
 	}
 	return string(reversedBytes)
@@ -14,7 +14,7 @@ func Reverse(s string) string {
 // Repeat creates a string with the same character repeated n times.
 func Repeat(c rune, n int) string {
 	runes := make([]rune, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		runes[i] = c
 	}
 	return string(runes)

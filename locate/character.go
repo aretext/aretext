@@ -43,7 +43,7 @@ func PrevCharInLine(tree *text.Tree, count uint64, includeEndOfLineOrFile bool, 
 	segmentIter := segment.NewReverseGraphemeClusterIter(reader)
 	seg := segment.Empty()
 	var offset uint64
-	for i := uint64(0); i < count; i++ {
+	for range count {
 		err := segmentIter.NextSegment(seg)
 		if err == io.EOF {
 			break
@@ -69,7 +69,7 @@ func PrevChar(tree *text.Tree, count uint64, pos uint64) uint64 {
 	reader := tree.ReverseReaderAtPosition(pos)
 	iter := segment.NewReverseGraphemeClusterIter(reader)
 	seg := segment.Empty()
-	for i := uint64(0); i < count; i++ {
+	for range count {
 		err := iter.NextSegment(seg)
 		if err == io.EOF {
 			break

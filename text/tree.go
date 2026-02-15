@@ -73,7 +73,7 @@ func bulkLoadIntoLeaves(r io.Reader) ([]nodeGroup, error) {
 			return nil, ErrInvalidUtf8
 		}
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			charWidth := textUtf8.CharWidth[buf[i]] // zero for continuation bytes
 			if currentNode.numBytes+charWidth >= maxBytesPerLeaf {
 				if currentGroup.numNodes < maxNodesPerGroup {

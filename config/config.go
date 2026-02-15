@@ -289,7 +289,7 @@ func stringSliceOrNil(m map[string]any, key string) []string {
 	}
 
 	stringSlice := make([]string, 0, len(slice))
-	for i := 0; i < len(slice); i++ {
+	for i := range slice {
 		s, ok := (slice[i]).(string)
 		if !ok {
 			log.Printf("Could not decode string in slice for config key %q\n", key)

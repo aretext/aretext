@@ -323,7 +323,7 @@ func stripStartingAndTrailingNewlines(s string) string {
 func deleteRunes(state *EditorState, pos uint64, count uint64, updateUndoLog bool) string {
 	deletedRunes := make([]rune, 0, count)
 	buffer := state.documentBuffer
-	for i := uint64(0); i < count; i++ {
+	for range count {
 		didDelete, r := buffer.textTree.DeleteAtPosition(pos)
 		if didDelete {
 			deletedRunes = append(deletedRunes, r)

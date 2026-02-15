@@ -2,6 +2,7 @@ package languages
 
 import (
 	"io"
+	"slices"
 	"sort"
 	"strings"
 	"unicode"
@@ -33,10 +34,8 @@ func matchState(targetState parser.State, f parser.Func) parser.Func {
 // matchStates executes `f` only if the parse state matches one of `targetStates`.
 func matchStates(targetStates []parser.State, f parser.Func) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		for _, ts := range targetStates {
-			if state.Equals(ts) {
-				return f(iter, state)
-			}
+		if slices.ContainsFunc(targetStates, state.Equals) {
+			return f(iter, state)
 		}
 		return parser.FailedResult
 	}
@@ -227,7 +226,7 @@ func consumeLongestMatchingOption(options []string) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		// Lookahead up to the length of the longest option.
 		var n uint64
-		for i := 0; i < len(buf); i++ {
+		for i := range buf {
 			r, err := iter.NextRune()
 			if err != nil {
 				break
@@ -299,10 +298,8 @@ func failIfMatchTerm(terms []string) parser.MapWithInputFn {
 			return result
 		}
 		s := readInputString(iter, result.NumConsumed)
-		for _, term := range terms {
-			if term == s {
-				return parser.FailedResult
-			}
+		if slices.Contains(terms, s) {
+			return parser.FailedResult
 		}
 		return result
 	}
@@ -311,7 +308,7 @@ func failIfMatchTerm(terms []string) parser.MapWithInputFn {
 // readInputString reads a string from the text up to `n` characters long.
 func readInputString(iter parser.TrackingRuneIter, n uint64) string {
 	var sb strings.Builder
-	for i := uint64(0); i < n; i++ {
+	for range n {
 		r, err := iter.NextRune()
 		if err != nil {
 			break

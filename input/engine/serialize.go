@@ -80,7 +80,7 @@ func Deserialize(data []byte) (*StateMachine, error) {
 	}
 
 	sm.acceptCmd = make(map[stateId]CmdId, numAcceptCmd)
-	for i := uint64(0); i < numAcceptCmd; i++ {
+	for range numAcceptCmd {
 		stateKey, err := readInt()
 		if err != nil {
 			return nil, fmt.Errorf("deserialize acceptCmd stateKey: %w", err)
@@ -98,7 +98,7 @@ func Deserialize(data []byte) (*StateMachine, error) {
 	}
 
 	sm.transitions = make(map[stateId][]transition, numTransitions)
-	for i := uint64(0); i < numTransitions; i++ {
+	for range numTransitions {
 		stateKey, err := readInt()
 		if err != nil {
 			return nil, fmt.Errorf("deserialize transition stateKey: %w", err)
@@ -110,7 +110,7 @@ func Deserialize(data []byte) (*StateMachine, error) {
 		}
 
 		sm.transitions[stateId(stateKey)] = make([]transition, 0, numTransitionsForState)
-		for j := uint64(0); j < numTransitionsForState; j++ {
+		for range numTransitionsForState {
 			eventStartVal, err := readInt()
 			if err != nil {
 				return nil, fmt.Errorf("deserialize transition eventStartVal: %w", err)
@@ -141,7 +141,7 @@ func Deserialize(data []byte) (*StateMachine, error) {
 
 			if numCaptures > 0 {
 				t.captures = make(map[CmdId]CaptureId, numCaptures)
-				for k := uint64(0); k < numCaptures; k++ {
+				for range numCaptures {
 					captureCmdKey, err := readInt()
 					if err != nil {
 						return nil, fmt.Errorf("deserialize capture cmdKey: %w", err)

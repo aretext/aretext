@@ -53,7 +53,7 @@ func TestValidateFile(t *testing.T) {
 
 func BenchmarkValidateAscii(b *testing.B) {
 	s := make([]byte, 4096)
-	for i := 0; i < len(s); i++ {
+	for i := range s {
 		s[i] = 'a'
 	}
 

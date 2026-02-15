@@ -38,7 +38,7 @@ func TodoTxtParseFunc() parser.Func {
 
 	consumeNumbers := func(n int) parser.Func {
 		return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-			for i := 0; i < n; i++ {
+			for range n {
 				r, err := iter.NextRune()
 				if !(err == nil && (r >= '0' && r <= '9')) {
 					return parser.FailedResult

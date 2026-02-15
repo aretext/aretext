@@ -53,7 +53,7 @@ func (iter *TrackingRuneIter) NextRune() (rune, error) {
 
 // Skip advances the iterator by the specified number of positions or the end of the file, whichever comes first.
 func (iter *TrackingRuneIter) Skip(n uint64) uint64 {
-	for i := uint64(0); i < n; i++ {
+	for i := range n {
 		_, err := iter.NextRune()
 		if err != nil {
 			return i

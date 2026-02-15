@@ -26,7 +26,7 @@ func Align(leftReader, rightReader io.Reader) ([]LineMatch, error) {
 	if allLineHashesMatch(leftLineHashes, rightLineHashes) {
 		// Fast path for exact match.
 		matches := make([]LineMatch, len(leftLineHashes))
-		for i := 0; i < len(leftLineHashes); i++ {
+		for i := range leftLineHashes {
 			matches[i] = LineMatch{LeftLineNum: uint64(i), RightLineNum: uint64(i)}
 		}
 		return matches, nil
@@ -77,7 +77,7 @@ type lineHash [md5.Size]byte
 // It assumes that the byte slice has the expected length.
 func lineHashFromBytes(b []byte) lineHash {
 	var lh lineHash
-	for i := 0; i < md5.Size; i++ {
+	for i := range md5.Size {
 		lh[i] = b[i]
 	}
 	return lh
@@ -111,7 +111,7 @@ func hashLines(r io.Reader) ([]lineHash, error) {
 		}
 
 		var i int
-		for j := 0; j < n; j++ {
+		for j := range n {
 			if buf[j] == '\n' {
 				// Output a hash for bytes from the previous line up to and including the line feed.
 				h.Write(buf[i : j+1])
@@ -140,7 +140,7 @@ func allLineHashesMatch(left, right []lineHash) bool {
 		return false
 	}
 
-	for i := 0; i < len(left); i++ {
+	for i := range left {
 		if left[i] != right[i] {
 			return false
 		}
@@ -219,7 +219,7 @@ func longestCommonSubsequence(lines []uniqueSharedLine) []LineMatch {
 	// Calculate the thresholds and lengths arrays incrementally,
 	// updating for each line from the left document.
 	var maxLen int
-	for i := 0; i < len(lines); i++ {
+	for i := range lines {
 		j := lines[i].rightLineNum
 
 		// Find k such that thresholds[k-1] < j < thresholds[k]

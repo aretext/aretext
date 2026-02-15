@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
 	"strconv"
@@ -356,11 +357,9 @@ func compileNFAToStateMachine(root *nfaNode) *StateMachine {
 	unionCaptures := func(captureMaps ...map[CmdId]CaptureId) map[CmdId]CaptureId {
 		union := make(map[CmdId]CaptureId)
 		for _, cm := range captureMaps {
-			for cmdId, captureId := range cm {
-				// Validation ensures that capture expressions aren't nested,
-				// so we can assume cmdId isn't already set in the map.
-				union[cmdId] = captureId
-			}
+			// Validation ensures that capture expressions aren't nested,
+			// so we can assume cmdId isn't already set in the map.
+			maps.Copy(union, cm)
 		}
 		return union
 	}

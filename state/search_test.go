@@ -916,7 +916,7 @@ func TestSearchQueryHistoryExcludesEmptyQueries(t *testing.T) {
 	CompleteSearch(state, false)
 
 	// Several empty search queries, should not be added to history.
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 		CompleteSearch(state, false)
 	}
@@ -951,7 +951,7 @@ func TestSearchQueryHistoryExcludesDuplicateQueries(t *testing.T) {
 	CompleteSearch(state, false)
 
 	// Repeat the query several times.
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		StartSearch(state, SearchDirectionForward, SearchCompleteMoveCursorToMatch)
 		for _, r := range "def" {
 			AppendRuneToSearchQuery(state, r)

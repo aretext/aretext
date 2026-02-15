@@ -9,7 +9,7 @@ type Event int64
 type CaptureId uint64
 
 // Expr is a regular expression that matches input events.
-type Expr interface{}
+type Expr any
 
 // EventExpr matches a single input event.
 type EventExpr struct {

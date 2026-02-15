@@ -268,16 +268,10 @@ func computationFromChildren(leftChild, rightChild *computation) *computation {
 		startState, endState = leftChild.StartState(), rightChild.EndState()
 	}
 
-	maxChildTreeHeight := leftChild.TreeHeight()
-	if rightChild.TreeHeight() > maxChildTreeHeight {
-		maxChildTreeHeight = rightChild.TreeHeight()
-	}
+	maxChildTreeHeight := max(rightChild.TreeHeight(), leftChild.TreeHeight())
 
 	// Right child starts reading after last character consumed by left child.
-	maxReadLength := leftChild.ConsumedLength() + rightChild.ReadLength()
-	if leftChild.ReadLength() > maxReadLength {
-		maxReadLength = leftChild.ReadLength()
-	}
+	maxReadLength := max(leftChild.ReadLength(), leftChild.ConsumedLength()+rightChild.ReadLength())
 
 	return &computation{
 		readLength:     maxReadLength,

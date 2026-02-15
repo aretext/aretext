@@ -170,7 +170,7 @@ func BenchmarkIncrementalSearch(b *testing.B) {
 
 func fakeItems(n int, prefix string) []Item {
 	items := make([]Item, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		name := fmt.Sprintf("%s/%d.txt", prefix, i)
 		items = append(items, Item{Name: name})
 	}

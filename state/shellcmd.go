@@ -222,7 +222,7 @@ func deleteCurrentSelection(state *EditorState) {
 
 func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {
 	var menuItems []menu.Item
-	for _, line := range strings.Split(shellCmdOutput, "\n") {
+	for line := range strings.SplitSeq(shellCmdOutput, "\n") {
 		name := strings.TrimRight(line, "\r") // If output is CRLF, strip the CR as well.
 		if len(name) == 0 {
 			continue
@@ -245,7 +245,7 @@ func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput st
 
 func showWorkingDirMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {
 	var menuItems []menu.Item
-	for _, line := range strings.Split(shellCmdOutput, "\n") {
+	for line := range strings.SplitSeq(shellCmdOutput, "\n") {
 		dirPath := strings.TrimRight(line, "\r") // If output is CRLF, strip the CR as well.
 		if len(dirPath) == 0 {
 			continue

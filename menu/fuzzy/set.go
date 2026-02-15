@@ -88,7 +88,7 @@ func (ss intSetSlots) probe(target int) (int, bool) {
 	h1 := (uint64(target) * 0x13205676652c1c3a)
 	h2 := (uint64(target) * 0xd23491f24a15d7ee) | 0x1
 	m := uint64(len(ss))
-	for i := uint64(0); i < m; i++ {
+	for i := range m {
 		idx := int((h1 + (i * h2)) % m)
 		if x, ok := ss.get(idx); !ok {
 			return idx, false

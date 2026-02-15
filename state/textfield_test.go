@@ -62,7 +62,7 @@ func TestAppendRuneToTextFieldMaxLimit(t *testing.T) {
 	emptyAction := func(_ *EditorState, _ string) error { return nil }
 	ShowTextField(state, "test prompt", emptyAction, nil)
 
-	for i := 0; i < maxTextFieldLen+5; i++ {
+	for range maxTextFieldLen + 5 {
 		AppendRuneToTextField(state, 'x')
 	}
 	assert.Equal(t, maxTextFieldLen, len(state.TextField().InputText()))

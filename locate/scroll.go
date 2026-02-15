@@ -109,7 +109,7 @@ func visibleLineRanges(tree *text.Tree, viewOrigin uint64, wrapConfig segment.Li
 	lineRanges := make([]posRange, 0, viewHeight)
 	var prevHadNewline bool
 
-	for row := uint64(0); row < viewHeight; row++ {
+	for range viewHeight {
 		err := wrappedLineIter.NextSegment(wrappedLine)
 		if err == io.EOF {
 			break

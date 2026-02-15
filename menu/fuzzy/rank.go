@@ -36,7 +36,7 @@ func rankRecords(candidates []candidateRecord, query string, limit int) []int {
 // scoreAllRecords assigns scores to every candidate record based on the query.
 func scoreAllRecords(candidates []candidateRecord, query string) []scoredRecord {
 	scoredRecords := make([]scoredRecord, len(candidates))
-	for i := 0; i < len(scoredRecords); i++ {
+	for i := range scoredRecords {
 		scoredRecords[i].recordId = candidates[i].recordId
 		scoredRecords[i].record = candidates[i].record
 	}
@@ -53,10 +53,7 @@ func scoreAllRecords(candidates []candidateRecord, query string) []scoredRecord 
 	var wg sync.WaitGroup
 	recordsPerPartition := len(scoredRecords)/numPartitions + 1
 	for start := 0; start < len(scoredRecords); start += recordsPerPartition {
-		end := start + recordsPerPartition
-		if end > len(scoredRecords) {
-			end = len(scoredRecords)
-		}
+		end := min(start+recordsPerPartition, len(scoredRecords))
 
 		wg.Add(1)
 		go func(partition []scoredRecord, query string) {
@@ -90,11 +87,11 @@ func scoreRecordsPartition(partition []scoredRecord, query string) {
 	numCols := utf8.RuneCountInString(query) + 1
 	prevRow := make([]float64, numCols)
 	currentRow := make([]float64, numCols)
-	for i := 0; i < len(partition); i++ {
+	for i := range partition {
 		record := partition[i].record
 
 		// Initialize the dynamic programming score matrix rows.
-		for col := 0; col < numCols; col++ {
+		for col := range numCols {
 			// Penalize deletion of query characters.
 			prevRow[col] = -1.0 * deleteQueryCharCost * float64(col)
 
@@ -188,14 +185,11 @@ func isSeparator(r rune) bool {
 }
 
 func topRecordsDescByScore(scoredRecords []scoredRecord, limit int) []int {
-	numResults := len(scoredRecords)
-	if numResults > limit {
-		numResults = limit
-	}
+	numResults := min(len(scoredRecords), limit)
 	result := make([]int, 0, numResults)
 	h := scoredRecordHeap(scoredRecords)
 	heap.Init(&h)
-	for i := 0; i < numResults; i++ {
+	for range numResults {
 		sr := heap.Pop(&h).(scoredRecord)
 		result = append(result, sr.recordId)
 	}
@@ -234,11 +228,11 @@ func (h scoredRecordHeap) Swap(i, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h *scoredRecordHeap) Push(x interface{}) {
+func (h *scoredRecordHeap) Push(x any) {
 	*h = append(*h, x.(scoredRecord))
 }
 
-func (h *scoredRecordHeap) Pop() interface{} {
+func (h *scoredRecordHeap) Pop() any {
 	x := (*h)[len(*h)-1]
 	*h = (*h)[0 : len(*h)-1]
 	return x

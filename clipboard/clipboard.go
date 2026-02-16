@@ -1,5 +1,10 @@
 package clipboard
 
+import (
+	"fmt"
+	"io"
+)
+
 // PageId represents a page in the clipboard.
 // This is equivalent to what vim calls a "register".
 type PageId int
@@ -51,33 +56,49 @@ func PageIdForInputRune(r rune) PageId {
 	return PageId(rune(PageLetterA) + offset)
 }
 
-// PageContent represents the content of a page in the clipboard.
-type PageContent struct {
-	Text     string
-	Linewise bool
+// pageContent represents the content of a page in the clipboard.
+type pageContent struct {
+	data     []byte
+	linewise bool
 }
 
 // Clipboard represents a clipboard.
 // The clipboard consists of distinct pages, each of which can store string content.
 type Clipboard struct {
-	pages map[PageId]PageContent
+	pages map[PageId]pageContent
 }
 
 // New constructs a new, empty clipboard.
 func New() *Clipboard {
-	pages := make(map[PageId]PageContent, 0)
+	pages := make(map[PageId]pageContent, 0)
 	return &Clipboard{pages}
 }
 
 // Set stores a string in a page, replacing the prior contents.
-func (c *Clipboard) Set(p PageId, pc PageContent) {
+func (c *Clipboard) Set(p PageId, r io.Reader, linewise bool) error {
 	if p == PageNull {
-		return
+		return nil
 	}
-	c.pages[p] = pc
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return fmt.Errorf("io.ReadAll: %w", err)
+	}
+	c.pages[p] = pageContent{data, linewise}
+	return nil
 }
 
 // Get retrieves the contents of a page.
-func (c *Clipboard) Get(p PageId) PageContent {
-	return c.pages[p]
+func (c *Clipboard) Get(p PageId, w io.Writer) (bool, error) {
+	pc := c.pages[p]
+	data := pc.data
+
+	for len(data) > 0 {
+		n, err := w.Write(data)
+		if err != nil {
+			return false, fmt.Errorf("io.WriteString: %w", err)
+		}
+		data = data[n:]
+	}
+
+	return pc.linewise, nil
 }

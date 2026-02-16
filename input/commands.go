@@ -45,7 +45,7 @@ func cursorCommands() []Command {
 				state.ScrollViewToCursor(s)
 			}
 			wrappedAction(s)
-			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+			state.AddToRecordingUserMacro(s, state.NewMacroAction(wrappedAction))
 		}
 	}
 
@@ -374,11 +374,11 @@ func decorateNormalOrVisual(action Action, addToMacro addToMacro) Action {
 
 		if addToMacro.lastAction {
 			state.ClearLastActionMacro(s)
-			state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
+			state.AddToLastActionMacro(s, state.NewMacroAction(wrappedAction))
 		}
 
 		if addToMacro.user {
-			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+			state.AddToRecordingUserMacro(s, state.NewMacroAction(wrappedAction))
 		}
 	}
 }
@@ -394,7 +394,7 @@ func decorateUndoOrRedo(action Action) Action {
 			state.ScrollViewToCursor(s)
 		}
 		wrappedAction(s)
-		state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+		state.AddToRecordingUserMacro(s, state.NewMacroAction(wrappedAction))
 	}
 }
 
@@ -1842,8 +1842,8 @@ func InsertModeCommands() []Command {
 				state.ScrollViewToCursor(s)
 			}
 			wrappedAction(s)
-			state.AddToLastActionMacro(s, state.MacroAction(wrappedAction))
-			state.AddToRecordingUserMacro(s, state.MacroAction(wrappedAction))
+			state.AddToLastActionMacro(s, state.NewMacroAction(wrappedAction))
+			state.AddToRecordingUserMacro(s, state.NewMacroAction(wrappedAction))
 		}
 	}
 
@@ -2004,7 +2004,7 @@ func SearchModeCommands() []Command {
 	decorate := func(action Action) Action {
 		return func(s *state.EditorState) {
 			action(s)
-			state.AddToRecordingUserMacro(s, state.MacroAction(action))
+			state.AddToRecordingUserMacro(s, state.NewMacroAction(action))
 		}
 	}
 

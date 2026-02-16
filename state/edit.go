@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"unicode/utf8"
@@ -215,7 +216,7 @@ func offsetInLine(buffer *BufferState, startPos uint64) uint64 {
 // It can delete either forwards or backwards from the cursor.
 // The cursor position will be set to the start of the deleted region,
 // which could be on a newline character or past the end of the text.
-func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId) {
+func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId) error {
 	buffer := state.documentBuffer
 	startPos := buffer.cursor.position
 	deleteToPos := loc(locatorParamsForBuffer(buffer))
@@ -230,35 +231,35 @@ func DeleteToPos(state *EditorState, loc Locator, clipboardPage clipboard.PageId
 	}
 
 	if deletedText != "" {
-		state.clipboard.Set(clipboardPage, clipboard.PageContent{
-			Text:     deletedText,
-			Linewise: false,
-		})
+		if err := setClipboardText(state, clipboardPage, deletedText, false); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // DeleteRange deletes all characters in a range (for example, a word or selection).
 // This moves the cursor to the start position of the range.
-func DeleteRange(state *EditorState, loc RangeLocator, clipboardPage clipboard.PageId) (uint64, uint64) {
+func DeleteRange(state *EditorState, loc RangeLocator, clipboardPage clipboard.PageId) (uint64, uint64, error) {
 	buffer := state.documentBuffer
 	startPos, endPos := loc(locatorParamsForBuffer(buffer))
 	startLoc := func(LocatorParams) uint64 { return startPos }
 	endLoc := func(LocatorParams) uint64 { return endPos }
 	MoveCursor(state, startLoc)
-	DeleteToPos(state, endLoc, clipboardPage)
-	return startPos, endPos
+	err := DeleteToPos(state, endLoc, clipboardPage)
+	return startPos, endPos, err
 }
 
 // DeleteLines deletes lines from the cursor's current line to the line of a target cursor.
 // It moves the cursor to the start of the line following the last deleted line.
-func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool, clipboardPage clipboard.PageId) {
+func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurrentLine bool, replaceWithEmptyLine bool, clipboardPage clipboard.PageId) error {
 	buffer := state.documentBuffer
 	currentLine := buffer.textTree.LineNumForPosition(buffer.cursor.position)
 	targetPos := targetLineLoc(locatorParamsForBuffer(buffer))
 	targetLine := buffer.textTree.LineNumForPosition(targetPos)
 
 	if targetLine == currentLine && abortIfTargetIsCurrentLine {
-		return
+		return nil
 	}
 
 	if targetLine < currentLine {
@@ -298,11 +299,11 @@ func DeleteLines(state *EditorState, targetLineLoc Locator, abortIfTargetIsCurre
 	}
 
 	if len(deletedText) > 0 {
-		state.clipboard.Set(clipboardPage, clipboard.PageContent{
-			Text:     stripStartingAndTrailingNewlines(deletedText),
-			Linewise: true,
-		})
+		if err := setClipboardText(state, clipboardPage, stripStartingAndTrailingNewlines(deletedText), true); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func stripStartingAndTrailingNewlines(s string) string {
@@ -566,39 +567,39 @@ func numRunesInIndent(buffer *BufferState, startOfLinePos uint64, count uint64) 
 }
 
 // CopyRange copies the characters in a range to the default page in the clipboard.
-func CopyRange(state *EditorState, page clipboard.PageId, loc RangeLocator) {
+func CopyRange(state *EditorState, page clipboard.PageId, loc RangeLocator) error {
 	startPos, endPos := loc(locatorParamsForBuffer(state.documentBuffer))
 	if startPos >= endPos {
-		return
+		return nil
 	}
-	text := copyText(state.documentBuffer.textTree, startPos, endPos-startPos)
-	state.clipboard.Set(page, clipboard.PageContent{Text: text})
+	return copyTextToClipboard(state, page, state.documentBuffer.textTree, startPos, endPos-startPos, false)
 }
 
 // CopyLine copies the line under the cursor to the default page in the clipboard.
-func CopyLine(state *EditorState, page clipboard.PageId) {
+func CopyLine(state *EditorState, page clipboard.PageId) error {
 	buffer := state.documentBuffer
 	startPos := locate.StartOfLineAtPos(buffer.textTree, buffer.cursor.position)
 	endPos := locate.NextLineBoundary(buffer.textTree, true, startPos)
-	line := copyText(buffer.textTree, startPos, endPos-startPos)
-	content := clipboard.PageContent{
-		Text:     line,
-		Linewise: true,
-	}
-	state.clipboard.Set(page, content)
+	return copyTextToClipboard(state, page, buffer.textTree, startPos, endPos-startPos, true)
 }
 
 // CopySelection copies the current selection to the clipboard.
-func CopySelection(state *EditorState, page clipboard.PageId) {
+func CopySelection(state *EditorState, page clipboard.PageId) error {
 	buffer := state.documentBuffer
-	text, r := copySelectionText(buffer)
-	content := clipboard.PageContent{Text: text}
-	if buffer.selector.Mode() == selection.ModeLine {
-		content.Linewise = true
+	r := selection.EmptyRegion
+	if buffer.selector.Mode() == selection.ModeNone {
+		if err := copyTextToClipboard(state, page, buffer.textTree, 0, 0, false); err != nil {
+			return err
+		}
+	} else {
+		r = buffer.SelectedRegion()
+		if err := copyTextToClipboard(state, page, buffer.textTree, r.StartPos, r.EndPos-r.StartPos, buffer.selector.Mode() == selection.ModeLine); err != nil {
+			return err
+		}
 	}
-	state.clipboard.Set(page, content)
 
 	MoveCursor(state, func(LocatorParams) uint64 { return r.StartPos })
+	return nil
 }
 
 // copyText copies part of the document text to a string.
@@ -630,11 +631,68 @@ func copySelectionText(buffer *BufferState) (string, selection.Region) {
 	return text, r
 }
 
+func copyTextToClipboard(state *EditorState, page clipboard.PageId, tree *text.Tree, pos uint64, numRunes uint64, linewise bool) error {
+	r := &charLimitReader{
+		reader:         tree.ReaderAtPosition(pos),
+		remainingChars: numRunes,
+	}
+	if err := state.clipboard.Set(page, r, linewise); err != nil {
+		return fmt.Errorf("could not write to clipboard: %w", err)
+	}
+	return nil
+}
+
+type charLimitReader struct {
+	reader         text.Reader
+	remainingChars uint64
+}
+
+func (r *charLimitReader) Read(buf []byte) (int, error) {
+	if r.remainingChars == 0 {
+		return 0, io.EOF
+	}
+
+	maxBytes := r.remainingChars * utf8.UTFMax
+	if uint64(len(buf)) > maxBytes {
+		buf = buf[:maxBytes]
+	}
+
+	n, err := r.reader.Read(buf)
+	if n == 0 {
+		return n, err
+	}
+
+	numChars := uint64(0)
+	for i, b := range buf[:n] {
+		if !utf8.RuneStart(b) {
+			continue
+		}
+		if numChars == r.remainingChars {
+			r.remainingChars = 0
+			return i, nil
+		}
+		numChars++
+	}
+
+	r.remainingChars -= numChars
+	return n, err
+}
+
+func setClipboardText(state *EditorState, page clipboard.PageId, s string, linewise bool) error {
+	if err := state.clipboard.Set(page, strings.NewReader(s), linewise); err != nil {
+		return fmt.Errorf("could not write to clipboard: %w", err)
+	}
+	return nil
+}
+
 // PasteAfterCursor inserts the text from the clipboard after the cursor position.
-func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
-	content := state.clipboard.Get(page)
+func PasteAfterCursor(state *EditorState, page clipboard.PageId) error {
+	text, linewise, err := clipboardText(state, page)
+	if err != nil {
+		return err
+	}
 	pos := state.documentBuffer.cursor.position
-	if content.Linewise {
+	if linewise {
 		pos = locate.NextLineBoundary(state.documentBuffer.textTree, true, pos)
 		insertTextAtPosition(state, "\n", pos, true)
 		pos++
@@ -642,36 +700,50 @@ func PasteAfterCursor(state *EditorState, page clipboard.PageId) {
 		pos = locate.NextCharInLine(state.documentBuffer.textTree, 1, true, pos)
 	}
 
-	insertTextAtPosition(state, content.Text, pos, true)
+	insertTextAtPosition(state, text, pos, true)
 
-	if content.Linewise {
+	if linewise {
 		MoveCursor(state, func(LocatorParams) uint64 { return pos })
 	} else {
 		MoveCursor(state, func(params LocatorParams) uint64 {
-			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(text))
 			return locate.PrevCharInLine(params.TextTree, 1, false, posAfterInsert)
 		})
 	}
+	return nil
 }
 
 // PasteBeforeCursor inserts the text from the clipboard before the cursor position.
-func PasteBeforeCursor(state *EditorState, page clipboard.PageId) {
-	content := state.clipboard.Get(page)
+func PasteBeforeCursor(state *EditorState, page clipboard.PageId) error {
+	text, linewise, err := clipboardText(state, page)
+	if err != nil {
+		return err
+	}
 	pos := state.documentBuffer.cursor.position
-	if content.Linewise {
+	if linewise {
 		pos = locate.StartOfLineAtPos(state.documentBuffer.textTree, pos)
 		insertTextAtPosition(state, "\n", pos, true)
 	}
 
-	insertTextAtPosition(state, content.Text, pos, true)
+	insertTextAtPosition(state, text, pos, true)
 
-	if content.Linewise {
+	if linewise {
 		MoveCursor(state, func(LocatorParams) uint64 { return pos })
 	} else {
 		MoveCursor(state, func(params LocatorParams) uint64 {
-			posAfterInsert := pos + uint64(utf8.RuneCountInString(content.Text))
+			posAfterInsert := pos + uint64(utf8.RuneCountInString(text))
 			newPos := locate.PrevChar(params.TextTree, 1, posAfterInsert)
 			return locate.ClosestCharOnLine(params.TextTree, newPos)
 		})
 	}
+	return nil
+}
+
+func clipboardText(state *EditorState, page clipboard.PageId) (string, bool, error) {
+	var sb strings.Builder
+	linewise, err := state.clipboard.Get(page, &sb)
+	if err != nil {
+		return "", false, fmt.Errorf("could not read from clipboard: %w", err)
+	}
+	return sb.String(), linewise, nil
 }

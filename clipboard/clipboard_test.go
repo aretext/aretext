@@ -1,23 +1,41 @@
 package clipboard
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClipboardPageNull(t *testing.T) {
 	c := New()
-	assert.Equal(t, PageContent{}, c.Get(PageNull))
-	c.Set(PageNull, PageContent{Text: "abcd"})
-	assert.Equal(t, PageContent{}, c.Get(PageNull))
+	assertClipboardContent(t, c, PageNull, "", false)
+
+	err := c.Set(PageNull, strings.NewReader("abcd"), false)
+	require.NoError(t, err)
+
+	assertClipboardContent(t, c, PageNull, "", false)
 }
 
 func TestClipboardPageDefault(t *testing.T) {
 	c := New()
-	assert.Equal(t, PageContent{}, c.Get(PageDefault))
-	c.Set(PageDefault, PageContent{Text: "abcd"})
-	assert.Equal(t, PageContent{Text: "abcd"}, c.Get(PageDefault))
+	assertClipboardContent(t, c, PageDefault, "", false)
+
+	err := c.Set(PageDefault, strings.NewReader("abcd"), false)
+	require.NoError(t, err)
+
+	assertClipboardContent(t, c, PageDefault, "abcd", false)
+}
+
+func TestClipboardLinewise(t *testing.T) {
+	c := New()
+
+	err := c.Set(PageDefault, strings.NewReader("abcd\n"), true)
+	require.NoError(t, err)
+
+	assertClipboardContent(t, c, PageDefault, "abcd\n", true)
 }
 
 func TestPageIdForInputRune(t *testing.T) {
@@ -59,4 +77,14 @@ func TestPageIdForInputRune(t *testing.T) {
 			assert.Equal(t, tc.expectedPage, page)
 		})
 	}
+}
+
+func assertClipboardContent(t *testing.T, c *Clipboard, p PageId, expectedText string, expectedLinewise bool) {
+	t.Helper()
+
+	var buf bytes.Buffer
+	linewise, err := c.Get(p, &buf)
+	require.NoError(t, err)
+	assert.Equal(t, expectedText, buf.String())
+	assert.Equal(t, expectedLinewise, linewise)
 }

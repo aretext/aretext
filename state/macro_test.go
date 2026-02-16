@@ -1,9 +1,11 @@
 package state
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type actionLogEntry struct {
@@ -16,11 +18,12 @@ type actionLogger struct {
 }
 
 func (a *actionLogger) buildAction(name string) MacroAction {
-	return func(s *EditorState) {
+	return func(s *EditorState) error {
 		a.logEntries = append(a.logEntries, actionLogEntry{
 			name:                 name,
 			isReplayingUserMacro: s.macroState.isReplayingUserMacro,
 		})
+		return nil
 	}
 }
 
@@ -140,6 +143,44 @@ func TestRecordAndReplayUserMacroWithCount(t *testing.T) {
 	assert.Equal(t, expected, logger.logEntries)
 }
 
+func TestReplayUserMacroHandlesActionError(t *testing.T) {
+	var logger actionLogger
+	state := NewEditorState(100, 100, nil, nil)
+	expectedErr := errors.New("test macro action failed")
+
+	ToggleUserMacroRecording(state)
+	AddToRecordingUserMacro(state, logger.buildAction("before error"))
+	AddToRecordingUserMacro(state, func(s *EditorState) error {
+		logger.logEntries = append(logger.logEntries, actionLogEntry{
+			name:                 "error",
+			isReplayingUserMacro: s.macroState.isReplayingUserMacro,
+		})
+		return expectedErr
+	})
+	AddToRecordingUserMacro(state, logger.buildAction("after error"))
+	ToggleUserMacroRecording(state)
+
+	ReplayRecordedUserMacro(state, 1)
+	assert.Equal(t, StatusMsg{
+		Style: StatusMsgStyleError,
+		Text:  expectedErr.Error(),
+	}, state.StatusMsg())
+	assert.False(t, state.macroState.isReplayingUserMacro)
+	assert.Equal(t, []actionLogEntry{
+		{name: "before error", isReplayingUserMacro: true},
+		{name: "error", isReplayingUserMacro: true},
+	}, logger.logEntries)
+
+	logger.clear()
+	err := ReplayLastActionMacro(state, 1)
+	require.ErrorIs(t, err, expectedErr)
+	assert.False(t, state.macroState.isReplayingUserMacro)
+	assert.Equal(t, []actionLogEntry{
+		{name: "before error", isReplayingUserMacro: true},
+		{name: "error", isReplayingUserMacro: true},
+	}, logger.logEntries)
+}
+
 func TestLastActionIsUserMacro(t *testing.T) {
 	var logger actionLogger
 	state := NewEditorState(100, 100, nil, nil)
@@ -239,23 +280,27 @@ func TestReplayCheckpointUndo(t *testing.T) {
 
 	// Record a macro switching normal -> insert -> normal -> insert -> normal mode.
 	ToggleUserMacroRecording(state)
-	AddToRecordingUserMacro(state, func(s *EditorState) {
+	AddToRecordingUserMacro(state, func(s *EditorState) error {
 		BeginUndoEntry(s)
 		setInputMode(s, InputModeInsert)
 		InsertRune(s, 'a')
+		return nil
 	})
-	AddToRecordingUserMacro(state, func(s *EditorState) {
+	AddToRecordingUserMacro(state, func(s *EditorState) error {
 		CommitUndoEntry(s)
 		setInputMode(s, InputModeNormal)
+		return nil
 	})
-	AddToRecordingUserMacro(state, func(s *EditorState) {
+	AddToRecordingUserMacro(state, func(s *EditorState) error {
 		BeginUndoEntry(s)
 		setInputMode(s, InputModeInsert)
 		InsertRune(s, 'b')
+		return nil
 	})
-	AddToRecordingUserMacro(state, func(s *EditorState) {
+	AddToRecordingUserMacro(state, func(s *EditorState) error {
 		CommitUndoEntry(s)
 		setInputMode(s, InputModeNormal)
+		return nil
 	})
 	ToggleUserMacroRecording(state)
 

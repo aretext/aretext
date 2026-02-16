@@ -1,6 +1,7 @@
 package state
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,28 @@ import (
 	"github.com/aretext/aretext/selection"
 	"github.com/aretext/aretext/text"
 )
+
+type clipboardContent struct {
+	Text     string
+	Linewise bool
+}
+
+func assertClipboardContent(t *testing.T, c *clipboard.Clipboard, page clipboard.PageId, expected clipboardContent) {
+	t.Helper()
+
+	var sb strings.Builder
+	linewise, err := c.Get(page, &sb)
+	require.NoError(t, err)
+	assert.Equal(t, expected.Text, sb.String())
+	assert.Equal(t, expected.Linewise, linewise)
+}
+
+func setClipboardContent(t *testing.T, c *clipboard.Clipboard, page clipboard.PageId, content clipboardContent) {
+	t.Helper()
+
+	err := c.Set(page, strings.NewReader(content.Text), content.Linewise)
+	require.NoError(t, err)
+}
 
 func TestInsertRune(t *testing.T) {
 	testCases := []struct {
@@ -127,7 +150,7 @@ func TestDeleteToPos(t *testing.T) {
 		locator           func(LocatorParams) uint64
 		expectedCursor    cursorState
 		expectedText      string
-		expectedClipboard clipboard.PageContent
+		expectedClipboard clipboardContent
 	}{
 		{
 			name:          "delete from empty string",
@@ -148,7 +171,7 @@ func TestDeleteToPos(t *testing.T) {
 			},
 			expectedCursor:    cursorState{position: 0},
 			expectedText:      "bcd",
-			expectedClipboard: clipboard.PageContent{Text: "a"},
+			expectedClipboard: clipboardContent{Text: "a"},
 		},
 		{
 			name:          "delete from end of text",
@@ -159,7 +182,7 @@ func TestDeleteToPos(t *testing.T) {
 			},
 			expectedCursor:    cursorState{position: 3},
 			expectedText:      "abc",
-			expectedClipboard: clipboard.PageContent{Text: "d"},
+			expectedClipboard: clipboardContent{Text: "d"},
 		},
 		{
 			name:          "delete multiple characters",
@@ -170,7 +193,7 @@ func TestDeleteToPos(t *testing.T) {
 			},
 			expectedCursor:    cursorState{position: 1},
 			expectedText:      "a",
-			expectedClipboard: clipboard.PageContent{Text: "bcd"},
+			expectedClipboard: clipboardContent{Text: "bcd"},
 		},
 	}
 
@@ -184,7 +207,7 @@ func TestDeleteToPos(t *testing.T) {
 			DeleteToPos(state, tc.locator, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assertClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.expectedClipboard)
 		})
 	}
 }
@@ -449,7 +472,7 @@ func TestDeleteLines(t *testing.T) {
 		replaceWithEmptyLine       bool
 		expectedCursor             cursorState
 		expectedText               string
-		expectedClipboard          clipboard.PageContent
+		expectedClipboard          clipboardContent
 	}{
 		{
 			name:          "empty",
@@ -470,7 +493,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -495,7 +518,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "efgh\nijk",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -509,7 +532,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nijk",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "efgh",
 				Linewise: true,
 			},
@@ -523,7 +546,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nefgh",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "ijk",
 				Linewise: true,
 			},
@@ -537,7 +560,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 5},
 			expectedText:   "abcd\nefgh",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "",
 				Linewise: true,
 			},
@@ -551,7 +574,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "lmnop",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd\nefgh\nijk",
 				Linewise: true,
 			},
@@ -565,7 +588,7 @@ func TestDeleteLines(t *testing.T) {
 			},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "abcd",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "efgh\nijk\nlmnop",
 				Linewise: true,
 			},
@@ -591,7 +614,7 @@ func TestDeleteLines(t *testing.T) {
 			replaceWithEmptyLine: true,
 			expectedCursor:       cursorState{position: 0},
 			expectedText:         "\nefgh",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abc",
 				Linewise: true,
 			},
@@ -606,7 +629,7 @@ func TestDeleteLines(t *testing.T) {
 			replaceWithEmptyLine: true,
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\nhij",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "efg",
 				Linewise: true,
 			},
@@ -621,7 +644,7 @@ func TestDeleteLines(t *testing.T) {
 			replaceWithEmptyLine: true,
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\n\nhij",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "",
 				Linewise: true,
 			},
@@ -636,7 +659,7 @@ func TestDeleteLines(t *testing.T) {
 			replaceWithEmptyLine: true,
 			expectedCursor:       cursorState{position: 8},
 			expectedText:         "abc\nefg\n",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "hij",
 				Linewise: true,
 			},
@@ -649,7 +672,7 @@ func TestDeleteLines(t *testing.T) {
 			replaceWithEmptyLine: true,
 			expectedCursor:       cursorState{position: 4},
 			expectedText:         "abc\n\nlmnop",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "efg\nhij",
 				Linewise: true,
 			},
@@ -666,7 +689,7 @@ func TestDeleteLines(t *testing.T) {
 			DeleteLines(state, tc.targetLineLocator, tc.abortIfTargetIsCurrentLine, tc.replaceWithEmptyLine, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assertClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.expectedClipboard)
 		})
 	}
 }
@@ -1417,31 +1440,31 @@ func TestCopyRange(t *testing.T) {
 		name              string
 		inputString       string
 		loc               RangeLocator
-		expectedClipboard clipboard.PageContent
+		expectedClipboard clipboardContent
 	}{
 		{
 			name:              "empty",
 			inputString:       "",
 			loc:               func(p LocatorParams) (uint64, uint64) { return 0, 0 },
-			expectedClipboard: clipboard.PageContent{},
+			expectedClipboard: clipboardContent{},
 		},
 		{
 			name:              "start pos equal to end pos",
 			inputString:       "abcd",
 			loc:               func(p LocatorParams) (uint64, uint64) { return 2, 2 },
-			expectedClipboard: clipboard.PageContent{},
+			expectedClipboard: clipboardContent{},
 		},
 		{
 			name:              "start pos after  end pos",
 			inputString:       "abcd",
 			loc:               func(p LocatorParams) (uint64, uint64) { return 3, 2 },
-			expectedClipboard: clipboard.PageContent{},
+			expectedClipboard: clipboardContent{},
 		},
 		{
 			name:              "start pos before end pos",
 			inputString:       "abcd",
 			loc:               func(p LocatorParams) (uint64, uint64) { return 1, 3 },
-			expectedClipboard: clipboard.PageContent{Text: "bc"},
+			expectedClipboard: clipboardContent{Text: "bc"},
 		},
 	}
 
@@ -1452,7 +1475,7 @@ func TestCopyRange(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			CopyRange(state, clipboard.PageDefault, tc.loc)
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assertClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.expectedClipboard)
 		})
 	}
 }
@@ -1462,13 +1485,13 @@ func TestCopyLine(t *testing.T) {
 		name              string
 		inputString       string
 		initialCursor     cursorState
-		expectedClipboard clipboard.PageContent
+		expectedClipboard clipboardContent
 	}{
 		{
 			name:          "empty",
 			inputString:   "",
 			initialCursor: cursorState{position: 0},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Linewise: true,
 			},
 		},
@@ -1476,7 +1499,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "single line, cursor at start",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 0},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -1485,7 +1508,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "single line, cursor in middle",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -1494,7 +1517,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "single line, cursor at end",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 4},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -1503,7 +1526,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "multiple lines, cursor on first line",
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 2},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "abcd",
 				Linewise: true,
 			},
@@ -1512,7 +1535,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "multiple lines, cursor on middle line",
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 5},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "efgh",
 				Linewise: true,
 			},
@@ -1521,7 +1544,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "multiple lines, cursor on last line",
 			inputString:   "abcd\nefgh\nijkl",
 			initialCursor: cursorState{position: 10},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "ijkl",
 				Linewise: true,
 			},
@@ -1530,7 +1553,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "cursor on empty line",
 			inputString:   "abcd\n\n\nefgh",
 			initialCursor: cursorState{position: 5},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "",
 				Linewise: true,
 			},
@@ -1539,7 +1562,7 @@ func TestCopyLine(t *testing.T) {
 			name:          "multi-byte unicode",
 			inputString:   "丂丄丅丆丏 ¢ह€한",
 			initialCursor: cursorState{position: 2},
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "丂丄丅丆丏 ¢ह€한",
 				Linewise: true,
 			},
@@ -1555,7 +1578,7 @@ func TestCopyLine(t *testing.T) {
 			state.documentBuffer.cursor = tc.initialCursor
 			CopyLine(state, clipboard.PageDefault)
 			assert.Equal(t, tc.initialCursor, state.documentBuffer.cursor)
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assertClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.expectedClipboard)
 		})
 	}
 }
@@ -1569,7 +1592,7 @@ func TestCopySelection(t *testing.T) {
 		cursorEndPos      uint64
 		expectedCursor    cursorState
 		expectedText      string
-		expectedClipboard clipboard.PageContent
+		expectedClipboard clipboardContent
 	}{
 		{
 			name:              "empty document, select charwise",
@@ -1579,7 +1602,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:      0,
 			expectedCursor:    cursorState{position: 0},
 			expectedText:      "",
-			expectedClipboard: clipboard.PageContent{Text: ""},
+			expectedClipboard: clipboardContent{Text: ""},
 		},
 		{
 			name:           "empty document, select linewise",
@@ -1589,7 +1612,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:   0,
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "",
 				Linewise: true,
 			},
@@ -1602,7 +1625,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:      3,
 			expectedCursor:    cursorState{position: 1},
 			expectedText:      "abcd1234",
-			expectedClipboard: clipboard.PageContent{Text: "bcd"},
+			expectedClipboard: clipboardContent{Text: "bcd"},
 		},
 		{
 			name:           "nonempty linewise selection",
@@ -1612,7 +1635,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:   8,
 			expectedCursor: cursorState{position: 3},
 			expectedText:   "ab\ncde\nfgh\n12\n34",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "cde\nfgh",
 				Linewise: true,
 			},
@@ -1625,7 +1648,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:      4,
 			expectedCursor:    cursorState{position: 4},
 			expectedText:      "abc\n\ndef",
-			expectedClipboard: clipboard.PageContent{Text: "\n"},
+			expectedClipboard: clipboardContent{Text: "\n"},
 		},
 		{
 			name:           "empty line, select linewise",
@@ -1635,7 +1658,7 @@ func TestCopySelection(t *testing.T) {
 			cursorEndPos:   4,
 			expectedCursor: cursorState{position: 4},
 			expectedText:   "abc\n\ndef",
-			expectedClipboard: clipboard.PageContent{
+			expectedClipboard: clipboardContent{
 				Text:     "",
 				Linewise: true,
 			},
@@ -1653,7 +1676,7 @@ func TestCopySelection(t *testing.T) {
 			CopySelection(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
-			assert.Equal(t, tc.expectedClipboard, state.clipboard.Get(clipboard.PageDefault))
+			assertClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.expectedClipboard)
 			assert.Equal(t, false, state.documentBuffer.undoLog.HasUnsavedChanges())
 		})
 	}
@@ -1664,7 +1687,7 @@ func TestPasteAfterCursor(t *testing.T) {
 		name           string
 		inputString    string
 		initialCursor  cursorState
-		clipboard      clipboard.PageContent
+		clipboard      clipboardContent
 		expectedCursor cursorState
 		expectedText   string
 	}{
@@ -1672,7 +1695,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:           "empty document, empty clipboard",
 			inputString:    "",
 			initialCursor:  cursorState{position: 0},
-			clipboard:      clipboard.PageContent{},
+			clipboard:      clipboardContent{},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 		},
@@ -1680,7 +1703,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:          "empty document, empty clipboard insert on next line",
 			inputString:   "",
 			initialCursor: cursorState{position: 0},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Linewise: true,
 			},
 			expectedCursor: cursorState{position: 1},
@@ -1690,7 +1713,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:          "paste after cursor",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "xyz",
 				Linewise: false,
 			},
@@ -1701,7 +1724,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:          "paste after cursor insert on next line",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "xyz",
 				Linewise: true,
 			},
@@ -1712,7 +1735,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:          "paste newline after cursor",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 1},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "\n",
 				Linewise: false,
 			},
@@ -1723,7 +1746,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			name:          "multi-byte unicode",
 			inputString:   "abc",
 			initialCursor: cursorState{position: 1},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "丂丄丅丆丏 ¢ह€한",
 				Linewise: false,
 			},
@@ -1739,7 +1762,7 @@ func TestPasteAfterCursor(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)
+			setClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.clipboard)
 			PasteAfterCursor(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())
@@ -1752,7 +1775,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 		name           string
 		inputString    string
 		initialCursor  cursorState
-		clipboard      clipboard.PageContent
+		clipboard      clipboardContent
 		expectedCursor cursorState
 		expectedText   string
 	}{
@@ -1760,7 +1783,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:           "empty document, empty clipboard",
 			inputString:    "",
 			initialCursor:  cursorState{position: 0},
-			clipboard:      clipboard.PageContent{},
+			clipboard:      clipboardContent{},
 			expectedCursor: cursorState{position: 0},
 			expectedText:   "",
 		},
@@ -1768,7 +1791,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:          "empty document, empty clipboard insert on next line",
 			inputString:   "",
 			initialCursor: cursorState{position: 0},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Linewise: true,
 			},
 			expectedCursor: cursorState{position: 0},
@@ -1778,7 +1801,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:          "paste before cursor",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "xyz",
 				Linewise: false,
 			},
@@ -1789,7 +1812,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:          "paste before cursor insert on next line",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "xyz",
 				Linewise: true,
 			},
@@ -1800,7 +1823,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:          "paste newline before cursor",
 			inputString:   "abcd",
 			initialCursor: cursorState{position: 2},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "\n",
 				Linewise: false,
 			},
@@ -1811,7 +1834,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			name:          "multi-byte unicode",
 			inputString:   "abc",
 			initialCursor: cursorState{position: 1},
-			clipboard: clipboard.PageContent{
+			clipboard: clipboardContent{
 				Text:     "丂丄丅丆丏 ¢ह€한",
 				Linewise: false,
 			},
@@ -1827,7 +1850,7 @@ func TestPasteBeforeCursor(t *testing.T) {
 			state := NewEditorState(100, 100, nil, nil)
 			state.documentBuffer.textTree = textTree
 			state.documentBuffer.cursor = tc.initialCursor
-			state.clipboard.Set(clipboard.PageDefault, tc.clipboard)
+			setClipboardContent(t, state.clipboard, clipboard.PageDefault, tc.clipboard)
 			PasteBeforeCursor(state, clipboard.PageDefault)
 			assert.Equal(t, tc.expectedCursor, state.documentBuffer.cursor)
 			assert.Equal(t, tc.expectedText, textTree.String())

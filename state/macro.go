@@ -3,7 +3,15 @@ package state
 import "log"
 
 // MacroAction is a transformation of editor state that can be recorded and replayed.
-type MacroAction func(*EditorState)
+type MacroAction func(*EditorState) error
+
+// NewMacroAction adapts an action that cannot fail into a macro action.
+func NewMacroAction(action func(*EditorState)) MacroAction {
+	return func(s *EditorState) error {
+		action(s)
+		return nil
+	}
+}
 
 // MacroState stores recorded macros.
 // The "last action" macro is used to repeat the last logical action
@@ -27,7 +35,7 @@ func ClearLastActionMacro(s *EditorState) {
 }
 
 // ReplayLastActionMacro executes the actions recorded in the "last action" macro.
-func ReplayLastActionMacro(s *EditorState, count uint64) {
+func ReplayLastActionMacro(s *EditorState, count uint64) error {
 	if s.macroState.isRecordingUserMacro {
 		// Replaying a last action macro while recording a user macro can cause an infinite loop:
 		// 1) Run a command, recorded as a last action macro.
@@ -46,14 +54,17 @@ func ReplayLastActionMacro(s *EditorState, count uint64) {
 			Style: StatusMsgStyleError,
 			Text:  "Cannot repeat the last action while recording a macro",
 		})
-		return
+		return nil
 	}
 
 	for range count {
 		for _, action := range s.macroState.lastActions {
-			action(s)
+			if err := action(s); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // ToggleUserMacroRecording stops/starts recording a user-defined macro.
@@ -134,26 +145,37 @@ func ReplayRecordedUserMacro(s *EditorState, count uint64) {
 	// The action sets the isReplayingUserMacro flag to disable undo log checkpointing
 	// when switching input modes -- this ensures that the next undo operation reverts
 	// the entire macro.
-	replay := func(s *EditorState) {
+	replay := func(s *EditorState) error {
 		BeginUndoEntry(s)
 		s.macroState.isReplayingUserMacro = true
+		defer func() {
+			s.macroState.isReplayingUserMacro = false
+			CommitUndoEntry(s)
+		}()
 
 		log.Printf("Replaying actions from user macro %d times...\n", count)
 		for range count {
-			for _, action := range m.userMacroActions {
-				action(s)
+			for _, action := range replayActions {
+				if err := action(s); err != nil {
+					return err
+				}
 			}
 		}
 		log.Printf("Finished replaying actions from user macro\n")
 
-		s.macroState.isReplayingUserMacro = false
-		CommitUndoEntry(s)
+		return nil
 	}
 
 	// Replay the macro, then set the replay action as the new "last" action macro.
 	// This lets the user easily repeat the macro using the "." command in normal mode.
-	replay(s)
 	m.lastActions = []MacroAction{replay}
+	if err := replay(s); err != nil {
+		SetStatusMsg(s, StatusMsg{
+			Style: StatusMsgStyleError,
+			Text:  err.Error(),
+		})
+		return
+	}
 
 	SetStatusMsg(s, StatusMsg{
 		Style: StatusMsgStyleSuccess,

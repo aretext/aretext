@@ -147,9 +147,7 @@ func menuItems(ctx Context) []menu.Item {
 			{
 				Name:    "replay macro",
 				Aliases: []string{"r"},
-				Action: func(s *state.EditorState) {
-					state.ReplayRecordedUserMacro(s, 1)
-				},
+				Action:  func(s *state.EditorState) { state.ReplayRecordedUserMacro(s, 1) },
 			},
 		}...)
 	}

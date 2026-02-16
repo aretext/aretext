@@ -36,7 +36,7 @@ func (d SearchDirection) Reverse() SearchDirection {
 }
 
 // SearchCompleteAction is the action to perform when a user completes a search.
-type SearchCompleteAction func(*EditorState, string, SearchDirection, SearchMatch)
+type SearchCompleteAction func(*EditorState, string, SearchDirection, SearchMatch) error
 
 // searchState represents the state of a text search.
 type searchState struct {
@@ -78,7 +78,7 @@ func StartSearch(state *EditorState, direction SearchDirection, completeAction S
 // CompleteSearch terminates a text search and returns to normal mode.
 // If commit is true, execute the complete search action.
 // Otherwise, return to the original cursor position.
-func CompleteSearch(state *EditorState, commit bool) {
+func CompleteSearch(state *EditorState, commit bool) error {
 	search := &state.documentBuffer.search
 
 	if search.query != "" {
@@ -94,7 +94,11 @@ func CompleteSearch(state *EditorState, commit bool) {
 
 	if commit {
 		if search.match != nil {
-			search.completeAction(state, search.query, search.direction, *search.match)
+			if err := search.completeAction(state, search.query, search.direction, *search.match); err != nil {
+				search.match = nil
+				ScrollViewToCursor(state)
+				return err
+			}
 		}
 	} else {
 		prevQuery, prevDirection := search.prevQuery, search.prevDirection
@@ -108,6 +112,7 @@ func CompleteSearch(state *EditorState, commit bool) {
 	search.match = nil
 
 	ScrollViewToCursor(state)
+	return nil
 }
 
 // AppendRuneToSearchQuery appends a rune to the text search query.
@@ -120,16 +125,16 @@ func AppendRuneToSearchQuery(state *EditorState, r rune) {
 
 // DeleteRuneFromSearchQuery deletes the last rune from the text search query.
 // A deletion in an empty query aborts the search and returns the editor to normal mode.
-func DeleteRuneFromSearchQuery(state *EditorState) {
+func DeleteRuneFromSearchQuery(state *EditorState) error {
 	search := &state.documentBuffer.search
 	if len(search.query) == 0 {
-		CompleteSearch(state, false)
-		return
+		return CompleteSearch(state, false)
 	}
 
 	q := search.query[0 : len(search.query)-1]
 	runTextSearchQuery(state, q)
 	search.historyIdx = len(search.history)
+	return nil
 }
 
 // SetSearchQueryToPrevInHistory sets the search query to a previous search query in the history.
@@ -156,14 +161,14 @@ func SetSearchQueryToNextInHistory(state *EditorState) {
 }
 
 // SearchWordUnderCursor starts a search for the word under the cursor.
-func SearchWordUnderCursor(state *EditorState, direction SearchDirection, completeAction SearchCompleteAction, targetCount uint64) {
+func SearchWordUnderCursor(state *EditorState, direction SearchDirection, completeAction SearchCompleteAction, targetCount uint64) error {
 	// Retrieve the current word under the cursor.
 	// If the cursor is on leading whitespace, this will retrieve the word after the whitespace.
 	buffer := state.documentBuffer
 	wordStartPos, wordEndPos := locate.WordObject(buffer.textTree, buffer.cursor.position, targetCount)
 	word := strings.TrimSpace(copyText(buffer.textTree, wordStartPos, wordEndPos-wordStartPos))
 	if word == "" {
-		return
+		return nil
 	}
 
 	query := fmt.Sprintf("%s\\C", word) // Force case-sensitive search.
@@ -171,7 +176,7 @@ func SearchWordUnderCursor(state *EditorState, direction SearchDirection, comple
 	// Search for the word.
 	StartSearch(state, direction, completeAction)
 	runTextSearchQuery(state, query)
-	CompleteSearch(state, true)
+	return CompleteSearch(state, true)
 }
 
 func runTextSearchQuery(state *EditorState, q string) {
@@ -359,41 +364,51 @@ func searchTextBackward(startPos uint64, tree *text.Tree, parsedQuery parsedQuer
 }
 
 // SearchCompleteMoveCursorToMatch is a SearchCompleteAction that moves the cursor to the start of the search match.
-func SearchCompleteMoveCursorToMatch(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+func SearchCompleteMoveCursorToMatch(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
 	state.documentBuffer.cursor = cursorState{position: match.StartPos}
+	return nil
 }
 
 // SearchCompleteDeleteToMatch is a SearchCompleteAction that deletes from the cursor position to the search match.
 func SearchCompleteDeleteToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
-	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
-		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
-			deleteToSearchMatch(state, direction, match, clipboardPage)
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
+		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
+			return deleteToSearchMatch(state, direction, match, clipboardPage)
 		}
-		completeAction(state, query, direction, match)
+		if err := completeAction(state, query, direction, match); err != nil {
+			return err
+		}
 		replaySearchInLastActionMacro(state, query, direction, completeAction)
+		return nil
 	}
 }
 
 // SearchCompleteChangeToMatch is a SearchCompleteAction that deletes to the search match, then enters insert mode.
 func SearchCompleteChangeToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
-	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
-		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
+		completeAction := func(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
 			// Delete to the match (exactly the same as the "search and delete" commands).
 			// Then go to insert mode (override default transition back to normal mode).
-			deleteToSearchMatch(state, direction, match, clipboardPage)
+			if err := deleteToSearchMatch(state, direction, match, clipboardPage); err != nil {
+				return err
+			}
 			setInputMode(state, InputModeInsert)
+			return nil
 		}
-		completeAction(state, query, direction, match)
+		if err := completeAction(state, query, direction, match); err != nil {
+			return err
+		}
 		replaySearchInLastActionMacro(state, query, direction, completeAction)
+		return nil
 	}
 }
 
 // SearchCompleteCopyToMatch is a SearchCompleteAction that copies text from the cursor position to the search match.
 func SearchCompleteCopyToMatch(clipboardPage clipboard.PageId) SearchCompleteAction {
-	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) {
+	return func(state *EditorState, query string, direction SearchDirection, match SearchMatch) error {
 		// If the search wraps around, then the range start will be >= range end,
 		// so nothing will be copied.
-		CopyRange(state, clipboardPage, func(params LocatorParams) (uint64, uint64) {
+		return CopyRange(state, clipboardPage, func(params LocatorParams) (uint64, uint64) {
 			if direction == SearchDirectionForward {
 				return params.CursorPos, match.StartPos
 			} else {
@@ -403,8 +418,8 @@ func SearchCompleteCopyToMatch(clipboardPage clipboard.PageId) SearchCompleteAct
 	}
 }
 
-func deleteToSearchMatch(state *EditorState, direction SearchDirection, match SearchMatch, clipboardPage clipboard.PageId) {
-	DeleteToPos(state, func(params LocatorParams) uint64 {
+func deleteToSearchMatch(state *EditorState, direction SearchDirection, match SearchMatch, clipboardPage clipboard.PageId) error {
+	return DeleteToPos(state, func(params LocatorParams) uint64 {
 		if direction == SearchDirectionForward {
 			return match.StartPos
 		} else {
@@ -422,11 +437,11 @@ func replaySearchInLastActionMacro(state *EditorState, query string, direction S
 	// The "last action" must use the original search query (even if the user subsequently searched for something else).
 	// Construct a macro action that performs the original search again, then performs the specified complete action.
 	ClearLastActionMacro(state)
-	AddToLastActionMacro(state, func(state *EditorState) {
+	AddToLastActionMacro(state, func(state *EditorState) error {
 		StartSearch(state, direction, completeAction)
 		for _, r := range query {
 			AppendRuneToSearchQuery(state, r)
 		}
-		CompleteSearch(state, true)
+		return CompleteSearch(state, true)
 	})
 }

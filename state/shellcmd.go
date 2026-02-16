@@ -53,7 +53,7 @@ func RunShellCmd(state *EditorState, shellCmd string, mode string) {
 			output, err := shellcmd.RunAndCaptureOutput(ctx, shellCmd, env)
 			return func(state *EditorState) {
 				if err == nil {
-					insertShellCmdOutput(state, output)
+					err = insertShellCmdOutput(state, output)
 				}
 				setStatusForShellCmdResult(state, err)
 			}
@@ -173,7 +173,7 @@ func countBytesBetweenPositions(textTree *text.Tree, startPos, endPos uint64) ui
 	return byteCount
 }
 
-func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
+func insertShellCmdOutput(state *EditorState, shellCmdOutput string) error {
 	BeginUndoEntry(state)
 
 	tree := state.documentBuffer.textTree
@@ -191,7 +191,9 @@ func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 		// If there is a selection, delete it before inserting.
 		// Deleting the selection moves the cursor, so insert text at the updated
 		// cursor position.
-		deleteCurrentSelection(state)
+		if err := deleteCurrentSelection(state); err != nil {
+			return err
+		}
 		pos = state.documentBuffer.cursor.position
 	}
 
@@ -206,18 +208,20 @@ func insertShellCmdOutput(state *EditorState, shellCmdOutput string) {
 	CommitUndoEntry(state)
 
 	setInputMode(state, InputModeNormal)
+	return nil
 }
 
-func deleteCurrentSelection(state *EditorState) {
+func deleteCurrentSelection(state *EditorState) error {
 	selectionMode := state.documentBuffer.selector.Mode()
 	selectedRegion := state.documentBuffer.SelectedRegion()
 	MoveCursor(state, func(p LocatorParams) uint64 { return selectedRegion.StartPos })
 	selectionEndLoc := func(p LocatorParams) uint64 { return selectedRegion.EndPos }
 	if selectionMode == selection.ModeChar {
-		DeleteToPos(state, selectionEndLoc, clipboard.PageDefault)
+		return DeleteToPos(state, selectionEndLoc, clipboard.PageDefault)
 	} else if selectionMode == selection.ModeLine {
-		DeleteLines(state, selectionEndLoc, false, true, clipboard.PageDefault)
+		return DeleteLines(state, selectionEndLoc, false, true, clipboard.PageDefault)
 	}
+	return nil
 }
 
 func showInsertChoiceMenuForShellCmdOutput(state *EditorState, shellCmdOutput string) error {

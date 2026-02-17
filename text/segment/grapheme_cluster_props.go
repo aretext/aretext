@@ -281,7 +281,7 @@ var gbAsciiLookupTbl = [256]gbProp{
 	gbPropNone,
 }
 
-var gbRanges = [1449]struct {
+var gbRanges = [1542]struct {
 	Prop  gbProp
 	Start rune
 	End   rune
@@ -433,7 +433,7 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtend,
-		Start: 2200,
+		Start: 2199,
 		End:   2207,
 	},
 	{
@@ -844,11 +844,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 3263,
-		End:   3263,
+		End:   3264,
 	},
 	{
 		Prop:  gbPropSpacingMark,
-		Start: 3264,
+		Start: 3265,
 		End:   3265,
 	},
 	{
@@ -864,21 +864,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 3270,
-		End:   3270,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 3271,
 		End:   3272,
 	},
 	{
-		Prop:  gbPropSpacingMark,
-		Start: 3274,
-		End:   3275,
-	},
-	{
 		Prop:  gbPropExtend,
-		Start: 3276,
+		Start: 3274,
 		End:   3277,
 	},
 	{
@@ -1204,21 +1194,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 5906,
-		End:   5908,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 5909,
 		End:   5909,
 	},
 	{
 		Prop:  gbPropExtend,
 		Start: 5938,
-		End:   5939,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 5940,
 		End:   5940,
 	},
 	{
@@ -1404,7 +1384,12 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 6832,
-		End:   6862,
+		End:   6877,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 6880,
+		End:   6891,
 	},
 	{
 		Prop:  gbPropExtend,
@@ -1419,31 +1404,16 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 6964,
-		End:   6970,
+		End:   6973,
 	},
 	{
 		Prop:  gbPropSpacingMark,
-		Start: 6971,
-		End:   6971,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 6972,
-		End:   6972,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 6973,
+		Start: 6974,
 		End:   6977,
 	},
 	{
 		Prop:  gbPropExtend,
 		Start: 6978,
-		End:   6978,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 6979,
 		End:   6980,
 	},
 	{
@@ -1479,16 +1449,6 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 7080,
-		End:   7081,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 7082,
-		End:   7082,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 7083,
 		End:   7085,
 	},
 	{
@@ -1524,11 +1484,6 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 7151,
-		End:   7153,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 7154,
 		End:   7155,
 	},
 	{
@@ -1673,11 +1628,6 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 9096,
-		End:   9096,
-	},
-	{
-		Prop:  gbPropExtended_Pictographic,
 		Start: 9167,
 		End:   9167,
 	},
@@ -1719,26 +1669,216 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 9728,
-		End:   9733,
+		End:   9732,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 9735,
-		End:   9746,
+		Start: 9742,
+		End:   9742,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9745,
+		End:   9745,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 9748,
-		End:   9861,
+		End:   9749,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 9872,
+		Start: 9752,
+		End:   9752,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9757,
+		End:   9757,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9760,
+		End:   9760,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9762,
+		End:   9763,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9766,
+		End:   9766,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9770,
+		End:   9770,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9774,
+		End:   9775,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9784,
+		End:   9786,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9792,
+		End:   9792,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9794,
+		End:   9794,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9800,
+		End:   9811,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9823,
+		End:   9824,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9827,
+		End:   9827,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9829,
+		End:   9830,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9832,
+		End:   9832,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9851,
+		End:   9851,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9854,
+		End:   9855,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9874,
+		End:   9879,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9881,
+		End:   9881,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9883,
+		End:   9884,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9888,
+		End:   9889,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9895,
+		End:   9895,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9898,
+		End:   9899,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9904,
+		End:   9905,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9917,
+		End:   9918,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9924,
+		End:   9925,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9928,
+		End:   9928,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9934,
+		End:   9935,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9937,
+		End:   9937,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9939,
+		End:   9940,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9961,
+		End:   9962,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9968,
+		End:   9973,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9975,
+		End:   9978,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9981,
+		End:   9981,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9986,
+		End:   9986,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9989,
 		End:   9989,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 9992,
+		End:   9997,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 9999,
+		End:   9999,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 10002,
 		End:   10002,
 	},
 	{
@@ -1804,7 +1944,7 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 10083,
-		End:   10087,
+		End:   10084,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
@@ -1989,6 +2129,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropSpacingMark,
 		Start: 43346,
+		End:   43346,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43347,
 		End:   43347,
 	},
 	{
@@ -2034,6 +2179,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropSpacingMark,
 		Start: 43454,
+		End:   43455,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 43456,
 		End:   43456,
 	},
 	{
@@ -6253,12 +6403,17 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtend,
+		Start: 68969,
+		End:   68973,
+	},
+	{
+		Prop:  gbPropExtend,
 		Start: 69291,
 		End:   69292,
 	},
 	{
 		Prop:  gbPropExtend,
-		Start: 69373,
+		Start: 69370,
 		End:   69375,
 	},
 	{
@@ -6399,6 +6554,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropSpacingMark,
 		Start: 70079,
+		End:   70079,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70080,
 		End:   70080,
 	},
 	{
@@ -6439,16 +6599,6 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 70196,
-		End:   70196,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 70197,
-		End:   70197,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 70198,
 		End:   70199,
 	},
 	{
@@ -6519,6 +6669,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropSpacingMark,
 		Start: 70475,
+		End:   70476,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70477,
 		End:   70477,
 	},
 	{
@@ -6540,6 +6695,66 @@ var gbRanges = [1449]struct {
 		Prop:  gbPropExtend,
 		Start: 70512,
 		End:   70516,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70584,
+		End:   70584,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70585,
+		End:   70586,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70587,
+		End:   70592,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70594,
+		End:   70594,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70597,
+		End:   70597,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70599,
+		End:   70601,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70602,
+		End:   70602,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 70604,
+		End:   70605,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70606,
+		End:   70608,
+	},
+	{
+		Prop:  gbPropPrepend,
+		Start: 70609,
+		End:   70609,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70610,
+		End:   70610,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 70625,
+		End:   70626,
 	},
 	{
 		Prop:  gbPropSpacingMark,
@@ -6724,21 +6939,21 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 71344,
-		End:   71349,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 71350,
-		End:   71350,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 71351,
 		End:   71351,
 	},
 	{
 		Prop:  gbPropExtend,
 		Start: 71453,
+		End:   71453,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 71454,
+		End:   71454,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 71455,
 		End:   71455,
 	},
 	{
@@ -6794,16 +7009,6 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 71995,
-		End:   71996,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 71997,
-		End:   71997,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 71998,
 		End:   71998,
 	},
 	{
@@ -6877,11 +7082,6 @@ var gbRanges = [1449]struct {
 		End:   72249,
 	},
 	{
-		Prop:  gbPropPrepend,
-		Start: 72250,
-		End:   72250,
-	},
-	{
 		Prop:  gbPropExtend,
 		Start: 72251,
 		End:   72254,
@@ -6925,6 +7125,36 @@ var gbRanges = [1449]struct {
 		Prop:  gbPropExtend,
 		Start: 72344,
 		End:   72345,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72544,
+		End:   72544,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72545,
+		End:   72545,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72546,
+		End:   72548,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72549,
+		End:   72549,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 72550,
+		End:   72550,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 72551,
+		End:   72551,
 	},
 	{
 		Prop:  gbPropSpacingMark,
@@ -7089,17 +7319,12 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 73536,
-		End:   73536,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 73537,
-		End:   73537,
+		End:   73538,
 	},
 	{
 		Prop:  gbPropExtend,
-		Start: 73538,
-		End:   73538,
+		Start: 73562,
+		End:   73562,
 	},
 	{
 		Prop:  gbPropControl,
@@ -7118,6 +7343,21 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtend,
+		Start: 90398,
+		End:   90409,
+	},
+	{
+		Prop:  gbPropSpacingMark,
+		Start: 90410,
+		End:   90412,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 90413,
+		End:   90415,
+	},
+	{
+		Prop:  gbPropExtend,
 		Start: 92912,
 		End:   92916,
 	},
@@ -7125,6 +7365,16 @@ var gbRanges = [1449]struct {
 		Prop:  gbPropExtend,
 		Start: 92976,
 		End:   92982,
+	},
+	{
+		Prop:  gbPropV,
+		Start: 93539,
+		End:   93539,
+	},
+	{
+		Prop:  gbPropV,
+		Start: 93543,
+		End:   93546,
 	},
 	{
 		Prop:  gbPropExtend,
@@ -7147,7 +7397,7 @@ var gbRanges = [1449]struct {
 		End:   94180,
 	},
 	{
-		Prop:  gbPropSpacingMark,
+		Prop:  gbPropExtend,
 		Start: 94192,
 		End:   94193,
 	},
@@ -7174,26 +7424,11 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtend,
 		Start: 119141,
-		End:   119141,
-	},
-	{
-		Prop:  gbPropSpacingMark,
-		Start: 119142,
-		End:   119142,
-	},
-	{
-		Prop:  gbPropExtend,
-		Start: 119143,
 		End:   119145,
 	},
 	{
-		Prop:  gbPropSpacingMark,
-		Start: 119149,
-		End:   119149,
-	},
-	{
 		Prop:  gbPropExtend,
-		Start: 119150,
+		Start: 119149,
 		End:   119154,
 	},
 	{
@@ -7303,6 +7538,31 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtend,
+		Start: 124398,
+		End:   124399,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 124643,
+		End:   124643,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 124646,
+		End:   124646,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 124654,
+		End:   124655,
+	},
+	{
+		Prop:  gbPropExtend,
+		Start: 124661,
+		End:   124661,
+	},
+	{
+		Prop:  gbPropExtend,
 		Start: 125136,
 		End:   125142,
 	},
@@ -7313,22 +7573,42 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 126976,
+		Start: 126980,
+		End:   126980,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127020,
+		End:   127023,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127124,
+		End:   127135,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127151,
+		End:   127152,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127168,
+		End:   127168,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127183,
+		End:   127184,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127222,
 		End:   127231,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 127245,
-		End:   127247,
-	},
-	{
-		Prop:  gbPropExtended_Pictographic,
-		Start: 127279,
-		End:   127279,
-	},
-	{
-		Prop:  gbPropExtended_Pictographic,
-		Start: 127340,
+		Start: 127344,
 		End:   127345,
 	},
 	{
@@ -7348,7 +7628,7 @@ var gbRanges = [1449]struct {
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 127405,
+		Start: 127406,
 		End:   127461,
 	},
 	{
@@ -7384,6 +7664,41 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 127561,
+		End:   127583,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127590,
+		End:   127777,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127780,
+		End:   127891,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127894,
+		End:   127895,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127897,
+		End:   127899,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127902,
+		End:   127984,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127987,
+		End:   127989,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 127991,
 		End:   127994,
 	},
 	{
@@ -7394,26 +7709,151 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 128000,
+		End:   128253,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128255,
 		End:   128317,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 128326,
+		Start: 128329,
+		End:   128334,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128336,
+		End:   128359,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128367,
+		End:   128368,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128371,
+		End:   128378,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128391,
+		End:   128391,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128394,
+		End:   128397,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128400,
+		End:   128400,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128405,
+		End:   128406,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128420,
+		End:   128421,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128424,
+		End:   128424,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128433,
+		End:   128434,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128444,
+		End:   128444,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128450,
+		End:   128452,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128465,
+		End:   128467,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128476,
+		End:   128478,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128481,
+		End:   128481,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128483,
+		End:   128483,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128488,
+		End:   128488,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128495,
+		End:   128495,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128499,
+		End:   128499,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128506,
 		End:   128591,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 128640,
+		End:   128709,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128715,
+		End:   128722,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128725,
+		End:   128741,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128745,
+		End:   128745,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128747,
+		End:   128752,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 128755,
 		End:   128767,
 	},
 	{
 		Prop:  gbPropExtended_Pictographic,
-		Start: 128884,
-		End:   128895,
-	},
-	{
-		Prop:  gbPropExtended_Pictographic,
-		Start: 128981,
+		Start: 128986,
 		End:   129023,
 	},
 	{
@@ -7439,6 +7879,21 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 129198,
+		End:   129199,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129212,
+		End:   129215,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129218,
+		End:   129231,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129241,
 		End:   129279,
 	},
 	{
@@ -7454,6 +7909,16 @@ var gbRanges = [1449]struct {
 	{
 		Prop:  gbPropExtended_Pictographic,
 		Start: 129351,
+		End:   129535,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129624,
+		End:   129631,
+	},
+	{
+		Prop:  gbPropExtended_Pictographic,
+		Start: 129646,
 		End:   129791,
 	},
 	{

@@ -55,6 +55,10 @@ func (gb *GraphemeClusterBreaker) ProcessRune(r rune) (canBreakBefore bool) {
 		// GB9b: Prepend ×
 		gb.lastProp == gbPropPrepend ||
 
+		// GB9c: Do not break within certain combinations with Indic_Conjunct_Break (InCB)=Linker.
+		// https://www.unicode.org/reports/tr29/
+		// TODO
+
 		// GB11: \p{Extended_Pictographic} Extend* ZWJ × \p{Extended_Pictographic}
 		(gb.afterExtendedPictographicPlusZWJ && prop == gbPropExtended_Pictographic) ||
 

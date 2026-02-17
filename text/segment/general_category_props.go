@@ -268,7 +268,7 @@ var gcAsciiLookupTbl = [256]gcProp{
 	gcPropNone,
 }
 
-var gcRanges = [707]struct {
+var gcRanges = [735]struct {
 	Prop  gcProp
 	Start rune
 	End   rune
@@ -380,13 +380,8 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 2191,
-		End:   2191,
-	},
-	{
-		Prop:  gcPropCn,
 		Start: 2194,
-		End:   2199,
+		End:   2198,
 	},
 	{
 		Prop:  gcPropCn,
@@ -801,7 +796,7 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 3163,
-		End:   3164,
+		End:   3163,
 	},
 	{
 		Prop:  gcPropCn,
@@ -861,7 +856,7 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 3287,
-		End:   3292,
+		End:   3291,
 	},
 	{
 		Prop:  gcPropCn,
@@ -1340,18 +1335,18 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 6863,
+		Start: 6878,
+		End:   6879,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 6892,
 		End:   6911,
 	},
 	{
 		Prop:  gcPropCn,
 		Start: 6989,
-		End:   6991,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 7039,
-		End:   7039,
+		End:   6989,
 	},
 	{
 		Prop:  gcPropCn,
@@ -1370,7 +1365,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 7305,
+		Start: 7307,
 		End:   7311,
 	},
 	{
@@ -1490,7 +1485,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 8385,
+		Start: 8386,
 		End:   8399,
 	},
 	{
@@ -1505,7 +1500,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 9255,
+		Start: 9258,
 		End:   9279,
 	},
 	{
@@ -1517,11 +1512,6 @@ var gcRanges = [707]struct {
 		Prop:  gcPropCn,
 		Start: 11124,
 		End:   11125,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 11158,
-		End:   11158,
 	},
 	{
 		Prop:  gcPropCn,
@@ -1620,11 +1610,6 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 12284,
-		End:   12287,
-	},
-	{
-		Prop:  gcPropCn,
 		Start: 12352,
 		End:   12352,
 	},
@@ -1650,8 +1635,8 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 12772,
-		End:   12783,
+		Start: 12774,
+		End:   12782,
 	},
 	{
 		Prop:  gcPropCn,
@@ -1680,23 +1665,8 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 42955,
-		End:   42959,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 42962,
-		End:   42962,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 42964,
-		End:   42964,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 42970,
-		End:   42993,
+		Start: 42973,
+		End:   42992,
 	},
 	{
 		Prop:  gcPropCn,
@@ -1872,21 +1842,6 @@ var gcRanges = [707]struct {
 		Prop:  gcPropCn,
 		Start: 64325,
 		End:   64325,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 64451,
-		End:   64466,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 64912,
-		End:   64913,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 64968,
-		End:   64974,
 	},
 	{
 		Prop:  gcPropCn,
@@ -2146,6 +2101,11 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 67005,
+		End:   67007,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 67060,
 		End:   67071,
 	},
 	{
@@ -2240,7 +2200,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 67904,
+		Start: 67930,
 		End:   67967,
 	},
 	{
@@ -2361,6 +2321,21 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 68922,
+		End:   68927,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 68966,
+		End:   68968,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 68998,
+		End:   69005,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 69008,
 		End:   69215,
 	},
 	{
@@ -2381,7 +2356,17 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 69298,
-		End:   69372,
+		End:   69313,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 69320,
+		End:   69327,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 69337,
+		End:   69369,
 	},
 	{
 		Prop:  gcPropCn,
@@ -2581,6 +2566,61 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 70517,
+		End:   70527,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70538,
+		End:   70538,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70540,
+		End:   70541,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70543,
+		End:   70543,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70582,
+		End:   70582,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70593,
+		End:   70593,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70595,
+		End:   70596,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70598,
+		End:   70598,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70603,
+		End:   70603,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70614,
+		End:   70614,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70617,
+		End:   70624,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 70627,
 		End:   70655,
 	},
 	{
@@ -2636,6 +2676,11 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 71370,
+		End:   71375,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 71396,
 		End:   71423,
 	},
 	{
@@ -2736,6 +2781,21 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 72458,
+		End:   72543,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 72552,
+		End:   72639,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 72674,
+		End:   72687,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 72698,
 		End:   72703,
 	},
 	{
@@ -2836,6 +2896,16 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 73130,
+		End:   73135,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 73180,
+		End:   73183,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 73194,
 		End:   73439,
 	},
 	{
@@ -2855,7 +2925,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 73562,
+		Start: 73563,
 		End:   73647,
 	},
 	{
@@ -2896,11 +2966,21 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 78934,
+		End:   78943,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 82939,
 		End:   82943,
 	},
 	{
 		Prop:  gcPropCn,
 		Start: 83527,
+		End:   90367,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 90426,
 		End:   92159,
 	},
 	{
@@ -2961,11 +3041,26 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 93072,
+		End:   93503,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 93562,
 		End:   93759,
 	},
 	{
 		Prop:  gcPropCn,
 		Start: 93851,
+		End:   93855,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 93881,
+		End:   93882,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 93908,
 		End:   93951,
 	},
 	{
@@ -2990,22 +3085,22 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 94194,
+		Start: 94199,
 		End:   94207,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 100344,
-		End:   100351,
-	},
-	{
-		Prop:  gcPropCn,
 		Start: 101590,
-		End:   101631,
+		End:   101630,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 101641,
+		Start: 101663,
+		End:   101759,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 101875,
 		End:   110575,
 	},
 	{
@@ -3076,6 +3171,26 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 113828,
+		End:   117759,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 118013,
+		End:   118015,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 118452,
+		End:   118457,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 118481,
+		End:   118495,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 118513,
 		End:   118527,
 	},
 	{
@@ -3331,6 +3446,31 @@ var gcRanges = [707]struct {
 	{
 		Prop:  gcPropCn,
 		Start: 124154,
+		End:   124367,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 124411,
+		End:   124414,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 124416,
+		End:   124607,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 124639,
+		End:   124639,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 124662,
+		End:   124669,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 124672,
 		End:   124895,
 	},
 	{
@@ -3620,7 +3760,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 128728,
+		Start: 128729,
 		End:   128731,
 	},
 	{
@@ -3632,11 +3772,6 @@ var gcRanges = [707]struct {
 		Prop:  gcPropCn,
 		Start: 128765,
 		End:   128767,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 128887,
-		End:   128890,
 	},
 	{
 		Prop:  gcPropCn,
@@ -3680,12 +3815,22 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129202,
+		Start: 129212,
+		End:   129215,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 129218,
+		End:   129231,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 129241,
 		End:   129279,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129620,
+		Start: 129624,
 		End:   129631,
 	},
 	{
@@ -3700,28 +3845,28 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129673,
-		End:   129679,
+		Start: 129675,
+		End:   129677,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129726,
-		End:   129726,
+		Start: 129735,
+		End:   129735,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129734,
-		End:   129741,
+		Start: 129737,
+		End:   129740,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129756,
-		End:   129759,
+		Start: 129757,
+		End:   129758,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129769,
-		End:   129775,
+		Start: 129771,
+		End:   129774,
 	},
 	{
 		Prop:  gcPropCn,
@@ -3735,12 +3880,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 129995,
-		End:   130031,
-	},
-	{
-		Prop:  gcPropCn,
-		Start: 130042,
+		Start: 130043,
 		End:   131071,
 	},
 	{
@@ -3750,22 +3890,22 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 177978,
-		End:   177983,
-	},
-	{
-		Prop:  gcPropCn,
 		Start: 178206,
 		End:   178207,
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 183970,
+		Start: 183982,
 		End:   183983,
 	},
 	{
 		Prop:  gcPropCn,
 		Start: 191457,
+		End:   191471,
+	},
+	{
+		Prop:  gcPropCn,
+		Start: 192094,
 		End:   194559,
 	},
 	{
@@ -3780,7 +3920,7 @@ var gcRanges = [707]struct {
 	},
 	{
 		Prop:  gcPropCn,
-		Start: 205744,
+		Start: 210042,
 		End:   917504,
 	},
 	{

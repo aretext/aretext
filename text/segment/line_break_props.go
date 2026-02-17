@@ -310,7 +310,7 @@ var lbAsciiLookupTbl = [256]lbProp{
 	lbPropAL,
 }
 
-var lbRanges = [2829]struct {
+var lbRanges = [2859]struct {
 	Prop  lbProp
 	Start rune
 	End   rune
@@ -393,16 +393,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropCM,
 		Start: 768,
-		End:   846,
-	},
-	{
-		Prop:  lbPropGL,
-		Start: 847,
-		End:   847,
-	},
-	{
-		Prop:  lbPropCM,
-		Start: 848,
 		End:   859,
 	},
 	{
@@ -481,11 +471,6 @@ var lbRanges = [2829]struct {
 		End:   1417,
 	},
 	{
-		Prop:  lbPropBA,
-		Start: 1418,
-		End:   1418,
-	},
-	{
 		Prop:  lbPropAL,
 		Start: 1421,
 		End:   1422,
@@ -499,11 +484,6 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropCM,
 		Start: 1425,
 		End:   1469,
-	},
-	{
-		Prop:  lbPropBA,
-		Start: 1470,
-		End:   1470,
 	},
 	{
 		Prop:  lbPropCM,
@@ -556,8 +536,13 @@ var lbRanges = [2829]struct {
 		End:   1524,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropNU,
 		Start: 1536,
+		End:   1541,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 1542,
 		End:   1544,
 	},
 	{
@@ -651,8 +636,13 @@ var lbRanges = [2829]struct {
 		End:   1756,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropNU,
 		Start: 1757,
+		End:   1757,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 1758,
 		End:   1758,
 	},
 	{
@@ -843,16 +833,16 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 2160,
-		End:   2190,
+		End:   2191,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropNU,
 		Start: 2192,
 		End:   2193,
 	},
 	{
 		Prop:  lbPropCM,
-		Start: 2200,
+		Start: 2199,
 		End:   2207,
 	},
 	{
@@ -866,7 +856,7 @@ var lbRanges = [2829]struct {
 		End:   2273,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropNU,
 		Start: 2274,
 		End:   2274,
 	},
@@ -1512,7 +1502,7 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
-		Start: 3165,
+		Start: 3164,
 		End:   3165,
 	},
 	{
@@ -1607,7 +1597,7 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
-		Start: 3293,
+		Start: 3292,
 		End:   3294,
 	},
 	{
@@ -2301,11 +2291,6 @@ var lbRanges = [2829]struct {
 		End:   5117,
 	},
 	{
-		Prop:  lbPropBA,
-		Start: 5120,
-		End:   5120,
-	},
-	{
 		Prop:  lbPropAL,
 		Start: 5121,
 		End:   5759,
@@ -2593,11 +2578,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropNU,
 		Start: 6608,
-		End:   6617,
-	},
-	{
-		Prop:  lbPropSA,
-		Start: 6618,
 		End:   6618,
 	},
 	{
@@ -2653,7 +2633,17 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropCM,
 		Start: 6832,
-		End:   6862,
+		End:   6877,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 6880,
+		End:   6890,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 6891,
+		End:   6891,
 	},
 	{
 		Prop:  lbPropCM,
@@ -2661,24 +2651,14 @@ var lbRanges = [2829]struct {
 		End:   6916,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 6917,
-		End:   6963,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 6964,
-		End:   6980,
+		End:   6979,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 6981,
-		End:   6988,
-	},
-	{
-		Prop:  lbPropNU,
-		Start: 6992,
-		End:   7001,
+		Prop:  lbPropBA,
+		Start: 6990,
+		End:   6991,
 	},
 	{
 		Prop:  lbPropBA,
@@ -2686,7 +2666,7 @@ var lbRanges = [2829]struct {
 		End:   7003,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 7004,
 		End:   7004,
 	},
@@ -2696,7 +2676,7 @@ var lbRanges = [2829]struct {
 		End:   7008,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 7009,
 		End:   7018,
 	},
@@ -2706,14 +2686,14 @@ var lbRanges = [2829]struct {
 		End:   7027,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 7028,
 		End:   7036,
 	},
 	{
 		Prop:  lbPropBA,
 		Start: 7037,
-		End:   7038,
+		End:   7039,
 	},
 	{
 		Prop:  lbPropCM,
@@ -2743,12 +2723,12 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 7098,
-		End:   7141,
+		End:   7103,
 	},
 	{
 		Prop:  lbPropCM,
 		Start: 7142,
-		End:   7155,
+		End:   7153,
 	},
 	{
 		Prop:  lbPropAL,
@@ -2793,7 +2773,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 7296,
-		End:   7304,
+		End:   7306,
 	},
 	{
 		Prop:  lbPropAL,
@@ -3011,19 +2991,9 @@ var lbRanges = [2829]struct {
 		End:   8207,
 	},
 	{
-		Prop:  lbPropBA,
-		Start: 8208,
-		End:   8208,
-	},
-	{
 		Prop:  lbPropGL,
 		Start: 8209,
 		End:   8209,
-	},
-	{
-		Prop:  lbPropBA,
-		Start: 8210,
-		End:   8211,
 	},
 	{
 		Prop:  lbPropB2,
@@ -3388,31 +3358,11 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 8492,
-		End:   8531,
+		End:   8527,
 	},
 	{
 		Prop:  lbPropAI,
-		Start: 8532,
-		End:   8533,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 8534,
-		End:   8538,
-	},
-	{
-		Prop:  lbPropAI,
-		Start: 8539,
-		End:   8539,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 8540,
-		End:   8541,
-	},
-	{
-		Prop:  lbPropAI,
-		Start: 8542,
+		Start: 8528,
 		End:   8542,
 	},
 	{
@@ -3843,7 +3793,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 9204,
-		End:   9254,
+		End:   9257,
 	},
 	{
 		Prop:  lbPropAL,
@@ -4533,6 +4483,16 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 10224,
+		End:   10239,
+	},
+	{
+		Prop:  lbPropBA,
+		Start: 10240,
+		End:   10240,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 10241,
 		End:   10626,
 	},
 	{
@@ -4703,11 +4663,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 11126,
-		End:   11157,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 11159,
 		End:   11502,
 	},
 	{
@@ -4846,11 +4801,6 @@ var lbRanges = [2829]struct {
 		End:   11798,
 	},
 	{
-		Prop:  lbPropBA,
-		Start: 11799,
-		End:   11799,
-	},
-	{
 		Prop:  lbPropOP,
 		Start: 11800,
 		End:   11800,
@@ -4972,7 +4922,7 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropBA,
-		Start: 11840,
+		Start: 11841,
 		End:   11841,
 	},
 	{
@@ -5021,7 +4971,7 @@ var lbRanges = [2829]struct {
 		End:   11861,
 	},
 	{
-		Prop:  lbPropCL,
+		Prop:  lbPropCP,
 		Start: 11862,
 		End:   11862,
 	},
@@ -5031,7 +4981,7 @@ var lbRanges = [2829]struct {
 		End:   11863,
 	},
 	{
-		Prop:  lbPropCL,
+		Prop:  lbPropCP,
 		Start: 11864,
 		End:   11864,
 	},
@@ -5041,7 +4991,7 @@ var lbRanges = [2829]struct {
 		End:   11865,
 	},
 	{
-		Prop:  lbPropCL,
+		Prop:  lbPropCP,
 		Start: 11866,
 		End:   11866,
 	},
@@ -5051,14 +5001,9 @@ var lbRanges = [2829]struct {
 		End:   11867,
 	},
 	{
-		Prop:  lbPropCL,
+		Prop:  lbPropCP,
 		Start: 11868,
 		End:   11868,
-	},
-	{
-		Prop:  lbPropBA,
-		Start: 11869,
-		End:   11869,
 	},
 	{
 		Prop:  lbPropID,
@@ -5078,7 +5023,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropID,
 		Start: 12272,
-		End:   12283,
+		End:   12287,
 	},
 	{
 		Prop:  lbPropBA,
@@ -5518,7 +5463,12 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropID,
 		Start: 12688,
-		End:   12771,
+		End:   12773,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 12783,
+		End:   12783,
 	},
 	{
 		Prop:  lbPropCJ,
@@ -5668,26 +5618,11 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 42752,
-		End:   42954,
+		End:   42972,
 	},
 	{
 		Prop:  lbPropAL,
-		Start: 42960,
-		End:   42961,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 42963,
-		End:   42963,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 42965,
-		End:   42969,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 42994,
+		Start: 42993,
 		End:   43009,
 	},
 	{
@@ -5861,17 +5796,12 @@ var lbRanges = [2829]struct {
 		End:   43395,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 43396,
-		End:   43442,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 43443,
-		End:   43456,
+		End:   43455,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 43457,
 		End:   43462,
 	},
@@ -5881,22 +5811,17 @@ var lbRanges = [2829]struct {
 		End:   43465,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 43466,
 		End:   43469,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 43471,
 		End:   43471,
 	},
 	{
-		Prop:  lbPropNU,
-		Start: 43472,
-		End:   43481,
-	},
-	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 43486,
 		End:   43487,
 	},
@@ -5916,17 +5841,12 @@ var lbRanges = [2829]struct {
 		End:   43518,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 43520,
-		End:   43560,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 43561,
 		End:   43574,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 43584,
 		End:   43586,
 	},
@@ -5936,7 +5856,7 @@ var lbRanges = [2829]struct {
 		End:   43587,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 43588,
 		End:   43595,
 	},
@@ -5946,12 +5866,7 @@ var lbRanges = [2829]struct {
 		End:   43597,
 	},
 	{
-		Prop:  lbPropNU,
-		Start: 43600,
-		End:   43609,
-	},
-	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 43612,
 		End:   43612,
 	},
@@ -10128,11 +10043,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 64336,
-		End:   64450,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 64467,
 		End:   64829,
 	},
 	{
@@ -10148,16 +10058,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 64832,
-		End:   64911,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 64914,
-		End:   64967,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 64975,
 		End:   64975,
 	},
 	{
@@ -10181,17 +10081,12 @@ var lbRanges = [2829]struct {
 		End:   65039,
 	},
 	{
-		Prop:  lbPropIS,
-		Start: 65040,
-		End:   65040,
-	},
-	{
 		Prop:  lbPropCL,
-		Start: 65041,
+		Start: 65040,
 		End:   65042,
 	},
 	{
-		Prop:  lbPropIS,
+		Prop:  lbPropNS,
 		Start: 65043,
 		End:   65044,
 	},
@@ -10216,8 +10111,73 @@ var lbRanges = [2829]struct {
 		End:   65049,
 	},
 	{
-		Prop:  lbPropCM,
+		Prop:  lbPropGL,
 		Start: 65056,
+		End:   65056,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65057,
+		End:   65057,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65058,
+		End:   65058,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65059,
+		End:   65059,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65060,
+		End:   65060,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65061,
+		End:   65061,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65062,
+		End:   65063,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65064,
+		End:   65064,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65065,
+		End:   65065,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65066,
+		End:   65066,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65067,
+		End:   65067,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65068,
+		End:   65068,
+	},
+	{
+		Prop:  lbPropGL,
+		Start: 65069,
+		End:   65070,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 65071,
 		End:   65071,
 	},
 	{
@@ -10867,6 +10827,11 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
+		Start: 67008,
+		End:   67059,
+	},
+	{
+		Prop:  lbPropAL,
 		Start: 67072,
 		End:   67382,
 	},
@@ -10968,7 +10933,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 67903,
-		End:   67903,
+		End:   67929,
 	},
 	{
 		Prop:  lbPropAL,
@@ -11136,6 +11101,31 @@ var lbRanges = [2829]struct {
 		End:   68921,
 	},
 	{
+		Prop:  lbPropNU,
+		Start: 68928,
+		End:   68937,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 68938,
+		End:   68965,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 68969,
+		End:   68973,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 68975,
+		End:   68997,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 69006,
+		End:   69007,
+	},
+	{
 		Prop:  lbPropAL,
 		Start: 69216,
 		End:   69246,
@@ -11151,18 +11141,28 @@ var lbRanges = [2829]struct {
 		End:   69292,
 	},
 	{
-		Prop:  lbPropBA,
-		Start: 69293,
-		End:   69293,
-	},
-	{
 		Prop:  lbPropAL,
 		Start: 69296,
 		End:   69297,
 	},
 	{
+		Prop:  lbPropAL,
+		Start: 69314,
+		End:   69319,
+	},
+	{
+		Prop:  lbPropBA,
+		Start: 69328,
+		End:   69328,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 69329,
+		End:   69336,
+	},
+	{
 		Prop:  lbPropCM,
-		Start: 69373,
+		Start: 69370,
 		End:   69375,
 	},
 	{
@@ -11216,14 +11216,9 @@ var lbRanges = [2829]struct {
 		End:   69634,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 69635,
-		End:   69687,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 69688,
-		End:   69702,
+		End:   69701,
 	},
 	{
 		Prop:  lbPropBA,
@@ -11231,19 +11226,14 @@ var lbRanges = [2829]struct {
 		End:   69704,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 69705,
 		End:   69709,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropID,
 		Start: 69714,
 		End:   69733,
-	},
-	{
-		Prop:  lbPropNU,
-		Start: 69734,
-		End:   69743,
 	},
 	{
 		Prop:  lbPropCM,
@@ -11251,23 +11241,18 @@ var lbRanges = [2829]struct {
 		End:   69744,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 69745,
-		End:   69746,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 69747,
 		End:   69748,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 69749,
-		End:   69749,
+		Prop:  lbPropGL,
+		Start: 69759,
+		End:   69759,
 	},
 	{
 		Prop:  lbPropCM,
-		Start: 69759,
+		Start: 69760,
 		End:   69762,
 	},
 	{
@@ -11283,6 +11268,11 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 69819,
+		End:   69820,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 69821,
 		End:   69821,
 	},
 	{
@@ -11296,7 +11286,7 @@ var lbRanges = [2829]struct {
 		End:   69826,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropNU,
 		Start: 69837,
 		End:   69837,
 	},
@@ -11556,42 +11546,12 @@ var lbRanges = [2829]struct {
 		End:   70403,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 70405,
-		End:   70412,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70415,
-		End:   70416,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70419,
-		End:   70440,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70442,
-		End:   70448,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70450,
-		End:   70451,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70453,
-		End:   70457,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 70459,
 		End:   70460,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 70461,
 		End:   70461,
 	},
@@ -11608,12 +11568,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropCM,
 		Start: 70475,
-		End:   70477,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 70480,
-		End:   70480,
+		End:   70476,
 	},
 	{
 		Prop:  lbPropCM,
@@ -11621,9 +11576,9 @@ var lbRanges = [2829]struct {
 		End:   70487,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 70493,
-		End:   70497,
+		End:   70493,
 	},
 	{
 		Prop:  lbPropCM,
@@ -11639,6 +11594,56 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropCM,
 		Start: 70512,
 		End:   70516,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 70583,
+		End:   70583,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70584,
+		End:   70592,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70594,
+		End:   70594,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70597,
+		End:   70597,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70599,
+		End:   70602,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70604,
+		End:   70607,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70610,
+		End:   70610,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 70611,
+		End:   70613,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 70615,
+		End:   70616,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 70625,
+		End:   70626,
 	},
 	{
 		Prop:  lbPropAL,
@@ -11811,6 +11816,11 @@ var lbRanges = [2829]struct {
 		End:   71369,
 	},
 	{
+		Prop:  lbPropNU,
+		Start: 71376,
+		End:   71395,
+	},
+	{
 		Prop:  lbPropSA,
 		Start: 71424,
 		End:   71450,
@@ -11873,27 +11883,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 71935,
-		End:   71942,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 71945,
-		End:   71945,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 71948,
-		End:   71955,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 71957,
-		End:   71958,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 71960,
-		End:   71983,
+		End:   71935,
 	},
 	{
 		Prop:  lbPropCM,
@@ -11908,22 +11898,12 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropCM,
 		Start: 71995,
-		End:   71998,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 71999,
-		End:   71999,
+		End:   71997,
 	},
 	{
 		Prop:  lbPropCM,
 		Start: 72000,
 		End:   72000,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 72001,
-		End:   72001,
 	},
 	{
 		Prop:  lbPropCM,
@@ -11934,11 +11914,6 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropBA,
 		Start: 72004,
 		End:   72006,
-	},
-	{
-		Prop:  lbPropNU,
-		Start: 72016,
-		End:   72025,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12089,6 +12064,21 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropBB,
 		Start: 72448,
 		End:   72457,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 72544,
+		End:   72551,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 72640,
+		End:   72673,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 72688,
+		End:   72697,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12247,7 +12237,17 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
-		Start: 73440,
+		Start: 73136,
+		End:   73179,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 73184,
+		End:   73193,
+	},
+	{
+		Prop:  lbPropBA,
+		Start: 73458,
 		End:   73458,
 	},
 	{
@@ -12256,7 +12256,7 @@ var lbRanges = [2829]struct {
 		End:   73462,
 	},
 	{
-		Prop:  lbPropAL,
+		Prop:  lbPropBA,
 		Start: 73463,
 		End:   73464,
 	},
@@ -12266,24 +12266,9 @@ var lbRanges = [2829]struct {
 		End:   73473,
 	},
 	{
-		Prop:  lbPropAL,
-		Start: 73474,
-		End:   73474,
-	},
-	{
 		Prop:  lbPropCM,
 		Start: 73475,
 		End:   73475,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 73476,
-		End:   73488,
-	},
-	{
-		Prop:  lbPropAL,
-		Start: 73490,
-		End:   73523,
 	},
 	{
 		Prop:  lbPropCM,
@@ -12293,7 +12278,7 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropCM,
 		Start: 73534,
-		End:   73538,
+		End:   73537,
 	},
 	{
 		Prop:  lbPropBA,
@@ -12306,9 +12291,9 @@ var lbRanges = [2829]struct {
 		End:   73551,
 	},
 	{
-		Prop:  lbPropNU,
-		Start: 73552,
-		End:   73561,
+		Prop:  lbPropCM,
+		Start: 73562,
+		End:   73562,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12428,6 +12413,11 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 78716,
+		End:   78894,
+	},
+	{
+		Prop:  lbPropOP,
+		Start: 78895,
 		End:   78895,
 	},
 	{
@@ -12487,6 +12477,11 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
+		Start: 78944,
+		End:   82938,
+	},
+	{
+		Prop:  lbPropAL,
 		Start: 82944,
 		End:   83405,
 	},
@@ -12504,6 +12499,11 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropAL,
 		Start: 83408,
 		End:   83526,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 90398,
+		End:   90415,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12602,6 +12602,21 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
+		Start: 93504,
+		End:   93549,
+	},
+	{
+		Prop:  lbPropBA,
+		Start: 93550,
+		End:   93551,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 93552,
+		End:   93561,
+	},
+	{
+		Prop:  lbPropAL,
 		Start: 93760,
 		End:   93846,
 	},
@@ -12614,6 +12629,16 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropAL,
 		Start: 93849,
 		End:   93850,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 93856,
+		End:   93880,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 93883,
+		End:   93907,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12661,13 +12686,18 @@ var lbRanges = [2829]struct {
 		End:   94193,
 	},
 	{
-		Prop:  lbPropID,
-		Start: 94208,
-		End:   100343,
+		Prop:  lbPropNS,
+		Start: 94194,
+		End:   94195,
 	},
 	{
 		Prop:  lbPropID,
-		Start: 100352,
+		Start: 94196,
+		End:   94198,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 94208,
 		End:   101119,
 	},
 	{
@@ -12676,9 +12706,19 @@ var lbRanges = [2829]struct {
 		End:   101589,
 	},
 	{
+		Prop:  lbPropAL,
+		Start: 101631,
+		End:   101631,
+	},
+	{
 		Prop:  lbPropID,
 		Start: 101632,
-		End:   101640,
+		End:   101662,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 101760,
+		End:   101874,
 	},
 	{
 		Prop:  lbPropAL,
@@ -12764,6 +12804,36 @@ var lbRanges = [2829]struct {
 		Prop:  lbPropCM,
 		Start: 113824,
 		End:   113827,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 117760,
+		End:   117999,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 118000,
+		End:   118009,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 118010,
+		End:   118012,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 118016,
+		End:   118451,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 118458,
+		End:   118480,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 118496,
+		End:   118512,
 	},
 	{
 		Prop:  lbPropCM,
@@ -13157,6 +13227,81 @@ var lbRanges = [2829]struct {
 	},
 	{
 		Prop:  lbPropAL,
+		Start: 124368,
+		End:   124397,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 124398,
+		End:   124399,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124400,
+		End:   124400,
+	},
+	{
+		Prop:  lbPropNU,
+		Start: 124401,
+		End:   124410,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124415,
+		End:   124415,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124608,
+		End:   124638,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124640,
+		End:   124642,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 124643,
+		End:   124643,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124644,
+		End:   124645,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 124646,
+		End:   124646,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124647,
+		End:   124653,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 124654,
+		End:   124655,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124656,
+		End:   124660,
+	},
+	{
+		Prop:  lbPropCM,
+		Start: 124661,
+		End:   124661,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 124670,
+		End:   124671,
+	},
+	{
+		Prop:  lbPropAL,
 		Start: 124896,
 		End:   124902,
 	},
@@ -13426,7 +13571,7 @@ var lbRanges = [2829]struct {
 		End:   127244,
 	},
 	{
-		Prop:  lbPropID,
+		Prop:  lbPropAL,
 		Start: 127245,
 		End:   127247,
 	},
@@ -13448,11 +13593,6 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 127338,
-		End:   127340,
-	},
-	{
-		Prop:  lbPropID,
-		Start: 127341,
 		End:   127343,
 	},
 	{
@@ -13461,8 +13601,13 @@ var lbRanges = [2829]struct {
 		End:   127404,
 	},
 	{
-		Prop:  lbPropID,
+		Prop:  lbPropAL,
 		Start: 127405,
+		End:   127405,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 127406,
 		End:   127461,
 	},
 	{
@@ -13873,6 +14018,16 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropID,
 		Start: 128884,
+		End:   128886,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 128887,
+		End:   128890,
+	},
+	{
+		Prop:  lbPropID,
+		Start: 128891,
 		End:   128895,
 	},
 	{
@@ -13891,19 +14046,9 @@ var lbRanges = [2829]struct {
 		End:   129035,
 	},
 	{
-		Prop:  lbPropID,
-		Start: 129036,
-		End:   129039,
-	},
-	{
 		Prop:  lbPropAL,
 		Start: 129040,
 		End:   129095,
-	},
-	{
-		Prop:  lbPropID,
-		Start: 129096,
-		End:   129103,
 	},
 	{
 		Prop:  lbPropAL,
@@ -13911,19 +14056,9 @@ var lbRanges = [2829]struct {
 		End:   129113,
 	},
 	{
-		Prop:  lbPropID,
-		Start: 129114,
-		End:   129119,
-	},
-	{
 		Prop:  lbPropAL,
 		Start: 129120,
 		End:   129159,
-	},
-	{
-		Prop:  lbPropID,
-		Start: 129160,
-		End:   129167,
 	},
 	{
 		Prop:  lbPropAL,
@@ -13931,9 +14066,19 @@ var lbRanges = [2829]struct {
 		End:   129197,
 	},
 	{
-		Prop:  lbPropID,
-		Start: 129198,
-		End:   129279,
+		Prop:  lbPropAL,
+		Start: 129200,
+		End:   129211,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 129216,
+		End:   129217,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 129232,
+		End:   129240,
 	},
 	{
 		Prop:  lbPropAL,
@@ -14063,11 +14208,11 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 129536,
-		End:   129619,
+		End:   129623,
 	},
 	{
 		Prop:  lbPropID,
-		Start: 129620,
+		Start: 129624,
 		End:   129730,
 	},
 	{
@@ -14098,12 +14243,17 @@ var lbRanges = [2829]struct {
 	{
 		Prop:  lbPropAL,
 		Start: 129940,
-		End:   129994,
+		End:   130031,
 	},
 	{
 		Prop:  lbPropNU,
 		Start: 130032,
 		End:   130041,
+	},
+	{
+		Prop:  lbPropAL,
+		Start: 130042,
+		End:   130042,
 	},
 	{
 		Prop:  lbPropID,

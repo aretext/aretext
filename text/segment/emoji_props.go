@@ -268,7 +268,7 @@ var emAsciiLookupTbl = [256]emProp{
 	emPropNone,
 }
 
-var emRanges = [78]struct {
+var emRanges = [156]struct {
 	Prop  emProp
 	Start rune
 	End   rune
@@ -315,11 +315,6 @@ var emRanges = [78]struct {
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 9096,
-		End:   9096,
-	},
-	{
-		Prop:  emPropExtended_Pictographic,
 		Start: 9167,
 		End:   9167,
 	},
@@ -361,26 +356,216 @@ var emRanges = [78]struct {
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 9728,
-		End:   9733,
+		End:   9732,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 9735,
-		End:   9746,
+		Start: 9742,
+		End:   9742,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9745,
+		End:   9745,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 9748,
-		End:   9861,
+		End:   9749,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 9872,
+		Start: 9752,
+		End:   9752,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9757,
+		End:   9757,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9760,
+		End:   9760,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9762,
+		End:   9763,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9766,
+		End:   9766,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9770,
+		End:   9770,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9774,
+		End:   9775,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9784,
+		End:   9786,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9792,
+		End:   9792,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9794,
+		End:   9794,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9800,
+		End:   9811,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9823,
+		End:   9824,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9827,
+		End:   9827,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9829,
+		End:   9830,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9832,
+		End:   9832,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9851,
+		End:   9851,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9854,
+		End:   9855,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9874,
+		End:   9879,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9881,
+		End:   9881,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9883,
+		End:   9884,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9888,
+		End:   9889,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9895,
+		End:   9895,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9898,
+		End:   9899,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9904,
+		End:   9905,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9917,
+		End:   9918,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9924,
+		End:   9925,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9928,
+		End:   9928,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9934,
+		End:   9935,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9937,
+		End:   9937,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9939,
+		End:   9940,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9961,
+		End:   9962,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9968,
+		End:   9973,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9975,
+		End:   9978,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9981,
+		End:   9981,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9986,
+		End:   9986,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9989,
 		End:   9989,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 9992,
+		End:   9997,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 9999,
+		End:   9999,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 10002,
 		End:   10002,
 	},
 	{
@@ -446,7 +631,7 @@ var emRanges = [78]struct {
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 10083,
-		End:   10087,
+		End:   10084,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
@@ -515,22 +700,42 @@ var emRanges = [78]struct {
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 126976,
+		Start: 126980,
+		End:   126980,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127020,
+		End:   127023,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127124,
+		End:   127135,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127151,
+		End:   127152,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127168,
+		End:   127168,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127183,
+		End:   127184,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127222,
 		End:   127231,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 127245,
-		End:   127247,
-	},
-	{
-		Prop:  emPropExtended_Pictographic,
-		Start: 127279,
-		End:   127279,
-	},
-	{
-		Prop:  emPropExtended_Pictographic,
-		Start: 127340,
+		Start: 127344,
 		End:   127345,
 	},
 	{
@@ -550,7 +755,7 @@ var emRanges = [78]struct {
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 127405,
+		Start: 127406,
 		End:   127461,
 	},
 	{
@@ -581,31 +786,191 @@ var emRanges = [78]struct {
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 127561,
+		End:   127583,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127590,
+		End:   127777,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127780,
+		End:   127891,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127894,
+		End:   127895,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127897,
+		End:   127899,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127902,
+		End:   127984,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127987,
+		End:   127989,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 127991,
 		End:   127994,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 128000,
+		End:   128253,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128255,
 		End:   128317,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 128326,
+		Start: 128329,
+		End:   128334,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128336,
+		End:   128359,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128367,
+		End:   128368,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128371,
+		End:   128378,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128391,
+		End:   128391,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128394,
+		End:   128397,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128400,
+		End:   128400,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128405,
+		End:   128406,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128420,
+		End:   128421,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128424,
+		End:   128424,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128433,
+		End:   128434,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128444,
+		End:   128444,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128450,
+		End:   128452,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128465,
+		End:   128467,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128476,
+		End:   128478,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128481,
+		End:   128481,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128483,
+		End:   128483,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128488,
+		End:   128488,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128495,
+		End:   128495,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128499,
+		End:   128499,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128506,
 		End:   128591,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 128640,
+		End:   128709,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128715,
+		End:   128722,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128725,
+		End:   128741,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128745,
+		End:   128745,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128747,
+		End:   128752,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 128755,
 		End:   128767,
 	},
 	{
 		Prop:  emPropExtended_Pictographic,
-		Start: 128884,
-		End:   128895,
-	},
-	{
-		Prop:  emPropExtended_Pictographic,
-		Start: 128981,
+		Start: 128986,
 		End:   129023,
 	},
 	{
@@ -631,6 +996,21 @@ var emRanges = [78]struct {
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 129198,
+		End:   129199,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 129212,
+		End:   129215,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 129218,
+		End:   129231,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 129241,
 		End:   129279,
 	},
 	{
@@ -646,6 +1026,16 @@ var emRanges = [78]struct {
 	{
 		Prop:  emPropExtended_Pictographic,
 		Start: 129351,
+		End:   129535,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 129624,
+		End:   129631,
+	},
+	{
+		Prop:  emPropExtended_Pictographic,
+		Start: 129646,
 		End:   129791,
 	},
 	{

@@ -270,7 +270,7 @@ var eaAsciiLookupTbl = [256]eaProp{
 	eaPropNone,
 }
 
-var eaRanges = [129]struct {
+var eaRanges = [132]struct {
 	Prop  eaProp
 	Start rune
 	End   rune
@@ -322,6 +322,11 @@ var eaRanges = [129]struct {
 	},
 	{
 		Prop:  eaPropW,
+		Start: 9776,
+		End:   9783,
+	},
+	{
+		Prop:  eaPropW,
 		Start: 9800,
 		End:   9811,
 	},
@@ -329,6 +334,11 @@ var eaRanges = [129]struct {
 		Prop:  eaPropW,
 		Start: 9855,
 		End:   9855,
+	},
+	{
+		Prop:  eaPropW,
+		Start: 9866,
+		End:   9871,
 	},
 	{
 		Prop:  eaPropW,
@@ -473,7 +483,7 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 12272,
-		End:   12283,
+		End:   12287,
 	},
 	{
 		Prop:  eaPropF,
@@ -508,11 +518,11 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 12688,
-		End:   12771,
+		End:   12773,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 12784,
+		Start: 12783,
 		End:   12830,
 	},
 	{
@@ -523,11 +533,6 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 12880,
-		End:   19903,
-	},
-	{
-		Prop:  eaPropW,
-		Start: 19968,
 		End:   42124,
 	},
 	{
@@ -618,22 +623,22 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 94192,
-		End:   94193,
+		End:   94198,
 	},
 	{
 		Prop:  eaPropW,
 		Start: 94208,
-		End:   100343,
-	},
-	{
-		Prop:  eaPropW,
-		Start: 100352,
 		End:   101589,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 101632,
-		End:   101640,
+		Start: 101631,
+		End:   101662,
+	},
+	{
+		Prop:  eaPropW,
+		Start: 101760,
+		End:   101874,
 	},
 	{
 		Prop:  eaPropW,
@@ -679,6 +684,16 @@ var eaRanges = [129]struct {
 		Prop:  eaPropW,
 		Start: 110960,
 		End:   111355,
+	},
+	{
+		Prop:  eaPropW,
+		Start: 119552,
+		End:   119638,
+	},
+	{
+		Prop:  eaPropW,
+		Start: 119648,
+		End:   119670,
 	},
 	{
 		Prop:  eaPropW,
@@ -833,7 +848,7 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 128725,
-		End:   128727,
+		End:   128728,
 	},
 	{
 		Prop:  eaPropW,
@@ -883,31 +898,31 @@ var eaRanges = [129]struct {
 	{
 		Prop:  eaPropW,
 		Start: 129664,
-		End:   129672,
+		End:   129674,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129680,
-		End:   129725,
+		Start: 129678,
+		End:   129734,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129727,
-		End:   129733,
+		Start: 129736,
+		End:   129736,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129742,
-		End:   129755,
+		Start: 129741,
+		End:   129756,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129760,
-		End:   129768,
+		Start: 129759,
+		End:   129770,
 	},
 	{
 		Prop:  eaPropW,
-		Start: 129776,
+		Start: 129775,
 		End:   129784,
 	},
 	{

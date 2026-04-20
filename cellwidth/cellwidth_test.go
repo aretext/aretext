@@ -88,7 +88,7 @@ func TestGraphemeClusterWidth(t *testing.T) {
 		{
 			name:          "thai",
 			gc:            []rune{3588, 3657, 3635},
-			expectedWidth: 2,
+			expectedWidth: 1,
 		},
 		{
 			name:          "combining character (angstrom)",

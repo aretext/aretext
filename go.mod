@@ -3,16 +3,15 @@ module github.com/aretext/aretext
 go 1.25.0
 
 require (
+	github.com/clipperhouse/displaywidth v0.11.0
 	github.com/gdamore/tcell/v3 v3.3.0
 	github.com/google/renameio/v2 v2.0.2
-	github.com/rivo/uniseg v0.4.7
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect

@@ -1,10 +1,23 @@
 package cellwidth
 
 import (
-	"github.com/rivo/uniseg"
+	"os"
+	"strings"
+
+	"github.com/clipperhouse/displaywidth"
 
 	"github.com/aretext/aretext/text"
 )
+
+// Copied from https://github.com/gdamore/tcell/blob/29b8586f6141d93aac712fd29fec38224b624625/internal/widthutil/widthutil.go
+func textWidthOptionsTcell() displaywidth.Options {
+	if rw := strings.ToLower(os.Getenv("RUNEWIDTH_EASTASIAN")); rw == "1" || rw == "true" || rw == "yes" {
+		return displaywidth.Options{EastAsianWidth: true}
+	}
+	return displaywidth.Options{}
+}
+
+var textWidthOptions = textWidthOptionsTcell()
 
 // Sizer determines the cellwidth of grapheme clusters.
 type Sizer interface {
@@ -52,10 +65,10 @@ func (s *sizer) GraphemeClusterWidth(gc []rune, offsetInLine uint64) uint64 {
 	}
 
 	// It is very important that the cell width matches what tcell expects.
-	// Since version 2.11, tcell uses rivo/uniseg to determine cell width,
+	// Since version 3.3.0, tcell uses clipperhouse/displaywidth to determine cell width,
 	// so we do the same. Unfortunately, this requires converting the
-	// grapheme cluster []rune to string (which uniseg then decodes back to
-	// runes internally), but there's currently no other mechanism available.
-	width := uniseg.StringWidth(string(gc))
+	// grapheme cluster []rune to string, but there's currently no other mechanism available.
+	width := textwidthoptions.String(string(gc))
+
 	return uint64(width)
 }

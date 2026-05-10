@@ -69,7 +69,7 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		screenHeight:      screenHeight,
 		configRuleSet:     configRuleSet,
 		documentBuffer:    buffer,
-		clipboard:         clipboard.New(),
+		clipboard:         clipboard.New(nil),
 		fileWatcher:       file.NewEmptyWatcher(),
 		fileTimeline:      file.NewTimeline(),
 		menu:              &MenuState{},

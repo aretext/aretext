@@ -49,7 +49,7 @@ When you delete text, aretext copies it to a hidden buffer. You can then insert 
 
 You can copy a line into the buffer by typing "yy" (short for "yank") in normal mode.
 
-If you want to copy/paste using your system's clipboard, you will need to add custom menu commands (see [Custom Menu Commands](custom-menu-commands.md) for instructions).
+To copy and paste using the system clipboard, see [System Clipboard](system-clipboard.md).
 
 Inserting and joining lines
 ---------------------------

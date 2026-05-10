@@ -16,6 +16,7 @@ This document lists every configuration option in aretext.
 | lineNumberMode  | enum             | Control how line numbers are displayed. Either "absolute" or "relative" to the cursor.                                                                               |
 | lineWrap        | enum             | Control soft line wrapping behavior. Either "character" for breaking at any character boundary or "word" to break only at word boundaries.                           |
 | menuCommands    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields.                          |
+| systemClipboard | object           | Commands for integrating with the system clipboard. See [System Clipboard](system-clipboard.md) and [System Clipboard Object](#system-clipboard-object) below.       |
 | hidePatterns    | array of strings | Glob patterns matching files or directories to hide from file search. Patterns are matched against absolute paths.                                                   |
 | hideDirectories | array of strings | (DEPRECATED, use hidePatterns instead) Glob patterns matching directories to hide from file search. Patterns are matched against the absolute path to the directory. |
 | styles          | dict             | Styles control how UI elements are displayed. See [Styles](#styles) below for details.                                                                               |
@@ -54,6 +55,15 @@ Menu Command Object
 | shellCmd  | string | Shell command to execute when the menu item is selected.                                                                         |
 | mode      | enum   | Either "silent", "terminal", "insert", or "fileLocations". See [Custom Menu Commands](custom-menu-commands.md) for more details. |
 | save      | bool   | If true, attempt to save the document before executing the command.                                                              |
+
+System Clipboard Object
+-----------------------
+
+| Attribute    | Type    | Description                                                                                                           |
+|--------------|---------|-----------------------------------------------------------------------------------------------------------------------|
+| useByDefault | boolean | If true, use the system clipboard by default for clipboard operations when no clipboard page is explicitly specified. |
+| copyCmd      | string  | Shell command used to copy text to the system clipboard. Required.                                                    |
+| pasteCmd     | string  | Shell command used to paste text from the system clipboard. Required.                                                 |
 
 Styles
 ------

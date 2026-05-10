@@ -18,6 +18,7 @@ User Guide
 -	[Navigation](navigation.md): how to navigate within a document.
 -	[Edit](edit.md): how to edit a document.
 -	[Configuration](configuration.md): how to configure settings.
+-	[System Clipboard](system-clipboard.md): how to configure copy and paste with the system clipboard.
 -	[Custom Menu Commands](custom-menu-commands.md): how to extend the editor with custom menu commands.
 -	[Unicode](unicode.md): how to configure the display of non-ASCII Unicode.
 

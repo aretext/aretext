@@ -10,7 +10,7 @@ Normal Mode Commands
 
 Some commands may be prefixed with a number *count* to repeat the command *count* times. For example "5x" deletes the next five characters.
 
-Commands that interact with the clipboard accept a *clipboard page* prefix of the form `"[a-z]`, where the letter is the name of the page. If not provided, a default (unnamed) page is used.
+Commands that interact with the clipboard accept a *clipboard page* prefix of the form `"[a-z]`, where the letter is the name of the page. The `"+` and `"*` pages use the [system clipboard](system-clipboard.md). If not provided, a default (unnamed) page is used.
 
 | Name                                                            | Key Binding               | Options               |
 |-----------------------------------------------------------------|---------------------------|-----------------------|

@@ -36,27 +36,21 @@
       tokenCustom7: {color: "darkcyan"}
       tokenCustom8: {color: "darkblue"}
 
-#- name: linux wayland clipboard commands
+#- name: linux wayland system clipboard
 #  pattern: "**"
 #  config:
-#    menuCommands:
-#    - name: copy to clipboard
-#      shellCmd: wl-copy "$SELECTION"
-#      mode: silent
-#    - name: paste from clipboard
-#      shellCmd: wl-paste
-#      mode: insert
+#    systemClipboard:
+#      copyCmd: wl-copy
+#      pasteCmd: wl-paste --no-newline
+#      useByDefault: true
 
-#- name: macos clipboard commands
+#- name: macos system clipboard
 #  pattern: "**"
 #  config:
-#    menuCommands:
-#    - name: copy to clipboard
-#      shellCmd: printenv SELECTION | pbcopy
-#      mode: silent
-#    - name: paste from clipboard
-#      shellCmd: pbpaste
-#      mode: insert
+#    systemClipboard:
+#      copyCmd: pbcopy
+#      pasteCmd: pbpaste
+#      useByDefault: true
 
 #- name: tmux clipboard commands
 #  pattern: "**"

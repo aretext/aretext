@@ -60,55 +60,6 @@ Add a menu command to build a project using `make`. Piping to `less` allows us t
       save: true  # save the file before running `make`
 ```
 
-### Copy and paste using the system clipboard
-
-Most systems provide command-line utilities for interacting with the system clipboard. Custom menu commands can invoke these tools to copy the current selection and paste into the document.
-
-On Linux (Wayland):
-
-```yaml
-- name: linux wayland clipboard commands
-  pattern: "**"
-  config:
-    menuCommands:
-    - name: copy to clipboard
-      shellCmd: wl-copy "$SELECTION"
-      mode: silent
-    - name: paste from clipboard
-      shellCmd: wl-paste
-      mode: insert
-```
-
-On macOS:
-
-```yaml
-- name: macos clipboard commands
-  pattern: "**"
-  config:
-    menuCommands:
-      - name: copy to clipboard
-        shellCmd: printenv SELECTION | pbcopy
-        mode: silent
-      - name: paste from clipboard
-        shellCmd: pbpaste
-        mode: insert
-```
-
-Using tmux:
-
-```yaml
-- name: tmux clipboard commands
-  pattern: "**"
-  config:
-    menuCommands:
-    - name: copy to clipboard
-      shellCmd: printenv SELECTION | tmux load-buffer -
-      mode: silent
-    - name: paste from clipboard
-      shellCmd: tmux show-buffer
-      mode: insert
-```
-
 ### Format the current file
 
 Many programming languages provide command line tools to automatically format code. You can add a custom menu command to run these tools on the current file.

@@ -269,7 +269,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.clipboard.SetSystemClipboard(systemClipboardFromConfig(cfg))
 	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(cfg)
-	state.hidePatterns = cfg.HidePatternsAndHideDirectories()
+	state.hidePatterns = cfg.HidePatterns
 	state.styles = cfg.Styles
 	setSyntaxAndRetokenize(state.documentBuffer, syntax.Language(cfg.SyntaxLanguage))
 

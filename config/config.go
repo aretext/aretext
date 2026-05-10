@@ -59,9 +59,6 @@ type Config struct {
 	// Glob patterns for files or directories to exclude from file search.
 	HidePatterns []string
 
-	// (DEPRECATED) Glob patterns for directories to exclude from file search.
-	HideDirectories []string
-
 	// Style overrides.
 	Styles map[string]StyleConfig
 }
@@ -184,7 +181,6 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
 		SystemClipboard: systemClipboardOrNil(m, "systemClipboard"),
 		HidePatterns:    stringSliceOrNil(m, "hidePatterns"),
-		HideDirectories: stringSliceOrNil(m, "hideDirectories"), // Deprecated by HidePatterns
 		Styles:          stylesFromMap(mapOrNil(m, "styles")),
 	}
 }
@@ -232,13 +228,6 @@ func (c Config) Validate() error {
 	}
 
 	return nil
-}
-
-func (c Config) HidePatternsAndHideDirectories() []string {
-	result := make([]string, 0, len(c.HidePatterns)+len(c.HideDirectories))
-	result = append(result, c.HidePatterns...)
-	result = append(result, c.HideDirectories...)
-	return result
 }
 
 func stringOrDefault(m map[string]any, key string, defaultVal string) string {

@@ -3,23 +3,22 @@ Configuration Reference
 
 This document lists every configuration option in aretext.
 
-| Attribute       | Type             | Description                                                                                                                                                          |
-|-----------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| syntaxLanguage  | enum             | Language used for syntax highlighting. Must be a valid [syntax language](#syntax-languages).                                                                         |
-| tabSize         | integer          | Maximum number of cells occupied by a tab. Must be greater than zero.                                                                                                |
-| tabExpand       | boolean          | If true, replace inserted tabs with the equivalent number of spaces.                                                                                                 |
-| showTabs        | boolean          | If true, display tabs in the document.                                                                                                                               |
-| showSpaces      | boolean          | If true, display spaces in the document.                                                                                                                             |
-| showUnicode     | boolean          | If true, display Unicode codepoints for all non-ASCII characters.                                                                                                    |
-| autoIndent      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                                                 |
-| showLineNumbers | boolean          | If true, display line numbers.                                                                                                                                       |
-| lineNumberMode  | enum             | Control how line numbers are displayed. Either "absolute" or "relative" to the cursor.                                                                               |
-| lineWrap        | enum             | Control soft line wrapping behavior. Either "character" for breaking at any character boundary or "word" to break only at word boundaries.                           |
-| menuCommands    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields.                          |
-| systemClipboard | object           | Commands for integrating with the system clipboard. See [System Clipboard](system-clipboard.md) and [System Clipboard Object](#system-clipboard-object) below.       |
-| hidePatterns    | array of strings | Glob patterns matching files or directories to hide from file search. Patterns are matched against absolute paths.                                                   |
-| hideDirectories | array of strings | (DEPRECATED, use hidePatterns instead) Glob patterns matching directories to hide from file search. Patterns are matched against the absolute path to the directory. |
-| styles          | dict             | Styles control how UI elements are displayed. See [Styles](#styles) below for details.                                                                               |
+| Attribute       | Type             | Description                                                                                                                                                    |
+|-----------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| syntaxLanguage  | enum             | Language used for syntax highlighting. Must be a valid [syntax language](#syntax-languages).                                                                   |
+| tabSize         | integer          | Maximum number of cells occupied by a tab. Must be greater than zero.                                                                                          |
+| tabExpand       | boolean          | If true, replace inserted tabs with the equivalent number of spaces.                                                                                           |
+| showTabs        | boolean          | If true, display tabs in the document.                                                                                                                         |
+| showSpaces      | boolean          | If true, display spaces in the document.                                                                                                                       |
+| showUnicode     | boolean          | If true, display Unicode codepoints for all non-ASCII characters.                                                                                              |
+| autoIndent      | boolean          | If true, indent new lines to match indentation of the previous line.                                                                                           |
+| showLineNumbers | boolean          | If true, display line numbers.                                                                                                                                 |
+| lineNumberMode  | enum             | Control how line numbers are displayed. Either "absolute" or "relative" to the cursor.                                                                         |
+| lineWrap        | enum             | Control soft line wrapping behavior. Either "character" for breaking at any character boundary or "word" to break only at word boundaries.                     |
+| menuCommands    | array of objects | Additional menu items that can run arbitrary shell commands. See [Menu Command Object](#menu-command-object) below for the expected fields.                    |
+| systemClipboard | object           | Commands for integrating with the system clipboard. See [System Clipboard](system-clipboard.md) and [System Clipboard Object](#system-clipboard-object) below. |
+| hidePatterns    | array of strings | Glob patterns matching files or directories to hide from file search. Patterns are matched against absolute paths.                                             |
+| styles          | dict             | Styles control how UI elements are displayed. See [Styles](#styles) below for details.                                                                         |
 
 Syntax Languages
 ----------------

@@ -58,6 +58,87 @@ func TestConfigForPath(t *testing.T) {
 				Styles:         map[string]StyleConfig{},
 			},
 		},
+		{
+			name: "matching rules merge system clipboard config",
+			ruleSet: []Rule{
+				{
+					Name:    "clipboard",
+					Pattern: "**/*.txt",
+					Config: map[string]any{
+						"systemClipboard": map[string]any{
+							"copyCmd":  "wl-copy",
+							"pasteCmd": "wl-paste --no-newline",
+						},
+					},
+				},
+				{
+					Name:    "clipboard use by default",
+					Pattern: "**/*.txt",
+					Config: map[string]any{
+						"systemClipboard": map[string]any{
+							"useByDefault": true,
+							"copyCmd":      "wl-copy",
+							"pasteCmd":     "wl-paste --no-newline",
+						},
+					},
+				},
+			},
+			path: "test.txt",
+			expectedConfig: Config{
+				SyntaxLanguage: DefaultSyntaxLanguage,
+				TabSize:        DefaultTabSize,
+				TabExpand:      DefaultTabExpand,
+				AutoIndent:     DefaultAutoIndent,
+				LineWrap:       DefaultLineWrap,
+				LineNumberMode: string(DefaultLineNumberMode),
+				MenuCommands:   []MenuCommandConfig{},
+				SystemClipboard: &SystemClipboardConfig{
+					UseByDefault: true,
+					CopyCmd:      "wl-copy",
+					PasteCmd:     "wl-paste --no-newline",
+				},
+				Styles: map[string]StyleConfig{},
+			},
+		},
+		{
+			name: "matching rule without system clipboard preserves prior system clipboard config",
+			ruleSet: []Rule{
+				{
+					Name:    "clipboard",
+					Pattern: "**/*.txt",
+					Config: map[string]any{
+						"systemClipboard": map[string]any{
+							"useByDefault": true,
+							"copyCmd":      "wl-copy",
+							"pasteCmd":     "wl-paste --no-newline",
+						},
+					},
+				},
+				{
+					Name:    "plain text",
+					Pattern: "**/*.txt",
+					Config: map[string]any{
+						"syntaxLanguage": "plaintext",
+					},
+				},
+			},
+			path: "test.txt",
+			expectedConfig: Config{
+				SyntaxLanguage: "plaintext",
+				TabSize:        DefaultTabSize,
+				TabExpand:      DefaultTabExpand,
+				AutoIndent:     DefaultAutoIndent,
+				LineWrap:       DefaultLineWrap,
+				LineNumberMode: string(DefaultLineNumberMode),
+				MenuCommands:   []MenuCommandConfig{},
+				SystemClipboard: &SystemClipboardConfig{
+					UseByDefault: true,
+					CopyCmd:      "wl-copy",
+					PasteCmd:     "wl-paste --no-newline",
+				},
+				Styles: map[string]StyleConfig{},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

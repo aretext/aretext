@@ -102,9 +102,19 @@ func init() {
 				},
 				engine.CaptureExpr{
 					CaptureId: captureIdClipboardPage,
-					Child: engine.EventRangeExpr{
-						StartEvent: runeToEngineEvent('a'),
-						EndEvent:   runeToEngineEvent('z'),
+					Child: engine.AltExpr{
+						Children: []engine.Expr{
+							engine.EventRangeExpr{
+								StartEvent: runeToEngineEvent('a'),
+								EndEvent:   runeToEngineEvent('z'),
+							},
+							engine.EventExpr{
+								Event: runeToEngineEvent('+'),
+							},
+							engine.EventExpr{
+								Event: runeToEngineEvent('*'),
+							},
+						},
 					},
 				},
 			},

@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aretext/aretext/clipboard"
 	"github.com/aretext/aretext/config"
 	"github.com/aretext/aretext/syntax"
 )
@@ -531,6 +533,36 @@ func TestDeduplicateCustomMenuItems(t *testing.T) {
 	// have inserted "foo2" into the document.
 	text := state.DocumentBuffer().TextTree().String()
 	assert.Equal(t, text, "foo2\n")
+}
+
+func TestLoadDocumentConfiguresSystemClipboard(t *testing.T) {
+	systemClipboardPath := filepath.Join(t.TempDir(), "system-clipboard.txt")
+	configRuleSet := config.RuleSet{
+		{
+			Name:    "systemClipboard",
+			Pattern: "**",
+			Config: map[string]any{
+				"systemClipboard": map[string]any{
+					"useByDefault": true,
+					"copyCmd":      fmt.Sprintf("cat > %q", systemClipboardPath),
+					"pasteCmd":     fmt.Sprintf("cat %q", systemClipboardPath),
+				},
+			},
+		},
+	}
+
+	path, cleanup := createTestFile(t, "abcd")
+	state := NewEditorState(100, 100, configRuleSet, nil)
+	defer state.fileWatcher.Stop()
+	LoadDocument(state, path, true, startOfDocLocator)
+	defer cleanup()
+
+	err := CopyLine(state, clipboard.PageDefault)
+	require.NoError(t, err)
+
+	data, err := os.ReadFile(systemClipboardPath)
+	require.NoError(t, err)
+	assert.Equal(t, "abcd\n", string(data))
 }
 
 func TestNewDocument(t *testing.T) {

@@ -16,6 +16,7 @@ const DefaultAutoIndent = false
 const DefaultShowLineNumbers = false
 const DefaultLineWrap = LineWrapCharacter
 const DefaultLineNumberMode = LineNumberModeAbsolute
+const DefaultSystemClipboardUseByDefault = false
 
 // Config is a configuration for the editor.
 type Config struct {
@@ -52,6 +53,9 @@ type Config struct {
 	// User-defined commands to include in the menu.
 	MenuCommands []MenuCommandConfig
 
+	// System clipboard integration.
+	SystemClipboard *SystemClipboardConfig
+
 	// Glob patterns for files or directories to exclude from file search.
 	HidePatterns []string
 
@@ -60,6 +64,18 @@ type Config struct {
 
 	// Style overrides.
 	Styles map[string]StyleConfig
+}
+
+// SystemClipboardConfig is a configuration for integrating with the system clipboard.
+type SystemClipboardConfig struct {
+	// UseByDefault controls whether the system clipboard is used by default.
+	UseByDefault bool
+
+	// CopyCmd is the shell command used to copy text to the system clipboard.
+	CopyCmd string
+
+	// PasteCmd is the shell command used to paste text from the system clipboard.
+	PasteCmd string
 }
 
 const (
@@ -166,6 +182,7 @@ func ConfigFromUntypedMap(m map[string]any) Config {
 		LineNumberMode:  stringOrDefault(m, "lineNumberMode", string(DefaultLineNumberMode)),
 		LineWrap:        stringOrDefault(m, "lineWrap", DefaultLineWrap),
 		MenuCommands:    menuCommandsFromSlice(sliceOrNil(m, "menuCommands")),
+		SystemClipboard: systemClipboardOrNil(m, "systemClipboard"),
 		HidePatterns:    stringSliceOrNil(m, "hidePatterns"),
 		HideDirectories: stringSliceOrNil(m, "hideDirectories"), // Deprecated by HidePatterns
 		Styles:          stylesFromMap(mapOrNil(m, "styles")),
@@ -185,6 +202,10 @@ func (c Config) Validate() error {
 	lnm := LineNumberMode(c.LineNumberMode)
 	if lnm != LineNumberModeAbsolute && lnm != LineNumberModeRelative {
 		return fmt.Errorf("LineNumberMode must be either %q or %q", LineNumberModeAbsolute, LineNumberModeRelative)
+	}
+
+	if c.SystemClipboard != nil && (c.SystemClipboard.CopyCmd == "" || c.SystemClipboard.PasteCmd == "") {
+		return errors.New("SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified")
 	}
 
 	for _, cmd := range c.MenuCommands {
@@ -332,6 +353,25 @@ func menuCommandsFromSlice(s []any) []MenuCommandConfig {
 		})
 	}
 	return result
+}
+
+func systemClipboardOrNil(m map[string]any, key string) *SystemClipboardConfig {
+	v, ok := m[key]
+	if !ok {
+		return nil
+	}
+
+	systemClipboardMap, ok := v.(map[string]any)
+	if !ok {
+		log.Printf("Could not decode system clipboard map from %v\n", v)
+		systemClipboardMap = nil
+	}
+
+	return &SystemClipboardConfig{
+		UseByDefault: boolOrDefault(systemClipboardMap, "useByDefault", DefaultSystemClipboardUseByDefault),
+		CopyCmd:      stringOrDefault(systemClipboardMap, "copyCmd", ""),
+		PasteCmd:     stringOrDefault(systemClipboardMap, "pasteCmd", ""),
+	}
 }
 
 func stylesFromMap(m map[string]any) map[string]StyleConfig {

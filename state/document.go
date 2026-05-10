@@ -266,6 +266,7 @@ func loadDocumentAndResetState(state *EditorState, path string, requireExists bo
 	state.documentBuffer.lineNumberMode = config.LineNumberMode(cfg.LineNumberMode)
 	state.documentBuffer.lineWrapAllowCharBreaks = bool(cfg.LineWrap == config.LineWrapCharacter)
 	state.documentBuffer.undoLog = undo.NewLog()
+	state.clipboard.SetSystemClipboard(systemClipboardFromConfig(cfg))
 	state.menu = &MenuState{}
 	state.customMenuItems = customMenuItems(cfg)
 	state.hidePatterns = cfg.HidePatternsAndHideDirectories()

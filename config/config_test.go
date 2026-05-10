@@ -79,6 +79,29 @@ func TestConfigFromUntypedMap(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "system clipboard",
+			input: map[string]any{
+				"systemClipboard": map[string]any{
+					"useByDefault": true,
+					"copyCmd":      "wl-copy",
+					"pasteCmd":     "wl-paste --no-newline",
+				},
+			},
+			expected: Config{
+				SyntaxLanguage: "plaintext",
+				TabSize:        4,
+				LineWrap:       "character",
+				MenuCommands:   []MenuCommandConfig{},
+				SystemClipboard: &SystemClipboardConfig{
+					UseByDefault: true,
+					CopyCmd:      "wl-copy",
+					PasteCmd:     "wl-paste --no-newline",
+				},
+				LineNumberMode: "absolute",
+				Styles:         map[string]StyleConfig{},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -163,6 +186,84 @@ func TestValidateConfig(t *testing.T) {
 				tc.updateFunc(&config)
 			}
 
+			err := config.Validate()
+			if tc.expectErrMsg == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectErrMsg)
+			}
+		})
+	}
+}
+
+func TestValidateSystemClipboardConfig(t *testing.T) {
+	testCases := []struct {
+		name         string
+		input        map[string]any
+		expectErrMsg string
+	}{
+		{
+			name:         "not specified",
+			input:        map[string]any{},
+			expectErrMsg: "",
+		},
+		{
+			name: "empty object",
+			input: map[string]any{
+				"systemClipboard": map[string]any{},
+			},
+			expectErrMsg: "SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified",
+		},
+		{
+			name: "invalid object",
+			input: map[string]any{
+				"systemClipboard": "invalid",
+			},
+			expectErrMsg: "SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified",
+		},
+		{
+			name: "copy command missing",
+			input: map[string]any{
+				"systemClipboard": map[string]any{
+					"pasteCmd": "wl-paste --no-newline",
+				},
+			},
+			expectErrMsg: "SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified",
+		},
+		{
+			name: "paste command missing",
+			input: map[string]any{
+				"systemClipboard": map[string]any{
+					"copyCmd": "wl-copy",
+				},
+			},
+			expectErrMsg: "SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified",
+		},
+		{
+			name: "use by default without commands",
+			input: map[string]any{
+				"systemClipboard": map[string]any{
+					"useByDefault": true,
+				},
+			},
+			expectErrMsg: "SystemClipboard copyCmd and pasteCmd must be non-empty when systemClipboard is specified",
+		},
+		{
+			name: "copy and paste commands provided",
+			input: map[string]any{
+				"systemClipboard": map[string]any{
+					"useByDefault": true,
+					"copyCmd":      "wl-copy",
+					"pasteCmd":     "wl-paste --no-newline",
+				},
+			},
+			expectErrMsg: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := ConfigFromUntypedMap(tc.input)
 			err := config.Validate()
 			if tc.expectErrMsg == "" {
 				assert.NoError(t, err)

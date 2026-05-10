@@ -64,12 +64,14 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		autoIndent:     config.DefaultAutoIndent,
 	}
 
+	cfg := configRuleSet.ConfigForPath("")
+
 	return &EditorState{
 		screenWidth:       screenWidth,
 		screenHeight:      screenHeight,
 		configRuleSet:     configRuleSet,
 		documentBuffer:    buffer,
-		clipboard:         clipboard.New(nil),
+		clipboard:         clipboard.New(systemClipboardFromConfig(cfg)),
 		fileWatcher:       file.NewEmptyWatcher(),
 		fileTimeline:      file.NewTimeline(),
 		menu:              &MenuState{},
@@ -80,6 +82,18 @@ func NewEditorState(screenWidth, screenHeight uint64, configRuleSet config.RuleS
 		styles:            nil,
 		suspendScreenFunc: suspendScreenFunc,
 	}
+}
+
+func systemClipboardFromConfig(cfg config.Config) *clipboard.SystemClipboard {
+	if cfg.SystemClipboard == nil {
+		return nil
+	}
+
+	return clipboard.NewSystemClipboard(
+		cfg.SystemClipboard.CopyCmd,
+		cfg.SystemClipboard.PasteCmd,
+		cfg.SystemClipboard.UseByDefault,
+	)
 }
 
 func (s *EditorState) ScreenSize() (uint64, uint64) {

@@ -632,50 +632,11 @@ func copySelectionText(buffer *BufferState) (string, selection.Region) {
 }
 
 func copyTextToClipboard(state *EditorState, page clipboard.PageId, tree *text.Tree, pos uint64, numRunes uint64, linewise bool) error {
-	r := &charLimitReader{
-		reader:         tree.ReaderAtPosition(pos),
-		remainingChars: numRunes,
-	}
+	r := text.NewLimitReader(tree.ReaderAtPosition(pos), numRunes)
 	if err := state.clipboard.Set(page, r, linewise); err != nil {
 		return fmt.Errorf("could not write to clipboard: %w", err)
 	}
 	return nil
-}
-
-type charLimitReader struct {
-	reader         text.Reader
-	remainingChars uint64
-}
-
-func (r *charLimitReader) Read(buf []byte) (int, error) {
-	if r.remainingChars == 0 {
-		return 0, io.EOF
-	}
-
-	maxBytes := r.remainingChars * utf8.UTFMax
-	if uint64(len(buf)) > maxBytes {
-		buf = buf[:maxBytes]
-	}
-
-	n, err := r.reader.Read(buf)
-	if n == 0 {
-		return n, err
-	}
-
-	numChars := uint64(0)
-	for i, b := range buf[:n] {
-		if !utf8.RuneStart(b) {
-			continue
-		}
-		if numChars == r.remainingChars {
-			r.remainingChars = 0
-			return i, nil
-		}
-		numChars++
-	}
-
-	r.remainingChars -= numChars
-	return n, err
 }
 
 func setClipboardText(state *EditorState, page clipboard.PageId, s string, linewise bool) error {

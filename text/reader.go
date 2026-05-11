@@ -189,3 +189,72 @@ func (r *ReverseReader) lookaheadToRuneStartByte() (int, error) {
 	// Could not find the start byte, so this is not a valid UTF-8 encoding.
 	return 0, ErrInvalidUtf8
 }
+
+// LimitReader reads up to the specified number of runes.
+type LimitReader struct {
+	reader         Reader
+	remainingRunes uint64
+	remainingBytes uint8
+}
+
+func NewLimitReader(reader Reader, limit uint64) *LimitReader {
+	return &LimitReader{
+		reader:         reader,
+		remainingRunes: limit,
+	}
+}
+
+func (r *LimitReader) Read(buf []byte) (int, error) {
+	if len(buf) == 0 {
+		return 0, nil
+	}
+
+	i := 0
+	for i < len(buf) {
+		// We've read up to the limit, so we're done.
+		if r.remainingRunes == 0 && r.remainingBytes == 0 {
+			if i > 0 {
+				return i, nil
+			}
+			return 0, io.EOF
+		}
+
+		// Nothing left in the source reader, so return EOF.
+		if r.reader.group.next == nil && r.reader.nodeIdx == r.reader.group.numNodes {
+			return i, io.EOF
+		}
+
+		// If we're at the end of a node in the tree, advance to the start of the next node.
+		node := &r.reader.group.nodes[r.reader.nodeIdx]
+		if r.reader.textByteOffset == uint64(node.numBytes) {
+			r.reader.advance(0)
+			continue
+		}
+
+		// Read to the end of this node or the end of the buffer, whichever is smaller.
+		n := min(int(uint64(node.numBytes)-r.reader.textByteOffset), len(buf)-i)
+
+		// Iterate through the runes in this node to figure out how many bytes to copy.
+		bytes := node.textBytes[r.reader.textByteOffset : r.reader.textByteOffset+uint64(n)]
+		for n = 0; n < len(bytes); n++ {
+			if r.remainingBytes > 0 {
+				r.remainingBytes--
+				continue
+			}
+			if r.remainingRunes == 0 {
+				break
+			}
+			r.remainingRunes--
+			r.remainingBytes = textUtf8.CharWidth[bytes[n]] - 1
+		}
+		if n == 0 {
+			return i, nil
+		}
+
+		// Copy the bytes for the runes in this node, then advance the reader.
+		copy(buf[i:], bytes[:n])
+		i += n
+		r.reader.advance(uint64(n))
+	}
+	return i, nil
+}

@@ -42,6 +42,7 @@ Syntax Languages
 | rust         | [Rust](https://doc.rust-lang.org/stable/reference/)                                         |
 | sql          | [SQL based on PL/PgSQL](https://www.postgresql.org/docs/current/sql-keywords-appendix.html) |
 | todotxt      | [todo.txt](https://github.com/todotxt/todo.txt)                                             |
+| typescript   | [TypeScript](https://www.typescriptlang.org/)                                               |
 | xml          | [xml](https://www.w3.org/TR/2006/REC-xml11-20060816/)                                       |
 | yaml         | [YAML](https://yaml.org/spec/)                                                              |
 

@@ -31,6 +31,7 @@ const (
 	LanguageMakefile     = Language("makefile")
 	LanguageP4           = Language("p4")
 	LanguageSQL          = Language("sql")
+	LanguageTypescript   = Language("typescript")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -57,6 +58,7 @@ func init() {
 		LanguageMakefile:     languages.MakefileParseFunc(),
 		LanguageP4:           languages.P4ParseFunc(),
 		LanguageSQL:          languages.SQLParseFunc(),
+		LanguageTypescript:   languages.TypescriptParseFunc(),
 	}
 
 	for language := range languageToParseFunc {

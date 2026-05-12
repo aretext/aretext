@@ -144,6 +144,15 @@
     tabSize: 4
     showLineNumbers: true
 
+- name: typescript
+  pattern: "**/*.ts"
+  config:
+    autoIndent: true
+    syntaxLanguage: typescript
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
 - name: c
   pattern: "**/*.c"
   config: &cconfig

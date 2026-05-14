@@ -35,33 +35,33 @@ const (
 )
 
 // languageToParseFunc maps each language to its parse func.
-var languageToParseFunc map[Language]parser.Func
+var languageToParseFuncConstructor map[Language]func() parser.Func
 
 func init() {
-	languageToParseFunc = map[Language]parser.Func{
+	languageToParseFuncConstructor = map[Language]func() parser.Func{
 		LanguagePlaintext:    nil,
-		LanguageJson:         languages.JsonParseFunc(),
-		LanguageYaml:         languages.YamlParseFunc(),
-		LanguageGo:           languages.GolangParseFunc(),
-		LanguageGoTemplate:   languages.GoTemplateParseFunc(),
-		LanguagePython:       languages.PythonParseFunc(),
-		LanguageRust:         languages.RustParseFunc(),
-		LanguageC:            languages.CParseFunc(),
-		LanguageBash:         languages.BashParseFunc(),
-		LanguageXml:          languages.XmlParseFunc(),
-		LanguageGitCommit:    languages.GitCommitParseFunc(),
-		LanguageGitRebase:    languages.GitRebaseParseFunc(),
-		LanguageProtobuf:     languages.ProtobufParseFunc(),
-		LanguageTodoTxt:      languages.TodoTxtParseFunc(),
-		LanguageMarkdown:     languages.MarkdownParseFunc(),
-		LanguageCriticMarkup: languages.CriticMarkupParseFunc(),
-		LanguageMakefile:     languages.MakefileParseFunc(),
-		LanguageP4:           languages.P4ParseFunc(),
-		LanguageSQL:          languages.SQLParseFunc(),
-		LanguageTypescript:   languages.TypescriptParseFunc(),
+		LanguageJson:         languages.JsonParseFunc,
+		LanguageYaml:         languages.YamlParseFunc,
+		LanguageGo:           languages.GolangParseFunc,
+		LanguageGoTemplate:   languages.GoTemplateParseFunc,
+		LanguagePython:       languages.PythonParseFunc,
+		LanguageRust:         languages.RustParseFunc,
+		LanguageC:            languages.CParseFunc,
+		LanguageBash:         languages.BashParseFunc,
+		LanguageXml:          languages.XmlParseFunc,
+		LanguageGitCommit:    languages.GitCommitParseFunc,
+		LanguageGitRebase:    languages.GitRebaseParseFunc,
+		LanguageProtobuf:     languages.ProtobufParseFunc,
+		LanguageTodoTxt:      languages.TodoTxtParseFunc,
+		LanguageMarkdown:     languages.MarkdownParseFunc,
+		LanguageCriticMarkup: languages.CriticMarkupParseFunc,
+		LanguageMakefile:     languages.MakefileParseFunc,
+		LanguageP4:           languages.P4ParseFunc,
+		LanguageSQL:          languages.SQLParseFunc,
+		LanguageTypescript:   languages.TypescriptParseFunc,
 	}
 
-	for language := range languageToParseFunc {
+	for language := range languageToParseFuncConstructor {
 		AllLanguages = append(AllLanguages, language)
 	}
 }
@@ -69,9 +69,9 @@ func init() {
 // ParseForLanguage creates a parser for a syntax language.
 // If no parser is available (e.g. for LanguagePlaintext) this returns nil.
 func ParserForLanguage(language Language) *parser.P {
-	parseFunc := languageToParseFunc[language]
-	if parseFunc == nil {
+	parseFuncConstructor := languageToParseFuncConstructor[language]
+	if parseFuncConstructor == nil {
 		return nil
 	}
-	return parser.New(parseFunc)
+	return parser.New(parseFuncConstructor())
 }

@@ -37,6 +37,9 @@ const (
 // languageToParseFunc maps each language to its parse func.
 var languageToParseFuncConstructor map[Language]func() parser.Func
 
+// parseFuncCache is a cache of previously constructed parse funcs.
+var parseFuncCache map[Language]parser.Func
+
 func init() {
 	languageToParseFuncConstructor = map[Language]func() parser.Func{
 		LanguagePlaintext:    nil,
@@ -64,14 +67,27 @@ func init() {
 	for language := range languageToParseFuncConstructor {
 		AllLanguages = append(AllLanguages, language)
 	}
+
+	parseFuncCache = make(map[Language]parser.Func, 1)
 }
 
 // ParseForLanguage creates a parser for a syntax language.
 // If no parser is available (e.g. for LanguagePlaintext) this returns nil.
 func ParserForLanguage(language Language) *parser.P {
-	parseFuncConstructor := languageToParseFuncConstructor[language]
-	if parseFuncConstructor == nil {
+	pf, ok := parseFuncCache[language]
+	if !ok {
+		pfc := languageToParseFuncConstructor[language]
+		if pfc == nil {
+			pf = nil
+		} else {
+			pf = pfc()
+		}
+		parseFuncCache[language] = pf
+	}
+
+	if pf == nil {
 		return nil
 	}
-	return parser.New(parseFuncConstructor())
+
+	return parser.New(pf)
 }

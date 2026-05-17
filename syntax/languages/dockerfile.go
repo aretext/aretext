@@ -64,9 +64,10 @@ func DockerfileParseFunc() parser.Func {
 					"workdir":     dockerfileParseStateShellArgs,
 				}))))
 
+	// This transitions back to toplevel state if it sees a newline, ignoring continuation `\`
 	parseShellArgs := matchState(
 		dockerfileParseStateShellArgs,
-		dockerfileShellArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+		dockerfileShellArgsParseFunc())
 
 	parseFromInstructionArgs := matchState(
 		dockerfileParseStateFromArgs,
@@ -124,11 +125,49 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 	}
 }
 
-func dockerfileShellArgsParseFunc() parser.Func {
-	parseShell := BashParseFunc()
+func dockerfileConsumeContinuation() parser.Func {
+	return func(iter TrackingRuneIter, state State) Result {
+		var numConsumed uint64
 
-	// TODO: consume to the end of the line, allowing continuations for "\\\n" and "\\\r\n"
-	// use BaseParseFunc() to parse the consumed characters into bash tokens
+		// Match line continuation char `\`
+		r, err := iter.NextRune()
+		if err != nil || r != '\\' {
+			return parser.FailedResult
+		}
+		numConsumed++
+
+		// Must be immediately followed by a newline (either '\r\n' or '\n')
+		r, err = iter.NextRune()
+		if err != nil {
+			return parser.FailedResult
+		}
+		numConsumed++
+
+		if r == '\r' {
+			r, err = iter.NextRune()
+			if err != nil {
+				return parser.FailedResult
+			}
+			numConsumed++
+		}
+
+		if r != '\n' {
+			return parser.FailedResult
+		}
+
+		return parser.Result{
+			NumConsumed: numConsumed,
+			NextState: state,
+		}
+	}
+}
+
+func dockerfileShellArgsParseFunc() parser.Func {
+	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
+	parseShell := BashParseFunc()
+	return dockerfileConsumeContinuation().
+		Or(consumeSingleRuneLike('\n').Map(setState(dockerfileParseStateToplevel))).
+		Or(parseShell)
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {

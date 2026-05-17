@@ -125,6 +125,8 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 }
 
 func dockerfileShellArgsParseFunc() parser.Func {
+	parseShell := BashParseFunc()
+
 	// TODO: consume to the end of the line, allowing continuations for "\\\n" and "\\\r\n"
 	// use BaseParseFunc() to parse the consumed characters into bash tokens
 }

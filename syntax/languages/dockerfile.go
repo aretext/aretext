@@ -125,15 +125,23 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 }
 
 func dockerfileShellArgsParseFunc() parser.Func {
-	// TODO
+	// TODO: consume to the end of the line, allowing continuations for "\\\n" and "\\\r\n"
+	// use BaseParseFunc() to parse the consumed characters into bash tokens
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
-	// TODO
+	// TODO: recognize "AS" (case insensitive) as a keyword
+	// TODO: recognize "$VAR" and "${VAR}" as variables (same token type as bash)
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
-	// TODO
+	// TODO: recognize "NONE" as a keyword if it occurs first (optionally with preceding whitespace)
+	// TODO: skip anything else until "CMD", recognize "CMD" as a keyword and transition to dockerfileParseStateShellArgs state.
+	// TODO: handle line continuations:
+	/*
+	HEALTHCHECK --interval=5m --timeout=3s \
+		  CMD curl -f http://localhost/ || exit 1
+	*/
 }
 
 func dockerfileOnbuildInstructionArgsParseFunc() parser.Func {

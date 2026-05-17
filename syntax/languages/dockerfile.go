@@ -60,5 +60,5 @@ func dockerfileInstructionArgParseFunc() parser.Func {
 		Then(consumeLineFeed)
 	return BashParseFunc().
 		Or(consumeContinuationAndNewline).
-		Or(consumeLineFeed.Map(setState(dockerfileStateTopLevel)))
+		Or(consumeLineFeed.Map(setState(dockerfileStateToplevel)))
 }

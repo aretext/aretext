@@ -41,6 +41,7 @@ RUN echo '# not a dockerfile comment'`,
 FROM scratch`,
 			expected: []TokenWithText{
 				{Text: "FROM", Role: parser.TokenRoleKeyword},
+				{Text: "$BUILDPLATFORM", Role: bashTokenRoleVariable},
 				{Text: "AS", Role: parser.TokenRoleKeyword},
 				{Text: "FROM", Role: parser.TokenRoleKeyword},
 			},
@@ -57,6 +58,7 @@ FROM scratch`,
 			text: `ARG VERSION=latest`,
 			expected: []TokenWithText{
 				{Text: "ARG", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
 			},
 		},
 		{

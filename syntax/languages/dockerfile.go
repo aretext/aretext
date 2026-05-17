@@ -17,7 +17,7 @@ func DockerfileParseFunc() parser.Func {
 	parseComment := matchState(
 		dockerfileParseStateToplevel,
 		consumeString("#").
-			ThenMaybe(consumeTonextLineFeed).
+			ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(parser.TokenRoleComment)))
 
 	parseInstruction := matchState(
@@ -45,7 +45,8 @@ func dockerfileInstructionParseFunc() parser.Func {
 		"run", "shell", "stopsignal", "user", "volume", "workdir"
 	}
 	return consumeRunesLike(isAsciiLetter).
-		MapWithInput(recognizeKeywordOrConsume(instructions, false)) // case insensitive
+		MapWithInput(recognizeKeywordOrConsume(instructions, false)). // case insensitive
+		Or(consumeToNextLineFeed) // on failure, consume the rest of the line
 }
 
 func dockerfileInstructionArgParseFunc() parser.Func {

@@ -151,50 +151,6 @@ var consumeToNextLineFeed = consumeToEofOrRuneLike(func(r rune) bool {
 	return r == '\n'
 })
 
-// consumeToNextLineFeedWithContinuation is the same as consumeNextLineFeed, except it allows a line to continue
-// with the specified continuation character (e.g. '\' at the end of the line skips past the following newline)
-func consumeToNextLineFeedWithContinuation(continuationChar rune) parser.Func {
-	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-		for {
-			r, err := iter.NextRune()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return parser.FailedResult
-			}
-
-			numConsumed++
-
-			if r == continuationChar {
-				lookaheadIter := iter
-				// lookahead to see if continuation char immediately followed by newline.
-				maybeNewlineAfterContinuation, err := lookaheadIter.NextRune()
-				if err == io.EOF {
-					break
-				} else if err != nil {
-					return parser.FailedResult
-				}
-
-				// TODO: handle '\r\n'
-				if maybeNewlineAfterContinutation == '\n' {
-					// Skip the newline and keep going.
-					numConsumed++
-					iter = lookaheadIter
-					continue
-				}
-			} else if r == '\n' {
-				// Newline NOT preceded by a continuation char, we're done.
-				break
-			}
-		}
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
-	}
-}
-
 func consumeDigitsAndSeparators(allowLeadingSeparator bool, isDigit func(r rune) bool) parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var numConsumed uint64

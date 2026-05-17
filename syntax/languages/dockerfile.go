@@ -45,9 +45,12 @@ func dockerfileInstructionParseFunc() parser.Func {
 		"run", "shell", "stopsignal", "user", "volume", "workdir"
 	}
 	return consumeRunesLike(isAsciiLetter).
-		MapWithInput(recognizeKeywordOrConsume(instructions, false)). // case insensitive
-		Or(consumeToNextLineFeed) // on failure, consume the rest of the line
+		MapWithInput(recognizeKeywordOrConsume(instructions, false)) // case insensitive
 }
 
 func dockerfileInstructionArgParseFunc() parser.Func {
+	return bashParseFunc().
+		Or(
+
+		)
 }

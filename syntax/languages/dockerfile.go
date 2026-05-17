@@ -83,3 +83,23 @@ func DockerfileParseFunc() parser.Func {
 			Or(parseShellArgs).
 			Or(consumeInvalidLine))
 }
+
+func dockerfileInstructionParseFunc(allowedInstructions []string) parser.Func {
+	// TODO
+}
+
+func dockerfileFromInstructionArgsParseFunc() parser.Func {
+	// TODO
+}
+
+func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
+	// TODO
+}
+
+func dockerfileOnbuldInstructionArgsParseFunc() parser.Func {
+	// TODO
+}
+
+func dockerfileShellArgsParseFunc() parser.Func {
+	// TODO
+}

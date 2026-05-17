@@ -39,25 +39,25 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileParseStateToplevel,
 		consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
 			MapWithInput(
-				dockerfileMapInstructionToState(map[string][dockerfileParseState]{
-					"add": dockerfileParseStateShellArgs,
-					"arg": dockerfileParseStateShellArgs,
-					"cmd": dockerfileParseStateShellArgs,
-					"copy":dockerfileParseStateShellArgs,
-					"entrypoint":dockerfileParseStateShellArgs,
-					"env":dockerfileParseStateShellArgs,
-					"expose": dockerfileParseStateShellArgs,
-					"from": dockerfileParseStateFromArgs,
+				dockerfileMapInstructionToState(map[string]dockerfileParseState{
+					"add":         dockerfileParseStateShellArgs,
+					"arg":         dockerfileParseStateShellArgs,
+					"cmd":         dockerfileParseStateShellArgs,
+					"copy":        dockerfileParseStateShellArgs,
+					"entrypoint":  dockerfileParseStateShellArgs,
+					"env":         dockerfileParseStateShellArgs,
+					"expose":      dockerfileParseStateShellArgs,
+					"from":        dockerfileParseStateFromArgs,
 					"healthcheck": dockerfileParseStateHealthcheckArgs,
-					"label": dockerfileParseStateShellArgs,
-					"maintainer":dockerfileParseStateShellArgs,
-					"onbuild":dockerfileParseStateOnbuildArgs,
-					"run":dockerfileParseStateShellArgs,
-					"shell":dockerfileParseStateShellArgs,
-					"stopsignal":dockerfileParseStateShellArgs,
-					"user":dockerfileParseStateShellArgs,
-					"volume":dockerfileParseStateShellArgs,
-					"workdir":dockerfileParseStateShellArgs,
+					"label":       dockerfileParseStateShellArgs,
+					"maintainer":  dockerfileParseStateShellArgs,
+					"onbuild":     dockerfileParseStateOnbuildArgs,
+					"run":         dockerfileParseStateShellArgs,
+					"shell":       dockerfileParseStateShellArgs,
+					"stopsignal":  dockerfileParseStateShellArgs,
+					"user":        dockerfileParseStateShellArgs,
+					"volume":      dockerfileParseStateShellArgs,
+					"workdir":     dockerfileParseStateShellArgs,
 				})))
 
 	parseShellArgs := matchState(
@@ -90,6 +90,42 @@ func DockerfileParseFunc() parser.Func {
 			Or(consumeInvalidLine))
 }
 
+func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfileParseState) parser.MapWithInputFn {
+	lowercaseInstructionToNextState := make(map[string]dockerfileParseState, len(instructionToNextState))
+	maxLength := 0
+	for instruction, nextState := range instructionToNextState {
+		maxLength = max(maxLength, len(instruction))
+		lowercaseInstructionToNextState[strings.ToLower(instruction)] = nextState
+	}
+
+	return func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		if result.NumConsumed > maxLength {
+			return parser.Result{} // instruction is too long to match, fail to parse.
+		}
+
+		maybeInstruction := readInputString(iter, result.NumConsumed)
+		nextState, ok := lowercaseInstructionToNextState[strings.ToLower(maybeInstruction)] // case insensitive
+		if !ok {
+			return parser.Result{} // no matching instruction, fail to parse.
+		}
+
+		// Matched an instruction, consume and transition to the next state
+		token := parser.ComputedToken{
+			Role: parser.TokenRoleKeyword,
+			Length: result.NumConsumed,
+		}
+		return parser.Result{
+			NumConsumed: result.NumConsumed,
+			ComputedTokens: []parser.ComputedToken{token},
+			NextState: nextState,
+		}
+	}
+}
+
+func dockerfileShellArgsParseFunc() parser.Func {
+	// TODO
+}
+
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
 	// TODO
 }
@@ -99,9 +135,5 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 }
 
 func dockerfileOnbuildInstructionArgsParseFunc() parser.Func {
-	// TODO
-}
-
-func dockerfileShellArgsParseFunc() parser.Func {
 	// TODO
 }

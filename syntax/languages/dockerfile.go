@@ -43,7 +43,7 @@ func DockerfileParseFunc() parser.Func {
 }
 
 func dockerfileInstructionParseFunc() parser.Func {
-	isAciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
+	isAsciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
 	instructions := []string{
 		"add", "arg", "cmd", "copy", "entrypoint", "env", "expose",
 		"from", "healthcheck", "label", "maintainer", "onbuild",

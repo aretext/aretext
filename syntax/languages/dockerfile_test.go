@@ -250,7 +250,7 @@ world
 COPY . /app`,
 			expected: []TokenWithText{
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
-				{Text: "# comment removed before shell runs", Role: parser.TokenRoleComment},
+				{Text: "# comment removed before shell runs\n", Role: parser.TokenRoleComment},
 				{Text: "COPY", Role: parser.TokenRoleKeyword},
 			},
 		},

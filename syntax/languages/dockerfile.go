@@ -34,34 +34,35 @@ func DockerfileParseFunc() parser.Func {
 	// instruction's arguments. Otherwise, the parse fails.
 	parseInstruction := matchState(
 		dockerfileParseStateToplevel,
-		consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' }) // preceding whitespace
-			.MaybeBefore(consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }). // maybe keyword
-			MapWithInput(
+		// preceding whitespace
+		consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' }).MaybeBefore(
+			// maybe keyword
+			consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).MapWithInput(
 				dockerfileMapInstructionToState(map[string]dockerfileParseState{
 					// FROM needs its own parsing to recognize "AS" keyword.
-					"from":        dockerfileParseStateFromArgs,
+					"from": dockerfileParseStateFromArgs,
 					// HEALTHCHECK needs its own parsing to recognize "NONE" and "CMD" keywords.
 					"healthcheck": dockerfileParseStateHealthcheckArgs,
 					// ONBUILD is a prefix to some other command, so go back to the toplevel state.
-					"onbuild":     dockerfileParseStateToplevel,
+					"onbuild": dockerfileParseStateToplevel,
 					// We're cheating a little bit here by using the shell parser for all other
 					// commands, which happens to work reasonably even for non-shell forms
 					// like exec (`["cmd", "arg"]`) and key-value pairs (`LABEL=label`).
-					"add":         dockerfileParseStateShellArgs,
-					"arg":         dockerfileParseStateShellArgs,
-					"cmd":         dockerfileParseStateShellArgs,
-					"copy":        dockerfileParseStateShellArgs,
-					"entrypoint":  dockerfileParseStateShellArgs,
-					"env":         dockerfileParseStateShellArgs,
-					"expose":      dockerfileParseStateShellArgs,
-					"label":       dockerfileParseStateShellArgs,
-					"maintainer":  dockerfileParseStateShellArgs,
-					"run":         dockerfileParseStateShellArgs,
-					"shell":       dockerfileParseStateShellArgs,
-					"stopsignal":  dockerfileParseStateShellArgs,
-					"user":        dockerfileParseStateShellArgs,
-					"volume":      dockerfileParseStateShellArgs,
-					"workdir":     dockerfileParseStateShellArgs,
+					"add":        dockerfileParseStateShellArgs,
+					"arg":        dockerfileParseStateShellArgs,
+					"cmd":        dockerfileParseStateShellArgs,
+					"copy":       dockerfileParseStateShellArgs,
+					"entrypoint": dockerfileParseStateShellArgs,
+					"env":        dockerfileParseStateShellArgs,
+					"expose":     dockerfileParseStateShellArgs,
+					"label":      dockerfileParseStateShellArgs,
+					"maintainer": dockerfileParseStateShellArgs,
+					"run":        dockerfileParseStateShellArgs,
+					"shell":      dockerfileParseStateShellArgs,
+					"stopsignal": dockerfileParseStateShellArgs,
+					"user":       dockerfileParseStateShellArgs,
+					"volume":     dockerfileParseStateShellArgs,
+					"workdir":    dockerfileParseStateShellArgs,
 				}))))
 
 	// This transitions back to toplevel state if it sees a newline, ignoring continuation `\`
@@ -157,7 +158,7 @@ func dockerfileConsumeContinuation() parser.Func {
 
 		return parser.Result{
 			NumConsumed: numConsumed,
-			NextState: state,
+			NextState:   state,
 		}
 	}
 }
@@ -180,7 +181,7 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 	// TODO: skip anything else until "CMD", recognize "CMD" as a keyword and transition to dockerfileParseStateShellArgs state.
 	// TODO: handle line continuations:
 	/*
-	HEALTHCHECK --interval=5m --timeout=3s \
-		  CMD curl -f http://localhost/ || exit 1
+		HEALTHCHECK --interval=5m --timeout=3s \
+			  CMD curl -f http://localhost/ || exit 1
 	*/
 }

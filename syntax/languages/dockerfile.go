@@ -1,6 +1,8 @@
 package languages
 
 import (
+	"strings"
+
 	"github.com/aretext/aretext/syntax/parser"
 )
 
@@ -111,13 +113,13 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 
 		// Matched an instruction, consume and transition to the next state
 		token := parser.ComputedToken{
-			Role: parser.TokenRoleKeyword,
+			Role:   parser.TokenRoleKeyword,
 			Length: result.NumConsumed,
 		}
 		return parser.Result{
-			NumConsumed: result.NumConsumed,
+			NumConsumed:    result.NumConsumed,
 			ComputedTokens: []parser.ComputedToken{token},
-			NextState: nextState,
+			NextState:      nextState,
 		}
 	}
 }

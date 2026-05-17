@@ -20,9 +20,10 @@ func TestDockerfileParseFunc(t *testing.T) {
   # comment
 RUN echo '# not a dockerfile comment'`,
 			expected: []TokenWithText{
-				{Text: "# syntax=docker/dockerfile:1", Role: parser.TokenRoleComment},
-				{Text: "# comment", Role: parser.TokenRoleComment},
+				{Text: "# syntax=docker/dockerfile:1\n", Role: parser.TokenRoleComment},
+				{Text: "# comment\n", Role: parser.TokenRoleComment},
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
+				{Text: "'# not a dockerfile comment'", Role: parser.TokenRoleString},
 			},
 		},
 		{

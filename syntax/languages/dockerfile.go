@@ -44,7 +44,7 @@ func DockerfileParseFunc() parser.Func {
 
 func dockerfileInstructionParseFunc() parser.Func {
 	isAsciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
-	isPrecedingWhitespace := func(r rune) bool { return r == ' ' or r == '\t' }
+	isPrecedingWhitespace := func(r rune) bool { return r == ' ' || r == '\t' }
 	instructions := []string{
 		"add", "arg", "cmd", "copy", "entrypoint", "env", "expose",
 		"from", "healthcheck", "label", "maintainer", "onbuild",

@@ -40,7 +40,7 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileParseStateToplevel,
 		parseComment.
 			Or(parseInstruction).
-			Or(parseInstructionArg)
+			Or(parseInstructionArg),
 	)
 }
 

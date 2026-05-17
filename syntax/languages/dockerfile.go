@@ -49,8 +49,11 @@ func dockerfileInstructionParseFunc() parser.Func {
 }
 
 func dockerfileInstructionArgParseFunc() parser.Func {
+	consumeLineFeed = consumeSingleRuneLike(func(r rune) bool { return r == '\n' })
 	consumeContinuationAndNewline := consumeSingleRuneLike(func(r rune) bool { r == '\\' }).
-		ThenMaybe(consumeSingleRuneLike(func (r rune) bool { r == '\r' })).
-		Then(consumeSingleRuneLike(func(r rune) bool { r == '\n' }))
-	return bashParseFunc().Or(consumeContinuationAndNewline)
+		ThenMaybe(consumeSingleRuneLike(func(r rune) bool { r == '\r' })).
+		Then(consumeLineFeed)
+	return bashParseFunc().
+		Or(consumeContinuationAndNewline).
+		Or(consumeLineFeed.Map(setState(dockerfileStateTopLevel)))
 }

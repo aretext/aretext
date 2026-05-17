@@ -172,6 +172,7 @@ func dockerfileShellArgsParseFunc() parser.Func {
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
 	// TODO: recognize "AS" (case insensitive) as a keyword
 	// TODO: recognize "$VAR" and "${VAR}" as variables (same token type as bash)
+	// TODO: recognize "="
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {

@@ -38,14 +38,12 @@ func DockerfileParseFunc() parser.Func {
 }
 
 func dockerfileInstructionParseFunc() parser.Func {
+	isAciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
 	instructions := []string{
 		"add", "arg", "cmd", "copy", "entrypoint", "env", "expose",
 		"from", "healthcheck", "label", "maintainer", "onbuild",
 		"run", "shell", "stopsignal", "user", "volume", "workdir"
 	}
-
-	isAciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
-
 	return consumeRunesLike(isAsciiLetter).
 		MapWithInput(recognizeKeywordOrConsume(instructions, false)) // case insensitive
 }

@@ -8,7 +8,10 @@ type dockerfileParseState uint8
 
 const (
 	dockerfileParseStateToplevel = dockerfileParseState(iota)
-	dockerfileParseStateInstructionArg
+	dockerfileParseStateFromArgs
+	dockerfileParseStateHealthcheckArgs
+	dockerfileParseStateOnbuildArgs
+	dockerfileParseStateShellArgs
 )
 
 func (s dockerfileParseState) Equals(other parser.State) bool {
@@ -19,53 +22,68 @@ func (s dockerfileParseState) Equals(other parser.State) bool {
 // DockerfileParseFunc returns a parser for a Dockerfile.
 // See https://docs.docker.com/reference/dockerfile
 func DockerfileParseFunc() parser.Func {
-	parseComment := matchState(
+	parseToplevelComment := matchState(
 		dockerfileParseStateToplevel,
 		consumeString("#").
 			ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(parser.TokenRoleComment)))
 
-	parseInstruction := matchState(
-		dockerfileParseStateToplevel,
-		dockerfileInstructionParseFunc().
-			Map(setState(dockerfileParseStateInstructionArg)))
+	// FROM instruction
+	parseFromInstruction := matchState(
+		dockerfileParseStateTopLevel,
+		dockerfileInstructionParseFunc([]string{"from"}).Map(setState(dockerfileParseStateFromArgs)))
+	parseFromInstructionArgs := matchState(
+		dockerfileParseStateFromArgs,
+		dockerfileFromInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
-	// TODO: special case FROM (needed to parse AS). Allow vars.
-	// TODO: maybe special case LABEL/ENV/ARGS to just recognize "=" and vars?
-	// TODO: special case ONBUILD, follow by a second command
-	// TODO: special case HEALTHCHECK (NONE or options + second command)
+	// HEALTHCHECK instruction
+	parseHealthcheckInstruction := matchState(
+		dockerfileParseStateTopLevel,
+		dockerfileInstructionParseFunc([]string{"healthcheck"}).Map(setState(dockerfileParseStateHealthcheckArgs)))
+	parseHealthcheckInstructionArgs := matchState(
+		dockerfileParseStateHealthcheckArgs,
+		dockefileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
-	// Transitions back to toplevel state at end of the instruction,
-	// taking into account continuations (\ at end of line).
-	parseInstructionArg := matchState(
-		dockerfileParseStateInstructionArg,
-		dockerfileInstructionArgParseFunc())
+	// ONBUILD instruction
+	parseOnbuildInstruction := matchState(
+		dockerfileParseStateTopLevel,
+		dockerfileInstructionParseFunc([]string{"onbuild"}).Map(setState(dockerfileParseStateOnbuildArgs)))
+	parseOnbuildInstructionArgs := matchState(
+		dockerfileParseStateOnbuildArgs,
+		dockefileOnbuildInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+
+	// All other valid instruction args are parsed as shell.
+	// Some of these technically don't support all shell syntax, but there's enough overlap
+	// that it ends up looking correct. For example, exec form (`["cmd", "arg1", "arg2"]`)
+	// gets parsed into string tokens by the shell parser. Likewise, key value pairs
+	// like "LABEL=value" and options like "--option=value" get parsed reasonably as shell.
+	parseOtherInstruction := matchState(
+		dockerfileParseStateTopLevel,
+		dockerfileInstructionParseFunc([]string{
+			"run", "add", "cmd", "label", "maintainer", "expose", "env", "add",
+			"copy", "entrypoint", "volume", "user", "workdir", "arg", "stopsignal", "shell",
+		}).Map(setState(dockerfileParseStateShellArgs)))
+	parseShellArgs := matchState(
+		dockerfileParseStateShellArgs,
+		dockerfileShellArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+
+	// For unrecognized arguments, consume to the end of the line.
+	consumeInvalidLine := matchState(dockerfileParseStateTopLevel, consumeToNextLineFeed)
 
 	return initialState(
 		dockerfileParseStateToplevel,
-		parseComment.
-			Or(parseInstruction).
-			Or(parseInstructionArg),
-	)
-}
-
-func dockerfileInstructionParseFunc() parser.Func {
-	isAsciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
-	instructions := []string{
-		"add", "arg", "cmd", "copy", "entrypoint", "env", "expose",
-		"from", "healthcheck", "label", "maintainer", "onbuild",
-		"run", "shell", "stopsignal", "user", "volume", "workdir",
-	}
-	return consumeRunesLike(isAsciiLetter).
-		MapWithInput(recognizeKeywordOrConsume(instructions, false)) // case insensitive
-}
-
-func dockerfileInstructionArgParseFunc() parser.Func {
-	consumeLineFeed := consumeSingleRuneLike(func(r rune) bool { return r == '\n' })
-	consumeContinuationAndNewline := consumeSingleRuneLike(func(r rune) bool { return r == '\\' }).
-		ThenMaybe(consumeSingleRuneLike(func(r rune) bool { return r == '\r' })).
-		Then(consumeLineFeed)
-	return BashParseFunc().
-		Or(consumeContinuationAndNewline).
-		Or(consumeLineFeed.Map(setState(dockerfileParseStateToplevel)))
+		matchState(
+			dockerfileParseStateTopLevel,
+			parseToplevelComment.
+				Or(parseFromInstruction).
+				Or(parseHealthcheckInstruction).
+				Or(parseOnbuildInstruction).
+				Or(parseOtherInstruction).
+				Or(consumeInvalidLine)).
+			Or(
+				matchState(dockerfileParseStateFromArgs, parseFromInstructionArgs).
+					Or(matchState(dockerfileParseStateHealthcheckArgs, parseHealthcheckInstructionArgs)).
+					Or(matchState(dockerfileParseStateOnbuildInstruction, parseOnbuildInstructionArgs)).
+					Or(matchState(dockerfileParseStateShellArgs, parseShellArgs)).
+					Map(setState(dockerfileParseStateTopLevel))))
 }

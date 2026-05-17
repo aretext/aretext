@@ -68,12 +68,13 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileShellArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
 	// For unrecognized arguments, consume to the end of the line.
-	consumeInvalidLine := matchState(dockerfileParseStateTopLevel, consumeToNextLineFeed)
+	consumeInvalidLine := matchState(dockerfileParseStateToplevel, consumeToNextLineFeed)
 
 	return initialState(
 		dockerfileParseStateToplevel,
 		parseToplevelComment.
 			Or(parseFromInstruction).
+			Or(parseFromInstructionArgs).
 			Or(parseHealthcheckInstruction).
 			Or(parseHealthcheckInstructionArgs).
 			Or(parseOnbuildInstruction).

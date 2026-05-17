@@ -117,6 +117,7 @@ FROM scratch`,
 			text: `LABEL version="1.0"`,
 			expected: []TokenWithText{
 				{Text: "LABEL", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
 				{Text: `"1.0"`, Role: parser.TokenRoleString},
 			},
 		},
@@ -199,10 +200,11 @@ rUn echo hello`,
 			},
 		},
 		{
-			name: "shell form cmd does not parse shell strings",
+			name: "shell form cmd",
 			text: `CMD echo "hello world"`,
 			expected: []TokenWithText{
 				{Text: "CMD", Role: parser.TokenRoleKeyword},
+				{Text: `"hello world"`, Role: parser.TokenRoleString},
 			},
 		},
 		{

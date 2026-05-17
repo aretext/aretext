@@ -65,18 +65,16 @@ func DockerfileParseFunc() parser.Func {
 					"workdir":    dockerfileParseStateShellArgs,
 				}))))
 
-	// This transitions back to toplevel state if it sees a newline, ignoring continuation `\`
+	// These transition back to toplevel state if they see a newline, ignoring continuation `\`
 	parseShellArgs := matchState(
 		dockerfileParseStateShellArgs,
 		dockerfileShellArgsParseFunc())
-
 	parseFromInstructionArgs := matchState(
 		dockerfileParseStateFromArgs,
-		dockerfileFromInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
-
+		dockerfileFromInstructionArgsParseFunc())
 	parseHealthcheckInstructionArgs := matchState(
 		dockerfileParseStateHealthcheckArgs,
-		dockerfileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+		dockerfileHealthcheckInstructionArgsParseFunc())
 
 	// For unrecognized arguments, consume to the end of the line.
 	consumeInvalidLine := matchState(dockerfileParseStateToplevel, consumeToNextLineFeed)

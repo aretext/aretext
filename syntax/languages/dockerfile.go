@@ -30,6 +30,11 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileInstructionParseFunc().
 			Map(setState(dockerfileParseStateInstructionArg)))
 
+	// TODO: special case FROM (needed to parse AS). Allow vars.
+	// TODO: maybe special case LABEL/ENV/ARGS to just recognize "=" and vars?
+	// TODO: special case ONBUILD, follow by a second command
+	// TODO: special case HEALTHCHECK (NONE or options + second command)
+
 	// Transitions back to toplevel state at end of the instruction,
 	// taking into account continuations (\ at end of line).
 	parseInstructionArg := matchState(

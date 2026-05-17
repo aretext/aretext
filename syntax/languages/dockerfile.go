@@ -28,44 +28,53 @@ func DockerfileParseFunc() parser.Func {
 			ThenMaybe(consumeToNextLineFeed).
 			Map(recognizeToken(parser.TokenRoleComment)))
 
-	// FROM instruction
-	parseFromInstruction := matchState(
+	// This parser consumes the first word (ascii) of a line. If it matches
+	// a valid docker instruction, it transitions to a state to parse the
+	// instruction's arguments.
+	//
+	// We're cheating a little bit here by using the shell parser for most
+	// commands, which happens to work reasonably even for non-shell forms
+	// like exec (`["cmd", "arg"]`) and key-value pairs (`LABEL=label`).
+	parseInstruction := matchState(
 		dockerfileParseStateToplevel,
-		dockerfileInstructionParseFunc([]string{"from"}).Map(setState(dockerfileParseStateFromArgs)))
+		consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
+			MapWithInput(
+				dockerfileMapInstructionToState(map[string][dockerfileParseState]{
+					"add": dockerfileParseStateShellArgs,
+					"arg": dockerfileParseStateShellArgs,
+					"cmd": dockerfileParseStateShellArgs,
+					"copy":dockerfileParseStateShellArgs,
+					"entrypoint":dockerfileParseStateShellArgs,
+					"env":dockerfileParseStateShellArgs,
+					"expose": dockerfileParseStateShellArgs,
+					"from": dockerfileParseStateFromArgs,
+					"healthcheck": dockerfileParseStateHealthcheckArgs,
+					"label": dockerfileParseStateShellArgs,
+					"maintainer":dockerfileParseStateShellArgs,
+					"onbuild":dockerfileParseStateOnbuildArgs,
+					"run":dockerfileParseStateShellArgs,
+					"shell":dockerfileParseStateShellArgs,
+					"stopsignal":dockerfileParseStateShellArgs,
+					"user":dockerfileParseStateShellArgs,
+					"volume":dockerfileParseStateShellArgs,
+					"workdir":dockerfileParseStateShellArgs,
+				})))
+
+	parseShellArgs := matchState(
+		dockerfileParseStateShellArgs,
+		dockerfileShellArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+
 	parseFromInstructionArgs := matchState(
 		dockerfileParseStateFromArgs,
 		dockerfileFromInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
-	// HEALTHCHECK instruction
-	parseHealthcheckInstruction := matchState(
-		dockerfileParseStateToplevel,
-		dockerfileInstructionParseFunc([]string{"healthcheck"}).Map(setState(dockerfileParseStateHealthcheckArgs)))
 	parseHealthcheckInstructionArgs := matchState(
 		dockerfileParseStateHealthcheckArgs,
 		dockerfileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
-	// ONBUILD instruction
-	parseOnbuildInstruction := matchState(
-		dockerfileParseStateToplevel,
-		dockerfileInstructionParseFunc([]string{"onbuild"}).Map(setState(dockerfileParseStateOnbuildArgs)))
 	parseOnbuildInstructionArgs := matchState(
 		dockerfileParseStateOnbuildArgs,
 		dockerfileOnbuildInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
-
-	// All other valid instruction args are parsed as shell.
-	// Some of these technically don't support all shell syntax, but there's enough overlap
-	// that it ends up looking correct. For example, exec form (`["cmd", "arg1", "arg2"]`)
-	// gets parsed into string tokens by the shell parser. Likewise, key value pairs
-	// like "LABEL=value" and options like "--option=value" get parsed reasonably as shell.
-	parseOtherInstruction := matchState(
-		dockerfileParseStateToplevel,
-		dockerfileInstructionParseFunc([]string{
-			"run", "add", "cmd", "label", "maintainer", "expose", "env", "add",
-			"copy", "entrypoint", "volume", "user", "workdir", "arg", "stopsignal", "shell",
-		}).Map(setState(dockerfileParseStateShellArgs)))
-	parseShellArgs := matchState(
-		dockerfileParseStateShellArgs,
-		dockerfileShellArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
 	// For unrecognized arguments, consume to the end of the line.
 	consumeInvalidLine := matchState(dockerfileParseStateToplevel, consumeToNextLineFeed)
@@ -73,19 +82,12 @@ func DockerfileParseFunc() parser.Func {
 	return initialState(
 		dockerfileParseStateToplevel,
 		parseToplevelComment.
-			Or(parseFromInstruction).
-			Or(parseFromInstructionArgs).
-			Or(parseHealthcheckInstruction).
-			Or(parseHealthcheckInstructionArgs).
-			Or(parseOnbuildInstruction).
-			Or(parseOnbuildInstructionArgs).
-			Or(parseOtherInstruction).
+			Or(parseInstruction).
 			Or(parseShellArgs).
+			Or(parseFromInstructionArgs).
+			Or(parseHealthcheckInstructionArgs).
+			Or(parseOnbuildInstructionArgs).
 			Or(consumeInvalidLine))
-}
-
-func dockerfileInstructionParseFunc(allowedInstructions []string) parser.Func {
-	// TODO
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {

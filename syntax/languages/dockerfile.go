@@ -43,6 +43,11 @@ func dockerfileInstructionParseFunc() parser.Func {
 		"from", "healthcheck", "label", "maintainer", "onbuild",
 		"run", "shell", "stopsignal", "user", "volume", "workdir"
 	}
+
+	isAciiLetter := func(r rune) bool { return r >= 'A' && r < 'z' }
+
+	return consumeRunesLike(isAsciiLetter).
+		MapWithInput(recognizeKeywordOrConsume(instructions, false)) // case insensitive
 }
 
 func dockerfileInstructionArgParseFunc() parser.Func {

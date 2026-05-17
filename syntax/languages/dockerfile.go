@@ -12,7 +12,6 @@ const (
 	dockerfileParseStateToplevel = dockerfileParseState(iota)
 	dockerfileParseStateFromArgs
 	dockerfileParseStateHealthcheckArgs
-	dockerfileParseStateOnbuildArgs
 	dockerfileParseStateShellArgs
 )
 
@@ -132,7 +131,7 @@ func dockerfileFromInstructionArgsParseFunc() parser.Func {
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
-	// TODO: recognize "NONE" as a keyword if it occurs first (optionally with preceding whitespace)
+	// TODO: recognize "NONE" (case insensitive) as a keyword if it occurs first (optionally with preceding whitespace)
 	// TODO: skip anything else until "CMD", recognize "CMD" as a keyword and transition to dockerfileParseStateShellArgs state.
 	// TODO: handle line continuations:
 	/*

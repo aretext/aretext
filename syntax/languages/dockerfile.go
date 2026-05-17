@@ -36,9 +36,14 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileParseStateInstructionArg,
 		dockerfileInstructionArgParseFunc())
 
+	skipInvalidInstructionOrComment := matchState(dockerfileParseStateToplevel, consumeToNextLineFeed)
+
 	return initialState(
 		dockerfileParseStateToplevel,
-		parseComment.Or(parseInstruction).Or(parseInstructionArg),
+		parseComment.
+			Or(parseInstruction).
+			Or(parseInstructionArg).
+			Or(skipInvalidInstructionOrComment),
 	)
 }
 

@@ -94,9 +94,9 @@ func DockerfileParseFunc() parser.Func {
 
 func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfileParseState) parser.MapWithInputFn {
 	lowercaseInstructionToNextState := make(map[string]dockerfileParseState, len(instructionToNextState))
-	maxLength := 0
+	var maxLength uint64
 	for instruction, nextState := range instructionToNextState {
-		maxLength = max(maxLength, len(instruction))
+		maxLength = max(maxLength, uint64(len(instruction)))
 		lowercaseInstructionToNextState[strings.ToLower(instruction)] = nextState
 	}
 

@@ -87,6 +87,7 @@ FROM scratch`,
 			text: `ENV APP_HOME=/app`,
 			expected: []TokenWithText{
 				{Text: "ENV", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
 			},
 		},
 		{

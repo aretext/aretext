@@ -88,6 +88,9 @@ func DockerfileParseFunc() parser.Func {
 			Or(consumeInvalidLine))
 }
 
+// dockerfileMapInstructionToState checks if the consumed content matches an instruction (case insensitive).
+// If it does, transition to the next state for that instruction.
+// Otherwise, fail to parse.
 func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfileParseState) parser.MapWithInputFn {
 	lowercaseInstructionToNextState := make(map[string]dockerfileParseState, len(instructionToNextState))
 	var maxLength uint64

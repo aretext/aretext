@@ -34,7 +34,8 @@ func DockerfileParseFunc() parser.Func {
 	// instruction's arguments. Otherwise, the parse fails.
 	parseInstruction := matchState(
 		dockerfileParseStateToplevel,
-		consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
+		consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' }) // preceding whitespace
+			.MaybeBefore(consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }). // maybe keyword
 			MapWithInput(
 				dockerfileMapInstructionToState(map[string]dockerfileParseState{
 					// FROM needs its own parsing to recognize "AS" keyword.
@@ -61,7 +62,7 @@ func DockerfileParseFunc() parser.Func {
 					"user":        dockerfileParseStateShellArgs,
 					"volume":      dockerfileParseStateShellArgs,
 					"workdir":     dockerfileParseStateShellArgs,
-				})))
+				}))))
 
 	parseShellArgs := matchState(
 		dockerfileParseStateShellArgs,

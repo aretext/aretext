@@ -42,7 +42,7 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileInstructionParseFunc([]string{"healthcheck"}).Map(setState(dockerfileParseStateHealthcheckArgs)))
 	parseHealthcheckInstructionArgs := matchState(
 		dockerfileParseStateHealthcheckArgs,
-		dockefileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+		dockerfileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
 	// ONBUILD instruction
 	parseOnbuildInstruction := matchState(
@@ -50,7 +50,7 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileInstructionParseFunc([]string{"onbuild"}).Map(setState(dockerfileParseStateOnbuildArgs)))
 	parseOnbuildInstructionArgs := matchState(
 		dockerfileParseStateOnbuildArgs,
-		dockefileOnbuildInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
+		dockerfileOnbuildInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
 	// All other valid instruction args are parsed as shell.
 	// Some of these technically don't support all shell syntax, but there's enough overlap

@@ -96,7 +96,7 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 	// TODO
 }
 
-func dockerfileOnbuldInstructionArgsParseFunc() parser.Func {
+func dockerfileOnbuildInstructionArgsParseFunc() parser.Func {
 	// TODO
 }
 

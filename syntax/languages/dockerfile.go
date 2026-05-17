@@ -31,7 +31,7 @@ func DockerfileParseFunc() parser.Func {
 
 	// This parser consumes the first word (ascii) of a line. If it matches
 	// a valid docker instruction, it transitions to a state to parse the
-	// instruction's arguments.
+	// instruction's arguments. Otherwise, the parse fails.
 	parseInstruction := matchState(
 		dockerfileParseStateToplevel,
 		consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).

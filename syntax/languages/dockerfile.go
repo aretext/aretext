@@ -30,7 +30,7 @@ func DockerfileParseFunc() parser.Func {
 
 	// FROM instruction
 	parseFromInstruction := matchState(
-		dockerfileParseStateTopLevel,
+		dockerfileParseStateToplevel,
 		dockerfileInstructionParseFunc([]string{"from"}).Map(setState(dockerfileParseStateFromArgs)))
 	parseFromInstructionArgs := matchState(
 		dockerfileParseStateFromArgs,
@@ -38,7 +38,7 @@ func DockerfileParseFunc() parser.Func {
 
 	// HEALTHCHECK instruction
 	parseHealthcheckInstruction := matchState(
-		dockerfileParseStateTopLevel,
+		dockerfileParseStateToplevel,
 		dockerfileInstructionParseFunc([]string{"healthcheck"}).Map(setState(dockerfileParseStateHealthcheckArgs)))
 	parseHealthcheckInstructionArgs := matchState(
 		dockerfileParseStateHealthcheckArgs,
@@ -46,7 +46,7 @@ func DockerfileParseFunc() parser.Func {
 
 	// ONBUILD instruction
 	parseOnbuildInstruction := matchState(
-		dockerfileParseStateTopLevel,
+		dockerfileParseStateToplevel,
 		dockerfileInstructionParseFunc([]string{"onbuild"}).Map(setState(dockerfileParseStateOnbuildArgs)))
 	parseOnbuildInstructionArgs := matchState(
 		dockerfileParseStateOnbuildArgs,
@@ -58,7 +58,7 @@ func DockerfileParseFunc() parser.Func {
 	// gets parsed into string tokens by the shell parser. Likewise, key value pairs
 	// like "LABEL=value" and options like "--option=value" get parsed reasonably as shell.
 	parseOtherInstruction := matchState(
-		dockerfileParseStateTopLevel,
+		dockerfileParseStateToplevel,
 		dockerfileInstructionParseFunc([]string{
 			"run", "add", "cmd", "label", "maintainer", "expose", "env", "add",
 			"copy", "entrypoint", "volume", "user", "workdir", "arg", "stopsignal", "shell",
@@ -72,18 +72,13 @@ func DockerfileParseFunc() parser.Func {
 
 	return initialState(
 		dockerfileParseStateToplevel,
-		matchState(
-			dockerfileParseStateTopLevel,
-			parseToplevelComment.
-				Or(parseFromInstruction).
-				Or(parseHealthcheckInstruction).
-				Or(parseOnbuildInstruction).
-				Or(parseOtherInstruction).
-				Or(consumeInvalidLine)).
-			Or(
-				matchState(dockerfileParseStateFromArgs, parseFromInstructionArgs).
-					Or(matchState(dockerfileParseStateHealthcheckArgs, parseHealthcheckInstructionArgs)).
-					Or(matchState(dockerfileParseStateOnbuildInstruction, parseOnbuildInstructionArgs)).
-					Or(matchState(dockerfileParseStateShellArgs, parseShellArgs)).
-					Map(setState(dockerfileParseStateTopLevel))))
+		parseToplevelComment.
+			Or(parseFromInstruction).
+			Or(parseHealthcheckInstruction).
+			Or(parseHealthcheckInstructionArgs).
+			Or(parseOnbuildInstruction).
+			Or(parseOnbuildInstructionArgs).
+			Or(parseOtherInstruction).
+			Or(parseShellArgs).
+			Or(consumeInvalidLine))
 }

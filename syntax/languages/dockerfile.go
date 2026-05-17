@@ -33,15 +33,20 @@ func DockerfileParseFunc() parser.Func {
 	// This parser consumes the first word (ascii) of a line. If it matches
 	// a valid docker instruction, it transitions to a state to parse the
 	// instruction's arguments.
-	//
-	// We're cheating a little bit here by using the shell parser for most
-	// commands, which happens to work reasonably even for non-shell forms
-	// like exec (`["cmd", "arg"]`) and key-value pairs (`LABEL=label`).
 	parseInstruction := matchState(
 		dockerfileParseStateToplevel,
 		consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
 			MapWithInput(
 				dockerfileMapInstructionToState(map[string]dockerfileParseState{
+					// FROM needs its own parsing to recognize "AS" keyword.
+					"from":        dockerfileParseStateFromArgs,
+					// HEALTHCHECK needs its own parsing to recognize "NONE" and "CMD" keywords.
+					"healthcheck": dockerfileParseStateHealthcheckArgs,
+					// ONBUILD is a prefix to some other command, so go back to the toplevel state.
+					"onbuild":     dockerfileParseStateToplevel,
+					// We're cheating a little bit here by using the shell parser for all other
+					// commands, which happens to work reasonably even for non-shell forms
+					// like exec (`["cmd", "arg"]`) and key-value pairs (`LABEL=label`).
 					"add":         dockerfileParseStateShellArgs,
 					"arg":         dockerfileParseStateShellArgs,
 					"cmd":         dockerfileParseStateShellArgs,
@@ -49,11 +54,8 @@ func DockerfileParseFunc() parser.Func {
 					"entrypoint":  dockerfileParseStateShellArgs,
 					"env":         dockerfileParseStateShellArgs,
 					"expose":      dockerfileParseStateShellArgs,
-					"from":        dockerfileParseStateFromArgs,
-					"healthcheck": dockerfileParseStateHealthcheckArgs,
 					"label":       dockerfileParseStateShellArgs,
 					"maintainer":  dockerfileParseStateShellArgs,
-					"onbuild":     dockerfileParseStateOnbuildArgs,
 					"run":         dockerfileParseStateShellArgs,
 					"shell":       dockerfileParseStateShellArgs,
 					"stopsignal":  dockerfileParseStateShellArgs,
@@ -74,10 +76,6 @@ func DockerfileParseFunc() parser.Func {
 		dockerfileParseStateHealthcheckArgs,
 		dockerfileHealthcheckInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
 
-	parseOnbuildInstructionArgs := matchState(
-		dockerfileParseStateOnbuildArgs,
-		dockerfileOnbuildInstructionArgsParseFunc().Map(setState(dockerfileParseStateToplevel)))
-
 	// For unrecognized arguments, consume to the end of the line.
 	consumeInvalidLine := matchState(dockerfileParseStateToplevel, consumeToNextLineFeed)
 
@@ -88,7 +86,6 @@ func DockerfileParseFunc() parser.Func {
 			Or(parseShellArgs).
 			Or(parseFromInstructionArgs).
 			Or(parseHealthcheckInstructionArgs).
-			Or(parseOnbuildInstructionArgs).
 			Or(consumeInvalidLine))
 }
 
@@ -142,8 +139,4 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 	HEALTHCHECK --interval=5m --timeout=3s \
 		  CMD curl -f http://localhost/ || exit 1
 	*/
-}
-
-func dockerfileOnbuildInstructionArgsParseFunc() parser.Func {
-	// TODO
 }

@@ -11,6 +11,11 @@ const (
 	dockerfileParseStateInstructionArg
 )
 
+func (s dockerfileParseState) Equals(other parser.State) bool {
+	otherState, ok := other.(dockerfileParseState)
+	return ok && s == otherState
+}
+
 // DockerfileParseFunc returns a parser for a Dockerfile.
 // See https://docs.docker.com/reference/dockerfile
 func DockerfileParseFunc() parser.Func {

@@ -238,6 +238,7 @@ ENV APP_HOME="/usr/local/app"`,
 COPY . /app`,
 			expected: []TokenWithText{
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
+				{Text: "&&", Role: parser.TokenRoleOperator},
 				{Text: "COPY", Role: parser.TokenRoleKeyword},
 			},
 		},

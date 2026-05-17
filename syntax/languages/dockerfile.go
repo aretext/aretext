@@ -127,7 +127,7 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 }
 
 func dockerfileConsumeContinuation() parser.Func {
-	return func(iter TrackingRuneIter, state State) Result {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var numConsumed uint64
 
 		// Match line continuation char `\`
@@ -167,7 +167,7 @@ func dockerfileShellArgsParseFunc() parser.Func {
 	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
 	parseShell := BashParseFunc()
 	return dockerfileConsumeContinuation().
-		Or(consumeSingleRuneLike('\n').Map(setState(dockerfileParseStateToplevel))).
+		Or(consumeSingleRuneLike(func(r rune) bool { return r == '\n' }).Map(setState(dockerfileParseStateToplevel))).
 		Or(parseShell)
 }
 

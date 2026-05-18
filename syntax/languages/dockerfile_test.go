@@ -115,6 +115,41 @@ FROM scratch`,
 			},
 		},
 		{
+			name: "healthcheck none instruction",
+			text: `HEALTHCHECK NONE
+CMD echo ready`,
+			expected: []TokenWithText{
+				{Text: "HEALTHCHECK", Role: parser.TokenRoleKeyword},
+				{Text: "NONE", Role: parser.TokenRoleKeyword},
+				{Text: "CMD", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
+			name: "healthcheck exec form command",
+			text: `HEALTHCHECK CMD ["curl", "-f", "http://localhost/"]`,
+			expected: []TokenWithText{
+				{Text: "HEALTHCHECK", Role: parser.TokenRoleKeyword},
+				{Text: "CMD", Role: parser.TokenRoleKeyword},
+				{Text: `"curl"`, Role: parser.TokenRoleString},
+				{Text: `"-f"`, Role: parser.TokenRoleString},
+				{Text: `"http://localhost/"`, Role: parser.TokenRoleString},
+			},
+		},
+		{
+			name: "healthcheck options can continue before cmd",
+			text: `HEALTHCHECK --interval=5m --timeout=3s \
+  CMD curl -f http://localhost/ || exit 1
+FROM alpine`,
+			expected: []TokenWithText{
+				{Text: "HEALTHCHECK", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "CMD", Role: parser.TokenRoleKeyword},
+				{Text: "||", Role: parser.TokenRoleOperator},
+				{Text: "FROM", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
 			name: "label instruction",
 			text: `LABEL version="1.0"`,
 			expected: []TokenWithText{
@@ -244,6 +279,28 @@ COPY . /app`,
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
 				{Text: "&&", Role: parser.TokenRoleOperator},
 				{Text: "COPY", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
+			name: "crlf line continuation keeps next line out of top level",
+			text: "RUN echo hello \\\r\n    && echo FROM\r\nCOPY . /app",
+			expected: []TokenWithText{
+				{Text: "RUN", Role: parser.TokenRoleKeyword},
+				{Text: "&&", Role: parser.TokenRoleOperator},
+				{Text: "COPY", Role: parser.TokenRoleKeyword},
+			},
+		},
+		{
+			name: "from instruction args can continue before alias",
+			text: `FROM --platform=$BUILDPLATFORM \
+  golang:1.22 AS build
+RUN echo build`,
+			expected: []TokenWithText{
+				{Text: "FROM", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
+				{Text: "$BUILDPLATFORM", Role: bashTokenRoleVariable},
+				{Text: "AS", Role: parser.TokenRoleKeyword},
+				{Text: "RUN", Role: parser.TokenRoleKeyword},
 			},
 		},
 		{

@@ -32,6 +32,7 @@ const (
 	LanguageP4           = Language("p4")
 	LanguageSQL          = Language("sql")
 	LanguageTypescript   = Language("typescript")
+	LanguageDockerfile   = Language("dockerfile")
 )
 
 // languageToParseFunc maps each language to its parse func.
@@ -62,6 +63,7 @@ func init() {
 		LanguageP4:           languages.P4ParseFunc,
 		LanguageSQL:          languages.SQLParseFunc,
 		LanguageTypescript:   languages.TypescriptParseFunc,
+		LanguageDockerfile:   languages.DockerfileParseFunc,
 	}
 
 	for language := range languageToParseFuncConstructor {

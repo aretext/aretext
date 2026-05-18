@@ -28,6 +28,7 @@ Syntax Languages
 | bash         | [bash](https://www.gnu.org/software/bash/manual/bash.html)                                  |
 | c            | [C](http://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html)                             |
 | criticmarkup | [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)                        |
+| dockerfile   | [Dockerfile](https://docs.docker.com/reference/dockerfile)                                  |
 | gitcommit    | Format for editing a git commit                                                             |
 | gitrebase    | Format for git interactive rebase                                                           |
 | go           | [Go](https://golang.org/ref/spec)                                                           |

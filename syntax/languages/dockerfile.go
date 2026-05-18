@@ -159,21 +159,19 @@ func dockerfileFromInstructionArgsParseFunc() parser.Func {
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
-	consumeLineContinuation := consumeString("\\").Then(consumeString("\n").Or(consumeString("\r\n")))
-
 	parseEqualOperator := consumeString("=").Map(recognizeToken(parser.TokenRoleOperator))
 
 	parseNoneOrCmd := consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
-		MapWithInput(mapNoneOrCmd)
+		MapWithInput(recognizeKeywordOrConsume([]string{"none", "cmd"}, true)). // case insensitive
+		MapWithInput(func(result parser.Result, iter parser.TrackingRuneIter, state parser.Staet) parser.Result {
+			// Must be CMD, transition to parsing as command args
+			if len(result.ComputedTokens) > 0 && result.NumConsumed == 3 {
+				result.NextState = dockerfileParseStateShellArgs
+			}
+			return result
+		})
 
-	// TODO: recognize "NONE" (case insensitive) as a keyword if it occurs first (optionally with preceding whitespace)
-	// TODO: skip anything else until "CMD", recognize "CMD" as a keyword and transition to dockerfileParseStateShellArgs state.
-	// TODO: handle line continuations:
-	/*
-		HEALTHCHECK --interval=5m --timeout=3s \
-			  CMD curl -f http://localhost/ || exit 1
-	*/
-
-	return consumeLineContinuation.
-		Or(consumeString("\n").Map(setState(
+	return dockerfileHandleLineContinuationInArgs().
+		Or(parseNoneOrCmd).
+		Or(parseEqualOperator)
 }

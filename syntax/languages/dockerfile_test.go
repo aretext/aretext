@@ -348,7 +348,9 @@ STOPSIGNAL SIGQUIT
 SHELL ["/bin/sh", "-c"]`,
 			expected: []TokenWithText{
 				{Text: "ARG", Role: parser.TokenRoleKeyword},
+				{Text: "=", Role: parser.TokenRoleOperator},
 				{Text: "FROM", Role: parser.TokenRoleKeyword},
+				{Text: "${BASE}", Role: bashTokenRoleVariable},
 				{Text: "MAINTAINER", Role: parser.TokenRoleKeyword},
 				{Text: "ONBUILD", Role: parser.TokenRoleKeyword},
 				{Text: "ADD", Role: parser.TokenRoleKeyword},
@@ -373,6 +375,8 @@ COPY . /app`,
 			expected: []TokenWithText{
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
 				{Text: "COPY", Role: parser.TokenRoleKeyword},
+				{Text: "<<", Role: parser.TokenRoleOperator},
+				{Text: "EOF\nFROM busybox\n# not a dockerfile comment\nEOF", Role: parser.TokenRoleString},
 			},
 		},
 		{

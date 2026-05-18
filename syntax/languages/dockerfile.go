@@ -133,7 +133,7 @@ func dockerfileHandleLineContinuationInArgs() parser.Func {
 func dockerfileShellArgsParseFunc() parser.Func {
 	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
 	parseShell := BashParseFunc()
-	return dockerfileHandleLineContinuationinArgs().Or(parseShell)
+	return dockerfileHandleLineContinuationInArgs().Or(parseShell)
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
@@ -163,7 +163,7 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 
 	parseNoneOrCmd := consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
 		MapWithInput(recognizeKeywordOrConsume([]string{"none", "cmd"}, true)). // case insensitive
-		MapWithInput(func(result parser.Result, iter parser.TrackingRuneIter, state parser.Staet) parser.Result {
+		MapWithInput(func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
 			// Must be CMD, transition to parsing as command args
 			if len(result.ComputedTokens) > 0 && result.NumConsumed == 3 {
 				result.NextState = dockerfileParseStateShellArgs

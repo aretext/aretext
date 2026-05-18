@@ -26,9 +26,11 @@ func (s dockerfileParseState) Equals(other parser.State) bool {
 func DockerfileParseFunc() parser.Func {
 	parseToplevelComment := matchState(
 		dockerfileParseStateToplevel,
-		consumeString("#").
-			ThenMaybe(consumeToNextLineFeed).
-			Map(recognizeToken(parser.TokenRoleComment)))
+		// preceding whitespace
+		consumeRunesLike(func(r rune) bool { return r == ' ' || r == '\t' }).MaybeBefore(
+			consumeString("#").
+				ThenMaybe(consumeToNextLineFeed).
+				Map(recognizeToken(parser.TokenRoleComment))))
 
 	// This parser consumes the first word (ascii) of a line. If it matches
 	// a valid docker instruction, it transitions to a state to parse the

@@ -111,6 +111,7 @@ FROM scratch`,
 			expected: []TokenWithText{
 				{Text: "HEALTHCHECK", Role: parser.TokenRoleKeyword},
 				{Text: "CMD", Role: parser.TokenRoleKeyword},
+				{Text: "||", Role: parser.TokenRoleOperator},
 			},
 		},
 		{
@@ -374,9 +375,9 @@ EOF
 COPY . /app`,
 			expected: []TokenWithText{
 				{Text: "RUN", Role: parser.TokenRoleKeyword},
-				{Text: "COPY", Role: parser.TokenRoleKeyword},
 				{Text: "<<", Role: parser.TokenRoleOperator},
 				{Text: "EOF\nFROM busybox\n# not a dockerfile comment\nEOF", Role: parser.TokenRoleString},
+				{Text: "COPY", Role: parser.TokenRoleKeyword},
 			},
 		},
 		{

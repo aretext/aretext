@@ -133,7 +133,8 @@ func dockerfileHandleLineContinuationInArgs() parser.Func {
 }
 
 func dockerfileShellArgsParseFunc() parser.Func {
-	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
+	// First handle state transition on newline, then delegate to the existing bash parser.
+	// This relies on the fact that the bash parser doesn't consume newlines without continuations.
 	parseShell := BashParseFunc()
 	return dockerfileHandleLineContinuationInArgs().Or(parseShell)
 }
@@ -147,11 +148,11 @@ func dockerfileFromInstructionArgsParseFunc() parser.Func {
 	isVariableNameRune := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' }
 	parseVariable := consumeString("$").
 		Then(consumeRunesLike(isVariableNameRune)).
-		Map(recognizeToken(bashTokenRoleVariable)) // TODO: dockerfile
+		Map(recognizeToken(bashTokenRoleVariable))
 
 	parseVariableBrace := consumeString("$").
 		Then(bashExpansionParseFunc('{')).
-		Map(recognizeToken(bashTokenRoleVariable)) // TODO: dockerfile const
+		Map(recognizeToken(bashTokenRoleVariable))
 
 	return dockerfileHandleLineContinuationInArgs().
 		Or(parseAsKeyword).

@@ -453,3 +453,8 @@ COPYRIGHT file`,
 		})
 	}
 }
+
+func FuzzDockerfileParseFunc(f *testing.F) {
+	seeds := LoadFuzzTestSeeds(f, "./testdata/dockerfile/*")
+	ParserFuzzTest(f, DockerfileParseFunc(), seeds)
+}

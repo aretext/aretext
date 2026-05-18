@@ -125,13 +125,15 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 	}
 }
 
+func dockerfileHandleLineContinuationInArgs() parser.Func {
+	return consumeString("\\").Then(consumeString("\n").Or(consumeString("\r\n"))).
+		Or(consumeString("\n").Map(setState(dockerfileParseStateToplevel)))
+}
+
 func dockerfileShellArgsParseFunc() parser.Func {
 	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
-	parseLineContinuation := consumeString("\\").Then(consumeString("\n").Or(consumeString("\r\n")))
 	parseShell := BashParseFunc()
-	return parseLineContinuation.
-		Or(consumeSingleRuneLike(func(r rune) bool { return r == '\n' }).Map(setState(dockerfileParseStateToplevel))).
-		Or(parseShell)
+	return dockerfileHandleLineContinuationinArgs().Or(parseShell)
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
@@ -149,13 +151,21 @@ func dockerfileFromInstructionArgsParseFunc() parser.Func {
 		Then(bashExpansionParseFunc('{')).
 		Map(recognizeToken(bashTokenRoleVariable)) // TODO: dockerfile const
 
-	return parseAsKeyword.
+	return dockerfileHandleLineContinuationInArgs().
+		Or(parseAsKeyword).
 		Or(parseEqualOperator).
 		Or(parseVariable).
 		Or(parseVariableBrace)
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
+	consumeLineContinuation := consumeString("\\").Then(consumeString("\n").Or(consumeString("\r\n")))
+
+	parseEqualOperator := consumeString("=").Map(recognizeToken(parser.TokenRoleOperator))
+
+	parseNoneOrCmd := consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
+		MapWithInput(mapNoneOrCmd)
+
 	// TODO: recognize "NONE" (case insensitive) as a keyword if it occurs first (optionally with preceding whitespace)
 	// TODO: skip anything else until "CMD", recognize "CMD" as a keyword and transition to dockerfileParseStateShellArgs state.
 	// TODO: handle line continuations:
@@ -163,4 +173,7 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 		HEALTHCHECK --interval=5m --timeout=3s \
 			  CMD curl -f http://localhost/ || exit 1
 	*/
+
+	return consumeLineContinuation.
+		Or(consumeString("\n").Map(setState(
 }

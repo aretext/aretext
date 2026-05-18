@@ -2,6 +2,7 @@ package languages
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/aretext/aretext/syntax/parser"
 )
@@ -124,55 +125,34 @@ func dockerfileMapInstructionToState(instructionToNextState map[string]dockerfil
 	}
 }
 
-func dockerfileConsumeContinuation() parser.Func {
-	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var numConsumed uint64
-
-		// Match line continuation char `\`
-		r, err := iter.NextRune()
-		if err != nil || r != '\\' {
-			return parser.FailedResult
-		}
-		numConsumed++
-
-		// Must be immediately followed by a newline (either '\r\n' or '\n')
-		r, err = iter.NextRune()
-		if err != nil {
-			return parser.FailedResult
-		}
-		numConsumed++
-
-		if r == '\r' {
-			r, err = iter.NextRune()
-			if err != nil {
-				return parser.FailedResult
-			}
-			numConsumed++
-		}
-
-		if r != '\n' {
-			return parser.FailedResult
-		}
-
-		return parser.Result{
-			NumConsumed: numConsumed,
-			NextState:   state,
-		}
-	}
-}
-
 func dockerfileShellArgsParseFunc() parser.Func {
 	// TODO: explain the assumption here that bash doesn't consume the continuation or newline
+	parseLineContinuation := consumeString("\\").Then(consumeString("\n").Or(consumeString("\r\n")))
 	parseShell := BashParseFunc()
-	return dockerfileConsumeContinuation().
+	return parseLineContinuation.
 		Or(consumeSingleRuneLike(func(r rune) bool { return r == '\n' }).Map(setState(dockerfileParseStateToplevel))).
 		Or(parseShell)
 }
 
 func dockerfileFromInstructionArgsParseFunc() parser.Func {
-	// TODO: recognize "AS" (case insensitive) as a keyword
-	// TODO: recognize "$VAR" and "${VAR}" as variables (same token type as bash)
-	// TODO: recognize "="
+	parseAsKeyword := consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
+		MapWithInput(recognizeKeywordOrConsume([]string{"as"}, false)) // case insensitive
+
+	parseEqualOperator := consumeString("=").Map(recognizeToken(parser.TokenRoleOperator))
+
+	isVariableNameRune := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' }
+	parseVariable := consumeString("$").
+		Then(consumeRunesLike(isVariableNameRune)).
+		Map(recognizeToken(bashTokenRoleVariable)) // TODO: dockerfile
+
+	parseVariableBrace := consumeString("$").
+		Then(bashExpansionParseFunc('{')).
+		Map(recognizeToken(bashTokenRoleVariable)) // TODO: dockerfile const
+
+	return parseAsKeyword.
+		Or(parseEqualOperator).
+		Or(parseVariable).
+		Or(parseVariableBrace)
 }
 
 func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {

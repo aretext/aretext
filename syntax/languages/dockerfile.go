@@ -164,7 +164,7 @@ func dockerfileHealthcheckInstructionArgsParseFunc() parser.Func {
 	parseEqualOperator := consumeString("=").Map(recognizeToken(parser.TokenRoleOperator))
 
 	parseNoneOrCmd := consumeRunesLike(func(r rune) bool { return r >= 'A' && r <= 'z' }).
-		MapWithInput(recognizeKeywordOrConsume([]string{"none", "cmd"}, true)). // case insensitive
+		MapWithInput(recognizeKeywordOrConsume([]string{"none", "cmd"}, false)). // case insensitive
 		MapWithInput(func(result parser.Result, iter parser.TrackingRuneIter, state parser.State) parser.Result {
 			// Must be CMD, transition to parsing as command args
 			if len(result.ComputedTokens) > 0 && result.NumConsumed == 3 {

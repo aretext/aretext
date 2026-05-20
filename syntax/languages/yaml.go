@@ -113,6 +113,7 @@ func yamlIdentifierRune(r rune) bool {
 //   key1:key2: val  => "key1:key2"
 //   key:<eof>       => 'key:"
 //   key       : val => "key       :"
+//   ::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
@@ -126,12 +127,15 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 				lookaheadIter := iter
 				nextRune, err := lookaheadIter.NextRune()
 				if err != nil || unicode.IsSpace(nextRune) {
+					// Found a ":" followed by a space, success!
 					return parser.Result{
 						NumConsumed: n + 1,
 						NextState:   state,
 					}
 				}
 
+				// Colon isn't followed by a space, so could be part of the key.
+				// Keep looking.
 				n++
 				continue
 			}

@@ -60,6 +60,13 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "unquoted key consisting of colons",
+			text: "::: val",
+			expected: []TokenWithText{
+				{Text: `:::`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
 			name: "unquoted key containing colon before eof",
 			text: "foo:bar:",
 			expected: []TokenWithText{

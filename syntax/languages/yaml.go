@@ -109,7 +109,9 @@ func yamlIdentifierRune(r rune) bool {
 }
 
 // Unquoted key in a map.
-// More complicated than it might seem at first; all of these are valid keys:
+// More complicated than it might seem at first!
+//
+// All of the following are valid keys:
 //
 //	key: val        => "key:"
 //	key1:key2: val  => "key1:key2"
@@ -118,7 +120,45 @@ func yamlIdentifierRune(r rune) bool {
 //  a b c : val     => "a b c :"
 //	::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		// Key must start with an identifier character or colon.
+		r, err := iter.NextRune()
+		if err != nil || !(yamlIdentifierRune(r) || r == ':') {
+			return parser.FailedResult
+		}
 
+		// Scan for the end-of-key separator, a colon followed by either whitespace,
+		// newline, or end-of-file.
+		n := uint64(1)
+		var lastWasColon bool
+		for {
+			r, err := iter.NextRune()
+			if lastWasColon && err == io.EOF {
+				return parser.Result{
+					NumConsumed: n,
+					NextState: state,
+				}
+			} else if err != nil {
+				return parser.FailedResult
+			}
+
+			n++
+
+			if lastWasColon && unicode.IsSpace(r) {
+				return parser.Result{
+					NumConsumed: n,
+					NextState: state,
+				}
+			}
+
+			// End of line without finding the end-of-key separator, give up.
+			if !lastWasColon && r == '\n' {
+				return parser.FailedResult
+			}
+
+			lastWasColon = bool(r == ':')
+		}
+	}
 }
 
 func yamlKeyParseFunc() parser.Func {

@@ -113,12 +113,11 @@ func yamlIdentifierRune(r rune) bool {
 //
 // All of the following are valid keys:
 //
-//		key: val        => "key:"
-//		key1:key2: val  => "key1:key2"
-//		key:<eof>       => 'key:"
-//		key       : val => "key       :"
-//	 a b c : val     => "a b c :"
-//		::: val         => "::"
+//	key: val        => "key:"
+//	key1:key2: val  => "key1:key2"
+//	key:<eof>       => 'key:"
+//	key       : val => "key       :"
+//	::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		// Key must start with an identifier character or colon.
@@ -131,6 +130,7 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 		// newline, or end-of-file.
 		n := uint64(1)
 		var lastWasColon bool
+		var lastWasSpace bool
 		for {
 			r, err := iter.NextRune()
 			if lastWasColon && err == io.EOF {
@@ -144,7 +144,7 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 				return parser.FailedResult
 			}
 
-			// Colon followed by a space.
+			// Colon followed by a space, found the end-of-key separator.
 			if lastWasColon && unicode.IsSpace(r) {
 				return parser.Result{
 					NumConsumed: n,
@@ -157,8 +157,15 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 				return parser.FailedResult
 			}
 
+			// Once we start seeing spaces, assume we're at the end of the key.
+			// Otherwise we match things like "- key: val" (space between "-" and "key").
+			if lastWasSpace && !(r == ':' || r == ' ' || r == '\t') {
+				return parser.FailedResult
+			}
+
 			n++
 			lastWasColon = bool(r == ':')
+			lastWasSpace = bool(r == ' ' || r == '\t')
 		}
 	}
 }

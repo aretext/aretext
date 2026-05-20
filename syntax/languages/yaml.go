@@ -1,6 +1,7 @@
 package languages
 
 import (
+	"io"
 	"unicode"
 
 	"github.com/aretext/aretext/syntax/parser"
@@ -107,10 +108,71 @@ func yamlIdentifierRune(r rune) bool {
 	return unicode.IsLetter(r) || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' || r == '/'
 }
 
+// Unquoted key in a map.
+// More complicated than it might seem at first!
+//
+// All of the following are valid keys:
+//
+//	key: val        => "key:"
+//	key1:key2: val  => "key1:key2"
+//	key:<eof>       => 'key:"
+//	key       : val => "key       :"
+//	::: val         => "::"
+func yamlUnquotedKeyParseFunc() parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		// Key must start with an identifier character or colon.
+		r, err := iter.NextRune()
+		if err != nil || !(yamlIdentifierRune(r) || r == ':') {
+			return parser.FailedResult
+		}
+
+		// Scan for the end-of-key separator, a colon followed by either whitespace,
+		// newline, or end-of-file.
+		n := uint64(1)
+		var lastWasColon bool
+		var lastWasSpace bool
+		for {
+			r, err := iter.NextRune()
+			if lastWasColon && err == io.EOF {
+				return parser.Result{
+					NumConsumed: n,
+					NextState:   state,
+				}
+			}
+
+			if err != nil {
+				return parser.FailedResult
+			}
+
+			// Colon followed by a space, found the end-of-key separator.
+			if lastWasColon && unicode.IsSpace(r) {
+				return parser.Result{
+					NumConsumed: n,
+					NextState:   state,
+				}
+			}
+
+			// End of line without finding the end-of-key separator, give up.
+			if !lastWasColon && r == '\n' {
+				return parser.FailedResult
+			}
+
+			// Once we start seeing spaces, assume we're at the end of the key.
+			// Otherwise we match things like "- key: val" (space between "-" and "key").
+			if lastWasSpace && !(r == ':' || r == ' ' || r == '\t') {
+				return parser.FailedResult
+			}
+
+			n++
+			lastWasColon = bool(r == ':')
+			lastWasSpace = bool(r == ' ' || r == '\t')
+		}
+	}
+}
+
 func yamlKeyParseFunc() parser.Func {
-	consumeToKeyEnd := jsonConsumeToKeyEndParseFunc()
-	parseUnquotedKey := consumeRunesLike(yamlIdentifierRune).Then(consumeToKeyEnd)
-	parseQuotedKey := yamlStringParseFunc().Then(consumeToKeyEnd)
+	parseUnquotedKey := yamlUnquotedKeyParseFunc()
+	parseQuotedKey := yamlStringParseFunc().Then(jsonConsumeToKeyEndParseFunc())
 	return yamlSkipIndentation(
 		parseUnquotedKey.
 			Or(parseQuotedKey).

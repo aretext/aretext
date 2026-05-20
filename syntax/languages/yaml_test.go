@@ -46,6 +46,46 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "unquoted key containing colon",
+			text: "foo:bar: baz",
+			expected: []TokenWithText{
+				{Text: `foo:bar:`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
+			name: "unquoted key containing multiple colons",
+			text: "registry:5000/project/image:tag: value",
+			expected: []TokenWithText{
+				{Text: `registry:5000/project/image:tag:`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
+			name: "unquoted key consisting of colons",
+			text: "::: val",
+			expected: []TokenWithText{
+				{Text: `:::`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
+			name: "unquoted key containing colon before eof",
+			text: "foo:bar:",
+			expected: []TokenWithText{
+				{Text: `foo:bar:`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
+			name: "unquoted key containing colon with space before mapping colon",
+			text: "foo:bar : baz",
+			expected: []TokenWithText{
+				{Text: `foo:bar :`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
+			name:     "indented empty key is not an unquoted key",
+			text:     "  : baz",
+			expected: []TokenWithText{},
+		},
+		{
 			name: "key with single-quoted string",
 			text: "'abc': xyz",
 			expected: []TokenWithText{
@@ -306,6 +346,13 @@ baz:
 				{Text: `key:`, Role: yamlTokenRoleKey},
 				{Text: `baz:`, Role: yamlTokenRoleKey},
 				{Text: `-`, Role: parser.TokenRoleOperator},
+			},
+		},
+		{
+			name: "flow map with unquoted key containing colon",
+			text: `{foo:bar: baz}`,
+			expected: []TokenWithText{
+				{Text: `foo:bar:`, Role: yamlTokenRoleKey},
 			},
 		},
 	}

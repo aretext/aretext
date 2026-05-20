@@ -115,79 +115,15 @@ func yamlIdentifierRune(r rune) bool {
 //	key1:key2: val  => "key1:key2"
 //	key:<eof>       => 'key:"
 //	key       : val => "key       :"
+//  a b c : val     => "a b c :"
 //	::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
-	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
-		var n uint64
-		for {
-			r, err := iter.NextRune()
-			if err != nil {
-				return parser.FailedResult
-			}
 
-			// Found part of an identifier, keep going.
-			if yamlIdentifierRune(r) {
-				n++
-				continue
-			}
-
-			// Found a colon, could be part of the key or the end of the key.
-			if r == ':' {
-				lookaheadIter := iter
-				nextRune, err := lookaheadIter.NextRune()
-				if err == io.EOF || unicode.IsSpace(nextRune) {
-					// Colon followed by space or EOF is definitely the end of the key.
-					return parser.Result{
-						NumConsumed: n + 1,
-						NextState:   state,
-					}
-				} else if err != nil {
-					return parser.FailedResult
-				}
-
-				// Colon must be part of the key, keep scanning.
-				n++
-				continue
-			}
-
-			if r == ' ' || r == '\t' {
-				n++
-				break
-			}
-
-			if !yamlIdentifierRune(r) {
-				return parser.FailedResult
-			}
-
-			n++
-		}
-
-		for {
-			r, err := iter.NextRune()
-			if err != nil {
-				return parser.FailedResult
-			}
-
-			if r == ':' {
-				return parser.Result{
-					NumConsumed: n + 1,
-					NextState:   state,
-				}
-			}
-
-			if !(r == ' ' || r == '\t') {
-				return parser.FailedResult
-			}
-
-			n++
-		}
-	}
 }
 
 func yamlKeyParseFunc() parser.Func {
-	consumeToKeyEnd := jsonConsumeToKeyEndParseFunc()
 	parseUnquotedKey := yamlUnquotedKeyParseFunc()
-	parseQuotedKey := yamlStringParseFunc().Then(consumeToKeyEnd)
+	parseQuotedKey := yamlStringParseFunc().Then(jsonConsumeToKeyEndParseFunc())
 	return yamlSkipIndentation(
 		parseUnquotedKey.
 			Or(parseQuotedKey).

@@ -1,6 +1,7 @@
 package languages
 
 import (
+	"io"
 	"unicode"
 
 	"github.com/aretext/aretext/syntax/parser"

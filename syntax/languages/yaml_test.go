@@ -81,6 +81,11 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name:     "indented empty key is not an unquoted key",
+			text:     "  : baz",
+			expected: nil,
+		},
+		{
 			name: "key with single-quoted string",
 			text: "'abc': xyz",
 			expected: []TokenWithText{

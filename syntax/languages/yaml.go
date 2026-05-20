@@ -107,6 +107,12 @@ func yamlIdentifierRune(r rune) bool {
 	return unicode.IsLetter(r) || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' || r == '/'
 }
 
+// Unquoted key in a map.
+// More complicated than it might seem at first; all of these are valid keys:
+//   key: val        => "key:"
+//   key1:key2: val  => "key1:key2"
+//   key:<eof>       => 'key:"
+//   key       : val => "key       :"
 func yamlUnquotedKeyParseFunc() parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64

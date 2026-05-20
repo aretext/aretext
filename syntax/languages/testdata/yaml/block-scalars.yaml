@@ -1,0 +1,22 @@
+foo: |
+  first line
+  second line with key: value
+  third line with # not a comment
+bar: >-
+  folded line one
+  folded line two
+  folded line three
+baz:
+  script: |+
+    echo "foo"
+    echo 'baz'
+    run --flag example:value
+  note: >
+    this text folds
+    into a plain scalar
+example:
+  empty: |
+
+  indented: |2
+      one
+      two

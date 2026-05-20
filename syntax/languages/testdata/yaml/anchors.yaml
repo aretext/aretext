@@ -1,0 +1,25 @@
+defaults: &defaults
+  image: example:1.2.3
+  retries: 3
+  env:
+    foo: bar
+    baz: example
+
+foo:
+  <<: *defaults
+  name: foo
+  command: ["run", "--config", "/example/foo.yaml"]
+
+bar:
+  <<: *defaults
+  name: bar
+  env:
+    <<: &env
+      foo: override
+      baz: example
+    extra: value
+
+baz:
+  <<: *defaults
+  name: baz
+  env: *env

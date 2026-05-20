@@ -1,0 +1,23 @@
+foo: !!str 123
+bar: !!int "456"
+baz: !example.tag value
+timestamp: 2026-05-19T12:34:56Z
+nulls:
+  - null
+  - ~
+  - NULL
+booleans:
+  - true
+  - false
+numbers:
+  decimal: 12345
+  negative: -42
+  float: 3.14159
+  exponent: 1.2e+3
+quoted:
+  double: "foo\nbar\tbaz"
+  single: 'foo''bar'
+plain:
+  colon: example.com/foo:1.2.3
+  question: what about foo?
+  hash: value#not-comment

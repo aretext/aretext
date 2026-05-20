@@ -1,0 +1,21 @@
+%YAML 1.2
+---
+foo: first
+bar:
+  - baz
+  - example
+...
+---
+foo: second
+mapping:
+  ? [foo, bar]
+  : baz
+  ? {example: key}
+  : value
+set:
+  ? foo
+  ? baz
+---
+- foo: bar
+- baz:
+    example: 42

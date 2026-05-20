@@ -364,3 +364,8 @@ baz:
 		})
 	}
 }
+
+func FuzzYamlParseFunc(f *testing.F) {
+	seeds := LoadFuzzTestSeeds(f, "./testdata/yaml/*")
+	ParserFuzzTest(f, YamlParseFunc(), seeds)
+}

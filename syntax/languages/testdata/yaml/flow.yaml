@@ -1,0 +1,9 @@
+foo: {bar: baz, count: 3, enabled: true}
+items: [foo, "bar value", 7, {baz: example}]
+matrix:
+  - [1, 2, 3]
+  - [foo, bar, baz]
+mixed:
+  key1: {nested: [foo, {bar: baz}], empty: {}}
+  key2: [alpha, beta, gamma]
+  key3: {example.com/test: value, foo:bar: baz}

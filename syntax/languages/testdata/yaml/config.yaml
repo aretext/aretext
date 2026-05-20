@@ -1,0 +1,21 @@
+---
+foo: example
+bar: 123
+baz: true
+items:
+  - name: foo
+    value: 1
+    enabled: true
+  - name: baz
+    value: 2
+    enabled: false
+metadata:
+  labels:
+    example.com/foo: bar
+    baz: "quoted value"
+  annotations:
+    foo: "line with # symbol"
+    bar: 'single quoted value'
+limits:
+  cpu: 2
+  memory: 512

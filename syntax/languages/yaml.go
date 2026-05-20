@@ -113,12 +113,12 @@ func yamlIdentifierRune(r rune) bool {
 //
 // All of the following are valid keys:
 //
-//	key: val        => "key:"
-//	key1:key2: val  => "key1:key2"
-//	key:<eof>       => 'key:"
-//	key       : val => "key       :"
-//  a b c : val     => "a b c :"
-//	::: val         => "::"
+//		key: val        => "key:"
+//		key1:key2: val  => "key1:key2"
+//		key:<eof>       => 'key:"
+//		key       : val => "key       :"
+//	 a b c : val     => "a b c :"
+//		::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		// Key must start with an identifier character or colon.
@@ -136,18 +136,19 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 			if lastWasColon && err == io.EOF {
 				return parser.Result{
 					NumConsumed: n,
-					NextState: state,
+					NextState:   state,
 				}
-			} else if err != nil {
+			}
+
+			if err != nil {
 				return parser.FailedResult
 			}
 
-			n++
-
+			// Colon followed by a space.
 			if lastWasColon && unicode.IsSpace(r) {
 				return parser.Result{
 					NumConsumed: n,
-					NextState: state,
+					NextState:   state,
 				}
 			}
 
@@ -156,6 +157,7 @@ func yamlUnquotedKeyParseFunc() parser.Func {
 				return parser.FailedResult
 			}
 
+			n++
 			lastWasColon = bool(r == ':')
 		}
 	}

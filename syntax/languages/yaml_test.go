@@ -46,6 +46,13 @@ func TestYamlParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "unquoted key containing colon",
+			text: "foo:bar: baz",
+			expected: []TokenWithText{
+				{Text: `foo:bar:`, Role: yamlTokenRoleKey},
+			},
+		},
+		{
 			name: "key with single-quoted string",
 			text: "'abc': xyz",
 			expected: []TokenWithText{

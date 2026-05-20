@@ -107,9 +107,64 @@ func yamlIdentifierRune(r rune) bool {
 	return unicode.IsLetter(r) || (r >= '0' && r <= '9') || r == '.' || r == '_' || r == '-' || r == '/'
 }
 
+func yamlUnquotedKeyParseFunc() parser.Func {
+	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
+		var n uint64
+		for {
+			r, err := iter.NextRune()
+			if err != nil {
+				return parser.FailedResult
+			}
+
+			if r == ':' {
+				lookaheadIter := iter
+				nextRune, err := lookaheadIter.NextRune()
+				if err != nil || unicode.IsSpace(nextRune) {
+					return parser.Result{
+						NumConsumed: n + 1,
+						NextState:   state,
+					}
+				}
+
+				n++
+				continue
+			}
+
+			if r == ' ' || r == '\t' {
+				var numSpaces uint64 = 1
+				for {
+					r, err := iter.NextRune()
+					if err != nil {
+						return parser.FailedResult
+					}
+
+					if r == ':' {
+						return parser.Result{
+							NumConsumed: n + numSpaces + 1,
+							NextState:   state,
+						}
+					}
+
+					if !(r == ' ' || r == '\t') {
+						return parser.FailedResult
+					}
+
+					numSpaces++
+				}
+			}
+
+			if !yamlIdentifierRune(r) {
+				return parser.FailedResult
+			}
+
+			n++
+		}
+	}
+}
+
 func yamlKeyParseFunc() parser.Func {
 	consumeToKeyEnd := jsonConsumeToKeyEndParseFunc()
-	parseUnquotedKey := consumeRunesLike(yamlIdentifierRune).Then(consumeToKeyEnd)
+	parseUnquotedKey := yamlUnquotedKeyParseFunc()
 	parseQuotedKey := yamlStringParseFunc().Then(consumeToKeyEnd)
 	return yamlSkipIndentation(
 		parseUnquotedKey.

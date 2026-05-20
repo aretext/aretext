@@ -116,61 +116,69 @@ func yamlIdentifierRune(r rune) bool {
 //	key       : val => "key       :"
 //	::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
-	const (
-		yamlUnquotedKeyStateKey = iota
-		yamlUnquotedKeyStateSpacesBeforeColon
-	)
-
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
-		keyState := yamlUnquotedKeyStateKey
 		for {
 			r, err := iter.NextRune()
 			if err != nil {
 				return parser.FailedResult
 			}
 
-			switch keyState {
-			case yamlUnquotedKeyStateKey:
-				if r == ':' {
-					lookaheadIter := iter
-					nextRune, err := lookaheadIter.NextRune()
-					if err != nil || unicode.IsSpace(nextRune) {
-						return parser.Result{
-							NumConsumed: n + 1,
-							NextState:   state,
-						}
-					}
-
-					n++
-					continue
-				}
-
-				if r == ' ' || r == '\t' {
-					n++
-					keyState = yamlUnquotedKeyStateSpacesBeforeColon
-					continue
-				}
-
-				if !yamlIdentifierRune(r) {
-					return parser.FailedResult
-				}
-
+			// Found part of an identifier, keep going.
+			if yamlIdentifierRune(r) {
 				n++
-			case yamlUnquotedKeyStateSpacesBeforeColon:
-				if r == ':' {
+				continue
+			}
+
+			// Found a colon, could be part of the key or the end of the key.
+			if r == ':' {
+				lookaheadIter := iter
+				nextRune, err := lookaheadIter.NextRune()
+				if err == io.EOF || unicode.IsSpace(nextRune) {
+					// Colon followed by space or EOF is definitely the end of the key.
 					return parser.Result{
 						NumConsumed: n + 1,
 						NextState:   state,
 					}
-				}
-
-				if !(r == ' ' || r == '\t') {
+				} else if err != nil {
 					return parser.FailedResult
 				}
 
+				// Colon must be part of the key, keep scanning.
 				n++
+				continue
 			}
+
+			if r == ' ' || r == '\t' {
+				n++
+				break
+			}
+
+			if !yamlIdentifierRune(r) {
+				return parser.FailedResult
+			}
+
+			n++
+		}
+
+		for {
+			r, err := iter.NextRune()
+			if err != nil {
+				return parser.FailedResult
+			}
+
+			if r == ':' {
+				return parser.Result{
+					NumConsumed: n + 1,
+					NextState:   state,
+				}
+			}
+
+			if !(r == ' ' || r == '\t') {
+				return parser.FailedResult
+			}
+
+			n++
 		}
 	}
 }

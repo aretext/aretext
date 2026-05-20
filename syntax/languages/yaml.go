@@ -109,65 +109,68 @@ func yamlIdentifierRune(r rune) bool {
 
 // Unquoted key in a map.
 // More complicated than it might seem at first; all of these are valid keys:
-//   key: val        => "key:"
-//   key1:key2: val  => "key1:key2"
-//   key:<eof>       => 'key:"
-//   key       : val => "key       :"
-//   ::: val         => "::"
+//
+//	key: val        => "key:"
+//	key1:key2: val  => "key1:key2"
+//	key:<eof>       => 'key:"
+//	key       : val => "key       :"
+//	::: val         => "::"
 func yamlUnquotedKeyParseFunc() parser.Func {
+	const (
+		yamlUnquotedKeyStateKey = iota
+		yamlUnquotedKeyStateSpacesBeforeColon
+	)
+
 	return func(iter parser.TrackingRuneIter, state parser.State) parser.Result {
 		var n uint64
+		keyState := yamlUnquotedKeyStateKey
 		for {
 			r, err := iter.NextRune()
 			if err != nil {
 				return parser.FailedResult
 			}
 
-			if r == ':' {
-				lookaheadIter := iter
-				nextRune, err := lookaheadIter.NextRune()
-				if err != nil || unicode.IsSpace(nextRune) {
-					// Found a ":" followed by a space, success!
+			switch keyState {
+			case yamlUnquotedKeyStateKey:
+				if r == ':' {
+					lookaheadIter := iter
+					nextRune, err := lookaheadIter.NextRune()
+					if err != nil || unicode.IsSpace(nextRune) {
+						return parser.Result{
+							NumConsumed: n + 1,
+							NextState:   state,
+						}
+					}
+
+					n++
+					continue
+				}
+
+				if r == ' ' || r == '\t' {
+					n++
+					keyState = yamlUnquotedKeyStateSpacesBeforeColon
+					continue
+				}
+
+				if !yamlIdentifierRune(r) {
+					return parser.FailedResult
+				}
+
+				n++
+			case yamlUnquotedKeyStateSpacesBeforeColon:
+				if r == ':' {
 					return parser.Result{
 						NumConsumed: n + 1,
 						NextState:   state,
 					}
 				}
 
-				// Colon isn't followed by a space, so could be part of the key.
-				// Keep looking.
-				n++
-				continue
-			}
-
-			if r == ' ' || r == '\t' {
-				var numSpaces uint64 = 1
-				for {
-					r, err := iter.NextRune()
-					if err != nil {
-						return parser.FailedResult
-					}
-
-					if r == ':' {
-						return parser.Result{
-							NumConsumed: n + numSpaces + 1,
-							NextState:   state,
-						}
-					}
-
-					if !(r == ' ' || r == '\t') {
-						return parser.FailedResult
-					}
-
-					numSpaces++
+				if !(r == ' ' || r == '\t') {
+					return parser.FailedResult
 				}
-			}
 
-			if !yamlIdentifierRune(r) {
-				return parser.FailedResult
+				n++
 			}
-
-			n++
 		}
 	}
 }

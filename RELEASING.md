@@ -1,11 +1,6 @@
 Releasing
 =========
 
-Setup
------
-
-Configure [gpg](https://www.gnupg.org/) so you can sign release artifacts.
-
 Major and Minor Releases
 ------------------------
 

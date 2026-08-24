@@ -37,7 +37,6 @@ func DrawMenu(screen tcell.Screen, palette *Palette, menu *state.MenuState) {
 	if row < height {
 		borderRegion := NewScreenRegion(screen, 0, row, screenWidth, 1)
 		borderRegion.Fill(tcell.RuneHLine, palette.StyleForMenuBorder())
-		row++
 	}
 }
 

@@ -118,6 +118,13 @@ func TestElixirParseFunc(t *testing.T) {
 			},
 		},
 		{
+			name: "heredoc sigil",
+			text: "~S\"\"\"\nRaw #{not_interpolated} heredoc.\n\"\"\"",
+			expected: []TokenWithText{
+				{Text: "~S\"\"\"\nRaw #{not_interpolated} heredoc.\n\"\"\"", Role: parser.TokenRoleString},
+			},
+		},
+		{
 			name: "atom",
 			text: ":ok",
 			expected: []TokenWithText{

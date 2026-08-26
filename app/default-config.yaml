@@ -193,6 +193,19 @@
     tabSize: 4
     showLineNumbers: true
 
+- name: elixir
+  pattern: "**/*.ex"
+  config: &elixirConfig
+    autoIndent: true
+    syntaxLanguage: elixir
+    tabExpand: true
+    tabSize: 2
+    showLineNumbers: true
+
+- name: elixir-script
+  pattern: "**/*.exs"
+  config: *elixirConfig
+
 - name: xml
   pattern: "**/*.xml"
   config: &xmlconfig

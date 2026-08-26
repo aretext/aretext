@@ -50,8 +50,12 @@ func elixirSigilParseFunc() parser.Func {
 		Then(consumeSingleRuneLike(unicode.IsLetter)).
 		ThenMaybe(consumeRunesLike(unicode.IsLetter))
 
+	// Heredoc delimiters must be tried before the single-character `"` and `'`
+	// delimiters so that a sigil like `~S"""..."""` is consumed as one token.
 	// Paired delimiters do not track nesting, which is good enough for highlighting.
-	consumeDelimited := consumeString("(").Then(consumeToString(")")).
+	consumeDelimited := consumeString(`"""`).Then(consumeToString(`"""`)).
+		Or(consumeString("'''").Then(consumeToString("'''"))).
+		Or(consumeString("(").Then(consumeToString(")"))).
 		Or(consumeString("[").Then(consumeToString("]"))).
 		Or(consumeString("{").Then(consumeToString("}"))).
 		Or(consumeString("<").Then(consumeToString(">"))).

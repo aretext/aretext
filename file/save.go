@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -130,6 +131,9 @@ func targetPathForSave(path string) (string, error) {
 			return "", fmt.Errorf("os.Readlink: %w", err)
 		}
 		log.Printf("Resolved symlink target %s -> %s", path, target)
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
 		return target, nil
 	}
 }

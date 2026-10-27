@@ -62,6 +62,42 @@ func TestSavePathToSymlink(t *testing.T) {
 	assert.Equal(t, "new contents\n", string(fileBytes))
 }
 
+func TestSavePathToRelativeSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+	linkDir := filepath.Join(tmpDir, "subdir")
+	require.NoError(t, os.Mkdir(linkDir, 0755))
+	targetPath := filepath.Join(linkDir, "target.txt")
+	cwdTargetPath := filepath.Join(tmpDir, "target.txt")
+	require.NoError(t, os.WriteFile(targetPath, []byte("link target before\n"), 0644))
+	require.NoError(t, os.WriteFile(cwdTargetPath, []byte("cwd target before\n"), 0644))
+
+	symlinkPath := filepath.Join(linkDir, "edit.txt")
+	require.NoError(t, os.Symlink("target.txt", symlinkPath))
+
+	oldCwd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(tmpDir))
+	defer func() { require.NoError(t, os.Chdir(oldCwd)) }()
+
+	tree, err := text.NewTreeFromString("edited through relative symlink")
+	require.NoError(t, err)
+	watcher, err := Save(symlinkPath, tree, testWatcherPollInterval)
+	require.NoError(t, err)
+	defer watcher.Stop()
+
+	targetContents, err := os.ReadFile(targetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "edited through relative symlink\n", string(targetContents))
+
+	cwdContents, err := os.ReadFile(cwdTargetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "cwd target before\n", string(cwdContents))
+
+	fileInfo, err := os.Lstat(symlinkPath)
+	require.NoError(t, err)
+	assert.True(t, fileInfo.Mode()&os.ModeSymlink != 0)
+}
+
 func TestSavePathToHardLink(t *testing.T) {
 	tmpDir := t.TempDir()
 	targetPath := filepath.Join(tmpDir, "test.txt")

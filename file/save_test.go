@@ -62,6 +62,53 @@ func TestSavePathToSymlink(t *testing.T) {
 	assert.Equal(t, "new contents\n", string(fileBytes))
 }
 
+func TestSavePathToRelativeSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+	targetPath := filepath.Join(tmpDir, "test.txt")
+	symlinkPath := filepath.Join(tmpDir, "testsymlink")
+
+	err := os.WriteFile(targetPath, []byte("test"), 0644)
+	require.NoError(t, err)
+	err = os.Symlink("test.txt", symlinkPath)
+	require.NoError(t, err)
+
+	saveAndAssertContents(t, symlinkPath, "new contents", 0644)
+
+	fileInfo, err := os.Lstat(symlinkPath)
+	require.NoError(t, err)
+	assert.True(t, fileInfo.Mode()&os.ModeSymlink != 0)
+
+	fileBytes, err := os.ReadFile(targetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "new contents\n", string(fileBytes))
+}
+
+func TestSavePathToChainedSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+	targetPath := filepath.Join(tmpDir, "test.txt")
+	link1Path := filepath.Join(tmpDir, "link1")
+	link2Path := filepath.Join(tmpDir, "link2")
+
+	err := os.WriteFile(targetPath, []byte("test"), 0644)
+	require.NoError(t, err)
+	err = os.Symlink("test.txt", link2Path)
+	require.NoError(t, err)
+	err = os.Symlink("link2", link1Path)
+	require.NoError(t, err)
+
+	saveAndAssertContents(t, link1Path, "new contents", 0644)
+
+	for _, path := range []string{link1Path, link2Path} {
+		fileInfo, err := os.Lstat(path)
+		require.NoError(t, err)
+		assert.True(t, fileInfo.Mode()&os.ModeSymlink != 0)
+	}
+
+	fileBytes, err := os.ReadFile(targetPath)
+	require.NoError(t, err)
+	assert.Equal(t, "new contents\n", string(fileBytes))
+}
+
 func TestSavePathToHardLink(t *testing.T) {
 	tmpDir := t.TempDir()
 	targetPath := filepath.Join(tmpDir, "test.txt")

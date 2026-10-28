@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -125,7 +126,7 @@ func targetPathForSave(path string) (string, error) {
 		return path, nil
 	} else {
 		// Symlink, so lookup the target.
-		target, err := os.Readlink(path)
+		target, err := filepath.EvalSymlinks(path)
 		if err != nil {
 			return "", fmt.Errorf("os.Readlink: %w", err)
 		}
